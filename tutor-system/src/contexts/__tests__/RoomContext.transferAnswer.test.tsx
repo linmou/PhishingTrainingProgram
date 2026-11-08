@@ -225,6 +225,22 @@ describe('RoomContext learner answer path', () => {
     expect(answer!.parent_message_id).toBe(DELIVERED_QUESTION_ID);
   });
 
+  it('accepts an answer to an older open question while a newer target question is open', async () => {
+    initialMessages = [learnerAMessageRow, deliveredQuestionRow, {
+      ...deliveredQuestionRow,
+      id: 'newer-question', assessment_id: 'newer-assessment',
+      assessment: { ...deliveredQuestionRow.assessment, id: 'newer-assessment' },
+      created_at: '2099-01-01T00:00:00Z',
+    }];
+    await mountRoom();
+    await act(async () => {
+      await room!.sendMessage('B', { replyToMessageId: DELIVERED_QUESTION_ID,
+        assessmentId: DELIVERED_QUESTION_ID, selectedOptionIds: ['B'] });
+    });
+    expect(processMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID, DELIVERED_QUESTION_ID);
+    expect(analyzeMessage).not.toHaveBeenCalled();
+  });
+
   it('posts canonical multiple option IDs with the delivered assessment and parent identities', async () => {
     initialMessages = [learnerAMessageRow, deliveredMultipleQuestionRow];
     await mountRoom();
@@ -290,20 +306,20 @@ describe('RoomContext learner answer path', () => {
     expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(TRANSFER_ROOM_ID, LEARNER_A_ID, DELIVERED_ANSWER_ID, LEARNER_A_ID);
   });
 
-  // RoomContext.tsx: open assessments block typed answers, help requests, and unrelated replies before persistence.
+  // RoomContext.tsx: hidden exit assessments do not block ordinary conversation.
   it.each([
     { content: 'A', options: undefined },
     { content: 'What does independent mean?', options: undefined },
     { content: 'A', options: { replyToMessageId: DELIVERED_QUESTION_ID } },
     { content: 'About the earlier example', options: { replyToMessageId: learnerAMessageRow.id } },
-  ])('blocks ordinary response $content while the learner assessment is open', async ({ content, options }) => {
+  ])('allows ordinary response $content while the learner assessment is open', async ({ content, options }) => {
     await mountRoom();
     await act(async () => {
-      await expect(room!.sendMessage(content, options)).rejects.toThrow('ASSESSMENT_OPTIONS_REQUIRED');
+      await room!.sendMessage(content, options);
     });
-    expect(postMessage).not.toHaveBeenCalled();
+    expect(postMessage).toHaveBeenCalledTimes(1);
     expect(processMessage).not.toHaveBeenCalled();
-    expect(analyzeMessage).not.toHaveBeenCalled();
+    expect(analyzeMessage).toHaveBeenCalledTimes(1);
   });
 
   // RoomContext.tsx: dedicated submissions must retain current ownership, parent, and canonical selections.
@@ -888,8 +904,8 @@ describe('RoomContext learner answer path', () => {
     expect(postMessage).not.toHaveBeenCalled();
   });
 
-  // RoomContext.tsx: retry retains the option gate, then accepted pass releases normal tutoring.
-  it('requires selected options through retry and resumes evidence analysis after a pass', async () => {
+  // RoomContext.tsx: retry permits ordinary chat, while explicit answers retain the option gate.
+  it('allows evidence analysis during retry and after a pass', async () => {
     processMessage.mockResolvedValueOnce(processedFirstIncorrectRetry).mockResolvedValueOnce(processedCorrectTerminal);
     await mountRoom();
     await act(async () => {
@@ -898,9 +914,9 @@ describe('RoomContext learner answer path', () => {
       });
     });
     await act(async () => {
-      await expect(room!.sendMessage('My next observation')).rejects.toThrow('ASSESSMENT_OPTIONS_REQUIRED');
+      await room!.sendMessage('My next observation');
     });
-    expect(postMessage).toHaveBeenCalledTimes(1);
+    expect(postMessage).toHaveBeenCalledTimes(2);
     await act(async () => {
       await room!.sendMessage('B', {
         replyToMessageId: DELIVERED_QUESTION_ID, assessmentId: DELIVERED_QUESTION_ID, selectedOptionIds: ['B'],
@@ -908,13 +924,13 @@ describe('RoomContext learner answer path', () => {
     });
     await act(async () => { await room!.sendMessage('My next observation'); });
     expect(processMessage).toHaveBeenCalledTimes(2);
-    expect(analyzeMessage).toHaveBeenCalledTimes(1);
+    expect(analyzeMessage).toHaveBeenCalledTimes(2);
     await act(async () => {
       await expect(room!.sendMessage('A', {
         replyToMessageId: DELIVERED_QUESTION_ID, assessmentId: DELIVERED_QUESTION_ID, selectedOptionIds: ['A'],
       })).rejects.toThrow('ASSESSMENT_OPTIONS_REQUIRED');
     });
-    expect(postMessage).toHaveBeenCalledTimes(3);
+    expect(postMessage).toHaveBeenCalledTimes(4);
   });
 
   // RoomContext.tsx: multiple selection accepts only the canonical option order supplied by the controls.

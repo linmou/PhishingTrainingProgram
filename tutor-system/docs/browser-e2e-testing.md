@@ -1,5 +1,17 @@
 # Browser E2E Testing
 
+<!-- Exit assessment implementation: updated 2026-11-03; baseline d6f6be7. -->
+
+<!-- Rating auto-send harness repair: updated 2026-11-03; baseline 976b0b1. -->
+
+The learner-send helper waits for a draft resumed by a required rating to finish or show the next rating before attempting another submit. The local Chromium regression covers asynchronous auto-send with an empty disabled composer, consecutive ratings and manual submission. Failed hosted evidence remains in the release record; a helper timeout after successful persistence does not establish a failed learner send.
+
+Exit-assessment verification uses `assessment-answer` for hidden questions, the unlocked composer, exit pop-up retries/results, unload confirmation and read-only history on re-entry. `assessment-delivery` prepares the full due-target queue during conversation and answers it at one exit, so reloads do not accidentally create reassessment loops. The answer fixture uses deterministic reviewed questions with real Edge grading; the delivery workflow exercises real-provider generation. Fixed-room cleanup removes learner visits as well as generated assessment rows. See the [open release record](doc_update_record/documentation_update_record_v2026_10_31_exit_time_assessment.md) for current evidence; older in-dialogue descriptions below are historical.
+
+Opt-in staging `--workflow=exit-assessment` adds a controlled two-target lifecycle: Partial and direct Pending routes to Covered, hidden questions during ordinary chat, actual browser Back into the ordered pop-up, a Guard-held answer without an attempt, release and pass, a two-attempt failure, resumed navigation and read-only results on re-entry. It verifies idempotent/keyless joins, same-visit suppression and next-visit eligibility against persisted visit and assessment rows. Question delivery and learning events are controlled fixtures; browser input, hosted grading and visit handling remain real. Run with `rtk npm run test:e2e:staging -- --workflow=exit-assessment` under the release owner's staging lease.
+
+The Guard stage waits for the submitted answer's actual `process_message` response and persisted processing record to report `deferred/guard_deferred`, checks its learner/question binding and zero consumed attempts, then clears Guard. Recovery must grade that same answer ID. Waiting text alone does not establish that an answer was held. Harness evidence revision: 2026-11-01, baseline `c439229`.
+
 <!-- Cyberbullying workflow added 2026-10-21; implementation baseline 2807c52. -->
 
 The `cyberbullying` workflow creates a tagged situation through the tutor UI and verifies learner progress, character selection/regeneration, edited approval, rejection, ratings, observer access, reload and JSON export. Run it with `--workflow=cyberbullying` against the explicitly selected candidate app/project. Cleanup deletes the tagged room by cascade and checks its related rows. See [Cyberbullying practise](cyberbullying-practise.md) and its [cutover runbook](cyberbullying-cutover.md).

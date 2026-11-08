@@ -442,6 +442,41 @@ Deno.test('room entry grants the first student the learner seat and returns obse
   assertEquals(calls[0].args.p_student_id, 'student-2');
 });
 
+// Covers assessment-api/index.ts: visit recording belongs only to keyed learner room entry.
+Deno.test('room entry records keyed learner visits after joining and leaves observers and unkeyed entries alone', async () => {
+  for (const roomRole of ['student', 'observer']) {
+    for (const visitKey of [undefined, '00000000-0000-4000-8000-000000000002']) {
+      const calls: Array<{ name: string; args: Record<string, unknown> }> = [];
+      const handler = createAssessmentApiHandler(dependencies({
+        rpc: async (name, args) => {
+          calls.push({ name, args });
+          return { data: name === 'join_room_v1' ? { room_role: roomRole } : null, error: null };
+        },
+      }));
+      const response = await handler(request('join_room', { room_id: 'room-1', ...(visitKey ? { visit_key: visitKey } : {}) }));
+      assertEquals(response.status, 200);
+      assertEquals(calls.map(call => call.name), roomRole === 'student' && visitKey
+        ? ['join_room_v1', 'start_learner_visit_v1'] : ['join_room_v1']);
+      if (calls.length === 2) assertEquals(calls[1].args, {
+        p_room_id: 'room-1', p_student_id: 'teacher-1', p_visit_key: visitKey,
+      });
+    }
+  }
+});
+
+// Covers assessment-api/index.ts: a failed visit write must be retried by the caller, never silently ignored.
+Deno.test('room entry reports visit recording failure', async () => {
+  const handler = createAssessmentApiHandler(dependencies({
+    rpc: async name => name === 'join_room_v1'
+      ? { data: { room_role: 'student' }, error: null }
+      : { data: null, error: { message: 'INVALID_SCOPE' } },
+  }));
+  const response = await handler(request('join_room', {
+    room_id: 'room-1', visit_key: '00000000-0000-4000-8000-000000000002',
+  }));
+  assertEquals(response.status, 409);
+});
+
 Deno.test('tutor status judgment is submitted under the verified actor identity', async () => {
   const calls: Array<{ name: string; args: Record<string, unknown> }> = [];
   const handler = createAssessmentApiHandler(dependencies({

@@ -39,6 +39,9 @@ test('template cleanup enables guarded deletes inside its transaction and retain
     assert.equal(queries[0], `select description from public.rooms where id='${roomId}'::uuid`);
     assertGuardedTransaction(queries[1]);
     assert(queries[1].includes('delete from public.session_checklists'));
+    assert(queries[1].includes("if to_regclass('private.learner_visits') is not null then"));
+    assert(queries[1].includes('delete from private.learner_visits'));
+    assert(queries[1].includes("raise exception 'Cleanup left learner visits'"));
     assert.equal(queries.filter(sql => sql.startsWith('select count')).length, 8);
     assert(queries.at(-1).startsWith('select guard_mode'));
   });
@@ -54,7 +57,11 @@ test('created-room cleanup guards explicit and cascading checklist deletes after
         assert(queries[1].includes(`and tutor_id='${tutorId}'::uuid`));
         assert(queries[1].includes('if not found then raise exception'));
         assert.equal(queries.filter(sql => sql.startsWith('select count')).length, 8);
-      } else assert(queries[1].includes('delete from public.session_checklists'));
+      } else {
+        assert(queries[1].includes('delete from public.session_checklists'));
+        assert(queries[1].includes('delete from private.learner_visits'));
+        assert(queries[1].includes("raise exception 'Cleanup left learner visits'"));
+      }
     });
   }
 });

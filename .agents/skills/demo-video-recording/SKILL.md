@@ -7,13 +7,19 @@ description: Record a real application workflow as a watchable demo video, with 
 
 Intent: show the requested workflow from its starting context through a visible result in one coherent recording.
 
+Updated: 2026-10-31. Revision baseline: `a8e7204`.
+
+## Participant Views
+
+The primary delivered video must show every participant's application view simultaneously throughout the workflow. For the usual tutor-and-student workflow, use two clearly labeled panes side by side; use a labeled grid for additional participants. Record each participant's actual session and synchronize all panes to the same timeline so an action and its effect on other participants are visible together. Keep inactive participants' views visible, and choose a resolution and layout that preserve readable UI text. Deliver this combined recording as the main video; additional close-up edits may supplement it.
+
 ## Record
 
 1. Identify the audience, the actions to show, and the final state that proves the workflow worked. Use the environment and accounts appropriate to the request; check project-specific browser or data guidance before a live run.
 2. Prepare the app and recording area so the UI is readable at the chosen resolution. Keep credentials, private data, and setup steps that do not belong in the demo out of view.
 3. Start recording before the first meaningful action. Perform the workflow in the real application, at a pace that makes state changes readable. Add chapter markers at major transitions if the recorder supports them.
 4. Stop after the outcome is visible. Save the video under a descriptive name in the requested output location, or a local output directory when none is given.
-5. Play or inspect the saved video. Confirm the important steps, final state, legible UI, and audio when relevant. Check any backend or external claims against their source before reporting them. State clearly when a requested stage did not occur.
+5. Play or inspect the saved video. Confirm every participant's view remains simultaneously visible and synchronized, along with the important steps, final state, legible UI, and audio when relevant. Check any backend or external claims against their source before reporting them. State clearly when a requested stage did not occur.
 
 Use a browser recorder for browser workflows and a screen recorder for other apps. Prefer the project's existing recording tools and instructions. For a browser app with Playwright CLI available, its `video-start`, `video-chapter`, and `video-stop` commands can capture one continuous WebM.
 

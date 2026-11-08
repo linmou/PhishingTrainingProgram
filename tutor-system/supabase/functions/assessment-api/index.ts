@@ -725,6 +725,13 @@ export function createAssessmentApiHandler(deps: AssessmentApiDependencies) {
             p_room_id: requiredString(body.room_id),
             p_student_id: principal.application_user_id,
           });
+          if (body.visit_key !== undefined && asRecord(data).room_role === 'student') {
+            await rpc(deps, 'start_learner_visit_v1', {
+              p_room_id: requiredString(body.room_id),
+              p_student_id: principal.application_user_id,
+              p_visit_key: requiredString(body.visit_key),
+            });
+          }
           break;
         case 'initialize_checklist':
           assertTeacher(principal);

@@ -15,6 +15,8 @@ import {
   withAnswerLifecycle,
   mergeRoomMessages,
   findOpenLearnerAssessment,
+  findOpenLearnerAssessments,
+  learnerConversationMessages,
 } from '../transferAssessmentUiAdapter';
 import {
   processedAlreadyTerminalReplay,
@@ -38,6 +40,14 @@ import {
 import type { Message } from '../../types';
 
 describe('transferAssessmentUiAdapter answer lifecycle', () => {
+  // transferAssessmentUiAdapter.ts: a final result may arrive before its answer or updated question.
+  it('closes stale delivered questions from a terminal result before the answer arrives', () => {
+    const question = projectRoomMessage(deliveredQuestionRow);
+    const result = projectRoomMessage(processedCorrectTerminal.result_message as unknown as Record<string, unknown>);
+    expect(findOpenLearnerAssessments([question], LEARNER_A_ID)).toEqual([question]);
+    expect(findOpenLearnerAssessments([question, result], LEARNER_A_ID)).toEqual([]);
+    expect(learnerConversationMessages([question, result], LEARNER_A_ID)).toEqual([question, result]);
+  });
   it('hydrates every participant from saved events arriving before the answer and ignores stale question updates', () => {
     const question=projectRoomMessage(deliveredQuestionRow);
     const result=projectRoomMessage(processedCorrectTerminal.result_message as unknown as Record<string,unknown>);

@@ -230,7 +230,7 @@ const PostComment: React.FC<PostCommentProps> = ({
                                         attempts={currentUserRole === 'student' && currentUserId === publicQuestion.studentId
                                             ? assessmentAttempts
                                             : []}
-                                        canAnswer={currentUserRole === 'student' && currentUserId === publicQuestion.studentId}
+                                        canAnswer={false}
                                         onSubmit={onSubmitAssessment
                                             ? (ids) => onSubmitAssessment(message.id, publicQuestion.id, ids)
                                             : undefined}
@@ -265,7 +265,7 @@ const PostComment: React.FC<PostCommentProps> = ({
                     </div>
 
                     {/* Comment Actions */}
-                    {!message.assessment_event && <div className="comment-actions">
+                    {!message.assessment_event && !publicQuestion && <div className="comment-actions">
                         <div className="comment-actions-left">
                             {/* Like Button - Two-step feedback */}
                             <button

@@ -1240,3 +1240,8 @@
         grid-row: 1;
     }
 }
+.exit-assessment-dialog {
+    width: min(720px, 90vw);
+    max-height: 90vh;
+    overflow-y: auto;
+}
