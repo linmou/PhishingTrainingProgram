@@ -157,11 +157,11 @@ const StudentView: React.FC = () => {
         // through refresh failures so later room/session events can recover the list.
         if (!hasLoaded) return;
 
-        // Only set up real-time subscriptions if we're not in offline mode
+        let active = true;
         let roomSubscription: any = null;
         let sessionSubscription: any = null;
 
-        // Add a delay before setting up subscriptions to see if the initial fetch works
+        // Preserve the subscription setup delay after a successful initial load.
         const setupSubscriptions = setTimeout(() => {
                 try {
                     console.log('🔄 StudentView: Setting up real-time subscriptions...');
@@ -177,6 +177,7 @@ const StudentView: React.FC = () => {
                                 table: 'rooms'
                             },
                             (payload) => {
+                                if (!active) return;
                                 console.log('Room change detected:', payload);
                                 // Refetch rooms when there are changes
                                 fetchRooms();
@@ -195,6 +196,7 @@ const StudentView: React.FC = () => {
                                 table: 'sessions'
                             },
                             (payload) => {
+                                if (!active) return;
                                 console.log('Session change detected:', payload);
                                 // Refetch rooms when session status changes (affects room availability)
                                 fetchRooms();
@@ -209,6 +211,7 @@ const StudentView: React.FC = () => {
         }, 3000);
 
         return () => {
+            active = false;
             clearTimeout(setupSubscriptions);
             if (roomSubscription) {
                 roomSubscription.unsubscribe();

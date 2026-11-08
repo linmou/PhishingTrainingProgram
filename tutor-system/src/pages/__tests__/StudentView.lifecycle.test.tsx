@@ -120,11 +120,17 @@ it('cleans old identity subscriptions and ignores an old pending result', async 
   await flush();
   expect(channels[0].unsubscribe).toHaveBeenCalledTimes(1);
   expect(channels[1].unsubscribe).toHaveBeenCalledTimes(1);
+  const requestsAfterSwitch = roomRead.mock.calls.length;
+  await act(async () => { channels[0].callback(); channels[1].callback(); });
+  expect(roomRead).toHaveBeenCalledTimes(requestsAfterSwitch);
   await act(async () => { resolveOld({ data: [{ ...room, title: 'Stale room' }], error: null }); });
   expect(screen.queryByText(/Stale room/)).not.toBeInTheDocument();
   expect(screen.getByText(/New identity room/)).toBeInTheDocument();
   await tick(3000);
   expect(channels).toHaveLength(4);
+  rendered.unmount();
+  await act(async () => { channels[2].callback(); channels[3].callback(); });
+  expect(roomRead).toHaveBeenCalledTimes(requestsAfterSwitch);
 });
 
 it('cancels pending subscription setup and ignores a load completed after unmount', async () => {

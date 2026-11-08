@@ -78,6 +78,13 @@ it('clears a removed selection so it cannot reappear when the same ID returns', 
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 });
 
+it.each(['room', 'learner'])('does not reopen retained evidence after the %s changes', (change) => {
+  const rendered = render(view());
+  rendered.rerender(view(change === 'room' ? 'room-b' : 'room-a', change === 'learner' ? 'learner-b' : 'learner-a'));
+  openFirst();
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+});
+
 it.each(['room', 'learner', 'checklist owner', 'checklist identity', 'hidden', 'loading'])(
   'closes the viewer on a change in %s and does not revive the old selection', (change) => {
     const rendered = render(view());

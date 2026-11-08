@@ -358,7 +358,10 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
     roomId, studentId, transferEnabled, auth?.user?.id,
     checklist?.id, checklist?.student_id
   ]);
-  const evidenceItem = evidenceSelection?.scope === evidenceScope
+  const evidenceOwner = studentId || (auth?.user?.current_role === 'student' ? auth.user.id : null);
+  const evidenceMatchesScope = checklist?.room_id === roomId
+    && (!transferEnabled || !evidenceOwner || checklist.student_id === evidenceOwner);
+  const evidenceItem = evidenceMatchesScope && evidenceSelection?.scope === evidenceScope
     ? [...(checklist?.detection_areas || []), ...(checklist?.verification_steps || [])]
       .find(item => item.id === evidenceSelection.itemId) || null
     : null;
@@ -402,6 +405,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
   };
 
   const handleViewEvidence = (itemId: string) => {
+    if (!evidenceMatchesScope || loading) return;
     setEvidenceSelection({ scope: evidenceScope, itemId });
   };
 

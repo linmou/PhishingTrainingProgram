@@ -34,3 +34,11 @@ Production acceptance after approved merge: confirm Render's deployed commit, th
 - New evidence cases: detection/verification selection, close/reopen, empty refreshed history, removed/reappearing item and room/learner/checklist/visibility/loading changes.
 - Raw local integration evidence: ignored `output/issues-57-66/` in the integration worktree. Baseline full Jest and TypeScript runs are retained separately from candidate results.
 - Source refs, final test totals, review disposition, artifact versions, hosted acceptance and cleanup will be recorded as observed.
+
+## Review and baseline
+
+- Untouched remote baseline: 148 suites / 1,510 tests passed, five suites / 93 tests skipped; one snapshot passed. TypeScript reports 439 existing diagnostics.
+- Sub-agent source commits: #57/#61 `065e114`, #58/#65 `745b8e0`, #59/#60 `7605c66`, #64/#66 `0a4aa49`. Integration cherry-picks preserve their changes under new commit identities.
+- Independent checklist_state review of `065e114`: no blocking findings; independently ran two suites / 30 tests.
+- Independent retire_alternatives review of root `742e6a0`: found retained-checklist reopening after learner/room change and late unsubscribed callbacks. Root added checklist owner/room validation and disposed-callback guards, with regression coverage; re-review pending.
+- Current Render inspection: service `srv-d1pjtjnfte5s73ce0opg` follows `fix/temporary-grade4-tutor`, live commit `21906cf`, deployment `dep-dblloa08v5cc739fscog`. This differs from documented `no_sign_up` deployment. Production branch configuration is preserved; this batch cannot claim automatic production deployment from its target-branch merge.
