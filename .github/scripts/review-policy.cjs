@@ -2,6 +2,7 @@
 
 // Security boundary: this script MUST be checked out from no_sign_up, never the PR head.
 const BOT = 'chatgpt-codex-connector[bot]';
+const { jsonMarker, parseRiskDecision, authorizedPaths, acceptedFindingDecision } = require('./review-decision.cjs');
 const MAX_EDIT_PAGES = 25;
 const CONTROL_RE = /(^|\/)(AGENTS|REVIEW|CLAUDE)\.md$/i;
 const lower = s => String(s || '').toLowerCase();
@@ -17,30 +18,8 @@ function isControl(path) {
     path.startsWith('.agents/skills/') || path.startsWith('.claude/');
 }
 
-function authorizedPaths(body) {
-  const matches = [...String(body || '').matchAll(/<!--\s*ptp-routine-authorization:v1\s+paths=([^\n>]+?)\s*-->/g)];
-  if (matches.length !== 1) return [];
-  const paths = matches[0][1].split(',').map(s => s.trim());
-  if (paths.length === 0 || paths.length > 30 || paths.some(p =>
-    !p || p.startsWith('/') || p.startsWith('.') || p.includes('..') || p.includes('\\') ||
-    p.includes('*') || p.includes('//') || !/^[\w./-]+$/.test(p))) return [];
-  return paths;
-}
-
 function isWithinPath(file, paths) {
   return paths.some(prefix => prefix.endsWith('/') ? file.startsWith(prefix) : file === prefix);
-}
-
-function issueReference(body, owner, repo) {
-  const line = String(body || '').split('\n').find(s => /^\s*-\s*\*\*Issue\s*\/\s*requirement:\*\*/i.test(s));
-  if (!line) return null;
-  const value = line.replace(/^.*?\*\*Issue\s*\/\s*requirement:\*\*/i, '');
-  const tokens = [...value.matchAll(/(?:https:\/\/github\.com\/([\w.-]+)\/([\w.-]+)\/issues\/(\d+)\b|(?:^|\s)#(\d+)\b)/gi)];
-  if (tokens.length !== 1) return null;
-  const match = tokens[0];
-  if (match[3] && (lower(match[1]) !== lower(owner) || lower(match[2]) !== lower(repo))) return null;
-  const number = Number(match[3] || match[4]);
-  return Number.isSafeInteger(number) && number > 0 ? number : null;
 }
 
 /**
@@ -94,10 +73,9 @@ async function verifiedContent(github, nodeId, expectedType, expectedAuthor, exp
 }
 
 function extractReceipt(body, sha) {
-  const match = String(body || '').match(/<!--\s*codex-review-state:v1\s+(\{[^\n]*\})\s*-->/);
-  if (!match) return null;
+  const data = jsonMarker(body, 'codex-review-state:v1');
+  if (!data) return null;
   try {
-    const data = JSON.parse(match[1]);
     const code = data.code_review;
     const security = data.security_review;
     if (code?.commit_sha !== sha || code.status !== 'completed' ||
@@ -143,8 +121,7 @@ async function trustedApprovals(github, owner, repo, pr, reviews) {
     if (review.state !== 'APPROVED' || review.commit_id !== pr.head.sha ||
       lower(review.user.login) === lower(pr.user.login) ||
       !(await trustedMaintainer(github, owner, repo, review.user.login))) continue;
-    const accepted = new RegExp('(?:^|\\n)PTP-ACCEPT-FINDINGS:\\s*' + pr.head.sha +
-      '\\s*\\nReason:\\s*[^\\n]{20,}', 'i').test(review.body || '');
+    const accepted = acceptedFindingDecision(review.body, pr.head.sha);
     // An APPROVED review's author/SHA/state are platform-owned. Its editable
     // free-text acceptance marker needs the same edit-history authentication.
     let verifiedAcceptance = false;
@@ -157,14 +134,20 @@ async function trustedApprovals(github, owner, repo, pr, reviews) {
   return approvals;
 }
 
-function assess({ pr, files, receipt, approvals, routine }) {
+function assess({ pr, files, receipt, approvals, routine, decision }) {
   const reasons = [];
+  // The agent's conclusion is input evidence, not an authorization token.
+  // Missing, stale, ambiguous or malformed decisions cannot pass this check.
+  const checkedDecision = parseRiskDecision(pr.body, pr.head.sha);
+  if (!checkedDecision || !decision ||
+      JSON.stringify(checkedDecision) !== JSON.stringify(decision))
+    reasons.push('Missing or invalid current-head structured risk decision');
   if (pr.draft) reasons.push('Draft PR');
   if (!receipt.complete) reasons.push('Missing authenticated current-head Codex code/security reviews');
   if (receipt.unresolved && !approvals.some(a => a.accepted))
     reasons.push('Unresolved Codex findings: fix/review again or obtain explicit trusted current-head acceptance');
-  const riskLine = String(pr.body || '').split('\n').find(s => /\*\*Risk assessment:\*\*/i.test(s)) || '';
-  const needsHuman = files.some(isControl) || !routine || /human decision required/i.test(riskLine);
+  const needsHuman = files.some(isControl) || !routine ||
+    !checkedDecision || checkedDecision.risk_decision === 'human_required';
   if (needsHuman && approvals.length === 0)
     reasons.push('Independent trusted current-head human approval required');
   return { ok: reasons.length === 0, humanRequired: needsHuman, reasons };
@@ -209,13 +192,13 @@ async function trustedPrBody(github, owner, repo, pr) {
     login => trustedMaintainer(github, owner, repo, login));
 }
 
-async function routineAuthorized(github, owner, repo, pr, files) {
+async function routineAuthorized(github, owner, repo, pr, files, decision) {
   // A public contributor cannot borrow an old standing authorization by
   // referencing its Issue while changing any in-scope source file.
-  if (files.some(isControl) || !(await trustedPrBody(github, owner, repo, pr))) return false;
+  if (!decision || decision.risk_decision !== 'routine' ||
+      files.some(isControl) || !(await trustedPrBody(github, owner, repo, pr))) return false;
   if (!(await trustedRevision(github, owner, repo, pr))) return false;
-  const issueNumber = issueReference(pr.body, owner, repo);
-  if (!issueNumber) return false;
+  const issueNumber = decision.authorization_issue;
   const { data: issue } = await github.rest.issues.get({ owner, repo, issue_number: issueNumber });
   if (issue.pull_request || !(await trustedMaintainer(github, owner, repo, issue.user?.login))) return false;
   const prefixes = authorizedPaths(issue.body);
@@ -247,12 +230,13 @@ async function evaluate(github, owner, repo, number) {
     github.paginate(github.rest.issues.listComments, { owner, repo, issue_number: number, per_page: 100 }),
     github.paginate(github.rest.pulls.listReviews, { owner, repo, pull_number: number, per_page: 100 })
   ]);
+  const decision = parseRiskDecision(pr.body, pr.head.sha);
   const [receipt, approvals, routine] = await Promise.all([
     authenticatedCodexReceipt(github, comments, pr.head.sha),
     trustedApprovals(github, owner, repo, pr, reviews),
-    routineAuthorized(github, owner, repo, pr, files)
+    routineAuthorized(github, owner, repo, pr, files, decision)
   ]);
-  const result = assess({ pr, files, receipt, approvals, routine });
+  const result = assess({ pr, files, receipt, approvals, routine, decision });
   // Do not publish a success for a superseded head or moved target branch.
   const { data: fresh } = await github.rest.pulls.get({ owner, repo, pull_number: number });
   if (fresh.head.sha !== pr.head.sha || fresh.base.sha !== pr.base.sha ||
@@ -293,7 +277,7 @@ async function run({ github, context, core }) {
 }
 
 module.exports = {
-  isControl, authorizedPaths, isWithinPath, issueReference, verifiedContent,
+  isControl, authorizedPaths, isWithinPath, parseRiskDecision, acceptedFindingDecision, verifiedContent,
   extractReceipt, authenticatedCodexReceipt, trustedApprovals, trustedMaintainer,
   routineAuthorized, trustedRevision, trustedPrBody, assess, refreshAll, publish, evaluate, run
 };
