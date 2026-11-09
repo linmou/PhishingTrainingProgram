@@ -2,15 +2,24 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const policy = require('./review-policy.cjs');
+const structure = require('./review-decision.cjs');
 const sha = 'a'.repeat(40);
 const BOT = 'chatgpt-codex-connector[bot]';
-const pr = (body = '- **Issue / requirement:** #12') => ({
+const marker = (tag, value) => '<!-- '+tag+' '+JSON.stringify(value)+' -->';
+const decision = (risk_decision='routine', authorization_issue=12) =>
+  marker('ptp-review-decision:v1', {schema_version:1,reviewed_commit:sha,
+    risk_decision,reason:'This task is within the documented and authorized contract.',
+    affected_contracts:['contract-123'],authorization_issue});
+const validIssue = marker('ptp-routine-authorization:v2',{schema_version:2,
+  paths:['tutor-system/src/'],reason:'Maintainer explicitly authorized this limited change.'});
+const pr = (body = decision()) => ({
   state: 'open', draft: false, body, head: { sha }, base: { ref: 'no_sign_up', sha: 'b'.repeat(40) },
   user: { login: 'contributor' }
 });
 const receipt = { complete: true, unresolved: false };
 const assess = overrides => policy.assess({
-  pr: pr(), files: ['tutor-system/src/App.tsx'], receipt, approvals: [], routine: false, ...overrides
+  pr: pr(), files: ['tutor-system/src/App.tsx'], receipt, approvals: [], routine: false,
+  decision: structure.parseRiskDecision(pr().body,sha), ...overrides
 });
 const trustedPr = (body) => ({ ...pr(body), number: 52, node_id: 'pr-node', head: { sha, repo: { full_name: 'linmou/PhishingTrainingProgram' } }, user: { login: 'linmou' } });
 const created = '2026-10-30T08:00:00Z';
@@ -39,11 +48,15 @@ test('static control files, including scoped agent instructions and skills, requ
   }
   assert.equal(policy.isControl('tutor-system/src/overview.ts'),false);
 });
-test('routine authorization cannot be self-declared in the PR', () => {
-  assert.equal(assess({pr:pr('- **Risk assessment:** Routine authorized')}).ok,false);
+test('agent risk decision cannot authorize its own merge', () => {
+  assert.equal(assess({pr:pr(decision()),routine:false}).ok,false);
   assert.equal(assess({routine:true}).ok,true);
-  assert.equal(assess({routine:true,pr:pr('- **Risk assessment:** **Human decision required**')}).ok,false);
+  const human=decision('human_required',null);
+  assert.equal(assess({routine:true,pr:pr(human),decision:structure.parseRiskDecision(human,sha)}).ok,false);
   assert.equal(assess({routine:false,approvals:[{accepted:false}]}).ok,true);
+  assert.equal(assess({pr:pr('- **Risk assessment:** routine authorized change'),routine:true,decision:null}).ok,false);
+  assert.equal(assess({pr:pr(decision().replace(sha,'b'.repeat(40))),routine:true,decision:null}).ok,false);
+  assert.equal(assess({pr:pr(decision()+decision()),routine:true,decision:null}).ok,false);
 });
 test('findings require trusted current-head acceptance or fresh clean review', () => {
   assert.equal(assess({routine:true,receipt:{complete:true,unresolved:true}}).ok,false);
@@ -52,19 +65,21 @@ test('findings require trusted current-head acceptance or fresh clean review', (
   assert.equal(assess({routine:true,receipt:{complete:false,unresolved:false},approvals:[{accepted:true}]}).ok,false);
 });
 test('authorization marker scopes are constrained', () => {
-  const f = txt => policy.authorizedPaths('<!-- ptp-routine-authorization:v1 paths='+txt+' -->');
-  assert.deepEqual(f('tutor-system/src/,tutor-system/features/'),['tutor-system/src/','tutor-system/features/']);
-  for(const bad of ['../','.env','/etc','src/*','one//two','../../pwd'])assert.deepEqual(f(bad),[]);
+  const f = values => policy.authorizedPaths(marker('ptp-routine-authorization:v2',{schema_version:2,
+    paths:values,reason:'Maintainer authorized the listed path scope.'}));
+  assert.deepEqual(f(['tutor-system/src/','tutor-system/features/']),['tutor-system/src/','tutor-system/features/']);
+  for(const bad of ['../','.env','/etc','src/*','one//two','../../pwd'])assert.deepEqual(f([bad]),[]);
   assert.deepEqual(policy.authorizedPaths('no marker'),[]);
   assert.equal(policy.isWithinPath('tutor-system/src/App.tsx',['tutor-system/src/']),true);
   assert.equal(policy.isWithinPath('tutor-system/src2/App.tsx',['tutor-system/src/']),false);
 });
-test('full same-repository issue URL or #id is accepted, other repo is rejected', () => {
-  const body = value => '- **Issue / requirement:** ' + value;
-  assert.equal(policy.issueReference(body('#123'),'linmou','PhishingTrainingProgram'),123);
-  assert.equal(policy.issueReference(body('https://github.com/linmou/PhishingTrainingProgram/issues/123'),'linmou','PhishingTrainingProgram'),123);
-  assert.equal(policy.issueReference(body('https://github.com/attacker/PhishingTrainingProgram/issues/123'),'linmou','PhishingTrainingProgram'),null);
-  assert.equal(policy.issueReference(body('#12 and #13'),'linmou','PhishingTrainingProgram'),null);
+test('strict structured decisions reject stale, duplicate and malformed payloads', () => {
+  assert.equal(policy.parseRiskDecision(decision(),sha)?.authorization_issue,12);
+  for(const bad of [decision()+decision(),decision().replace(sha,'b'.repeat(40)),
+    marker('ptp-review-decision:v1',{schema_version:1,reviewed_commit:sha,risk_decision:'routine',reason:'short',affected_contracts:[],authorization_issue:12}),
+    '<!-- ptp-review-decision:v1 {invalid} -->']) {
+    assert.equal(policy.parseRiskDecision(bad,sha),null);
+  }
 });
 test('GitHub-authenticated edit history rejects edits by other users', async () => {
   const safe = graph({editors:[BOT],body:'signed report'});
@@ -86,8 +101,7 @@ test('Codex review receipt is commit-bound and authenticated by edit history',as
   assert.equal((await policy.authenticatedCodexReceipt(auth,[{...c,user:{login:'contributor'}}],sha)).complete,false);
 });
 test('trusted issue needs author and edit provenance (forged scope must fail)',async()=>{
-  const marker='<!-- ptp-routine-authorization:v1 paths=tutor-system/src/ -->';
-  const body=marker+'\nOriginal authorization';
+  const body=validIssue;
   function github(editors) {
     const api=graph({type:'Issue',author:'linmou',body,editors});
     const originalGraph=api.graphql;
@@ -104,13 +118,14 @@ test('trusted issue needs author and edit provenance (forged scope must fail)',a
     };
     return api;
   }
-  assert.equal(await policy.routineAuthorized(github([]),'linmou','PhishingTrainingProgram',trustedPr(),['tutor-system/src/App.tsx']),true);
-  assert.equal(await policy.routineAuthorized(github(['contributor']),'linmou','PhishingTrainingProgram',trustedPr(),['tutor-system/src/App.tsx']),false);
-  assert.equal(await policy.routineAuthorized(github([]),'linmou','PhishingTrainingProgram',pr(),['tutor-system/src/App.tsx']),false);
-  assert.equal(await policy.routineAuthorized(github([]),'linmou','PhishingTrainingProgram',trustedPr(),['.github/workflows/review-policy.yml']),false);
+  assert.equal(await policy.routineAuthorized(github([],structure.parseRiskDecision(trustedPr().body,sha)),'linmou','PhishingTrainingProgram',trustedPr(),['tutor-system/src/App.tsx']),true);
+  assert.equal(await policy.routineAuthorized(github(['contributor'],structure.parseRiskDecision(trustedPr().body,sha)),'linmou','PhishingTrainingProgram',trustedPr(),['tutor-system/src/App.tsx']),false);
+  assert.equal(await policy.routineAuthorized(github([],structure.parseRiskDecision(pr().body,sha)),'linmou','PhishingTrainingProgram',pr(),['tutor-system/src/App.tsx']),false);
+  assert.equal(await policy.routineAuthorized(github([],structure.parseRiskDecision(trustedPr().body,sha)),'linmou','PhishingTrainingProgram',trustedPr(),['.github/workflows/review-policy.yml']),false);
 });
 test('review acceptance requires trusted approval and authenticated edits',async()=>{
-  const body='PTP-ACCEPT-FINDINGS: '+sha+'\nReason: Accepted nonblocking finding after explicit risk assessment.';
+  const body=marker('ptp-finding-acceptance:v1',{schema_version:1,reviewed_commit:sha,
+    reason:'Accepted nonblocking finding after explicit risk assessment.'});
   const r={user:{login:'linmou'},state:'APPROVED',commit_id:sha,node_id:'review-node',body};
   const api=graph({type:'PullRequestReview',author:'linmou',body});
   const good=await policy.trustedApprovals(api,'linmou','PhishingTrainingProgram',pr(),[r]);
@@ -128,8 +143,7 @@ test('issue edits and push events refresh all PRs',()=>{
 });
 
 test('an issue authorization revocation turns a previously passing PR check into failure', async () => {
-  const marker = '<!-- ptp-routine-authorization:v1 paths=tutor-system/src/ -->';
-  let issueBody = marker;
+  let issueBody = validIssue;
   const receiptBody = '<!-- codex-pull-request-review-summary -->\n<!-- codex-review-state:v1 ' + JSON.stringify({
     code_review: {commit_sha: sha, status:'completed',has_unresolved_findings:false},
     security_review: {commit_sha: sha, status:'completed',has_unresolved_findings:false}
@@ -176,8 +190,7 @@ test('an issue authorization revocation turns a previously passing PR check into
 
 
 test('routine commits reject unsigned, untrusted signer, stale head, and foreign forks',async()=>{
-  const marker='<!-- ptp-routine-authorization:v1 paths=tutor-system/src/ -->';
-  const body=marker+'\nAuthorization';
+  const body=validIssue;
   const good=trustedPr();
   const api=graph({type:'Issue',author:'linmou',body});
   const commits=()=>{};
@@ -195,16 +208,16 @@ test('routine commits reject unsigned, untrusted signer, stale head, and foreign
       author:actor('linmou'),body:vars.id==='pr-node'?good.body:body,
       lastEditedAt:null,userContentEdits:{nodes:[],pageInfo:{hasNextPage:false,endCursor:null}}}};
   };
-  assert.equal(await policy.routineAuthorized(api,'linmou','PhishingTrainingProgram',good,['tutor-system/src/App.tsx']),true);
+  assert.equal(await policy.routineAuthorized(api,'linmou','PhishingTrainingProgram',good,['tutor-system/src/App.tsx'],structure.parseRiskDecision(good.body,sha)),true);
   signed=false;
-  assert.equal(await policy.routineAuthorized(api,'linmou','PhishingTrainingProgram',good,['tutor-system/src/App.tsx']),false);
+  assert.equal(await policy.routineAuthorized(api,'linmou','PhishingTrainingProgram',good,['tutor-system/src/App.tsx'],structure.parseRiskDecision(good.body,sha)),false);
   signed=true; signer='contributor';
-  assert.equal(await policy.routineAuthorized(api,'linmou','PhishingTrainingProgram',good,['tutor-system/src/App.tsx']),false);
+  assert.equal(await policy.routineAuthorized(api,'linmou','PhishingTrainingProgram',good,['tutor-system/src/App.tsx'],structure.parseRiskDecision(good.body,sha)),false);
   signer='linmou';oid='c'.repeat(40);
-  assert.equal(await policy.routineAuthorized(api,'linmou','PhishingTrainingProgram',good,['tutor-system/src/App.tsx']),false);
+  assert.equal(await policy.routineAuthorized(api,'linmou','PhishingTrainingProgram',good,['tutor-system/src/App.tsx'],structure.parseRiskDecision(good.body,sha)),false);
   oid=sha;
   assert.equal(await policy.routineAuthorized(api,'linmou','PhishingTrainingProgram',
-    {...good,head:{...good.head,repo:{full_name:'stranger/fork'}}},['tutor-system/src/App.tsx']),false);
+    {...good,head:{...good.head,repo:{full_name:'stranger/fork'}}},['tutor-system/src/App.tsx'],structure.parseRiskDecision(good.body,sha)),false);
 });
 test('PR body edit provenance blocks a forged routine reference',async()=>{
   const original=trustedPr();
