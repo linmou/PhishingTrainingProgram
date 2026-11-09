@@ -118,10 +118,10 @@ test('trusted issue needs author and edit provenance (forged scope must fail)',a
     };
     return api;
   }
-  assert.equal(await policy.routineAuthorized(github([],structure.parseRiskDecision(trustedPr().body,sha)),'linmou','PhishingTrainingProgram',trustedPr(),['tutor-system/src/App.tsx']),true);
-  assert.equal(await policy.routineAuthorized(github(['contributor'],structure.parseRiskDecision(trustedPr().body,sha)),'linmou','PhishingTrainingProgram',trustedPr(),['tutor-system/src/App.tsx']),false);
-  assert.equal(await policy.routineAuthorized(github([],structure.parseRiskDecision(pr().body,sha)),'linmou','PhishingTrainingProgram',pr(),['tutor-system/src/App.tsx']),false);
-  assert.equal(await policy.routineAuthorized(github([],structure.parseRiskDecision(trustedPr().body,sha)),'linmou','PhishingTrainingProgram',trustedPr(),['.github/workflows/review-policy.yml']),false);
+  assert.equal(await policy.routineAuthorized(github([]),'linmou','PhishingTrainingProgram',trustedPr(),['tutor-system/src/App.tsx'],structure.parseRiskDecision(trustedPr().body,sha)),true);
+  assert.equal(await policy.routineAuthorized(github(['contributor']),'linmou','PhishingTrainingProgram',trustedPr(),['tutor-system/src/App.tsx'],structure.parseRiskDecision(trustedPr().body,sha)),false);
+  assert.equal(await policy.routineAuthorized(github([]),'linmou','PhishingTrainingProgram',pr(),['tutor-system/src/App.tsx'],structure.parseRiskDecision(pr().body,sha)),false);
+  assert.equal(await policy.routineAuthorized(github([]),'linmou','PhishingTrainingProgram',trustedPr(),['.github/workflows/review-policy.yml'],structure.parseRiskDecision(trustedPr().body,sha)),false);
 });
 test('review acceptance requires trusted approval and authenticated edits',async()=>{
   const body=marker('ptp-finding-acceptance:v1',{schema_version:1,reviewed_commit:sha,
