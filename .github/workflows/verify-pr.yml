@@ -25,7 +25,7 @@ jobs:
           node --test scripts/staging-coordination.test.js
 
       - name: Test review approval policy (pure logic, no hosted state)
-        run: node --test .github/scripts/review-policy.test.cjs
+        run: node --test .github/scripts/review-policy.test.cjs .github/scripts/review-decision.test.cjs
 
       # Prevent the human-facing PR handoff from drifting away from CI check IDs.
       # Structural check only: PR results and review decisions are external gates.
