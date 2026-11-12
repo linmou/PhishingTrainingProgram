@@ -1,10 +1,25 @@
 /**
  * File: src/services/detectionTemplates.ts
- * Purpose: verify unified teaching inventories, scenario identities and custom catalog coverage.
+ * Purpose: verify teaching inventories and exact agreement with the saved-template migration.
  */
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
 import { SCENARIO_TEMPLATES } from '../detectionTemplates';
 
 describe('Detection Templates', () => {
+  it('keeps all six migration inventories identical to the frontend targets', () => {
+    const migration = readFileSync(resolve(__dirname,
+      '../../../supabase/migrations/20261112000000_document_learning_targets.sql'), 'utf8');
+    const entries: { scenario: keyof typeof SCENARIO_TEMPLATES; points: string[] }[] =
+      JSON.parse(migration.split('$catalog$')[1]);
+    expect(entries.map(entry => entry.scenario).sort()).toEqual(
+      Object.keys(SCENARIO_TEMPLATES).filter(name => name !== 'General Scam Indicators').sort()
+    );
+    entries.forEach(entry => {
+      expect(entry.points).toEqual(SCENARIO_TEMPLATES[entry.scenario].detection_areas);
+    });
+  });
+
   it.each([
     ['Nintendo Switch Deal ($19.99)', 5],
     ['iTunes Gift Card Survey ($500)', 5],

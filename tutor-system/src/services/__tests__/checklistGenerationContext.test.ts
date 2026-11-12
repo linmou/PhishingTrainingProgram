@@ -61,10 +61,6 @@ describe('checklistGenerationContext', () => {
     expect(context.aiConfigId).toBe(`ai-${seed.case_id}`);
     expect(context.detectionAreas).toEqual(templateConfig.prompt_config.detection_areas);
     expect(context.verificationSteps).toEqual([]);
-    const targets = [...context.detectionAreas!, ...context.verificationSteps!];
-    const count = ['Location Sharing Safety', 'Movie Meetup Social Engineering'].includes(seed.template_name) ? 4 : 5;
-    expect(targets).toHaveLength(count);
-    expect(new Set(targets).size).toBe(count);
     expect(ChecklistIntegration.extractFromSystemPromptAsync).not.toHaveBeenCalled();
   });
 

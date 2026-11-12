@@ -62,9 +62,6 @@ describe('demoRoomTemplates', () => {
       expect(seed.test_only).toBe(false);
       expect(config.detection_areas).toEqual(scenario.detection_areas);
       expect(config.verification_steps).toEqual(scenario.verification_steps);
-      expect(config.detection_areas).toHaveLength(
-        ['Location Sharing Risks', 'Movie Meetup Social Engineering'].includes(seed.ai_config_template.scenario) ? 4 : 5
-      );
       expect(config.verification_steps).toEqual([]);
     }
   });
