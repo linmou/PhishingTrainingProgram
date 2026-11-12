@@ -1,6 +1,6 @@
 # aiService.ts - AI Assistant Functionality
 
-<!-- Intent: explain the supported AI request boundary and its configuration/context contracts. Updated: 2026-11-12. Learning-target baseline commit: e665cfd. -->
+<!-- Intent: explain the supported AI request boundary and its configuration/context contracts. Updated: 2026-11-12. Learning-target baseline commit: e336496. -->
 
 ## Assessment dialogue revision
 
@@ -324,6 +324,8 @@ movie-meetup scenarios have four targets; the other four teaching scenarios have
 five. The generic `General Scam Indicators` fallback retains five targets.
 Checklist initialization reads the saved inventory before considering prompt
 extraction. Each resulting checklist item has the type `detection_area`.
+AI settings separate detection targets with a blank line, preserving internal
+line breaks in each point's explanation and action when saving or reopening.
 
 | Teaching template | Document learning targets |
 | --- | --- |
