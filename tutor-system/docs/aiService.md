@@ -1,8 +1,13 @@
 # aiService.ts - AI Assistant Functionality
 
-<!-- Intent: explain the supported AI request boundary and its configuration/context contracts. Updated: 2026-11-12. Learning-target baseline commit: e336496. -->
+<!-- Intent: explain the supported AI request boundary and its configuration/context contracts. Updated: 2026-11-12. Learning-target baseline commit: d8e1b1d. -->
 
 ## Assessment dialogue revision
+
+The default tutor prompt includes the same temporary fourth-grade audience paragraph
+previously deployed from `fix/temporary-grade4-tutor`, as explicitly requested on
+2026-11-12. Its [known evaluation limitations](ai-behaviors/temporary-fourth-grade-prompt.md)
+remain recorded. The learning-target release will deploy the integrated `no_sign_up` branch.
 
 Tutor requests use saved assessment question/options, learner answers and backend result messages in dialogue history. Remove the dynamic VERIFIED ASSESSMENT STATE section and prompt-only assessmentFeedback input. Trusted readiness still blocks provider calls for pending/missing results; common request instructions preserve recorded grading, retries, cancellation, required feedback and Guard. See [Assessment result messages](assessment-result-messages.md) for the governing publication and consumer rules. Implementation/release status is recorded there; older dated evidence below is retained.
 
