@@ -3,8 +3,9 @@
 \set ON_ERROR_STOP on
 -- Local disposable PostgreSQL reads the same checkout; run from repository root.
 \set repository_root `rtk proxy pwd`
+\set target_catalog `rtk proxy node -e 'const fs=require("fs"),ts=require("./tutor-system/node_modules/typescript"); const m={exports:{}}; new Function("exports",ts.transpileModule(fs.readFileSync("tutor-system/src/services/detectionTemplates.ts","utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText)(m.exports); console.log(JSON.stringify(m.exports.SCENARIO_TEMPLATES));'`
 CREATE TEMP TABLE document_target_sources AS
-SELECT pg_read_file(:'repository_root'||'/tutor-system/src/services/generalLearningGoals.json')::jsonb AS catalog,
+SELECT :'target_catalog'::jsonb AS catalog,
   replace(replace(pg_read_file(:'repository_root'||'/tutor-system/supabase/migrations/20261112000000_document_learning_targets.sql'),
     E'\nBEGIN;\n',E'\n'),E'\nCOMMIT;\n',E'\n') AS migration_body;
 CREATE TEMP TABLE document_template_names(name text,scenario text);
@@ -85,7 +86,7 @@ DECLARE b record; actual jsonb; expected jsonb; points jsonb; replacement text; 
 BEGIN
   FOR b IN SELECT * FROM document_template_before LOOP
     SELECT to_jsonb(r) INTO actual FROM room_templates r WHERE r.id=b.id;
-    SELECT catalog->'scenarios'->(b.row_data->'ai_config_template'->>'scenario')->'learning_points'
+    SELECT catalog->(b.row_data->'ai_config_template'->>'scenario')->'detection_areas'
       INTO points FROM document_target_sources;
     ASSERT points IS NOT NULL,'every fixture has independent document catalog points';
     SELECT string_agg('- '||value,E'\n\n' ORDER BY ordinality) INTO replacement

@@ -1,6 +1,6 @@
 # Service configuration
 
-<!-- Intent: locate maintained scenario targets, AI configuration and their verification. Updated: 2026-11-12. Baseline commit: 33dede1. -->
+<!-- Intent: locate maintained scenario targets, AI configuration and their verification. Updated: 2026-11-12. Baseline commit: e665cfd. -->
 
 The supported tutor/context path is `aiService.ts` → `simplifiedAIContext.ts`,
 with transport through the `ai-api` Edge Function. The application is private;
@@ -13,9 +13,9 @@ Room components use `useChecklist` directly and retain the live
 `RoomFeaturesService.checklist` facade. Components and hooks own their subscriptions
 and cleanup; the service facade does not expose lifecycle or health checks.
 
-`generalLearningGoals.json` preserves the complete learning-point text from
-`General Learning Goals.docx`, with its source hash. `detectionTemplates.ts` uses
-that catalog for the six teaching scenarios: four points each for home-location
+`detectionTemplates.ts` defines the complete learning-point text directly from
+`General Learning Goals.docx`, with its source hash, for the six teaching
+scenarios: four points each for home-location
 and movie-meetup rooms, five for the others. The generic `General Scam Indicators`
 fallback retains its five points. Cyberbullying uses the document's five shared
 points in document order, with versioned persisted inventories.

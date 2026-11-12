@@ -1,6 +1,6 @@
 # aiService.ts - AI Assistant Functionality
 
-<!-- Intent: explain the supported AI request boundary and its configuration/context contracts. Updated: 2026-11-12. Learning-target baseline commit: 33dede1. -->
+<!-- Intent: explain the supported AI request boundary and its configuration/context contracts. Updated: 2026-11-12. Learning-target baseline commit: e665cfd. -->
 
 ## Assessment dialogue revision
 
@@ -319,7 +319,7 @@ import { SCENARIO_TEMPLATES, ScenarioTemplate } from './detectionTemplates';
 ```
 
 The six teaching scenarios use the complete document knowledge points from
-`src/services/generalLearningGoals.json` in `detection_areas`. Home-location and
+`src/services/detectionTemplates.ts` in `detection_areas`. Home-location and
 movie-meetup scenarios have four targets; the other four teaching scenarios have
 five. The generic `General Scam Indicators` fallback retains five targets.
 Checklist initialization reads the saved inventory before considering prompt

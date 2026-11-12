@@ -8,12 +8,11 @@ Release owner and repair owner: root Codex agent for issue #73.
 Draft PR: https://github.com/linmou/PhishingTrainingProgram/pull/74
 Implementation commit: `330995c`.
 Migration SHA-256: `2ac977b6c92b91acd05c6fa8c87e49c940a57a97845f70c071ac40789e2ae4ea`.
-Catalog SHA-256: `e7acebf885b84566195db1dea195fd97eb9f1d230673659b1fd6949db733ab73`.
 
 ## Source and behavior
 
 `General Learning Goals.docx` SHA-256: `fd0a0f49106e1b37795886dc39f974c3e99758e0007df5c2b0ba5d730dd6655b`.
-`src/services/generalLearningGoals.json` contains all 33 distinct knowledge points, preserving their complete title, explanation, action text and document order.
+`src/services/detectionTemplates.ts` directly contains all 33 distinct knowledge points, preserving their complete title, explanation, action text and document order.
 The six phishing/privacy scenarios contain 5, 5, 5, 4, 4 and 5 points; all four cyberbullying templates use the same five document points.
 
 The frontend scenario catalog supplies new room configurations. SQL migration `20261112000000_document_learning_targets.sql` replaces the six saved standard templates' detection inventories and corresponding system-prompt section. Existing prompt policy and template content remain intact. SQL rejects missing/ambiguous template inventories or malformed prompt boundaries atomically.
@@ -33,6 +32,8 @@ SQL verification command (repository root): `rtk proxy node scripts/database/dis
 Independent Codex reviewer `targets_review` found no blocking defect in the implementation and independently verified all 33 DOCX blocks and assessment-api consumption of persisted target text. Its nonblocking suggestion to use true historical text/order in the frontend legacy-version test was addressed; both version cases passed afterward. GitHub CI is pending; the initial isolation-harness job passed.
 
 ## Hosted release status and resumption
+
+The user requested simpler source organization on 2026-11-12. All target definitions now live directly in `detectionTemplates.ts`; the separate JSON file and import were removed. The SQL diagnostic reads the TypeScript exports for its expected values. All 33 point strings and their ordering were compared exactly with the previously source-verified catalog. Four focused Jest suites passed (45 tests), and the combined SQL diagnostic passed again with cleanup recorded at `/Users/admin/.transfer-assessment-pg17/runs/scenario-a0Vyow/lease.json`. The deployable SQL migration is unchanged.
 
 **Not deployed; staging blocked.** Production SQL inspection succeeded. Staging `ciubrzggdqesgvfkpolj` rejects database authentication through Supabase MCP (`postgres`, SQLSTATE 28P01), Management API read-only query (`supabase_read_only_user`, HTTP 400), and normal Management API SELECT (`postgres`, HTTP 500). No hosted mutation was performed.
 
