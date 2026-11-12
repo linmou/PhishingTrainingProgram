@@ -1,5 +1,11 @@
 # Browser E2E Testing
 
+<!-- Learning-target integration updated: 2026-11-12; baseline 84d7a50. -->
+
+Template-settings readiness uses blank lines between detection targets so each
+document point keeps its internal line breaks. New cyberbullying checklist and
+export checks expect `cyberbullying_doc_20261112`.
+
 <!-- Exit assessment implementation: updated 2026-11-03; baseline d6f6be7. -->
 
 <!-- Rating auto-send harness repair: updated 2026-11-03; baseline 976b0b1. -->
