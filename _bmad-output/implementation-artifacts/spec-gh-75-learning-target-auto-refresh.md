@@ -53,7 +53,7 @@ issue: https://github.com/linmou/PhishingTrainingProgram/issues/75
 - [x] Room page and tests: mount for owner/learner using room membership, retain hidden subscription, replace target waiting/learner lookup polling with appropriate room events/state.
 - [x] PRD FR-23/NFR-8, initiative R7, architecture conventions and learning-progress epic: record automatic visibility and edit preservation; add reciprocal platform-guarantee links.
 - [x] Candidate SQL and catalog assertions: add only missing progress tables and sessions (learner-join dependency) to existing publication, preserve unrelated members, fail clearly on unmet preconditions. Record live/MCP validation as blocked until available.
-- [ ] Dated release record: artifact hashes, exact local checks/review, staging/production criteria, owner and concrete resumption steps; reviewed draft PR targeting no_sign_up.
+- [x] Dated release record: artifact hashes, exact local checks/review, staging/production criteria, owner and concrete resumption steps; reviewed draft PR targeting no_sign_up.
 
 **Acceptance Criteria:**
 - Given committed progress in phishing or cyberbullying, when either eligible viewer stays in the room, then progress and evidence appear without manual refresh, targeting two seconds from commit under normal connectivity.
@@ -105,3 +105,7 @@ Grounding: P2/P4/P5 support live visibility; P6 and P7/R7 favor reusing Realtime
 - Read observed evidence and the concrete release blocker.
   [documentation_update_record_v2026_11_12_learning_target_auto_refresh.md:1](../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_11_12_learning_target_auto_refresh.md#L1)
 
+
+## Delivery status
+
+Draft PR [#76](https://github.com/linmou/PhishingTrainingProgram/pull/76), issue [#75](https://github.com/linmou/PhishingTrainingProgram/issues/75). Reviewed implementation `b4e5dcb`; 1,602 tests and production build pass. All three independent follow-up reviews found no actionable local blocker. Status remains in-review: migration validation and staging/production acceptance are blocked on Supabase MCP, with owner and concrete resumption steps in the dated release record.

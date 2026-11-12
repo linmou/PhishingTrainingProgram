@@ -3,6 +3,8 @@
 Status: **frontend implemented and locally verified; pre-PR review passed; local setup blocked for migration and hosted acceptance**. This record does not certify a release.
 
 - Issue: https://github.com/linmou/PhishingTrainingProgram/issues/75
+- Draft PR: https://github.com/linmou/PhishingTrainingProgram/pull/76
+- Reviewed implementation commit: `b4e5dcb` (runtime artifact hashes in the candidate manifest).
 - Batch: `learning-target-auto-refresh-2026-11-12`.
 - Release and repair owner: **Codex, learning-target-auto-refresh workspace**, `/Users/admin/orca/workspaces/PhishingTrainingProgram/learning-target-auto-refresh`.
 - Base: `878ed465823959517bb68398b05ee08b90958b24`; topic: `linmou/learning-target-auto-refresh`; integration target: `no_sign_up`.
