@@ -2,6 +2,8 @@
 // Responsibility: verify useChecklist.ts progress and saved checklist state across creation, trusted edits, and failures.
 
 import { act, renderHook, waitFor } from '@testing-library/react';
+jest.mock('../../hooks/useRealtimeInvalidation', () => ({ useRealtimeInvalidation: () => null }));
+
 import { useChecklist } from '../useChecklist';
 import { RoomFeaturesService } from '../../services/roomFeaturesService';
 import { getAIConfig } from '../../services/aiService';

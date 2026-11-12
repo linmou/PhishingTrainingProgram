@@ -10,6 +10,8 @@ import { getAIConfig } from '../services/aiService';
 import { assessChecklistGenerationContext, ChecklistGenerationContext } from '../services/checklistGenerationContext';
 import { useOptionalAuth } from '../contexts/AuthContext';
 import { transferAssessmentService } from '../services/transferAssessmentService';
+import { useRealtimeInvalidation } from './useRealtimeInvalidation';
+import { boundedRead } from './boundedRead';
 
 export interface GenerationModalState {
   mode: 'no_ai_config' | 'empty_system_prompt';
@@ -116,6 +118,7 @@ export interface UseChecklistReturn {
   priorChecklist: SessionChecklist | null;
   loading: boolean;
   error: string | null;
+  liveError: string | null;
   progress: ChecklistProgress | null;
   
   // New modal states
@@ -124,7 +127,7 @@ export interface UseChecklistReturn {
 
   // Actions
   generateChecklist: (templateName: string) => Promise<void>;
-  updateItem: (itemId: string, updates: Partial<ChecklistItem>) => Promise<void>;
+  updateItem: (itemId: string, updates: Partial<ChecklistItem>) => Promise<boolean>;
   refreshChecklist: () => Promise<void>;
   deleteChecklist: () => Promise<void>;
   
@@ -154,16 +157,38 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
   const [priorChecklist, setPriorChecklist] = useState<SessionChecklist | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [readError, setReadError] = useState<string | null>(null);
   const [progress, setProgress] = useState<ChecklistProgress | null>(null);
   
   // New modal states
   const [showGenerationModal, setShowGenerationModal] = useState<GenerationModalState | null>(null);
   const [showManualInput, setShowManualInput] = useState(false);
-  const transferScope = `${roomId}:${transferStudentId}:${transferEnabled}:${user?.current_role}`;
+  const transferScope = JSON.stringify([roomId, transferStudentId, transferEnabled, user?.id, user?.current_role]);
+  const [dataScope, setDataScope] = useState(transferScope);
+  const loadedScope = useRef<string | null>(null);
+  const readRequest = useRef<{ scope: string; pending: boolean; promise: Promise<void>; controller: AbortController } | null>(null);
   const currentTransferScope = useRef(transferScope);
   currentTransferScope.current = transferScope;
   const transferPromotionInFlight = useRef<{ scope: string } | null>(null);
-  useEffect(() => () => { transferPromotionInFlight.current = null; }, [transferScope]);
+  useEffect(() => {
+    setDataScope(transferScope);
+    const localDraft = transferEnabled && user?.current_role === 'tutor' ? readLearningTargetDraft(roomId) : null;
+    const scopedDraft = localDraft ? draftChecklist(roomId, localDraft) : null;
+    setChecklist(scopedDraft);
+    setPriorChecklist(null);
+    setProgress(scopedDraft ? progressForChecklist(scopedDraft) : null);
+    setError(null);
+    setReadError(null);
+    setShowManualInput(false);
+    setShowGenerationModal(null);
+    loadedScope.current = scopedDraft ? transferScope : null;
+    readRequest.current = null;
+    return () => {
+      transferPromotionInFlight.current = null;
+      readRequest.current?.controller.abort();
+      readRequest.current = null;
+    };
+  }, [transferScope, roomId, transferEnabled, user?.current_role]);
 
   const syncTransferDraft = useCallback(async () => {
     if (!transferEnabled || !transferStudentId || user?.current_role !== 'tutor') return;
@@ -190,10 +215,12 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
       const saved = await RoomFeaturesService.checklist.initializeTransferChecklistForStudent(roomId, transferStudentId, items);
       if (!isCurrentRequest()) return;
       window.localStorage.removeItem(draftStorageKey(roomId));
+      loadedScope.current = transferScope;
       setChecklist(saved);
       setProgress(progressForChecklist(saved));
     } catch (err) {
       if (!isCurrentRequest()) return;
+      loadedScope.current = transferScope;
       const message = err instanceof Error ? err.message : 'Failed to sync learning targets';
       const localChecklist = draftChecklist(roomId, draft);
       setChecklist(localChecklist);
@@ -466,16 +493,87 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
     }
   }, [roomId, saveTransferTargets, transferEnabled]);
 
+  // Reads are serialized per viewer scope. Notifications never promote drafts or judge messages.
+  const readChecklist = useCallback(async () => {
+    if (!roomId || transferPromotionInFlight.current?.scope === transferScope) return;
+    const existing = readRequest.current;
+    if (existing?.scope === transferScope) {
+      existing.pending = true;
+      return existing.promise;
+    }
+    const request = { scope: transferScope, pending: false, promise: Promise.resolve(), controller: new AbortController() };
+    readRequest.current = request;
+    const current = () => currentTransferScope.current === transferScope && readRequest.current === request;
+    request.promise = (async () => {
+      do {
+        request.pending = false;
+        if (loadedScope.current !== transferScope) setLoading(true);
+        const localDraft = transferEnabled && user?.current_role === 'tutor' ? readLearningTargetDraft(roomId) : null;
+        setReadError(null);
+        try {
+          const api = RoomFeaturesService.checklist;
+          let saved: SessionChecklist | null = null;
+          try {
+            saved = await boundedRead(user?.current_role === 'student'
+              ? api.getChecklistForStudent?.(roomId, user.id) ?? null
+              : api.getActiveTransferChecklistForRoom?.(roomId) ?? null, request.controller.signal);
+          } catch (err) {
+            if (!localDraft || !isOwnerlessTransferError(err)) throw err;
+          }
+          if (!current()) return;
+          const draft = transferEnabled && user?.current_role === 'tutor' ? readLearningTargetDraft(roomId) : null;
+          if (draft) saved = draftChecklist(roomId, draft);
+          else if (!saved) saved = await boundedRead(api.read(roomId), request.controller.signal);
+          if (!current()) return;
+          const wrongRoom = saved && saved.room_id !== roomId;
+          const wrongOwner = saved?.progress_policy_version === 'transfer_v1' && !saved.id.startsWith('draft-') && (
+            !saved.student_id || (user?.current_role === 'student' && saved.student_id !== user.id)
+            || (transferStudentId && saved.student_id !== transferStudentId)
+          );
+          if (wrongRoom || wrongOwner) {
+            setChecklist(null);
+            setProgress(null);
+            setReadError(wrongRoom ? 'Server returned progress for a different room.'
+              : saved?.student_id ? 'Server returned transfer progress for a different learner.'
+                : 'Server returned transfer progress without a valid learner owner.');
+            return;
+          }
+          setChecklist(saved);
+          setPriorChecklist(null);
+          setProgress(saved ? progressForChecklist(saved) : null);
+        } catch (err) {
+          if (current()) setReadError(err instanceof Error ? err.message : 'Failed to refresh checklist');
+        } finally {
+          if (current()) {
+            loadedScope.current = transferScope;
+            setLoading(false);
+          }
+        }
+      } while (current() && request.pending);
+    })();
+    try { await request.promise; }
+    finally { if (current()) readRequest.current = null; }
+  }, [roomId, user?.id, user?.current_role, transferEnabled, transferStudentId, transferScope]);
+
+  const refreshChecklist = useCallback(async () => {
+    if (transferPromotionInFlight.current?.scope === transferScope) return;
+    if (transferEnabled && transferStudentId && user?.current_role === 'tutor' && readLearningTargetDraft(roomId)) {
+      await syncTransferDraft();
+    } else {
+      await readChecklist();
+    }
+  }, [roomId, transferScope, transferEnabled, transferStudentId, user?.current_role, syncTransferDraft, readChecklist]);
+
   // Update checklist item
   const updateItem = useCallback(async (itemId: string, updates: Partial<ChecklistItem>) => {
-    if (!roomId) return;
+    if (!roomId) return false;
 
     if (checklist?.id.startsWith('draft-')) {
       const currentDraft = readLearningTargetDraft(roomId);
-      if (!currentDraft) return;
+      if (!currentDraft) return false;
       const allItems = [...currentDraft.detectionAreas, ...currentDraft.verificationSteps];
       const draftIndex = allItems.findIndex((text, index) => `draft-${roomId}-${index < currentDraft.detectionAreas.length ? 'detection_area' : 'verification_step'}-${index < currentDraft.detectionAreas.length ? index : index - currentDraft.detectionAreas.length}` === itemId);
-      if (draftIndex < 0) return;
+      if (draftIndex < 0) return false;
       const nextDraft = {
         detectionAreas: [...currentDraft.detectionAreas],
         verificationSteps: [...currentDraft.verificationSteps],
@@ -495,9 +593,11 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
       }
       window.localStorage.setItem(draftStorageKey(roomId), JSON.stringify(nextDraft));
       setChecklist(draftChecklist(roomId, nextDraft));
-      return;
+      setError(null);
+      return true;
     }
 
+    const currentScope = () => currentTransferScope.current === transferScope;
     const trustedTransferEdit = checklist?.progress_policy_version === 'transfer_v1'
       && TRANSFER_PROGRESS_FIELDS.some((field) => field in updates);
     setLoading(!trustedTransferEdit);
@@ -520,6 +620,7 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
                   : 'edit_item',
           updates: updates as Record<string, unknown>,
         });
+        if (!currentScope()) return false;
         const savedProgress = {
           status: saved.status as ChecklistItem['status'],
           understanding_level: saved.understanding_level as ChecklistItem['understanding_level'],
@@ -543,115 +644,30 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
       }
       
       // Refresh checklist to get updated data
+      if (!currentScope()) return false;
       if (!trustedTransferEdit) await refreshChecklist();
+      return true;
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update item';
-      setError(errorMessage);
+      if (currentScope()) setError(errorMessage);
       console.error('Failed to update checklist item:', err);
+      return false;
     } finally {
-      setLoading(false);
+      if (currentScope()) setLoading(false);
     }
-  }, [roomId, checklist]);
+  }, [roomId, checklist, transferScope, refreshChecklist]);
 
-  // Refresh checklist data - reload existing data without clearing
-  const refreshChecklist = useCallback(async () => {
-    if (!roomId) return;
-    if (transferPromotionInFlight.current?.scope === transferScope) return;
-    if (transferEnabled && transferStudentId && user?.current_role === 'tutor' && readLearningTargetDraft(roomId)) {
-      await syncTransferDraft();
-      return;
-    }
-
-    console.log('🔄 Refreshing checklist data for room:', roomId);
-    setLoading(true);
-    const localDraft = transferEnabled && user?.current_role === 'tutor'
-      ? readLearningTargetDraft(roomId)
-      : null;
-    if (!localDraft) setError(null);
-
-    try {
-      const checklistApi = RoomFeaturesService.checklist as typeof RoomFeaturesService.checklist & {
-        getChecklistForStudent?: (id: string, studentId: string) => Promise<SessionChecklist | null>;
-        getActiveTransferChecklistForRoom?: (id: string) => Promise<SessionChecklist | null>;
-      };
-      let transferChecklist: SessionChecklist | null = null;
-      try {
-        transferChecklist = await (user?.current_role === 'student'
-          ? checklistApi.getChecklistForStudent?.(roomId, user.id) ?? null
-          : checklistApi.getActiveTransferChecklistForRoom?.(roomId) ?? null);
-      } catch (transferError) {
-        const pendingDraft = localDraft || (transferEnabled && user?.current_role === 'tutor'
-          ? readLearningTargetDraft(roomId)
-          : null);
-        if (pendingDraft && user?.current_role === 'tutor' && isOwnerlessTransferError(transferError)) {
-          const localChecklist = draftChecklist(roomId, pendingDraft);
-          setChecklist(localChecklist);
-          setProgress(progressForChecklist(localChecklist));
-          return;
-        }
-        throw transferError;
-      }
-      const pendingDraft = transferEnabled && user?.current_role === 'tutor'
-        ? readLearningTargetDraft(roomId)
-        : null;
-      if (pendingDraft) {
-        const localChecklist = draftChecklist(roomId, pendingDraft);
-        setChecklist(localChecklist);
-        setProgress(progressForChecklist(localChecklist));
-        return;
-      }
-      const legacyChecklist = transferChecklist ? null : await RoomFeaturesService.checklist.read(roomId);
-      setPriorChecklist(null);
-      const updatedChecklist = transferChecklist || legacyChecklist || (localDraft ? draftChecklist(roomId, localDraft) : null);
-      if (updatedChecklist?.progress_policy_version === 'transfer_v1' && (
-        !updatedChecklist.student_id ||
-        (user?.current_role === 'student' && updatedChecklist.student_id !== user.id)
-      )) {
-        if (localDraft && user?.current_role === 'tutor') {
-          const localChecklist = draftChecklist(roomId, localDraft);
-          setChecklist(localChecklist);
-          setProgress(progressForChecklist(localChecklist));
-          setError(null);
-          return;
-        }
-        setChecklist(null);
-        setProgress(null);
-        setError(user?.current_role === 'student' && updatedChecklist.student_id !== user.id
-          ? 'Server returned transfer progress for a different learner.'
-          : 'Server returned transfer progress without a valid learner owner.');
-        return;
-      }
-      
-      console.log('📊 Checklist refresh result:', {
-        found: !!updatedChecklist,
-        detectionAreas: updatedChecklist?.detection_areas.length || 0,
-        verificationSteps: updatedChecklist?.verification_steps.length || 0
-      });
-      
-      setChecklist(updatedChecklist);
-      
-      // Update progress only if checklist exists
-      if (updatedChecklist) {
-        setProgress(progressForChecklist(updatedChecklist));
-        
-        console.log('✅ Checklist refreshed successfully');
-      } else {
-        setProgress(null);
-        console.log('ℹ️ No checklist found for room after refresh - this is normal if no checklist exists yet');
-      }
-      
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to refresh checklist';
-      setError(errorMessage);
-      console.error('❌ Failed to refresh checklist:', err);
-      
-      // Don't clear existing checklist on refresh error - keep what we have
-      console.log('🔒 Preserving existing checklist data due to refresh error');
-    } finally {
-      setLoading(false);
-    }
-  }, [roomId, user, transferEnabled, transferStudentId, syncTransferDraft, transferScope]);
+  const visibleChecklist = dataScope === transferScope ? checklist : null;
+  const persistedChecklist = visibleChecklist && !visibleChecklist.id.startsWith('draft-') ? visibleChecklist : null;
+  const liveError = useRealtimeInvalidation(transferScope, roomId ? [
+    { table: 'session_checklists', filter: `room_id=eq.${roomId}` },
+    ...(persistedChecklist ? [
+      { table: 'checklist_items', filter: `checklist_id=eq.${persistedChecklist.id}` },
+      ...[...persistedChecklist.detection_areas, ...persistedChecklist.verification_steps]
+        .map(item => item.id).sort().map(id => ({ table: 'coverage_evidence', filter: `item_id=eq.${id}` })),
+    ] : []),
+  ] : [], readChecklist);
 
   useEffect(() => {
     void syncTransferDraft();
@@ -698,17 +714,18 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
   // Load existing checklist on mount
   useEffect(() => {
     if (roomId) {
-      refreshChecklist();
+      void readChecklist();
     }
-  }, [roomId, refreshChecklist]);
+  }, [roomId, readChecklist]);
 
   return {
     // State
-    checklist,
-    priorChecklist,
-    loading,
-    error,
-    progress,
+    checklist: visibleChecklist,
+    priorChecklist: dataScope === transferScope ? priorChecklist : null,
+    loading: dataScope !== transferScope || loading,
+    error: dataScope === transferScope ? [error, readError].filter(Boolean).join(' ') || null : null,
+    liveError,
+    progress: dataScope === transferScope ? progress : null,
     
     // New modal states
     showGenerationModal,

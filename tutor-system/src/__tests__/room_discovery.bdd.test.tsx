@@ -29,6 +29,7 @@ jest.mock('../services/supabase', () => ({
 }));
 
 jest.mock('../contexts/AuthContext', () => ({
+  useOptionalAuth: () => ({ user: mockAuthUser, loading: false }),
   useAuth: () => ({ user: mockAuthUser, loading: false, signOut: jest.fn(), setUserRole: jest.fn() }),
   AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>
 }));

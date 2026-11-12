@@ -46,7 +46,7 @@ Test paths are from the repository root.
 - Touch point: identity, joining and the learner seat follow these guarantees — owner: epic-identity-and-access
 - Touch point: room creation and deletion follow these guarantees — owner: epic-rooms-and-templates
 - Touch point: messages and ratings follow these guarantees — owner: epic-conversation
-- Touch point: judging and progress follow server authority and repeatable requests — owner: epic-learning-progress
+- Touch point: judging and progress follow server authority and repeatable requests; live progress reconciles on reconnect and warns visibly on failed refresh/feed without clearing valid data (FR-23, NFR-7/8; #75) — owner: epic-learning-progress
 - Touch point: owner-only controls and Guard follow these guarantees — owner: epic-supervision-and-guard
 - Touch point: AI calls follow the credential and version-handshake rules — owner: epic-ai-suggestions
 - Touch point: grading follows server authority and repeatable requests — owner: epic-transfer-assessment
