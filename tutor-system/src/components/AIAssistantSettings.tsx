@@ -76,7 +76,7 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
     const [confidenceBuilding, setConfidenceBuilding] = useState<'low' | 'high'>('high');
 
     const getEffectiveScenarioContent = useCallback(() => {
-        const detectionAreas = customDetectionAreas.split('\n').filter(area => area.trim());
+        const detectionAreas = customDetectionAreas.split(/\r?\n[\t ]*\r?\n/).filter(area => area.trim());
         const verificationSteps = customVerificationSteps.split('\n').filter(step => step.trim());
         const scenarioData = selectedScenario ? SCENARIO_TEMPLATES[selectedScenario] : null;
 
@@ -94,7 +94,7 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
         }
 
         const template = SCENARIO_TEMPLATES[scenario];
-        setCustomDetectionAreas(template.detection_areas.join('\n'));
+        setCustomDetectionAreas(template.detection_areas.join('\n\n'));
         setCustomVerificationSteps(template.verification_steps.join('\n'));
     };
 
@@ -114,7 +114,7 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
             setValidationFrequency(promptConfig.emotional_parameters.validation_frequency);
             setMistakeNormalization(promptConfig.emotional_parameters.mistake_normalization);
             setConfidenceBuilding(promptConfig.emotional_parameters.confidence_building);
-            setCustomDetectionAreas(promptConfig.detection_areas.join('\n'));
+            setCustomDetectionAreas(promptConfig.detection_areas.join('\n\n'));
             setCustomVerificationSteps(promptConfig.verification_steps.join('\n'));
             setSelectedScenario(getScenarioFromPromptConfig(promptConfig));
         };
@@ -487,7 +487,7 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
                                     <div className="ai-setting-group">
                                         <label className="ai-setting-label">
                                             Custom Detection Areas
-                                            <span className="ai-setting-optional">(One per line, optional)</span>
+                                            <span className="ai-setting-optional">(Separate targets with a blank line, optional)</span>
                                         </label>
                                         <textarea
                                             value={customDetectionAreas}

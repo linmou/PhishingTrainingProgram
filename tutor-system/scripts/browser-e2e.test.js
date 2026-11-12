@@ -34,7 +34,7 @@ test('template settings readiness rejects unloaded, wrong, partial and disabled 
   const browser = await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage();
-    const expected = { detection_areas: ['One', 'Two', 'Three', 'Four', 'Five'], verification_steps: [] };
+    const expected = { detection_areas: ['One\nExplanation and action', 'Two', 'Three', 'Four', 'Five'], verification_steps: [] };
     let predicate;
     await waitForTemplateSettings({ waitForFunction: async (check, config, options) => {
       predicate = check;
@@ -49,9 +49,9 @@ test('template settings readiness rejects unloaded, wrong, partial and disabled 
     const areas = page.getByPlaceholder('Red flags to watch for (optional - will use template if empty)', { exact: true });
     await areas.fill(['One', 'Two', 'Three', 'Four', 'Wrong'].join('\n'));
     assert.equal(await ready(), false);
-    await areas.fill(expected.detection_areas.slice(0, 4).join('\n'));
+    await areas.fill(expected.detection_areas.slice(0, 4).join('\n\n'));
     assert.equal(await ready(), false);
-    await areas.fill(expected.detection_areas.join('\n'));
+    await areas.fill(expected.detection_areas.join('\n\n'));
     const steps = page.getByPlaceholder('Steps students should take to verify content (optional)', { exact: true });
     await steps.fill('Unexpected');
     assert.equal(await ready(), false);
