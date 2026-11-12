@@ -1,14 +1,14 @@
 // #!/usr/bin/env node
 // Covers checklistService.ts and roomExportBuilder.ts: all five learner targets and durable evidence survive reading/export.
 import { ChecklistService } from '../checklistService';
-import { CYBERBULLYING_LEARNING_TARGETS } from '../detectionTemplates';
+import { CYBERBULLYING_LEARNING_TARGETS, CYBERBULLYING_TARGET_VERSION } from '../detectionTemplates';
 import { supabase } from '../supabase';
 import { buildRoomExportData, buildRoomTextExport } from '../../contexts/roomExportBuilder';
 import { transferRoom } from '../../test-support/transferRoomFixtures';
 
 jest.mock('../supabase', () => ({ supabase: { from: jest.fn() } }));
 
-test('reads and exports understanding plus behavior targets with their learner and evidence identities', async () => {
+test.each(['cyberbullying_v1', CYBERBULLYING_TARGET_VERSION])('reads and exports %s targets with their learner, order and evidence identities', async targetVersion => {
   const now = '2026-10-21T12:00:00Z';
   const evidence = { id: 'evidence-1', evidence_text: 'Saved learner evidence', analysis: 'Recorded analysis',
     confidence_score: 90, detection_method: 'ai_analysis', timestamp: now, message_id: 'message-1' };
@@ -19,9 +19,11 @@ test('reads and exports understanding plus behavior targets with their learner a
     coverage_evidence: index === 1 ? [evidence] : [], created_at: now, updated_at: now,
   }));
   const checklist = { id: 'checklist-1', room_id: transferRoom.id, student_id: 'learner-1',
-    target_version: 'cyberbullying_v1', template_name: 'Cyberbullying', session_start: now,
+    target_version: targetVersion, template_name: 'Cyberbullying', session_start: now,
     total_items: 5, completed_items: 1, completion_percentage: 20, created_at: now, updated_at: now, is_active: true };
   const queries: any[] = [];
+  // Identical timestamps cannot order the revised targets; simulate arbitrary DB order.
+  if (targetVersion === CYBERBULLYING_TARGET_VERSION) items.reverse();
   (supabase.from as jest.Mock).mockImplementation(table => {
     const query: any = { select: jest.fn(() => query), eq: jest.fn(() => query),
       maybeSingle: jest.fn(async () => ({ data: checklist, error: null })),
@@ -38,9 +40,9 @@ test('reads and exports understanding plus behavior targets with their learner a
     messageFeedbackStats: {}, feedbackSummary: null, aiInteractions: [], userRole: 'student' as const,
     userId: 'learner-1', learningProgress: progress };
   const exported = JSON.parse(JSON.stringify(buildRoomExportData(args)));
-  expect(exported.learning_progress).toMatchObject({ student_id: 'learner-1', target_version: 'cyberbullying_v1' });
+  expect(exported.learning_progress).toMatchObject({ student_id: 'learner-1', target_version: targetVersion });
   expect(exported.learning_progress.verification_steps.map((item: any) => item.target_key))
     .toEqual(CYBERBULLYING_LEARNING_TARGETS.slice(1).map(target => target.key));
   expect(buildRoomTextExport(args)).toContain('Evidence [message-1]: Saved learner evidence');
-  expect(buildRoomTextExport(args)).toContain('targets: cyberbullying_v1');
+  expect(buildRoomTextExport(args)).toContain(`targets: ${targetVersion}`);
 });

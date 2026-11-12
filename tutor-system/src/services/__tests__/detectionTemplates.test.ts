@@ -6,19 +6,19 @@ import { SCENARIO_TEMPLATES } from '../detectionTemplates';
 
 describe('Detection Templates', () => {
   it.each([
-    'Nintendo Switch Deal ($19.99)',
-    'iTunes Gift Card Survey ($500)',
-    'Account Security Alert',
-    'Location Sharing Risks',
-    'Movie Meetup Social Engineering',
-    'Contact Information Exposure',
-    'General Scam Indicators'
-  ] as const)('provides five unique nonempty learning targets for %s', (name) => {
+    ['Nintendo Switch Deal ($19.99)', 5],
+    ['iTunes Gift Card Survey ($500)', 5],
+    ['Account Security Alert', 5],
+    ['Location Sharing Risks', 4],
+    ['Movie Meetup Social Engineering', 4],
+    ['Contact Information Exposure', 5],
+    ['General Scam Indicators', 5]
+  ] as const)('provides the document-sized inventory for %s', (name, count) => {
     const scenario = SCENARIO_TEMPLATES[name];
-    expect(scenario.detection_areas).toHaveLength(5);
+    expect(scenario.detection_areas).toHaveLength(count);
     expect(scenario.verification_steps).toEqual([]);
     expect(scenario.detection_areas.every((target) => target.trim().length > 0)).toBe(true);
-    expect(new Set(scenario.detection_areas.map((target) => target.trim().toLowerCase())).size).toBe(5);
+    expect(new Set(scenario.detection_areas.map((target) => target.trim().toLowerCase())).size).toBe(count);
   });
 
   it('keeps home-location and future-meetup inventories distinct', () => {
