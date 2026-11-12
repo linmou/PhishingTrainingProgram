@@ -8,11 +8,20 @@ import { transferRoom } from '../../test-support/transferRoomFixtures';
 
 jest.mock('../supabase', () => ({ supabase: { from: jest.fn() } }));
 
+const historicalTargets = [
+  { key: 'recognize_cyberbullying_impact', description: 'Recognize harmful online behavior and explain its impact on the person targeted.' },
+  { key: 'show_empathy_support', description: 'Acknowledge the targeted person’s feelings and offer a concrete supportive response.' },
+  { key: 'stand_up_constructively', description: 'Challenge bullying with a calm, respectful response that avoids escalating the conflict.' },
+  { key: 'avoid_reinforcing_bullying', description: 'Choose responses that avoid joining in, amplifying, or rewarding harmful behavior.' },
+  { key: 'choose_safe_next_step', description: 'Choose an appropriate next step such as supporting the person privately, saving evidence, reporting, blocking, or seeking trusted help.' },
+];
+
 test.each(['cyberbullying_v1', CYBERBULLYING_TARGET_VERSION])('reads and exports %s targets with their learner, order and evidence identities', async targetVersion => {
   const now = '2026-10-21T12:00:00Z';
   const evidence = { id: 'evidence-1', evidence_text: 'Saved learner evidence', analysis: 'Recorded analysis',
     confidence_score: 90, detection_method: 'ai_analysis', timestamp: now, message_id: 'message-1' };
-  const items = CYBERBULLYING_LEARNING_TARGETS.map((target, index) => ({
+  const targets = targetVersion === 'cyberbullying_v1' ? historicalTargets : CYBERBULLYING_LEARNING_TARGETS;
+  const items = targets.map((target, index) => ({
     id: 'item-' + index, target_key: target.key, area_text: target.description,
     item_type: index === 0 ? 'understanding' : 'behavior', priority: 'important',
     status: index === 1 ? 'covered' : 'pending', understanding_level: index === 1 ? 'good' : 'none',
@@ -35,6 +44,8 @@ test.each(['cyberbullying_v1', CYBERBULLYING_TARGET_VERSION])('reads and exports
   expect(queries[0].eq).toHaveBeenCalledWith('student_id', 'learner-1');
   expect(progress?.detection_areas).toHaveLength(1);
   expect(progress?.verification_steps).toHaveLength(4);
+  expect([...(progress?.detection_areas || []), ...(progress?.verification_steps || [])].map(item => item.area_text))
+    .toEqual(targets.map(target => target.description));
   expect(progress?.verification_steps[0].coverage_evidence[0].message_id).toBe('message-1');
   const args = { room: { ...transferRoom, practice_type: 'cyberbullying' as const }, messages: [],
     messageFeedbackStats: {}, feedbackSummary: null, aiInteractions: [], userRole: 'student' as const,
@@ -42,7 +53,7 @@ test.each(['cyberbullying_v1', CYBERBULLYING_TARGET_VERSION])('reads and exports
   const exported = JSON.parse(JSON.stringify(buildRoomExportData(args)));
   expect(exported.learning_progress).toMatchObject({ student_id: 'learner-1', target_version: targetVersion });
   expect(exported.learning_progress.verification_steps.map((item: any) => item.target_key))
-    .toEqual(CYBERBULLYING_LEARNING_TARGETS.slice(1).map(target => target.key));
+    .toEqual(targets.slice(1).map(target => target.key));
   expect(buildRoomTextExport(args)).toContain('Evidence [message-1]: Saved learner evidence');
   expect(buildRoomTextExport(args)).toContain(`targets: ${targetVersion}`);
 });

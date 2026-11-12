@@ -5,6 +5,10 @@ Intent: record the exact source, implementation, verification and remaining rele
 Updated: 2026-11-12. Baseline commit: `33dede1`. Branch: `feat/issue-73-learning-targets`.
 Issue: https://github.com/linmou/PhishingTrainingProgram/issues/73
 Release owner and repair owner: root Codex agent for issue #73.
+Draft PR: https://github.com/linmou/PhishingTrainingProgram/pull/74
+Implementation commit: `330995c`.
+Migration SHA-256: `2ac977b6c92b91acd05c6fa8c87e49c940a57a97845f70c071ac40789e2ae4ea`.
+Catalog SHA-256: `e7acebf885b84566195db1dea195fd97eb9f1d230673659b1fd6949db733ab73`.
 
 ## Source and behavior
 
@@ -25,6 +29,8 @@ New cyberbullying checklists use `cyberbullying_doc_20261112`. Existing checklis
 - Combined SQL integration passed on a disposable clone of `exit_baseline_20261031_2354`: real room joining, initialization, analysis application, evidence preservation, idempotence, version protection and anonymous static catalog reads. Six explicitly synthetic legacy prompt fixtures verify exact catalog installation, preservation of every unrelated template column/configuration field and prompt prefix/suffix, idempotence including timestamps, and atomic rollback of both catalog and earlier template updates when the final template has a malformed boundary. Evidence lease: `/Users/admin/.transfer-assessment-pg17/runs/scenario-dLCfqG/lease.json`. This is diagnostic evidence, not fresh hosted-baseline parity.
 
 SQL verification command (repository root): `rtk proxy node scripts/database/disposable-database.js --template exit_baseline_20261031_2354 -- /opt/homebrew/opt/postgresql@17/bin/psql -X -v ON_ERROR_STOP=1 -f tutor-system/supabase/tests/document_learning_targets.sql` (exit 0).
+
+Independent Codex reviewer `targets_review` found no blocking defect in the implementation and independently verified all 33 DOCX blocks and assessment-api consumption of persisted target text. Its nonblocking suggestion to use true historical text/order in the frontend legacy-version test was addressed; both version cases passed afterward. GitHub CI is pending; the initial isolation-harness job passed.
 
 ## Hosted release status and resumption
 
