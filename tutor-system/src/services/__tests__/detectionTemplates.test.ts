@@ -9,7 +9,7 @@ import { SCENARIO_TEMPLATES } from '../detectionTemplates';
 describe('Detection Templates', () => {
   it('keeps all six migration inventories identical to the frontend targets', () => {
     const migration = readFileSync(resolve(__dirname,
-      '../../../supabase/migrations/20261112000000_document_learning_targets.sql'), 'utf8');
+      '../../../supabase/archived_migrations/20261112000000_document_learning_targets.sql'), 'utf8');
     const entries: { scenario: keyof typeof SCENARIO_TEMPLATES; points: string[] }[] =
       JSON.parse(migration.split('$catalog$')[1]);
     expect(entries.map(entry => entry.scenario).sort()).toEqual(

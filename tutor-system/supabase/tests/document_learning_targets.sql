@@ -4,7 +4,7 @@
 -- Local disposable PostgreSQL reads the same checkout; run from repository root.
 \set repository_root `rtk proxy pwd`
 CREATE TEMP TABLE document_target_sources AS
-SELECT replace(replace(pg_read_file(:'repository_root'||'/tutor-system/supabase/migrations/20261112000000_document_learning_targets.sql'),
+SELECT replace(replace(pg_read_file(:'repository_root'||'/tutor-system/supabase/archived_migrations/20261112000000_document_learning_targets.sql'),
     E'\nBEGIN;\n',E'\n'),E'\nCOMMIT;\n',E'\n') AS migration_body;
 CREATE TEMP TABLE document_template_names(name text,scenario text);
 INSERT INTO document_template_names VALUES
@@ -76,7 +76,7 @@ BEGIN
 END;
 $test$;
 
-\ir ../migrations/20261112000000_document_learning_targets.sql
+\ir ../archived_migrations/20261112000000_document_learning_targets.sql
 
 BEGIN;
 DO $test$
