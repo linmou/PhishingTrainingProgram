@@ -43,18 +43,20 @@ describe('AIAssistantSettings', () => {
         const scenario = seed.ai_config_template.scenario;
         expect(screen.getByDisplayValue(scenario)).toBeInTheDocument();
         const targets = screen.getByPlaceholderText('Red flags to watch for (optional - will use template if empty)');
-        expect(targets).toHaveValue(aiConfig.prompt_config.detection_areas.join('\n'));
-        fireEvent.change(targets, { target: { value: 'My edited target' } });
+        expect(targets).toHaveValue(aiConfig.prompt_config.detection_areas.join('\n\n'));
+        const editedTargets = ['My edited target\nIts explanation and action', 'Another target'];
+        fireEvent.change(targets, { target: { value: editedTargets.join('\n\n') } });
         fireEvent.click(screen.getByText('Save Settings'));
         await waitFor(() => expect(toggleAIAssistant).toHaveBeenCalledTimes(1));
         const saved = toggleAIAssistant.mock.calls[0][1];
         expect(saved.prompt_config.scenario).toBe(scenario);
-        expect(saved.prompt_config.detection_areas).toEqual(['My edited target']);
+        expect(saved.prompt_config.detection_areas).toEqual(editedTargets);
         view.unmount();
         (useRoom as jest.Mock).mockReturnValue({ ...roomContext, aiConfig: saved });
         render(<AIAssistantSettings onClose={jest.fn()} />);
         expect(screen.getByDisplayValue(scenario)).toBeInTheDocument();
-        expect(screen.getByDisplayValue('My edited target')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('Red flags to watch for (optional - will use template if empty)'))
+            .toHaveValue(editedTargets.join('\n\n'));
     });
 
     // Covers AIAssistantSettings.tsx: Custom is explicit even when its targets equal a registry entry.
@@ -70,7 +72,7 @@ describe('AIAssistantSettings', () => {
         const view = render(<AIAssistantSettings onClose={jest.fn()} />);
         fireEvent.change(screen.getByDisplayValue('Movie Meetup Social Engineering'), { target: { value: '' } });
         expect(screen.getByPlaceholderText('Red flags to watch for (optional - will use template if empty)'))
-            .toHaveValue(aiConfig.prompt_config.detection_areas.join('\n'));
+            .toHaveValue(aiConfig.prompt_config.detection_areas.join('\n\n'));
         fireEvent.click(screen.getByText('Save Settings'));
         await waitFor(() => expect(toggleAIAssistant).toHaveBeenCalledTimes(1));
         const saved = toggleAIAssistant.mock.calls[0][1];
@@ -180,7 +182,7 @@ describe('AIAssistantSettings', () => {
         await waitFor(() => {
             expect(
                 screen.getByPlaceholderText('Red flags to watch for (optional - will use template if empty)')
-            ).toHaveValue('Suspicious links\nSender spoofing');
+            ).toHaveValue('Suspicious links\n\nSender spoofing');
             expect(
                 screen.getByPlaceholderText('Steps students should take to verify content (optional)')
             ).toHaveValue('Check sender\nHover over links');

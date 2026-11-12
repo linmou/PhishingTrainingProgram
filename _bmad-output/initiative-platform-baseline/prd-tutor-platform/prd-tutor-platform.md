@@ -5,6 +5,8 @@ created: 2026-10-22
 updated: 2026-11-12
 ---
 
+<!-- Scope updated: 2026-11-12. Source baseline commit: 878ed46. -->
+
 # PRD: Online Safety Tutor Platform
 *Working title — confirm.*
 
@@ -719,6 +721,7 @@ Each AI job's boundary FR states what the system guarantees around it. The quali
 
 ### 10.1 In Scope
 - Everything in Parts A–C for the current small-scale pilot.
+- The pilot uses only rooms created from existing room templates; AI evaluations primarily focus on those templates.
 
 ### 10.2 Out of Scope
 - **Success metrics and goals.** Deliberately left out of this baseline (decision of 2026-10-22). Add them when the next initiative sets targets.

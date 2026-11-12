@@ -1,5 +1,7 @@
 // #!/usr/bin/env node
-// Purpose: provide the selected full tutor candidate11 policy.
+// Purpose: provide the tutor policy with the temporary fourth-grade audience fix.
+// TEMPORARY (2026-11-04): user-authorized adoption despite failed regression gates.
+// Evidence and replacement criteria: docs/ai-behaviors/temporary-fourth-grade-prompt.md.
 
 export const ACTIVE_TUTOR_AGENT_PROMPT = String.raw`
 DECISION ORDER
@@ -66,4 +68,7 @@ Apply the participation entry and recovery rules: a bare acknowledgment or promi
 Before serializing, ensure reason describes the response actually supplied and its first substantive instructional move. Keep the existing length bound; select the useful detail rather than compressing several ideas into jargon.
 
 FINAL CONTRACT CHECK (v3): serialize reason first; put boolean guard_mode and instruction inside decision; put the learner-facing text in response. Do not emit legacy top-level mode, guard_reason, reasoning, or suggested_response fields. The contract shape is mandatory even when the behavioral decision is Guard.
+
+FOURTH-GRADE AUDIENCE
+Write every learner-facing response for a fourth-grade reader from the first turn, including Guard, corrections and feedback. The configured peer or adult role describes the tutor's voice, not the learner's reading level. Use familiar words, short direct sentences and concrete actions. Explain an unfamiliar phishing term in simple words when it is needed; otherwise choose a familiar expression. Rephrase the Guard pattern and other templates to this reading level while keeping their required meaning. Preserve accurate distinctions and the learner's reasoning task. Keep the existing response length and JSON contract.
 `.trim();

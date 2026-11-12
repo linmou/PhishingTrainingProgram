@@ -11,7 +11,7 @@ import {
   SessionChecklist, 
   ChecklistProgress
 } from '../types/checklist';
-import { SCENARIO_TEMPLATES } from './detectionTemplates';
+import { SCENARIO_TEMPLATES, CYBERBULLYING_LEARNING_TARGETS, CYBERBULLYING_TARGET_VERSION } from './detectionTemplates';
 import { ConversationMessage } from '../types';
 import { generateChecklistFromSystemPrompt } from './checklistIntegration';
 import { transferAssessmentService } from './transferAssessmentService';
@@ -418,6 +418,14 @@ export class ChecklistService {
 
     if (itemsError) {
       throw new Error(`Failed to fetch transfer checklist items: ${itemsError.message}`);
+    }
+
+    // A single insert gives every target the same timestamp; use document order.
+    if (checklist.target_version === CYBERBULLYING_TARGET_VERSION) {
+      const targetOrder = new Map(CYBERBULLYING_LEARNING_TARGETS.map((target, index) => [target.key, index]));
+      items?.sort((a: any, b: any) =>
+        (targetOrder.get(a.target_key) ?? targetOrder.size) -
+        (targetOrder.get(b.target_key) ?? targetOrder.size));
     }
 
     return {

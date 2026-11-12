@@ -1,8 +1,13 @@
 # aiService.ts - AI Assistant Functionality
 
-<!-- Intent: explain the supported AI request boundary and its configuration/context contracts. Updated: 2026-11-08. Request-ownership baseline commit: a69b836. -->
+<!-- Intent: explain the supported AI request boundary and its configuration/context contracts. Updated: 2026-11-12. Learning-target baseline commit: d8e1b1d. -->
 
 ## Assessment dialogue revision
+
+The default tutor prompt includes the same temporary fourth-grade audience paragraph
+previously deployed from `fix/temporary-grade4-tutor`, as explicitly requested on
+2026-11-12. Its [known evaluation limitations](ai-behaviors/temporary-fourth-grade-prompt.md)
+remain recorded. The learning-target release will deploy the integrated `no_sign_up` branch.
 
 Tutor requests use saved assessment question/options, learner answers and backend result messages in dialogue history. Remove the dynamic VERIFIED ASSESSMENT STATE section and prompt-only assessmentFeedback input. Trusted readiness still blocks provider calls for pending/missing results; common request instructions preserve recorded grading, retries, cancellation, required feedback and Guard. See [Assessment result messages](assessment-result-messages.md) for the governing publication and consumer rules. Implementation/release status is recorded there; older dated evidence below is retained.
 
@@ -318,19 +323,23 @@ does not change prompts, provider settings, pagination or assessment policy.
 import { SCENARIO_TEMPLATES, ScenarioTemplate } from './detectionTemplates';
 ```
 
-The six teaching scenarios and the generic `General Scam Indicators` fallback use five
-learning targets each in `detection_areas`.
+The six teaching scenarios use the complete document knowledge points from
+`src/services/detectionTemplates.ts` in `detection_areas`. Home-location and
+movie-meetup scenarios have four targets; the other four teaching scenarios have
+five. The generic `General Scam Indicators` fallback retains five targets.
 Checklist initialization reads the saved inventory before considering prompt
 extraction. Each resulting checklist item has the type `detection_area`.
+AI settings separate detection targets with a blank line, preserving internal
+line breaks in each point's explanation and action when saving or reopening.
 
-| Teaching template | Five learning targets |
+| Teaching template | Document learning targets |
 | --- | --- |
-| Account Security Alert Scam | Pressure tactics; sender/domain impersonation; limits of design and HTTPS; missing alert details; independent verification and account security |
-| Nintendo Switch Deal Scam | Offer plausibility; urgency/scarcity; sender/link authenticity; social proof; official promotion and price verification |
-| iTunes Gift Card Survey Scam | Reward plausibility; excitement/instant-reward persuasion; sender/link authenticity; photos/testimonials/terms; official promotion verification |
-| Location Sharing Safety | Exposed location; audience and misuse; home-identifying details; private communication; safe post rewriting |
-| Movie Meetup Social Engineering | Exposed future movements; trackability; familiarity-based manipulation; participant verification; private coordination |
-| Phone Number Phishing Training | Exposed contact information; misuse risks; suspicious follow-up contact; selective sharing; safe response to requests for credentials or codes |
+| Account Security Alert Scam | Scare tactics; warning sender; which account is affected; website address; safe account checks |
+| Nintendo Switch Deal Scam | Implausible deal; rushing language; who shared it; suspicious links; real-company verification |
+| iTunes Gift Card Survey Scam | Reward plausibility; exciting promises; sharer; website link; official reward verification |
+| Location Sharing Safety | Public address; identifying photos; invitations to strangers; general versus exact locations |
+| Movie Meetup Social Engineering | Destination disclosure; advance plans; exact schedule; audience |
+| Phone Number Phishing Training | Keeping numbers private; audience; misuse; account access; responding to accidental disclosure |
 
 Free-text prompt extraction uses the configured Qwen service and returns
 `{"detection_areas": ["target", "target"]}`. The parser validates strings, trims
@@ -342,12 +351,12 @@ Account-alert demo variants share the account-alert inventory. The Phase 0
 comparison keeps its historical tutor policy and examples, with only its knowledge
 sections refreshed to match the current targets. The frozen source prompt and
 historical evaluation datasets retain their original content. Custom inventories
-are not subject to the catalog's five-target limit.
+are not subject to the catalog's four- or five-target sizes.
 
 Saved global templates must receive the matching knowledge configuration and
 prompt update before newly created hosted rooms inherit these targets. Existing
 rooms retain their authored inventories. Deployment status and verification are
-tracked in the [unified release record](doc_update_record/documentation_update_record_v2026_10_15_unified_learning_targets.md).
+tracked in the [document-target release record](doc_update_record/documentation_update_record_v2026_11_12_document_learning_targets.md).
 
 **Available Scenarios**:
 - **Phishing detection**: Email scam identification

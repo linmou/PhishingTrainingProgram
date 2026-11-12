@@ -48,7 +48,7 @@ module.exports = async function cyberbullying(ctx) {
     assert(imageChecks.every(image => image.width > 0 && image.height > 0), 'Imported images must decode in the browser');
     await tutorPage.waitForFunction(() => Array.from(document.querySelectorAll('.room-post img')).every(image => image.complete && image.naturalWidth > 0));
     const checklist = (await waitForMatch(() => query(client, 'session_checklists', '*', 'room_id', room.id),
-      rows => rows.length === 1 && rows[0].target_version === 'cyberbullying_v1', 'canonical learner checklist'))[0];
+      rows => rows.length === 1 && rows[0].target_version === 'cyberbullying_doc_20261112', 'canonical learner checklist'))[0];
     assert.equal(checklist.student_id, ctx.student.id);
     const targets = await query(client, 'checklist_items', '*', 'checklist_id', checklist.id);
     assert.equal(targets.length, 5);
@@ -193,7 +193,7 @@ module.exports = async function cyberbullying(ctx) {
     const exportPath = path.join(evidenceDir, 'cyberbullying-export.json');
     await download.saveAs(exportPath);
     const exported = JSON.parse(fs.readFileSync(exportPath, 'utf8'));
-    assert.equal(exported.learning_progress.target_version, 'cyberbullying_v1');
+    assert.equal(exported.learning_progress.target_version, 'cyberbullying_doc_20261112');
     assert.equal(exported.learning_progress.student_id, ctx.student.id);
     assert.equal(exported.messages.find(message => message.id === approved.id).character, 'older_peer');
     const exportedReview = exported.ai_interactions.find(row => row.tutor_message_id === approved.id);

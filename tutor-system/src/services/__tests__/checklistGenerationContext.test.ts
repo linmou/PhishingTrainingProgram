@@ -43,7 +43,7 @@ describe('checklistGenerationContext', () => {
     });
   }
 
-  it.each(getNormalTeachingTemplateSeeds())('carries five $template_name targets from the seed row into checklist context', async (seed) => {
+  it.each(getNormalTeachingTemplateSeeds())('carries complete $template_name targets from the seed row into checklist context', async (seed) => {
     mockEnabledRoom();
     const row = toRoomTemplateInsertRow(seed);
     const templateConfig = JSON.parse(JSON.stringify(row.ai_config_template));
@@ -61,9 +61,6 @@ describe('checklistGenerationContext', () => {
     expect(context.aiConfigId).toBe(`ai-${seed.case_id}`);
     expect(context.detectionAreas).toEqual(templateConfig.prompt_config.detection_areas);
     expect(context.verificationSteps).toEqual([]);
-    const targets = [...context.detectionAreas!, ...context.verificationSteps!];
-    expect(targets).toHaveLength(5);
-    expect(new Set(targets).size).toBe(5);
     expect(ChecklistIntegration.extractFromSystemPromptAsync).not.toHaveBeenCalled();
   });
 
