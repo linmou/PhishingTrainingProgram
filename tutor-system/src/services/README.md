@@ -1,6 +1,6 @@
 # Service configuration
 
-<!-- Intent: locate maintained scenario targets, AI configuration and their verification. Updated: 2026-11-12. Baseline commit: e665cfd. -->
+<!-- Intent: locate maintained scenario targets, AI configuration and their verification. Updated: 2026-11-12. Baseline commit: d8e1b1d. -->
 
 The supported tutor/context path is `aiService.ts` → `simplifiedAIContext.ts`,
 with transport through the `ai-api` Edge Function. The application is private;
@@ -26,7 +26,8 @@ See [AI service configuration](../../docs/aiService.md#scenario-templates) for t
 target contract and [release evidence](../../docs/doc_update_record/documentation_update_record_v2026_11_12_document_learning_targets.md)
 for verification and deployment status.
 
-`prompts/activeTutorAgentPrompt.ts` supplies full candidate11. Tutor requests use
+`prompts/activeTutorAgentPrompt.ts` supplies full candidate11 with the user-selected
+[temporary fourth-grade audience instruction](../../docs/ai-behaviors/temporary-fourth-grade-prompt.md). Tutor requests use
 temperature0.3, max_tokens600 and thinking disabled. `aiModels.ts` declares
 Qwen3.8 Flash for React and ai-api; assessment-api retains Qwen3.5. See the
 [candidate11 release record](../../docs/doc_update_record/documentation_update_record_v2026_10_15_candidate11_qwen38_conditional_release.md)
