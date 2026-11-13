@@ -10,7 +10,7 @@ import { execFileSync } from 'child_process';
 import os from 'os';
 import yaml from 'js-yaml';
 import { ACTIVE_TUTOR_AGENT_PROMPT } from '../prompts/activeTutorAgentPrompt';
-import { ASSESSMENT_DIALOGUE_POLICY, NOTICE_THEN_ACTION_POLICY, buildEcologicalChatCompletionMessages } from '../ecologicalTutorCall';
+import { ASSESSMENT_DIALOGUE_POLICY, NOTICE_THEN_ACTION_POLICY, KNOWLEDGE_POINT_COMPLETION_POLICY, LEARNER_COMPLETION_EVIDENCE_POLICY, TASK_MEANING_SELECTION_POLICY, buildEcologicalChatCompletionMessages } from '../ecologicalTutorCall';
 
 const repoRoot = path.resolve(__dirname, '../../..', '..');
 const readText = (relativePath: string): string => fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
@@ -27,7 +27,7 @@ describe('Promptfoo brevity and ecological scaffold', () => {
   it('wires the active production policy into ecological requests exactly once', () => {
     const vars = { scenario_context: 'scenario', conversation_history: 'history', student_message: 'message' };
     const messages = buildEcologicalChatCompletionMessages('room configuration', vars);
-    expect(messages[0].content).toBe(`room configuration\n\n${ACTIVE_TUTOR_AGENT_PROMPT}\n\n${ASSESSMENT_DIALOGUE_POLICY}\n\n${NOTICE_THEN_ACTION_POLICY}`);
+    expect(messages[0].content).toBe(`room configuration\n\n${ACTIVE_TUTOR_AGENT_PROMPT}\n\n${ASSESSMENT_DIALOGUE_POLICY}\n\n${NOTICE_THEN_ACTION_POLICY}\n\n${KNOWLEDGE_POINT_COMPLETION_POLICY}\n\n${LEARNER_COMPLETION_EVIDENCE_POLICY}\n\n${TASK_MEANING_SELECTION_POLICY}`);
     expect(buildEcologicalChatCompletionMessages(messages[0].content, vars)[0].content.split(ACTIVE_TUTOR_AGENT_PROMPT)).toHaveLength(2);
   });
 

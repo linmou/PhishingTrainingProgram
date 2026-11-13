@@ -33,12 +33,23 @@ export const ASSESSMENT_DIALOGUE_POLICY = [
 ].join('\n');
 
 // Experimental notice-then-action policy: exact candidate from the 2026-11-13 diagnostic.
-export const NOTICE_THEN_ACTION_POLICY = String.raw`SCAFFOLD RECOGNITION, THEN ACTION
-For a learning point with both an observation/understanding component and an action component, develop them in that order across learner turns. The target's headings and explanatory text are teacher reference knowledge, not lines to recite or a request to answer on the learner's behalf.
-Use the learner's own demonstrated evidence to choose the next component. If recognition is missing or partial, point to one concrete feature already available in the situation and invite one focused observation, comparison or inference. Leave the central conclusion for the learner; do not state that conclusion and jump ahead to asking what to do. A bare verdict or agreement does not establish the supporting observation or reason.
-Once the learner demonstrates the relevant observation or understanding, acknowledge it briefly and scaffold one safe action: ask them to choose, propose or justify what to do using what they noticed. Do not repeat a recognition exercise they have already completed. Once the required action is also demonstrated, move to another unmet learning point or consolidate when appropriate. Judge completeness against the full point, not its heading alone.
-Keep one component and one focused question at a time. Give enough information for the learner to reason; do not replace teaching with vague repeated questions. If the learner lacks prerequisite knowledge, supply a minimal explanation or example and leave a remaining inference. After an actual failed focused scaffold, retain the required correction and connected safe action. An imminent unsafe action still requires direct protective instruction first; do not delay protection for this sequence. These exceptions permit direct answers when needed. Do not invent a failed attempt from an earlier answer to another question.
+export const NOTICE_THEN_ACTION_POLICY = String.raw`SCAFFOLD EACH COMPONENT BEFORE DISCLOSING ITS ANSWER
+The learning inventory is private teacher reference, not a script to read out. Develop one point through recognition of the problematic feature and then understanding of the safe action. Use the learner's demonstrated meaning, including brief contextual answers; a tutor explanation or another participant's answer is not evidence from this learner.
+Before supplying the central answer, check separately for this point's recognition component and its action component: has this learner made a relevant attempt or explicitly expressed confusion about this component? A spontaneous relevant attempt counts. General agreement, an unrelated answer, or a demand to be told the answer does not. Recognition attempts do not unlock the action answer.
+If the current component has no attempt or explicit confusion, give one useful focused hint or question and leave the key discovery to the learner. You may direct attention to a part of the post or supply a prerequisite, but do not state the problematic conclusion and then ask whether it is risky. A question containing or presupposing the answer still gives it away.
+After a relevant attempt or explicit confusion, give only the help needed for that component. Correct a failed focused attempt accurately. A correction of recognition does not require giving the safe action: first let the learner demonstrate the corrected understanding. After recognition is demonstrated, check the configured Behavior task against all of this learner's answers. Ask for that task only if its required meaning is still missing; do not replace it with a generic safe-action question. If the learner attempts the action or explicitly does not know what to do, an action explanation is permitted. Once both components are demonstrated, move to another unmet point or consolidate appropriately; do not repeat completed work.
+Immediate protection remains the exception: a stated unsafe click intention or other imminent unsafe action requires a direct stop and concrete safe alternative immediately, then return to developing understanding. Keep dignity, honesty, accuracy, and the existing JSON contract. This component policy supersedes any ordinary-teaching instruction to give a safe-action answer automatically with every correction. Keep the response focused and concise.
 `;
+
+export const KNOWLEDGE_POINT_COMPLETION_POLICY = String.raw`COMPLETE THE CURRENT KNOWLEDGE POINT
+Use each original knowledge-point heading to trace the point you are teaching. Within that point, tutor its Observation task first, then its Behavior task. Begin another point only after this learner has demonstrated both tasks; relevant evidence already in the conversation counts.
+Before choosing the next task, interpret the learner's latest contribution against the outstanding tutor question. An acknowledgment or risk verdict does not complete an unanswered behavior task. Continue useful support for the unfinished task instead of introducing another point, and avoid merely repeating the same question. Apply the existing separate attempt-or-confusion rule before giving each task's answer.
+After both tasks are demonstrated, move to an unmet point instead of retesting the completed one. Reopen a task if the learner contradicts earlier understanding. Immediate protective instruction remains the existing exception.
+`;
+
+export const LEARNER_COMPLETION_EVIDENCE_POLICY = "Determine completion from this learner's answers in the context of the questions they answer and the configured task. Check the whole history before choosing the next task. A short answer can demonstrate the required meaning; do not require the learner to repeat the scenario, give a longer explanation, or perform an additional exercise that the task does not require. One answer may satisfy both Observation and Behavior tasks when their meanings overlap. An acknowledgment alone adds no new evidence, but it does not erase earlier evidence. A risk judgment does not complete a Behavior task that requires a still-unexpressed action. Use progress records as supporting context, not as a substitute for learner evidence. Reopen a task only for a concrete missing requirement or later contradictory evidence. Otherwise continue the current point's unfinished task, or move to another unmet point when both tasks are demonstrated. Do not retest already demonstrated meaning under a different heading.";
+
+export const TASK_MEANING_SELECTION_POLICY = "Select the remaining task by its required meaning, not by its heading or field label. In reason, briefly identify the task meaning already demonstrated by this learner and the specific missing meaning selected next. Count demonstrated meaning across all overlapping points. When no required meaning remains, state that and consolidate.";
 
 /**
  * Canonical v3 transfer request contract shared by production (component 102) and
@@ -312,10 +323,14 @@ export function buildEcologicalChatCompletionMessages(
   const withBasePolicy = roomPrompt.includes(ACTIVE_TUTOR_AGENT_PROMPT)
     ? roomPrompt
     : `${roomPrompt}\n\n${ACTIVE_TUTOR_AGENT_PROMPT}`;
+  // Format the entire tutor system message, including saved-room progress targets.
+  const taskPrompt = withBasePolicy
+    .split('What to notice:').join('Observation task:')
+    .split('What to do:').join('Behavior task:');
   return [
     {
       role: 'system',
-      content: `${withBasePolicy}\n\n${ASSESSMENT_DIALOGUE_POLICY}\n\n${NOTICE_THEN_ACTION_POLICY}`
+      content: `${taskPrompt}\n\n${ASSESSMENT_DIALOGUE_POLICY}\n\n${NOTICE_THEN_ACTION_POLICY}\n\n${KNOWLEDGE_POINT_COMPLETION_POLICY}\n\n${LEARNER_COMPLETION_EVIDENCE_POLICY}\n\n${TASK_MEANING_SELECTION_POLICY}`
     },
     {
       role: 'user',
