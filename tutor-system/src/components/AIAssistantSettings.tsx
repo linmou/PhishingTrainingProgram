@@ -146,7 +146,7 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
         }
 
         if (aiConfig) {
-            // Legacy room values (including GPT names) are normalized to the sole Qwen option.
+            // Legacy room values (including GPT names) are normalized to the configured model.
             setSelectedModel(OAI_MODEL);
             setSystemPrompt(aiConfig.system_prompt || '');
             setTemperature(aiConfig.temperature);

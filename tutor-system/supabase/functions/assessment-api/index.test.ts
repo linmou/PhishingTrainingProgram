@@ -1159,6 +1159,32 @@ Deno.test('requires provider credentials before any provider or audit call', asy
   }
 });
 
+for (const model of [undefined, '', '   ']) {
+  Deno.test(`analyze_message rejects absent or blank OAI_MODEL without generation or progress writes: ${JSON.stringify(model)}`, async () => {
+    const message = { id: 'focus-1', room_id: 'room-1', user_id: 'learner-1', user_role: 'student', content: 'Check the official app.' };
+    let providerCalls = 0;
+    const writes: string[] = [];
+    const handler = createAssessmentApiHandler({
+      ...dependencies(),
+      env: name => ({ OAI_API_KEY: 'secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: model } as Record<string, string | undefined>)[name],
+      rpc: async name => {
+        if (name === 'get_transfer_message_analysis_context_v1') return { data: {
+          practice_type: 'cyberbullying', room_id: 'room-1', student_id: 'learner-1', checklist_id: 'checklist-1',
+          message, dialogue_history: [message], items: [{ id: 'item-1', area_text: 'Fixture target', status: 'pending', understanding_level: 'none' }],
+        }, error: null };
+        writes.push(name);
+        return { data: {}, error: null };
+      },
+      fetch: async () => { providerCalls += 1; throw new Error('provider must not be called'); },
+    });
+    const response = await handler(request('analyze_message', { room_id: 'room-1', message_id: 'focus-1' }));
+    assertEquals(response.status, 503);
+    assertEquals((await response.json()).error.code, 'AI_PROVIDER_NOT_CONFIGURED');
+    assertEquals(providerCalls, 0);
+    assertEquals(writes, []);
+  });
+}
+
 Deno.test('uses the configured assessment model, 1200-token budget, JSON mode, and private audit', async () => {
   const requests: Array<{ url: string; body: Record<string, unknown> }> = [];
   const audits: Record<string, unknown>[] = [];

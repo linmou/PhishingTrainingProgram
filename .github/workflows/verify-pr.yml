@@ -23,6 +23,7 @@ jobs:
           node --test scripts/database/export_validation_baseline.test.js
           node --test scripts/database/disposable-database.test.js
           node --test scripts/staging-coordination.test.js
+          node --test tutor-system/scripts/react-scripts.test.js
 
       # Prevent the human-facing PR handoff from drifting away from CI check IDs.
       # Structural check only: PR results and review decisions are external gates.
