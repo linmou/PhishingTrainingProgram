@@ -1,15 +1,18 @@
 # Learning target auto-refresh — issue #75
 
-Status: **manual-form preservation and database-stream-readiness repairs pass local and controlled browser verification; PR remains draft**. Both fixes are available on localhost. Historical uninstrumented failures cannot be conclusively attributed to the demonstrated readiness gap. Latest continuation below supersedes historical checkpoints. PR76 is not merged or production released.
+Intent: retain implementation, failure, verification and release evidence for issue #75.
+Updated: 2026-11-13 UTC. Integrated release: `968331f11dc352f16a0d3ae42f9ff708f12bc056`.
+
+Status: **PR76 merged and production verified**. Final release evidence below supersedes historical checkpoints. Historical uninstrumented failures cannot be conclusively attributed to the demonstrated readiness gap; its repair and both manual-form preservation fixes passed the selected production acceptance checks.
 
 - Issue: https://github.com/linmou/PhishingTrainingProgram/issues/75
-- Draft PR: https://github.com/linmou/PhishingTrainingProgram/pull/76
+- Merged PR: https://github.com/linmou/PhishingTrainingProgram/pull/76
 - Reviewed implementation commit: `b4e5dcb` (runtime artifact hashes in the candidate manifest).
 - Batch: `learning-target-auto-refresh-2026-11-12`.
-- Release and repair owner: **Codex, learning-target-auto-refresh workspace**, `/Users/admin/orca/workspaces/PhishingTrainingProgram/learning-target-auto-refresh`.
+- Release and repair owner: **Codex**, `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/pr-76-local`.
 - Base: `878ed465823959517bb68398b05ee08b90958b24`; topic: `linmou/learning-target-auto-refresh`; integration target: `no_sign_up`.
 - Authorization: owner approved automatic refresh, the database release and learner visibility trade-off, then requested issue → requirement refinement → implementation → review → PR in the prior session; continuation explicitly requests finishing that work. Standing AGENTS instructions authorize release after all gates pass.
-- Merge: not merged. Integrated release commit: none. Production acceptance remains open.
+- Merge: `968331f11dc352f16a0d3ae42f9ff708f12bc056`; production acceptance and fixture cleanup passed.
 
 ## Changed contracts and dependency ownership
 
@@ -447,3 +450,78 @@ query and documenting the direct form-submit check. The two regression cases
 passed again after that test-only cleanup. Broader smell-monitor coverage remains
 incomplete because optional analyzers are unavailable; existing standalone type
 errors and dependency advisories are outside this frontend repair.
+
+## Production release completed — 2026-11-13 UTC
+
+The maintainer explicitly resumed merging after the final fix. PR76 merged at
+`968331f11dc352f16a0d3ae42f9ff708f12bc056`; all 16 recorded artifact hashes matched
+the reviewed `37fc743` candidate. Current-head CI and integrated push CI
+([43368472813](https://github.com/linmou/PhishingTrainingProgram/actions/runs/43368472813))
+passed all three required checks. Final staging full realtime run
+`20261113045216-b0d99e09` and the successful-refresh manual-form conflict run
+`20261113045311-2ce0548a` passed; all three created rooms were cleaned.
+
+Before production SQL, a direct MCP catalog read matched all 18 catalog groups
+of the previously validated fresh production snapshot `baseline.wzS4uHcZ`:
+roles, columns, indexes, schemas, server version, database metadata/defaults,
+policies, triggers, functions, relations, constraints, memberships, publication,
+database ACL/settings, UUID extension and publication members. All four affected
+tables retained their id primary key. The exact SQL SHA-256
+`36760ca5352aae0e3ff1b41a1331e1f7ca667a260605eb095a726ce4f482b9d9` was applied
+through MCP. Both projects now have seven publication members. Evidence RPC
+execution remains denied to anon/authenticated and allowed to service_role;
+function definitions and parent-invalidation trigger match staging.
+
+| Artifact | Staging | Production |
+| --- | --- | --- |
+| assessment-api | v83, bundle `cb53eee4fe5ecfc4f252ac6e08d9fa9bdf69ac7c398f7443f46beffba1fc1514` | v23, bundle `2187c077aeec9fb5c4016b92a3b6389bf33cb34ceed13baeca66739cd866276c` |
+| Submitted transitive source manifest | `4eab5fa629fa0f2327321c44b54447cf8aae27f33323064ec119119aa01b68ce` | Same manifest; all 11 downloaded runtime files exactly match integrated source |
+| ai-api | v8 unchanged | v6 unchanged |
+| Frontend | localhost candidate against staging | Render `dep-dbr9gmdbedkc73cuuuk0`, release commit `968331f`, live at 04:56:58 UTC |
+
+Render automatic deployment was paused for SQL → API → frontend ordering.
+The served `/static/js/main.f9d2fda7.js` SHA-256 is
+`dce975910207800c0e0f9b4745aead27bd6ae5672af8fc3060f7062c6890f525`; its production
+project binding and final conflict notice were verified. Production acceptance
+used the actual hosted app at https://phishingtrainingprogram.onrender.com.
+
+| Production check | Run suffix | Result |
+| --- | --- | --- |
+| Full realtime, drafts, evidence, reconnect, both setup orders, mobile | `20261113045712-45272601` | Pass |
+| Successful-refresh manual-form conflict, blocked submission, unchanged saved target | `20261113045753-e3d90f2b` | Pass |
+| Checklist management | `20261113050029-ac84402d` | Pass |
+| Checklist coverage | `20261113050042-b9a56431` | Pass |
+| Early-message replay and deduplication | `20261113050125-76c8f10b` | Pass |
+| Guard recovery | `20261113050158-e1068d06` | Pass |
+| Assessment pass/failure/retry/recovery/cancellation and read-only history | `20261113050450-8e144f44` | Pass |
+| Cyberbullying learner/tutor/observer flow and export | `20261113050644-b77a982d` | Pass |
+
+Reports are retained locally under `tmp/browser_demo_runs/production-template-<suffix>/`.
+Realtime normal-connectivity updates measured 591–1258 ms, below the 2000 ms
+acceptance bound; reconnect recovered missed state without a reload. The dedicated
+`exit-assessment` runner is staging-only; production exit behavior was exercised
+by the complete `assessment-answer` journey.
+
+Preserved verification failures: `20261113045813-ab53e352` found that the configured
+production fixture room had been deleted, before fixture writes. Temporary
+run-owned fixtures copied the staging template/configuration. The operator first
+omitted the assessment-delivery alias (`20261113050104-b5935c55`), then reused a
+room across two cases that require isolation (`20261113050237-4d66568a`); both
+failed closed, and cleanup passed. Four separate temporary rooms corrected the
+configuration. These were harness/fixture setup failures, not passing application
+checks; only the subsequent complete runs above establish acceptance.
+
+Every completed workflow's cleanup passed. The four temporary template rooms
+were verified empty, removed with owner/marker checks, and read back as zero rooms
+and zero AI configurations. Staging and production project leases were released.
+Production API version/hash remained unchanged through acceptance. Security
+advisors reported no finding on either new function; existing
+[definer-view](https://supabase.com/docs/guides/database/database-linter?lint=0010_security_definer_view),
+legacy function/API exposure, Auth and Postgres-version advisories remain outside
+this change; a clean whole-project security audit is not claimed.
+
+The applied migration is archived byte-for-byte, and the SQL integration test now
+loads that archive. Runtime source is unchanged by this release-record closeout.
+The archived-path SQL harness passed all three tests with zero skips against
+`pr76_baseline_20261113_fresh` (session `83981`), including Red/Green, permissions,
+idempotence and atomic rollback; disposable databases were cleaned by the harness.

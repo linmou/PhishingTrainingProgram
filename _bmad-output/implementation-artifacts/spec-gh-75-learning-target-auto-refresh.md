@@ -2,7 +2,9 @@
 title: 'Automatically refresh room learning progress'
 type: feature
 created: 2026-11-12
-status: in-review
+status: done
+released: 2026-11-13
+release_commit: 968331f11dc352f16a0d3ae42f9ff708f12bc056
 baseline_commit: 878ed465823959517bb68398b05ee08b90958b24
 context: []
 issue: https://github.com/linmou/PhishingTrainingProgram/issues/75
