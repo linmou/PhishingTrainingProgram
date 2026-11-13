@@ -51,7 +51,7 @@ function practiceDependencies(overrides: Partial<AiApiDependencies> = {}) {
     dialogue: Array.from({ length: 61 }, (_, index) => ({ id: 'message-' + index, content: 'saved comment ' + index, user_role: 'student' })),
   };
   const deps = dependencies({
-    env: name => ({ OAI_API_KEY: 'secret', OAI_BASE_URL: 'https://provider.invalid/v1' } as Record<string, string>)[name],
+    env: name => ({ OAI_API_KEY: 'secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'configured-test-model' } as Record<string, string>)[name],
     rpc: async (name, args) => {
       calls.push({ name, args });
       return { data: context, error: null };
@@ -109,7 +109,7 @@ Deno.test('cyberbullying reads full context and returns a browser draft for each
     assertEquals(JSON.parse(provider.messages[2].content).dialogue, fixture.context.dialogue);
     const provenance = draft.generation_provenance;
     assertEquals(provenance.attempts.length, 1);
-    assertEquals(provenance.model, 'qwen3.8-flash');
+    assertEquals(provenance.model, 'configured-test-model');
     assert(!JSON.stringify(provenance).includes('secret'));
   }
 });
@@ -188,7 +188,7 @@ Deno.test('accepts offline requests without a Supabase Auth token', async () => 
   const env = (name: string) => ({
     OAI_API_KEY: 'server-secret',
     OAI_BASE_URL: 'https://provider.invalid/v1',
-    OAI_MODEL: 'qwen3.5-flash',
+    OAI_MODEL: 'configured-test-model',
   } as Record<string, string>)[name];
   const handler = createAiApiHandler(dependencies({
     env,
@@ -229,13 +229,29 @@ Deno.test('fails closed when server provider settings are missing', async () => 
   assertEquals(providerCalls, 0);
 });
 
-Deno.test('uses the shared model despite a stale model secret or client override and projects the provider response', async () => {
+for (const model of [undefined, '', '   ']) {
+  Deno.test(`rejects missing or blank OAI_MODEL before provider calls: ${JSON.stringify(model)}`, async () => {
+    let calls = 0;
+    const handler = createAiApiHandler(dependencies({
+      env: name => ({ OAI_API_KEY: 'secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: model } as Record<string, string | undefined>)[name],
+      fetch: async () => { calls += 1; throw new Error('provider must not be called'); },
+    }));
+    for (const req of [request(validBody), practiceRequest({})]) {
+      const response = await handler(req);
+      assertEquals(response.status, 503);
+      assertEquals((await response.json()).error.code, 'AI_PROVIDER_NOT_CONFIGURED');
+    }
+    assertEquals(calls, 0);
+  });
+}
+
+Deno.test('uses the configured server model despite a client override and projects the provider response', async () => {
   let providerRequest: ProviderRequest | null = null;
   const handler = createAiApiHandler(dependencies({
     env: (name) => ({
       OAI_API_KEY: 'server-secret',
       OAI_BASE_URL: 'https://provider.invalid/v1',
-      OAI_MODEL: 'qwen3.5-flash',
+      OAI_MODEL: ' configured-test-model ',
     } as Record<string, string>)[name],
     fetch: async (input, init) => {
       providerRequest = {
@@ -252,12 +268,12 @@ Deno.test('uses the shared model despite a stale model secret or client override
   const response = await handler(request({ ...validBody, model: 'attacker-selected-model' }));
   const payload = await response.json();
   assertEquals(response.status, 200);
-  assertEquals(payload.data, { content: '{"ok":true}', model: 'qwen3.8-flash', finish_reason: 'stop' });
+  assertEquals(payload.data, { content: '{"ok":true}', model: 'configured-test-model', finish_reason: 'stop' });
   assert(providerRequest);
   const capturedProviderRequest = providerRequest as ProviderRequest;
   assertEquals(capturedProviderRequest.url, 'https://provider.invalid/v1/chat/completions');
   assertEquals(capturedProviderRequest.authorization, 'Bearer server-secret');
-  assertEquals(capturedProviderRequest.body.model, 'qwen3.8-flash');
+  assertEquals(capturedProviderRequest.body.model, 'configured-test-model');
   assertEquals(capturedProviderRequest.body.messages, validBody.messages);
   assertEquals(capturedProviderRequest.body.temperature, 0.2);
   assertEquals(capturedProviderRequest.body.max_tokens, 800);
@@ -273,7 +289,7 @@ Deno.test('forwards a full tutor prompt while rejecting requests above the total
     env: (name) => ({
       OAI_API_KEY: 'server-secret',
       OAI_BASE_URL: 'https://provider.invalid/v1',
-      OAI_MODEL: 'qwen3.5-flash',
+      OAI_MODEL: 'configured-test-model',
     } as Record<string, string>)[name],
     fetch: async (_input, init) => {
       providerCalls += 1;
@@ -310,7 +326,7 @@ Deno.test('rejects invalid generation parameters without contacting the provider
     env: (name) => ({
       OAI_API_KEY: 'server-secret',
       OAI_BASE_URL: 'https://provider.invalid/v1',
-      OAI_MODEL: 'qwen3.5-flash',
+      OAI_MODEL: 'configured-test-model',
     } as Record<string, string>)[name],
     fetch: async () => { providerCalls += 1; return new Response('{}'); },
   }));
@@ -328,7 +344,7 @@ Deno.test('rejects malformed messages and excessive token budgets', async () => 
     env: (name) => ({
       OAI_API_KEY: 'server-secret',
       OAI_BASE_URL: 'https://provider.invalid/v1',
-      OAI_MODEL: 'qwen3.5-flash',
+      OAI_MODEL: 'configured-test-model',
     } as Record<string, string>)[name],
     fetch: async () => { providerCalls += 1; return new Response('{}'); },
   }));
@@ -344,7 +360,7 @@ Deno.test('maps provider HTTP and network failures without exposing provider det
   const env = (name: string) => ({
     OAI_API_KEY: 'server-secret',
     OAI_BASE_URL: 'https://provider.invalid/v1',
-    OAI_MODEL: 'qwen3.5-flash',
+    OAI_MODEL: 'configured-test-model',
   } as Record<string, string>)[name];
   const httpHandler = createAiApiHandler(dependencies({
     env,

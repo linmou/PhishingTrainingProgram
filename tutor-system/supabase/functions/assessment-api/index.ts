@@ -3,7 +3,6 @@
 
 // deno-lint-ignore-file no-explicit-any
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
-import { DEFAULT_AI_MODEL } from '../../../src/services/aiModels.ts';
 import { resolveTransferAnswer } from '../../../src/services/transferAssessmentOrchestrator.ts';
 import {
   buildTransferTutorRequestContextV3,
@@ -20,8 +19,6 @@ const OPERATIONS = new Set([
   'prepare_turn', 'send_reviewed', 'read_review', 'process_message', 'clear_chat_history',
 ]);
 const OPTION_IDS = new Set(['A', 'B', 'C', 'D']);
-// Assessment preparation and Cyberbullying analysis retain their validated model.
-const PROVIDER_MODEL = 'qwen3.5-flash';
 const PROVIDER_MAX_TOKENS = 1200;
 
 const TRANSFER_ASSESSMENT_SYSTEM_PROMPT = [
@@ -307,8 +304,9 @@ async function recordProviderAttempt(
 function providerConfig(deps: AssessmentApiDependencies): { key: string; baseUrl: string; model: string } {
   const key = deps.env('OAI_API_KEY');
   const baseUrl = deps.env('OAI_BASE_URL');
-  if (!key || !baseUrl) throw new Error('AI_PROVIDER_NOT_CONFIGURED');
-  return { key, baseUrl: baseUrl.replace(/\/$/, ''), model: PROVIDER_MODEL };
+  const model = deps.env('OAI_MODEL')?.trim();
+  if (!key || !baseUrl || !model) throw new Error('AI_PROVIDER_NOT_CONFIGURED');
+  return { key, baseUrl: baseUrl.replace(/\/$/, ''), model };
 }
 
 
@@ -344,10 +342,7 @@ async function analyzeMessage(
       asRecord(history[focusIndex]).content !== message.content) {
     throw new Error('INVALID_SCOPE');
   }
-  const provider = {
-    ...providerConfig(deps),
-    model: DEFAULT_AI_MODEL,
-  };
+  const provider = providerConfig(deps);
   const allowedKinds = new Set(['initial_signal', 'demonstrated_understanding', 'post_repair_signal', 'spontaneous_transfer', 'contradiction']);
   const allowedEvidenceTypes = new Set(['action', 'recognition', 'explanation']);
   const outcomes = await Promise.allSettled(items.map(async (item: any) => {

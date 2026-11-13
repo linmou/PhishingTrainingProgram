@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { createRoom, deleteRoom, getRoomsByTutor, getRoomTemplatesByTutor } from '../services/supabase';
-import { getAIConfig, initializeAIAssistant, updateAIConfig, DEFAULT_AI_MODEL } from '../services/aiService';
+import { getAIConfig, initializeAIAssistant, updateAIConfig, OAI_MODEL } from '../services/aiService';
 import { Database } from '../types/database';
 import AvatarDisplay from '../components/AvatarDisplay';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
@@ -152,7 +152,7 @@ const TestRoomsView: React.FC = () => {
 
       const aiTemplate = selectedTemplate.ai_config_template;
       if (aiTemplate?.enabled) {
-        const modelName = DEFAULT_AI_MODEL;
+        const modelName = OAI_MODEL;
         const promptConfig = aiTemplate.prompt_config
           ? {
               role: (aiTemplate.preset === 'casual_peer' ||
@@ -182,7 +182,7 @@ const TestRoomsView: React.FC = () => {
         await updateAIConfig(
           newRoom.id,
           {
-            model_name: DEFAULT_AI_MODEL,
+            model_name: OAI_MODEL,
             system_prompt: current?.system_prompt ?? null,
             prompt_config: current?.prompt_config ?? null,
             temperature: aiTemplate.temperature ?? 0.3,

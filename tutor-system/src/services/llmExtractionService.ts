@@ -2,7 +2,7 @@
  * Extract room learning targets from educational prompts through the configured Qwen service.
  */
 
-import { QwenService, DEFAULT_AI_MODEL } from './aiService';
+import { QwenService, OAI_MODEL } from './aiService';
 import { AIAssistantConfig } from '../types';
 
 export interface ExtractionResult {
@@ -12,7 +12,7 @@ export interface ExtractionResult {
 const EXTRACTION_CONFIG: AIAssistantConfig = {
   id: 'llm-extraction',
   room_id: 'system',
-  model_name: DEFAULT_AI_MODEL,
+  model_name: OAI_MODEL,
   system_prompt: 'You extract specific learning targets from educational prompts and return only the requested JSON object.',
   temperature: 0.05,
   max_tokens: 800,

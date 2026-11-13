@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRoom } from '../contexts/RoomContext';
 import { useAuth } from '../contexts/AuthContext';
-import { AI_MODELS, AIModelName, DEFAULT_AI_MODEL } from '../services/aiService';
+import { AI_MODELS, AIModelName, OAI_MODEL } from '../services/aiService';
 import { ScenarioTemplate, SCENARIO_TEMPLATES, isScenarioTemplate } from '../services/detectionTemplates';
 import { PRESET_CONFIGS, generateSystemPrompt } from '../services/systemPrompts';
 import { SystemPromptConfig } from '../services/prompts/types';
@@ -45,7 +45,7 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
 
     const [isEnabled, setIsEnabled] = useState(false);
     const [transferEnabled, setTransferEnabled] = useState(true);
-    const [selectedModel, setSelectedModel] = useState<AIModelName>(DEFAULT_AI_MODEL);
+    const [selectedModel, setSelectedModel] = useState<AIModelName>(OAI_MODEL);
     const [systemPrompt, setSystemPrompt] = useState('');
     const [temperature, setTemperature] = useState(0.7);
     const [maxTokens, setMaxTokens] = useState(150);
@@ -146,8 +146,8 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
         }
 
         if (aiConfig) {
-            // Legacy room values (including GPT names) are normalized to the sole Qwen option.
-            setSelectedModel(DEFAULT_AI_MODEL);
+            // Legacy room values (including GPT names) are normalized to the configured model.
+            setSelectedModel(OAI_MODEL);
             setSystemPrompt(aiConfig.system_prompt || '');
             setTemperature(aiConfig.temperature);
             setMaxTokens(aiConfig.max_tokens);
