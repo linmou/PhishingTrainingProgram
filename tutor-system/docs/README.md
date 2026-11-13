@@ -5,6 +5,7 @@ Document the current tutor-system architecture and development workflows, includ
 - Updated: 2026-11-13
 - Component-scaffolding specification baseline: `2172ab6`.
 - Task-label continuity preparation baseline: `297a1b3`.
+- Contextual completion and learner-progress baseline: `9bcae2d`.
 - Recovery-aware message synchronization baseline commit: `7762cbb`.
 - Learning Progress original-position restoration commit: `ecabba2`; integration base commit: `860b81a`; final assessment release baseline: `88b3ccd`.
 - Implementation commit IDs: `2988dd0`, `31cc05c`; release-decision base commit: `97ebe9f`; release-workflow rename base commit: `3c02349`; learning-status update base commit: `953e273`
@@ -42,6 +43,7 @@ This directory contains comprehensive architectural and implementation documenta
 - **[Tutor behavior specification](./ai-behaviors/tutor-behavior-specification.md)** - Authoritative requirements with constitutional grounding on each item
 - **[Component-scaffolding experiment](../../evals/promptfoo/scaffolding-diagnostics/2026-11-13-component-scaffolding/)** - Focused recognition/action opportunities, versioned rubric changes, fixed real-template inputs and separately reported diagnostic results
 - **[Task-label continuity preparation](./doc_update_record/documentation_update_record_v2026_11_13_task_label_continuity.md)** - Retained point headings, observation/behavior task labels, and focused completion-before-progression evaluation
+- **[Contextual completion and learner progress](./doc_update_record/documentation_update_record_v2026_11_13_contextual_completion.md)** - General completion criteria, cross-scenario semantic checks, and learner-specific progress in tutor requests
 - **[Tutor response contract](./ai-behaviors/tutor-response-contract.md)** - Legacy tutor decoding, assessment-only teacher review, exact question payload, and private-key rules
 - **[Transfer status response contract](./ai-behaviors/transfer-status-response-contract.md)** - Item-level evidence, direct coverage, transfer, and open classification limits
 - **[Learning-progress analyzer dialogue contract](./transfer-status-analysis.md)** - Product input, speaker attribution, per-target calls and progress application

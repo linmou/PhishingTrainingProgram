@@ -1,0 +1,26 @@
+{
+  "intent": "Verify the actual frozen comparison independently and record a harmless metadata correction race without altering executed evidence.",
+  "reviewer": "continuity_audit",
+  "date": "2026-11-13",
+  "fingerprint": "e3c526e5e407c7b53eedd29af6ad56831e2bb543cd8560add6cb943fb429d2a6",
+  "verdict": "clear for the focused comparison; semantic calibration and output conformance remain unassessed",
+  "verified": {
+    "current_source_hashes_match_frozen": 33,
+    "cases": 9,
+    "target_jobs": 54,
+    "calibration_checks": 16,
+    "same_user_inputs_both_arms": true,
+    "only_completion_policy_replaced": true,
+    "replacement_occurs_once_per_system": true,
+    "reversing_replacement_restores_baseline_system_exactly": true,
+    "headings_preserved": true,
+    "case_input_fields_present_unchanged": true,
+    "reference_and_provenance_absent_from_target_user_payload": true,
+    "jobs_match_frozen_shells": true,
+    "inherited_disclosure_rubric_exactly_matches_prior_v12": true
+  },
+  "candidate_file_sha256": "df357f4776efd58cca764634f7449df072627f3466c3cffca7128ad51c04e30b",
+  "candidate_inserted_text_sha256": "5117b007acf02e1a5b75f46ffca5ae928fcff7dcbf1b454f6fb44a287b1cf0ec",
+  "candidate_difference": "The inserted policy trims the source file's terminal newline; all semantic text is identical.",
+  "metadata_note": "The case manifest's limitation sentence still says Eight cases from its first draft, while formal case_count, actual list, calibration references and54 jobs correctly include9. A post-freeze attempt to correct only that sentence was immediately restored to the exact frozen bytes, along with its audit hash. No target input, reference, rubric or output changed. This note corrects interpretation without rewriting the freeze."
+}

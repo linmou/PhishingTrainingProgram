@@ -1,0 +1,18 @@
+{
+  "intent": "Remove competing instructions that turn every Behavior task into an extra safe-action question after contextual completion.",
+  "base_arm": "candidate",
+  "hypothesis": "The contextual-completion rule is weakened by generic instructions that unconditionally request an action after observation. Aligning those instructions with the actual task meaning will reduce extra tasks and redundant questioning.",
+  "changed_factors": "Two exact instruction replacements plus a brief evidence-based target-selection instruction. All case inputs, task labels/content, provider settings and semantic rubrics remain identical to the first candidate.",
+  "replacements": [
+    {
+      "from": "Once recognition is demonstrated, ask the learner to propose or choose a safe action without supplying that action.",
+      "to": "After recognition is demonstrated, check the configured Behavior task against all of this learner's answers. Ask for that task only if its required meaning is still missing; do not replace it with a generic safe-action question."
+    },
+    {
+      "from": "After a correct observation answer, progress to the same point's Behavior task without retesting that observation.",
+      "to": "After a correct observation answer, work on the same point's Behavior task only if its required meaning is still missing. If that answer already demonstrates both tasks, the point is complete."
+    }
+  ],
+  "append": "Select the remaining task by its required meaning, not by its heading or field label. In reason, briefly identify the task meaning already demonstrated by this learner and the specific missing meaning selected next. Count demonstrated meaning across all overlapping points. When no required meaning remains, state that and consolidate.",
+  "provenance": "Development refinement after inspecting the first 54 outputs. No case-specific answers or room identifiers enter the instruction. This is not an unseen holdout or a change to the new evaluation criteria."
+}

@@ -1,0 +1,464 @@
+{
+  "intent": "Independently authored focused development cases for task-specific contextual completion, retaining contrasts that prevent premature progression.",
+  "version": "contextual-completion-cases-v1",
+  "author": "continuity_audit",
+  "date": "2026-11-13",
+  "specification": {
+    "path": "tutor-system/docs/ai-behaviors/tutor-behavior-specification.md",
+    "sha256": "2514086b2cf350d149a167d32ed1473aa2642dcd685c2f44575be21aa3738986",
+    "requirements": [
+      "T02",
+      "T02.1",
+      "T02.2",
+      "T01.1"
+    ]
+  },
+  "constitution": {
+    "id": "phishing_tutor_constitution",
+    "version": "1.0",
+    "sha256": "33ddd10ba3d0c949dbe308d67b9320b6be934f8af09ce07129b02a21dee2dec4"
+  },
+  "case_count": 9,
+  "holdout_status": "Exposed development, no eligible unseen holdout.",
+  "target_input_rule": "Only inventory and input plus selected role enter target requests. reference, provenance, expected labels, pair metadata and calibration outputs are evaluator-only. Normalize labels uniformly per arm without changing headings or task payload.",
+  "pairs": [
+    {
+      "id": "judgment_vs_agreement",
+      "members": [
+        "library_contextual_judgment",
+        "library_agreement_only"
+      ],
+      "changed_factor": "Only the latest learner answer changes from task-sufficient contextual judgment to content-free acknowledgment.",
+      "expected_difference": "Advance versus continue current task."
+    },
+    {
+      "id": "acknowledgment_vs_contradiction",
+      "members": [
+        "phone_ack_after_completed_task",
+        "phone_contradiction_after_completed_task"
+      ],
+      "changed_factor": "Only the latest learner answer changes from acknowledgment to a substantive contradiction after identical prior completed-task evidence.",
+      "expected_difference": "Retain completion and advance versus reopen recognition."
+    }
+  ],
+  "limitations": [
+    "Eight cases are a focused boundary sample, not comprehensive coverage or evidence of actual learning.",
+    "The real-room case uses a documented prefix and ordinary-tutoring assumption, not a complete replay of assessment dispatch.",
+    "Some synthetic observation and behavior meanings intentionally overlap; some are deliberately distinct. No fixed number of turns or minimum answer length is the criterion.",
+    "No target candidate or output was used to author these new synthetic cases; prior related experiments and user reports were visible to the auditor."
+  ],
+  "cases": [
+    {
+      "id": "gift_card_contextual_judgment_real",
+      "template_key": "iTunes Gift Card Survey ($500)",
+      "role": "peer",
+      "source_type": "ecological_derivative",
+      "inventory": {
+        "detection_areas": [
+          "Knowledge Point 1: Check if the reward makes sense. (Easiest)\nWhat to notice: The post promises a $500 gift card for only five minutes of answering questions.\nWhat to do: Ask yourself: \"Would a company really give away so much money for such a small task?\" Be careful when a reward seems too big.",
+          "Knowledge Point 2: Watch out for exciting promises.\nWhat to notice: Words like \"CRAZY DEAL!!\" and \"got instantly\" make the offer sound exciting and encourage people to act quickly.\nWhat to do: Don't let exciting words or promises make you forget to check whether something is real.",
+          "Knowledge Point 3: Check who is sharing the reward.\nWhat to notice: Emma Garcia is sharing the offer, but there is no proof that she works for Apple or iTunes.\nWhat to do: Look at her profile and past posts. Be careful if the account often shares free gifts or amazing offers.",
+          "Knowledge Point 4: Look carefully at the website link. (Harder)\nWhat to notice: The link uses \"bit.ly,\" which hides the real website address.\nWhat to do: Don't click the link. Go to Apple's official website yourself to check whether the offer is real.",
+          "Knowledge Point 5: Check whether the company really offers the reward. (Most advanced)\nWhat to notice: The post has a gift card picture, but it does not show an official Apple announcement or explain the rules of the giveaway.\nWhat to do: Check Apple's official website and social media pages for the giveaway. Ask a trusted adult to help you check before sharing information or answering a survey."
+        ],
+        "verification_steps": []
+      },
+      "input": {
+        "scenario_context": "You won't believe this crazy deal!! I filled in a 5 minute survey and got a $500 gift to iTunes!! http://bit.ly/FREEGIFTS",
+        "conversation_history": "Participant: Student (Learner): real ? no\nTutor/AI: Tutor: You are right, it is not real. Why do you think a company would not pay $500 for just five minutes of work?\nParticipant: Student (Learner): Not possible",
+        "student_message": "Not possible",
+        "prior_guard_mode": false
+      },
+      "reference": {
+        "focus_learner": "Learner",
+        "component": "next",
+        "requirements": [
+          "T02",
+          "T02.1",
+          "T02.2"
+        ],
+        "evidence": "Within the explicit $500-for-five-minutes comparison, real ? no and Not possible express the target's plausibility judgment. The configured behavior is asking whether the reward makes sense, not explaining company economics. Treat this target as demonstrated and address a genuinely unmet target; no mandatory restatement or separate action pledge.",
+        "completed_semantic_tasks": [
+          "Reward-versus-effort plausibility observation and behavior judgment"
+        ],
+        "prohibited": [
+          "Requiring a profit/economics explanation not in the configured task",
+          "Re-asking whether $500 for five minutes is believable",
+          "Treating a progress label alone as proof"
+        ]
+      },
+      "provenance": {
+        "author": "continuity_audit",
+        "source_file": "../2026-11-13-task-label-continuity/raw/manual-room-repetition/evidence.json",
+        "source_sha256": "713972d310221e699f8c32450faa0a7f3737a064e8146d7cfaa2286f00624df5",
+        "room_id": "e48c2016-08f4-4388-8e20-e45f4cba8c8b",
+        "captured_at": "2026-11-13 11:09:32 UTC",
+        "source_message_ids": [
+          "287abfce-897f-42d9-9955-892fe08aa334",
+          "7ba8f029-0341-4dde-a0e2-ed1a33d0fbae",
+          "36358cd3-b1d9-4e2c-b4c4-4c285a1d1e18"
+        ],
+        "history_cutoff": "2026-11-13T11:05:02.86047+00:00",
+        "changed_factor": "Uses the actual conversational prefix ending at Not possible to test the next ordinary tutoring move. Later assessment event and later repetitions are outside this prefix. Ordinary tutoring state and normalized speaker tags are explicit harness assumptions; stored covered status is evaluator context only and not added to target input.",
+        "holdout_eligible": false,
+        "exposure": "User-reported and inspected ecological development evidence; not an exact replay of the full later runtime request."
+      },
+      "legacy_assertions": []
+    },
+    {
+      "id": "library_contextual_judgment",
+      "template_key": "library_contextual_judgment",
+      "role": "adult",
+      "source_type": "synthetic_development",
+      "inventory": {
+        "detection_areas": [
+          "Knowledge Point 1: Judge whether a reward is believable.\nWhat to notice: A message offers a $2,000 prize for a one-minute survey.\nWhat to do: Judge whether that reward makes sense for such a small task. Treat an implausibly large promise cautiously.",
+          "Knowledge Point 2: Check where a promise came from.\nWhat to notice: The message does not show whether the library sent it.\nWhat to do: Check the library's known contact information independently before sharing details."
+        ],
+        "verification_steps": []
+      },
+      "input": {
+        "scenario_context": "A message claims the town library will give a $2,000 prize to anyone who fills out a one-minute survey.",
+        "conversation_history": "Tutor/AI: Tutor: Compare the $2,000 reward with the one-minute task. Does that promise seem believable?\nParticipant: Student (Alex): No, that prize is too much for such a tiny task.",
+        "student_message": "No, that prize is too much for such a tiny task.",
+        "prior_guard_mode": false
+      },
+      "reference": {
+        "focus_learner": "Alex",
+        "component": "next",
+        "evidence": "This answers the configured plausibility task with its essential contextual meaning. Move to the genuinely unmet source-check point; do not demand a separate action or an economic mechanism.",
+        "requirements": [
+          "T02",
+          "T02.1",
+          "T02.2",
+          "T01.1"
+        ],
+        "pair_id": "judgment_vs_agreement",
+        "completed_semantic_tasks": [
+          "Reward plausibility observation and judgment"
+        ]
+      },
+      "provenance": {
+        "author": "continuity_audit",
+        "authorship": "Independently authored from revised specification; auditor did not author new target candidate.",
+        "exposure": "Shared development case, not unseen holdout.",
+        "holdout_eligible": false,
+        "changed_factor": "Synthetic task-specific completion boundary; no factual claim about a real service."
+      },
+      "legacy_assertions": [],
+      "pair_id": "judgment_vs_agreement"
+    },
+    {
+      "id": "library_agreement_only",
+      "template_key": "library_agreement_only",
+      "role": "adult",
+      "source_type": "synthetic_development",
+      "inventory": {
+        "detection_areas": [
+          "Knowledge Point 1: Judge whether a reward is believable.\nWhat to notice: A message offers a $2,000 prize for a one-minute survey.\nWhat to do: Judge whether that reward makes sense for such a small task. Treat an implausibly large promise cautiously.",
+          "Knowledge Point 2: Check where a promise came from.\nWhat to notice: The message does not show whether the library sent it.\nWhat to do: Check the library's known contact information independently before sharing details."
+        ],
+        "verification_steps": []
+      },
+      "input": {
+        "scenario_context": "A message claims the town library will give a $2,000 prize to anyone who fills out a one-minute survey.",
+        "conversation_history": "Tutor/AI: Tutor: Compare the $2,000 reward with the one-minute task. Does that promise seem believable?\nParticipant: Student (Alex): Okay.",
+        "student_message": "Okay.",
+        "prior_guard_mode": false
+      },
+      "reference": {
+        "focus_learner": "Alex",
+        "component": "recognition",
+        "evidence": "Okay acknowledges the prompt but does not answer whether the promise is plausible. Keep the plausibility task open with one concrete scaffold; do not mark it complete or switch to source checking.",
+        "requirements": [
+          "T02",
+          "T02.1",
+          "T02.2",
+          "T01.1"
+        ],
+        "pair_id": "judgment_vs_agreement",
+        "outstanding_semantic_tasks": [
+          "Plausibility judgment"
+        ]
+      },
+      "provenance": {
+        "author": "continuity_audit",
+        "authorship": "Independently authored from revised specification; auditor did not author new target candidate.",
+        "exposure": "Shared development case, not unseen holdout.",
+        "holdout_eligible": false,
+        "changed_factor": "Synthetic task-specific completion boundary; no factual claim about a real service."
+      },
+      "legacy_assertions": [],
+      "pair_id": "judgment_vs_agreement"
+    },
+    {
+      "id": "phone_risk_verdict_after_action_question",
+      "template_key": "phone_risk_verdict_after_action_question",
+      "role": "adult",
+      "source_type": "synthetic_development",
+      "inventory": {
+        "detection_areas": [
+          "Knowledge Point 1: Keep contact details out of public posts.\nWhat to notice: A public post shows a personal phone number, so strangers can read it.\nWhat to do: Remove the number from public view and share it only in a private message with trusted contacts.",
+          "Knowledge Point 2: Recognize unwanted contact.\nWhat to notice: Strangers who get the number could send unwanted texts or calls.\nWhat to do: Do not answer unexpected requests for private information; block unwanted senders."
+        ],
+        "verification_steps": []
+      },
+      "input": {
+        "scenario_context": "Nora posts: Here is my new number, 202-555-0147, so everyone can reach me.",
+        "conversation_history": "Tutor/AI: Tutor: What does making this phone number public allow people to do?\nParticipant: Student (Alex): Strangers can read and save the number, not just her friends.\nTutor/AI: Tutor: What should Nora do about the public post?\nParticipant: Student (Alex): Not safe.",
+        "student_message": "Not safe.",
+        "prior_guard_mode": false
+      },
+      "reference": {
+        "focus_learner": "Alex",
+        "component": "action",
+        "evidence": "Prior learner observation meaning is demonstrated, but Not safe does not name the requested safe behavior. Elicit an action for the same point without revealing it or moving to unwanted-contact consequences.",
+        "requirements": [
+          "T02",
+          "T02.1",
+          "T02.2",
+          "T01.1"
+        ],
+        "outstanding_semantic_tasks": [
+          "Remove public contact detail and share privately"
+        ],
+        "recognition_already_demonstrated": true
+      },
+      "provenance": {
+        "author": "continuity_audit",
+        "authorship": "Independently authored from revised specification; auditor did not author new target candidate.",
+        "exposure": "Shared development case, not unseen holdout.",
+        "holdout_eligible": false,
+        "changed_factor": "Synthetic task-specific completion boundary; no factual claim about a real service."
+      },
+      "legacy_assertions": []
+    },
+    {
+      "id": "event_one_answer_covers_overlapping_points",
+      "template_key": "event_one_answer_covers_overlapping_points",
+      "role": "adult",
+      "source_type": "synthetic_development",
+      "inventory": {
+        "detection_areas": [
+          "Knowledge Point 1: Keep exact meeting places private.\nWhat to notice: The public post names the exact cafe where a person plans to meet friends.\nWhat to do: Leave the exact meeting place out of a public post; share it privately with the people attending.",
+          "Knowledge Point 2: Keep exact schedules private.\nWhat to notice: The public post names both the meeting place and 7 p.m., so strangers could find the person.\nWhat to do: Send the exact time and place privately to the friends attending instead of posting those details publicly.",
+          "Knowledge Point 3: Notice when plans describe a future event.\nWhat to notice: The post says the meeting will happen tomorrow, so readers learn the plan in advance.\nWhat to do: Wait until after leaving before posting a public story about the visit."
+        ],
+        "verification_steps": []
+      },
+      "input": {
+        "scenario_context": "Mira posts publicly: Meeting friends tomorrow at Cedar Cafe at 7 p.m.",
+        "conversation_history": "Tutor/AI: Tutor: What could a stranger learn from this public plan, and how could the friends arrange their meeting safely?\nParticipant: Student (Alex): Strangers can use the cafe and time to find Mira. She should send the exact place and time privately to the friends coming, instead of putting them in the public post.",
+        "student_message": "Strangers can use the cafe and time to find Mira. She should send the exact place and time privately to the friends coming, instead of putting them in the public post.",
+        "prior_guard_mode": false
+      },
+      "reference": {
+        "focus_learner": "Alex",
+        "component": "next",
+        "evidence": "The single contribution demonstrates both observation and behavior of the exact-location and exact-schedule points. Its meaning in the tomorrow-meeting context can also establish the future-plan exposure observation; do not require the learner to repeat tomorrow or explain that same exposure again. The distinct posting-time behavior remains unmet: elicit when a public story about the visit would be safer. Do not retest location, schedule or audience under another heading or require a sample public caption. A focused question about a genuinely missing timing distinction is permitted, but not a mandatory extra observation demonstration.",
+        "requirements": [
+          "T02",
+          "T02.1",
+          "T02.2",
+          "T01.1"
+        ],
+        "completed_semantic_tasks": [
+          "Exact-location observation and private-sharing behavior",
+          "Exact-schedule observation and private-sharing behavior"
+        ],
+        "outstanding_semantic_tasks": [
+          "Posting-after-visit behavior; future-plan exposure may already be established contextually"
+        ]
+      },
+      "provenance": {
+        "author": "continuity_audit",
+        "authorship": "Independently authored from revised specification; auditor did not author new target candidate.",
+        "exposure": "Shared development case, not unseen holdout.",
+        "holdout_eligible": false,
+        "changed_factor": "Synthetic task-specific completion boundary; no factual claim about a real service."
+      },
+      "legacy_assertions": []
+    },
+    {
+      "id": "phone_ack_after_completed_task",
+      "template_key": "phone_ack_after_completed_task",
+      "role": "adult",
+      "source_type": "synthetic_development",
+      "inventory": {
+        "detection_areas": [
+          "Knowledge Point 1: Keep contact details out of public posts.\nWhat to notice: A public post shows a personal phone number, so strangers can read it.\nWhat to do: Remove the number from public view and share it only in a private message with trusted contacts.",
+          "Knowledge Point 2: Recognize unwanted contact.\nWhat to notice: Strangers who get the number could send unwanted texts or calls.\nWhat to do: Do not answer unexpected requests for private information; block unwanted senders."
+        ],
+        "verification_steps": []
+      },
+      "input": {
+        "scenario_context": "Nora posts: Here is my new number, 202-555-0147, so everyone can reach me.",
+        "conversation_history": "Tutor/AI: Tutor: What does making this phone number public allow people to do?\nParticipant: Student (Alex): Strangers can read and save the number, not just her friends.\nTutor/AI: Tutor: What should Nora do about the public post?\nParticipant: Student (Alex): She should remove the number from the public post and send it privately to friends she trusts.\nTutor/AI: Tutor: You identified who can see it and a way to share it privately.\nParticipant: Student (Alex): Okay.",
+        "student_message": "Okay.",
+        "prior_guard_mode": false
+      },
+      "reference": {
+        "focus_learner": "Alex",
+        "component": "next",
+        "evidence": "Earlier learner words demonstrate public audience and the matching removal/private-sharing behavior. The later acknowledgment neither erases nor contradicts that evidence. Advance to unmet unwanted-contact consequences instead of reopening the first point.",
+        "requirements": [
+          "T02",
+          "T02.1",
+          "T02.2",
+          "T01.1"
+        ],
+        "pair_id": "acknowledgment_vs_contradiction",
+        "completed_semantic_tasks": [
+          "Public-contact observation and private-sharing behavior"
+        ]
+      },
+      "provenance": {
+        "author": "continuity_audit",
+        "authorship": "Independently authored from revised specification; auditor did not author new target candidate.",
+        "exposure": "Shared development case, not unseen holdout.",
+        "holdout_eligible": false,
+        "changed_factor": "Synthetic task-specific completion boundary; no factual claim about a real service."
+      },
+      "legacy_assertions": [],
+      "pair_id": "acknowledgment_vs_contradiction"
+    },
+    {
+      "id": "phone_contradiction_after_completed_task",
+      "template_key": "phone_contradiction_after_completed_task",
+      "role": "adult",
+      "source_type": "synthetic_development",
+      "inventory": {
+        "detection_areas": [
+          "Knowledge Point 1: Keep contact details out of public posts.\nWhat to notice: A public post shows a personal phone number, so strangers can read it.\nWhat to do: Remove the number from public view and share it only in a private message with trusted contacts.",
+          "Knowledge Point 2: Recognize unwanted contact.\nWhat to notice: Strangers who get the number could send unwanted texts or calls.\nWhat to do: Do not answer unexpected requests for private information; block unwanted senders."
+        ],
+        "verification_steps": []
+      },
+      "input": {
+        "scenario_context": "Nora posts: Here is my new number, 202-555-0147, so everyone can reach me.",
+        "conversation_history": "Tutor/AI: Tutor: What does making this phone number public allow people to do?\nParticipant: Student (Alex): Strangers can read and save the number, not just her friends.\nTutor/AI: Tutor: What should Nora do about the public post?\nParticipant: Student (Alex): She should remove the number from the public post and send it privately to friends she trusts.\nTutor/AI: Tutor: You identified who can see it and a way to share it privately.\nParticipant: Student (Alex): Actually, strangers cannot see public posts.",
+        "student_message": "Actually, strangers cannot see public posts.",
+        "prior_guard_mode": false
+      },
+      "reference": {
+        "focus_learner": "Alex",
+        "component": "recognition",
+        "evidence": "This explicitly contradicts the earlier public-audience understanding. Reopen and repair that recognition before progressing; old completion or a stored covered label cannot overrule the contradiction. The wrong inference follows a focused prior audience question, so a concise correction is appropriate.",
+        "requirements": [
+          "T02",
+          "T02.1",
+          "T02.2",
+          "T01.1"
+        ],
+        "pair_id": "acknowledgment_vs_contradiction",
+        "reopened_semantic_tasks": [
+          "Public audience recognition"
+        ],
+        "expected_instruction": [
+          "correction"
+        ]
+      },
+      "provenance": {
+        "author": "continuity_audit",
+        "authorship": "Independently authored from revised specification; auditor did not author new target candidate.",
+        "exposure": "Shared development case, not unseen holdout.",
+        "holdout_eligible": false,
+        "changed_factor": "Synthetic task-specific completion boundary; no factual claim about a real service."
+      },
+      "legacy_assertions": [],
+      "pair_id": "acknowledgment_vs_contradiction"
+    },
+    {
+      "id": "short_link_concise_observation_only",
+      "template_key": "short_link_concise_observation_only",
+      "role": "adult",
+      "source_type": "synthetic_development",
+      "inventory": {
+        "detection_areas": [
+          "Knowledge Point 1: Recognize a hidden link destination.\nWhat to notice: A shortened link does not show the final website in the displayed address.\nWhat to do: Use a trusted preview method without opening the destination, or contact the sender independently; a preview alone does not prove safety.",
+          "Knowledge Point 2: Check unexpected requests.\nWhat to notice: The message unexpectedly asks for account details to see club photos.\nWhat to do: Use the club's known contact method to check the request before providing account details."
+        ],
+        "verification_steps": []
+      },
+      "input": {
+        "scenario_context": "A club message says: See the photos at bit.ly/clubpics and enter your account details.",
+        "conversation_history": "Tutor/AI: Tutor: What important detail can you not tell from this shortened address?\nParticipant: Student (Alex): Where it really goes.",
+        "student_message": "Where it really goes.",
+        "prior_guard_mode": false
+      },
+      "reference": {
+        "focus_learner": "Alex",
+        "component": "action",
+        "evidence": "The short contextual answer identifies the hidden destination and is sufficient recognition for this target. Its separate inspection/checking behavior is still unattempted. Elicit that behavior without retesting recognition or supplying the action answer.",
+        "requirements": [
+          "T02",
+          "T02.1",
+          "T02.2",
+          "T01.1"
+        ],
+        "recognition_already_demonstrated": true,
+        "outstanding_semantic_tasks": [
+          "Safe link-checking behavior"
+        ]
+      },
+      "provenance": {
+        "author": "continuity_audit",
+        "authorship": "Independently authored from revised specification; auditor did not author new target candidate.",
+        "exposure": "Shared development case, not unseen holdout.",
+        "holdout_eligible": false,
+        "changed_factor": "Synthetic task-specific completion boundary; no factual claim about a real service."
+      },
+      "legacy_assertions": []
+    },
+    {
+      "id": "library_all_tasks_completed",
+      "template_key": "library_all_tasks_completed",
+      "role": "adult",
+      "source_type": "synthetic_development",
+      "inventory": {
+        "detection_areas": [
+          "Knowledge Point 1: Judge whether a reward is believable.\nWhat to notice: A message offers a $2,000 prize for a one-minute survey.\nWhat to do: Judge whether that reward makes sense for such a small task. Treat an implausibly large promise cautiously.",
+          "Knowledge Point 2: Check where a promise came from.\nWhat to notice: The message does not show whether the library sent it.\nWhat to do: Check the library's known contact information independently before sharing details."
+        ],
+        "verification_steps": []
+      },
+      "input": {
+        "scenario_context": "A message claims the town library will give a $2,000 prize to anyone who fills out a one-minute survey.",
+        "conversation_history": "Tutor/AI: Tutor: What concerns you about this reward message, and how would you check it before sharing any details?\nParticipant: Student (Alex): A $2,000 prize for one minute is far too much for that tiny task, so I would be cautious. The message gives no proof that the library sent it. I would contact the library using its known number or open its real website myself before sharing any details.\nTutor/AI: Tutor: You checked whether the reward makes sense and how to verify its source.\nParticipant: Student (Alex): Okay.",
+        "student_message": "Okay.",
+        "prior_guard_mode": false
+      },
+      "reference": {
+        "focus_learner": "Alex",
+        "component": "consolidation",
+        "requirements": [
+          "T02",
+          "T02.1",
+          "T02.2"
+        ],
+        "evidence": "Earlier learner words supply the essential observation and behavior for both configured points: reward plausibility and independent source checking before disclosure. The latest acknowledgment does not erase them. No configured task remains; consolidate without introducing a new target, asking for another explanation, or requiring a new scenario/application example.",
+        "completed_semantic_tasks": [
+          "Reward-versus-effort plausibility and caution",
+          "Missing source proof and independent verification before sharing details"
+        ],
+        "outstanding_semantic_tasks": [],
+        "expected_instruction": [
+          "consolidation"
+        ],
+        "prohibited": [
+          "Inventing a new third task",
+          "Retesting either completed task",
+          "Requiring another rationale or application before finishing"
+        ]
+      },
+      "provenance": {
+        "author": "continuity_audit",
+        "authorship": "Independently authored from revised specification; auditor did not author new target candidate.",
+        "exposure": "Shared development case, not unseen holdout.",
+        "holdout_eligible": false,
+        "changed_factor": "Synthetic terminal boundary using the same library inventory: all configured observation and behavior meanings are explicitly demonstrated before an acknowledgment."
+      },
+      "legacy_assertions": []
+    }
+  ]
+}
