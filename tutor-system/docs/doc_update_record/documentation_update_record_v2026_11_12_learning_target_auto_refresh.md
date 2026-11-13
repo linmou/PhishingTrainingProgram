@@ -415,3 +415,35 @@ unavailable duplication/dead-code/security tools, existing package advisory
 findings and standalone type errors remain recorded in
 `audits/pr76-readiness-code-smell/`. The owned diagnostic staging lease was
 released after cleanup; localhost remains running.
+
+### Follow-up: preserve manual text when saved targets arrive (2026-11-13)
+
+Intent: close the successful-background-read case missed by the earlier setup-form repair.
+Reviewed baseline: `0395dc94d0d41d7b7f14a90ce0c058f8d6895309`.
+Three independent reviewers reproduced a remaining P2: after an empty read, type
+manual targets, then deliver a populated checklist through a database notification.
+The panel switched branches and unmounted the textboxes. The preservation test
+failed with the textbox absent (session `3395`).
+
+The panel now keeps the manual form mounted while open. When a saved nonempty
+checklist arrives, it preserves both text fields and explains that the tutor can
+copy the text or Cancel to view/edit the saved targets. Creation is disabled,
+including keyboard submission, so the conflict cannot silently replace saved
+targets. Local draft promotion and conversion from a legacy checklist remain available.
+
+`useChecklist.reviewRemoteSetup.test.tsx` checks both database notifications and
+database-ready events using the real hook/panel, retains both fields, rejects
+submission without an API call or local draft write, and checks Cancel reveals
+the saved targets. Full frontend verification: **156 suites / 1632 tests / 1
+snapshot passed**, with 5 suites / 93 existing skips (session `28233`). Production
+build passed with existing warnings (session `16359`). This is local frontend
+verification; no new hosted staging acceptance or production release is claimed.
+Updated runtime hashes are recorded in the candidate manifest. PR76 remains draft.
+
+Three independent repair reviews passed all criteria; the strict review gate
+accepted `audits/pr76_remote_setup_fix_review_iteration1_summary.json`. Scoped
+ESLint is clean after replacing an empty test `act` with an accessible async
+query and documenting the direct form-submit check. The two regression cases
+passed again after that test-only cleanup. Broader smell-monitor coverage remains
+incomplete because optional analyzers are unavailable; existing standalone type
+errors and dependency advisories are outside this frontend repair.

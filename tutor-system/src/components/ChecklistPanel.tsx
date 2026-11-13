@@ -622,7 +622,10 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
       <button onClick={refreshChecklist} className="action-button secondary"><RotateCcw size={14} />Refresh</button>
     </section>;
   }
-  if (!checklist || setupRequired) {
+  if (!checklist || setupRequired || (canSetupTargets && showManualInput)) {
+    const savedTargetsArrived = Boolean(checklist && !checklist.id.startsWith('draft-')
+      && (!transferEnabled || transferPolicy)
+      && checklist.detection_areas.length + checklist.verification_steps.length > 0);
     return (
       <div className="checklist-panel">
         <div className="checklist-header">
@@ -638,8 +641,13 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
         {/* Show manual input form */}
         {canSetupTargets && showManualInput && (
           <div className="checklist-manual-input">
+            {savedTargetsArrived && <p role="status">
+              Targets were saved while this form was open. Your text is still here to copy.
+              Cancel to view and edit the saved targets.
+            </p>}
             <ManualChecklistInput
               onSubmit={handleManualSubmit}
+              submitDisabled={savedTargetsArrived}
               onCancel={closeModals}
               title={transferEnabled ? 'Enter Learning Targets' : undefined}
               allowVerificationOnly={transferEnabled}
