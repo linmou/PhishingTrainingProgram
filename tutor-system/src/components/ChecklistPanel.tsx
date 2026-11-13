@@ -549,7 +549,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
   const draftSyncError = Boolean(error && checklist?.id.startsWith('draft-'));
   const warnings = <>
     {liveError && <div className="checklist-error" role="status"><p>{liveError}</p></div>}
-    {error && (checklist || !isVisible) && <div className="checklist-error" role="status">
+    {error && (checklist || !isVisible || showManualInput) && <div className="checklist-error" role="status">
       <p>{error}</p>
       <button onClick={refreshChecklist} className="retry-button">
         <RotateCcw size={14} />{draftSyncError ? 'Retry sync' : 'Retry'}
@@ -569,7 +569,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
     );
   }
 
-  if (loading && !checklist) {
+  if (loading && !checklist && !showManualInput) {
     return (
       <div className="checklist-panel">
         <div className="checklist-header">
@@ -587,7 +587,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
     );
   }
 
-  if (error && !checklist) {
+  if (error && !checklist && !showManualInput) {
     return (
       <div className="checklist-panel">
         <div className="checklist-header">

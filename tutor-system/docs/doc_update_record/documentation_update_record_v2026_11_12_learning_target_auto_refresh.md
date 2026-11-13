@@ -1,6 +1,6 @@
 # Learning target auto-refresh — issue #75
 
-Status: **all selected staging workflows passed; merge risk decision remains open for the unexplained first setup timeout**. Latest continuation below supersedes historical checkpoints. PR76 is not merged or production released.
+Status: **manual-form preservation and database-stream-readiness repairs pass local and controlled browser verification; PR remains draft**. Both fixes are available on localhost. Historical uninstrumented failures cannot be conclusively attributed to the demonstrated readiness gap. Latest continuation below supersedes historical checkpoints. PR76 is not merged or production released.
 
 - Issue: https://github.com/linmou/PhishingTrainingProgram/issues/75
 - Draft PR: https://github.com/linmou/PhishingTrainingProgram/pull/76
@@ -288,3 +288,130 @@ requires an explicit maintainer decision. Codex owns resumption: after that
 decision and current-head checks, recheck deployment/source preconditions,
 coordinate Render, merge, promote SQL then Edge/frontend, and run production
 acceptance. Production has no PR76 changes; issue #75 remains open.
+
+### Further setup investigation and repair — 2026-11-12
+
+The maintainer explicitly chose to keep PR76 draft and investigate further.
+Current-head CI passed on `3af5389` before the following repair. The diagnostic
+`tmp/pr76-setup-stress.cjs` drives real UI target setup in both entry orders,
+varies tutor membership-response delay from 0 to 1500ms, and records requests,
+session/checklist state, local draft and both panels. It reuses the existing
+runner's environment/lease/fixture ownership and cleanup checks; its own SHA-256
+is recorded in `setup-stress.json` because it overrides the selected workflow.
+
+First stress run `20261113014024-07fb266e` passed ten cases before a diagnostic
+route callback failed during navigation. All eleven recorded rooms were cleaned
+by the owned recovery script, documented in `recovery.json`; the maintainer
+authorized removal of that stopped run's stale local fixture lock. The harness
+now awaits route completion and retains navigation-related route errors.
+
+Run `20261113014404-c0dfaa03` passed twenty cases, then reproduced a real form-loss
+bug with a 500ms membership response delay. The tutor had typed targets, but the
+manual form disappeared before Submit could execute. Captured evidence shows
+one valid learner session, no initialize-checklist request, no stored local
+draft and no checklist. All twenty-one fixture cleanups passed and the owned
+lease was released. This differs from the original post-submit failure, whose
+tutor screenshot already displayed target cards; it does not establish that
+failure's cause.
+
+Controlled real-hook/real-panel tests reproduced four failures: same-room learner
+resolution resets the open form, and successful/pending/failed reads discard its
+typed values. The repair separates setup-form identity (room/account/mode) from
+learner-read scope, preserves the form during loading/error states, and keeps
+read errors and Retry visible. Room/account changes still clear the form.
+Independent review caught hidden errors in the first repair; a new failing
+assertion confirmed that gap before it was corrected. Final focused validation:
+**3 suites / 57 tests passed**, including fifteen timing probes, exact submitted
+targets/learner, visible errors and successful Retry without losing input.
+
+Before the final warning adjustment, full frontend regression passed **155
+suites / 1629 tests / 1 snapshot**, with 5 suites / 93 existing skips; production
+build passed with existing warnings. Affected panel regressions were rerun after
+that adjustment; final build/current-head CI and hosted setup validation must
+complete for this new frontend candidate. SQL and assessment-api remain unchanged
+on staging. The original post-submit timeout remains open and production is
+untouched. Keep PR76 draft as directed.
+
+### Localhost and post-submit reproduction — 2026-11-12
+
+The maintainer requested a localhost for manual testing, followed by continued
+investigation. `http://localhost:3106` serves the current local frontend against
+staging; it compiled successfully and returned HTTP 200. Application source was
+held unchanged during this diagnostic pass. The fifteen local setup regressions
+pass; nineteen test-file lint findings remain outstanding, so no clean quality
+gate or merge readiness is claimed.
+
+Run `20261113020833-ffadc717` reproduced the original waiting symptom after
+submission. A controlled membership response was released after manual text entry;
+the form retained its text and submitted successfully. Database and tutor HTTP
+reads confirm the active learner checklist and both target items. The local draft
+was cleared. The learner's last checklist read was empty before the commit, and
+it made no later read while waiting twenty seconds. The tutor displayed saved
+targets; the learner still displayed the waiting view. This rules out failed
+target persistence in this reproduction. It does not yet distinguish a missing
+subscription/event from a missed client invalidation, or prove the same underlying
+cause as the first historical failure.
+
+Websocket event capture was then added only to the untracked diagnostic script.
+Run `20261113021020-cc174b77` passed 24 cases with full page transitions;
+`20261113021255-23b9fd1d` passed 24 with ordinary hash navigation retaining the
+same realtime client. Eight fresh-browser first-entry runs also passed:
+`20261113021555-199b0d18`, `20261113021607-5a26416f`,
+`20261113021619-0f757070`, `20261113021630-d2d85877`,
+`20261113021641-a0f60b7f`, `20261113021652-f18da536`,
+`20261113021706-990ca660`, `20261113021720-770677ca`.
+These successful retries do not repair or explain the captured failure. Reports
+are under `tmp/browser_demo_runs/staging-template-<suffix>/`; diagnostic records
+include actual uncommitted runtime hashes. All 57 rooms across these eleven
+reports were cleaned and the diagnostic staging lease released. The localhost
+server remains available for manual testing. Next investigation boundary:
+capture channel acknowledgement, PostgreSQL readiness and notification events
+during a failing first-entry run. No additional runtime patch was made in this pass.
+
+### Readiness-gap repair — 2026-11-12
+
+The maintainer requested fixing the remaining learner waiting behavior. Twenty
+ordinary first-entry repetitions passed without reproducing a natural failure.
+Captured websocket traffic and the installed SDK show channel `SUBSCRIBED`
+arrives before the separate `system` event reporting PostgreSQL readiness. The
+hook previously reread on channel join but ignored successful database readiness.
+A write in that interval can therefore remain absent from the learner projection
+when its notification is missed.
+
+Added a real-hook regression with an initially empty learner read, channel join,
+saved targets and later PostgreSQL readiness without a row event. Before repair:
+**1 failed / 16 passed** (session `69269`). A controlled real-browser run delayed
+the database-ready message five seconds and withheld four intervening row events:
+`20261113034155-be3af0c9` failed after twenty seconds despite a persisted checklist
+and released readiness. This fault injection reproduces the failure mechanism;
+it is not a captured causal trace of the earlier natural failures.
+
+The small hook repair invalidates the current projection on successful PostgreSQL
+readiness using the existing bounded debounce. Stale-generation and database-error
+guards remain in place; writes and polling behavior are unchanged. Regression
+suite now **17 passed** (session `14285`), including stale-room readiness rejection.
+Controlled browser Green `20261113034252-f1e809ee`: readiness released at
+03:43:02.419Z, learner checklist read at 03:43:02.793Z returned the saved checklist,
+and the target displayed automatically. Repeated controlled cases before/after
+learner entry both passed in `20261113034350-1dc427b1`. The ordinary full realtime
+workflow passed in `20261113034445-5930022d`. All fixture cleanup entries passed.
+
+Final frontend regression: **155 suites / 1630 tests / 1 snapshot passed**, with
+5 suites / 93 existing skips (session `41369`). Production build passed with
+existing warnings (session `93046`). Setup timing regressions remain **15 passed**;
+the nineteen introduced test lint findings were fixed. Three independent reviews
+converged on all three blocking readiness criteria; strict phase gate accepted
+(`audits/pr76_readiness_review_iteration1_summary.json`). Review certifies the
+demonstrated gap and preserves uncertainty about historical attribution.
+
+Runtime modifications are limited to setup-form preservation in the existing
+hook/panel and the readiness event handler. No new SQL or Edge artifact is
+required. The latest source is served at localhost:3106 for manual testing. Keep
+PR76 draft as instructed; production is unchanged.
+
+Scoped code-smell follow-up reports zero ESLint errors/warnings across the three
+changed runtime modules and new setup timing tests. Broader coverage is incomplete:
+unavailable duplication/dead-code/security tools, existing package advisory
+findings and standalone type errors remain recorded in
+`audits/pr76-readiness-code-smell/`. The owned diagnostic staging lease was
+released after cleanup; localhost remains running.

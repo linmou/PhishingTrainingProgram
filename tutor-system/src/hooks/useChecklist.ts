@@ -163,6 +163,8 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
   // New modal states
   const [showGenerationModal, setShowGenerationModal] = useState<GenerationModalState | null>(null);
   const [showManualInput, setShowManualInput] = useState(false);
+  const setupScope = JSON.stringify([roomId, transferEnabled, user?.id, user?.current_role]);
+  const [modalScope, setModalScope] = useState(setupScope);
   const transferScope = JSON.stringify([roomId, transferStudentId, transferEnabled, user?.id, user?.current_role]);
   const [dataScope, setDataScope] = useState(transferScope);
   const loadedScope = useRef<string | null>(null);
@@ -179,8 +181,6 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
     setProgress(scopedDraft ? progressForChecklist(scopedDraft) : null);
     setError(null);
     setReadError(null);
-    setShowManualInput(false);
-    setShowGenerationModal(null);
     loadedScope.current = scopedDraft ? transferScope : null;
     readRequest.current = null;
     return () => {
@@ -189,6 +189,13 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
       readRequest.current = null;
     };
   }, [transferScope, roomId, transferEnabled, user?.current_role]);
+
+  // Resolving the learner must not discard the tutor's unfinished setup form.
+  useEffect(() => {
+    setModalScope(setupScope);
+    setShowManualInput(false);
+    setShowGenerationModal(null);
+  }, [setupScope]);
 
   const syncTransferDraft = useCallback(async () => {
     if (!transferEnabled || !transferStudentId || user?.current_role !== 'tutor') return;
@@ -730,8 +737,8 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
     progress: dataScope === transferScope ? progress : null,
     
     // New modal states
-    showGenerationModal,
-    showManualInput,
+    showGenerationModal: modalScope === setupScope ? showGenerationModal : null,
+    showManualInput: modalScope === setupScope && showManualInput,
 
     // Actions
     generateChecklist,

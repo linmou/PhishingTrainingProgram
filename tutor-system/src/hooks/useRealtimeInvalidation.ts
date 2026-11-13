@@ -65,9 +65,14 @@ export function useRealtimeInvalidation(
       // A missing channel is an unavailable feed, including restricted clients.
       if (!channel?.on) { failed(); return; }
       channel.on('system', {}, payload => {
-        if (current() && payload.extension === 'postgres_changes' && payload.status === 'error') {
+        if (!current() || payload.extension !== 'postgres_changes') return;
+        if (payload.status === 'error') {
           postgresChangesFailed = true;
           failed();
+        } else if (payload.status === 'ok' && !postgresChangesFailed) {
+          // Channel join can precede database-stream readiness. Read again to
+          // recover writes committed after the join read but before notifications.
+          invalidate();
         }
       });
       const registered = JSON.parse(bindingKey) as RealtimeReadBinding[];

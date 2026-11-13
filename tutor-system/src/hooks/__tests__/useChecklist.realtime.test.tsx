@@ -109,6 +109,20 @@ it('does not clear a database-stream error on channel join or manual refresh', a
   expect(result.current.checklist).not.toBeNull();
 });
 
+it('discovers targets committed after channel join but before PostgreSQL stream readiness', async () => {
+  mockUser = { id: 'learner', current_role: 'student' };
+  (api.getChecklistForStudent as jest.Mock).mockResolvedValue(null);
+  const { result } = renderHook(() => useChecklist('room', { enabled: true, studentId: 'learner' }));
+  await flush();
+  status('SUBSCRIBED'); await advance();
+  expect(result.current.checklist).toBeNull();
+  // A write before the database stream starts has no row notification to replay.
+  (api.getChecklistForStudent as jest.Mock).mockResolvedValue(saved());
+  act(() => currentChannel().handlers.find(h => h.kind === 'system')!.callback({ extension: 'postgres_changes', status: 'ok' }));
+  await advance();
+  expect(result.current.checklist?.id).toBe('checklist-room');
+});
+
 it('queues one further read when events arrive during a pending read', async () => {
   renderHook(() => useChecklist('room'));
   await flush();
@@ -148,6 +162,8 @@ it('rejects delayed reads and notifications from a previous room', async () => {
   rerender({ room: 'new-room' }); await flush();
   await act(async () => pending.resolve(saved()));
   event('session_checklists', previous); await advance();
+  act(() => previous.handlers.find(h => h.kind === 'system')!.callback({ extension: 'postgres_changes', status: 'ok' }));
+  await advance();
   expect(result.current.checklist?.room_id).toBe('new-room');
   expect(api.getActiveTransferChecklistForRoom).toHaveBeenCalledTimes(2);
 });
