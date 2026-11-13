@@ -1,0 +1,98 @@
+{
+  "settings": {
+    "model": "deepseek-flash",
+    "endpoint": "https://api.deepseek.com",
+    "temperature": 0.3,
+    "max_tokens": 600,
+    "thinking": {
+      "type": "disabled"
+    },
+    "response_format": {
+      "type": "json_object"
+    },
+    "repetitions": 3,
+    "num_workers": 3,
+    "timeout_ms": 90000,
+    "max_active_ms": 1800000
+  },
+  "files": [
+    {
+      "path": "raw/execution-1794561681586.json",
+      "bytes": 489,
+      "sha256": "b57084499076d41b845944efffb2eda32a969db854bd05b4e05768088ce197dc"
+    },
+    {
+      "path": "raw/fixed-r1.json",
+      "bytes": 30892,
+      "sha256": "96d35c1bfc4bc49b2e69d33730166991ccf098df374fd44e48098b0e679e963c"
+    },
+    {
+      "path": "raw/fixed-r2.json",
+      "bytes": 30892,
+      "sha256": "aa281619a4ede314894fe8953ccddc189e9c9229a43cf2a22aa857343c15625b"
+    },
+    {
+      "path": "raw/fixed-r3.json",
+      "bytes": 31045,
+      "sha256": "053d80342b4d3e7edfe4b653f1e9fbb2fada988fd40e598b9bdf41a6ec3d8629"
+    },
+    {
+      "path": "raw/frozen.json",
+      "bytes": 258820,
+      "sha256": "9515fe9bc28ccb680d0c7442950d104c5b327ce20f945eef018cc32c8bdc8372"
+    },
+    {
+      "path": "raw/journey-r1-t1.json",
+      "bytes": 30868,
+      "sha256": "75fdc1fd4c82cbbcf623cca0793465ceb85579a3a4c6928c9cfcdeecbf49d01c"
+    },
+    {
+      "path": "raw/journey-r1-t2.json",
+      "bytes": 31196,
+      "sha256": "7bbbe1e7103bfddca6b7e3e0f63bdd39d0369a4d0367b6fa3685dc34f1b99aa1"
+    },
+    {
+      "path": "raw/journey-r1-t3.json",
+      "bytes": 31843,
+      "sha256": "5e162520140aebee9264a4eb9943acbcc0952666d1b46204896c6f366a1051d6"
+    },
+    {
+      "path": "raw/journey-r2-t1.json",
+      "bytes": 30826,
+      "sha256": "d56fddcd2f88aa2f02678f671baf8235335eff4762c301033c34b2b30cfb57f5"
+    },
+    {
+      "path": "raw/journey-r2-t2.json",
+      "bytes": 31163,
+      "sha256": "3d41ee4ee587e27c32ea556d77a4ea37bef9bf20db87fe0faabf72a63c80901b"
+    },
+    {
+      "path": "raw/journey-r2-t3.json",
+      "bytes": 31535,
+      "sha256": "16c066b3f58bb20d7d207e8e598d823e9eac8da03789835ebe1e05cc29fb44c6"
+    },
+    {
+      "path": "raw/journey-r3-t1.json",
+      "bytes": 30943,
+      "sha256": "72a26482ff989b151bdb69762b840ebf699e539ce19bc94dc20b3b7c0d260bcf"
+    },
+    {
+      "path": "raw/journey-r3-t2.json",
+      "bytes": 31337,
+      "sha256": "fa66df8e317476d8afdb2fc0c102c9e6d25b22f5649b266aa6d1eadae4a20eef"
+    },
+    {
+      "path": "raw/journey-r3-t3.json",
+      "bytes": 31827,
+      "sha256": "64f9416fa5257c5186ab1b72631c16d2bf78714d6c38b73c788c8be5bd7ed9b8"
+    },
+    {
+      "path": "raw/room-snapshot.json",
+      "bytes": 6755,
+      "sha256": "81f7db0f6b3c2ebb2f6037de32849d2bf5e96fc88059000f1714b85e9efebc80"
+    }
+  ],
+  "file_count": 15,
+  "bytes": 640431,
+  "manifest_sha256": "55ba8fd082debfbb15268b4e561678f513491192c8bf17b165fddbbdb6a487f4"
+}
