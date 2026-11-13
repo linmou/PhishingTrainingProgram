@@ -569,6 +569,8 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
     if (!roomId) return false;
 
     if (checklist?.id.startsWith('draft-')) {
+      // Promotion owns this snapshot until it succeeds or fails.
+      if (transferPromotionInFlight.current?.scope === transferScope) return false;
       const currentDraft = readLearningTargetDraft(roomId);
       if (!currentDraft) return false;
       const allItems = [...currentDraft.detectionAreas, ...currentDraft.verificationSteps];

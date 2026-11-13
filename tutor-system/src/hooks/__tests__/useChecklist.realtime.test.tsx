@@ -1,4 +1,7 @@
-import { act, renderHook } from '@testing-library/react';
+/** useChecklist.ts: verify realtime reads and draft edits during pending promotion. */
+import React from 'react';
+import { act, fireEvent, render, renderHook, screen } from '@testing-library/react';
+import ChecklistPanel from '../../components/ChecklistPanel';
 import { useChecklist } from '../useChecklist';
 import { RoomFeaturesService } from '../../services/roomFeaturesService';
 import { transferAssessmentService } from '../../services/transferAssessmentService';
@@ -180,6 +183,59 @@ it('cancels pending refresh and recovery timers when the viewer unmounts', async
   expect(api.getActiveTransferChecklistForRoom).toHaveBeenCalledTimes(1);
   expect(channels).toHaveLength(count);
   expect(supabase.removeChannel).toHaveBeenCalled();
+});
+
+it('rejects draft edits during promotion and allows persisted edits after success', async () => {
+  const draft = JSON.stringify({ detectionAreas: ['Draft'], verificationSteps: [] });
+  window.localStorage.setItem('room-learning-target-draft:room', draft);
+  const pending = deferred<SessionChecklist>();
+  (api.initializeTransferChecklistForStudent as jest.Mock).mockReturnValueOnce(pending.promise);
+  const { result } = renderHook(() => useChecklist('room', { enabled: true, studentId: 'learner' }));
+  await flush();
+  expect(result.current.loading).toBe(true);
+  await act(async () => {
+    expect(await result.current.updateItem('draft-room-detection_area-0', { area_text: 'New draft' })).toBe(false);
+    expect(await result.current.updateItem('draft-room-detection_area-0', { priority: 'critical' })).toBe(false);
+  });
+  expect(window.localStorage.getItem('room-learning-target-draft:room')).toBe(draft);
+  await act(async () => pending.resolve(saved()));
+  expect(result.current.loading).toBe(false);
+  expect(window.localStorage.getItem('room-learning-target-draft:room')).toBeNull();
+  (transferAssessmentService.editLearningProgress as jest.Mock).mockResolvedValue({ ...saved().detection_areas[0], area_text: 'New saved target' });
+  await act(async () => {
+    expect(await result.current.updateItem('item-room', { area_text: 'New saved target' })).toBe(true);
+  });
+  expect(transferAssessmentService.editLearningProgress).toHaveBeenCalledTimes(1);
+});
+
+it('allows draft edits after promotion fails without retrying the write', async () => {
+  window.localStorage.setItem('room-learning-target-draft:room', JSON.stringify({ detectionAreas: ['Draft'], verificationSteps: [] }));
+  (api.initializeTransferChecklistForStudent as jest.Mock).mockRejectedValueOnce(new Error('Sync failed'));
+  const { result } = renderHook(() => useChecklist('room', { enabled: true, studentId: 'learner' }));
+  await flush();
+  expect(result.current.loading).toBe(false);
+  await act(async () => {
+    expect(await result.current.updateItem('draft-room-detection_area-0', { area_text: 'Revised draft' })).toBe(true);
+  });
+  expect(result.current.checklist?.detection_areas[0].area_text).toBe('Revised draft');
+  expect(JSON.parse(window.localStorage.getItem('room-learning-target-draft:room')!).detectionAreas).toEqual(['Revised draft']);
+  expect(api.initializeTransferChecklistForStudent).toHaveBeenCalledTimes(1);
+});
+
+it('keeps the real panel draft controls disabled until its hook finishes promotion', async () => {
+  window.localStorage.setItem('room-learning-target-draft:room', JSON.stringify({ detectionAreas: ['Draft'], verificationSteps: [] }));
+  const pending = deferred<SessionChecklist>();
+  (api.initializeTransferChecklistForStudent as jest.Mock).mockReturnValueOnce(pending.promise);
+  render(<ChecklistPanel roomId="room" studentId="learner" transferEnabled isVisible onToggleVisibility={() => {}} />);
+  await flush();
+  fireEvent.click(screen.getByText('Draft', { selector: '.checklist-item-text' }));
+  expect(screen.getByLabelText('Status:')).toBeDisabled();
+  expect(screen.getAllByRole('button', { name: 'Edit' })).toHaveLength(2);
+  screen.getAllByRole('button', { name: 'Edit' }).forEach(button => expect(button).toBeDisabled());
+  await act(async () => pending.resolve(saved()));
+  fireEvent.click(screen.getByText('Explain the risk', { selector: '.checklist-item-text' }));
+  expect(screen.getByLabelText('Status:')).toBeEnabled();
+  screen.getAllByRole('button', { name: 'Edit' }).forEach(button => expect(button).toBeEnabled());
 });
 
 

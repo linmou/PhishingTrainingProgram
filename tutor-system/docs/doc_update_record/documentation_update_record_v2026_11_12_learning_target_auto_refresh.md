@@ -93,3 +93,49 @@ All commands ran in `tutor-system/` with Node v22.23.5 and explicit `REACT_APP_S
 - Runtime candidate hashes in `docs/evidence/learning-target-auto-refresh/candidate-artifacts.json`; reviewed diff baselines in the topic history. Backend versions and integrated release commit remain unknown/unassigned until the release gates run.
 
 The PR remains a draft for a concrete reviewable handoff. It must not auto-close issue #75 on merge; close the issue only after production acceptance. GitHub CI is separate and must be read from actual PR checks.
+
+## Local review repair — 2026-11-12
+
+Intent: record the PR #76 draft-promotion race repair and its local verification.
+
+The user requested pulling the branch and modifying it locally. Worktree: `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/pr-76-local`; branch: `linmou/learning-target-auto-refresh`. Remote candidate `e09e93822e234f7c003dea35709c9b7cef0bd7ba` was merged locally with `no_sign_up` at `0d4428843c2a7aaba9d11c491bfdb770167d3ab5`, producing merge commit `3d1a1dd0b6ce2e7be0af0bb962321ff0def1ea39`. The repair remains an uncommitted local diff on that merge.
+
+The review identified that keeping the panel mounted during draft promotion allowed a tutor to save a newer draft while the older snapshot was being persisted. Completion then deleted the newer local draft. The hook now rejects draft mutations while its promotion request owns the current scope. A disabled fieldset keeps the draft visible while preventing edits until synchronization succeeds or fails. Persisted background refreshes remain editable.
+
+Verification used Node v22.12.0 with `REACT_APP_SUPABASE_URL=http://127.0.0.1:54321` and `REACT_APP_SUPABASE_ANON_KEY=local-placeholder`:
+
+- Regression sensitivity: removing both guards produced **3 failures / 23 passes** across the two focused suites. Failures showed draft mutation returning true and enabled controls in both the mocked panel and actual panel-plus-hook integration. Restored both guards before final validation.
+- `CI=true npm test -- --watchAll=false --runInBand --silent --testPathPattern='useChecklist|ChecklistPanel|RoomPagePost.transfer'`: **11 suites / 159 tests passed**, exit 0. New cases cover pending promotion, successful transition to persisted editing, failed-promotion recovery, and actual panel/hook control disabling.
+- `CI=false npm run build`: exit 0, compiled with existing lint warnings in ImageUpload, RoomPagePost, imageUpload and parameterConfig. This supplies the application TypeScript build check; mypy does not apply to these TypeScript-only edits.
+- `git diff --check`: passed.
+- A clean `npm ci` failed with ENOSPC. The user authorized removal of that incomplete 768 MB install. Tests/build reused a symlink to the existing `transfer-assessment-ui-upgrade/integration/tutor-system/node_modules`. Lockfile comparison found matching shared package versions, with three candidate-only nested entries absent from that installation: mongoose/gcp-metadata, promptfoo/@types/node and promptfoo/undici-types. This is local verification, not a clean-install CI claim.
+
+The preceding review successfully queried both live projects through Supabase MCP: none of the four required tables was in `supabase_realtime`. MCP availability is therefore no longer the blocker recorded earlier. Migration validation, staging acceptance, production rollout and current-head GitHub checks remain outstanding. This local repair did not apply SQL, deploy, push, or merge the PR.
+
+### Local follow-up verification — 2026-11-12
+
+The user reiterated local-worktree repair. The draft race guards and current-default integration were rechecked. Full integrated frontend regression, `CI=true npm run test:regression -- --runInBand --silent`, passed **154 suites / 1,608 tests / 1 snapshot**, with 5 suites / 93 existing tests skipped (46.943 seconds, exit 0). It used the same explicit loopback environment and reused dependencies described above.
+
+Read-only Supabase MCP inspection confirmed both targets use executor/publication owner `postgres`, publication INSERT/UPDATE enabled, all four target tables owned by postgres with RLS and `PRIMARY KEY (id)`, default replica identity, and no target publication memberships. Existing publication members are `messages`, `message_feedback`, and `rooms`. Staging runs PostgreSQL 17.11; production runs 17.4; local client is 17.11.
+
+A fresh configured production export completed at `/Users/admin/.transfer-assessment-pg17/runs/baseline.KUXU9J4q`; both SHA-256 checks passed. That export has not been restored or compared and is not a verified baseline.
+
+Additional SQL diagnostics ran the exact candidate as `postgres` on two owned clones of retained `issue73_baseline_20261112_fresh`. The local diagnostic runner `tmp/pr76-publication-diagnostic.cjs` establishes the observed publication membership on each clone before invoking the existing harness scenario:
+
+- Red/Green: expected missing-membership failure, successful migration, unchanged rows/policies/ACLs/replica identities/options, unrelated member preservation, idempotence, browser-role reads and forbidden DDL/private-read checks all passed. Evidence: `/Users/admin/.transfer-assessment-pg17/runs/scenario-DRbC28/lease.json` and `learning-realtime-evidence.json` in that directory.
+- Atomic failure: removing the last required table caused the expected migration failure and rolled back earlier additions. Evidence: `/Users/admin/.transfer-assessment-pg17/runs/scenario-fcnYGK/lease.json` and its SQL evidence JSON.
+- Both scenarios exited 0 and their leases confirm cleanup. The retained baseline was untouched. The local cluster reports insufficient `wal_level` for logical streaming; these checks exercise SQL/catalog behavior only.
+
+These diagnostics do not replace fresh-baseline parity or hosted websocket acceptance. No new SQL defect was found. Remaining merge gates are fresh-baseline validation, staging two-viewer acceptance, current-head CI/review, and coordinated production rollout. The user's local-only scope remains in effect.
+
+### Independent repair review and lint follow-up — 2026-11-12
+
+Three independent reviewers converged on pass for four blocking criteria: same-viewer mutation rejection, UI disabling/recovery, regression evidence and accurate release scope. The deterministic phase gate accepted round 1; audit artifacts are locally ignored under `audits/pr76_fix_review_*`. The review rerun passed 11 suites / 159 tests.
+
+The requested scoped code-smell monitor found five new test lint violations. These are repaired by destructuring `rerender` and replacing CSS-selector access with accessible-role queries for both Edit buttons, retaining explicit count and disabled/enabled assertions. The two focused suites passed 26/26 tests after cleanup; `git diff --check` passed. Runtime source is unchanged since the independent review; the small test-query cleanup was not independently re-reviewed.
+
+The same four-file monitor scope reduced ESLint errors from 24 to 19, with zero in the repaired runtime modules or new test block. Remaining errors predate the repair. Before/after reports: `audits/pr76-fix-code-smell/` and `audits/pr76-fix-code-smell-after/`. Coverage remains incomplete because Knip, jscpd, madge, depcheck and Gitleaks are unavailable; package-wide standalone TypeScript failures and dependency advisories remain explicitly recorded. No push, deployment or PR merge occurred.
+
+### PR update handoff — 2026-11-12
+
+The user subsequently authorized updating PR #76. The repair, regression tests, requirement status and verification notes are being committed on the topic branch, based on local integration commit `3d1a1dd0b6ce2e7be0af0bb962321ff0def1ea39`. The candidate manifest now reflects both repaired runtime hashes and current default baseline `0d4428843c2a7aaba9d11c491bfdb770167d3ab5`. Earlier references to uncommitted/local-only status describe the state before this handoff. Hosted deployment remains outside this update; the PR stays draft until fresh-baseline and staging gates pass. Release resumption owner: Codex in `pr-76-local`, accepting the earlier workspace's handoff. Current-head GitHub CI must be checked after push.

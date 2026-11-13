@@ -726,7 +726,9 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
 
       {warnings}
 
-      <div className="checklist-content">
+      <fieldset className="checklist-content"
+        disabled={loading && checklist.id.startsWith('draft-')}
+        style={{ border: 0, margin: 0, minWidth: 0 }}>
         <div className="checklist-summary">
           <div className="template-info">
             <strong>{checklist.template_name}</strong>
@@ -827,7 +829,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
             {loading ? 'Refreshing...' : 'Refresh'}
           </button>
         </div>
-      </div>
+      </fieldset>
 
       {/* Add Custom Area Modal */}
       {!isReadOnly && <AddCustomAreaModal

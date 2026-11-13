@@ -1,11 +1,11 @@
 {
   "purpose": "Reviewed local candidate; not an integrated production release manifest",
-  "baseline_commit": "878ed465823959517bb68398b05ee08b90958b24",
+  "baseline_commit": "0d4428843c2a7aaba9d11c491bfdb770167d3ab5",
   "files": {
-    "tutor-system/src/hooks/useChecklist.ts": "a12fc5d1b67256b192bfe02a651c7abc3dc87f4bd7034192616d34927cbdc8f7",
+    "tutor-system/src/hooks/useChecklist.ts": "9243ce8c0d8cb7a3ba2090eeba579ebcb7ef8d317803af196a7993964f485592",
     "tutor-system/src/hooks/useRealtimeInvalidation.ts": "146f79c8876a948985c73f5ae8825c1c1b83178359cb3469557d80cb9c085186",
     "tutor-system/src/hooks/boundedRead.ts": "0f3d7dbc74cf4e2ccf9013ab8ca26ed91c6f1cf6a9d9797cfd4f9957674f8c7b",
-    "tutor-system/src/components/ChecklistPanel.tsx": "ef755b831f946ccecec2417c47c10f1b8ff939fd6ebe81c2453a7acb2fab410a",
+    "tutor-system/src/components/ChecklistPanel.tsx": "9509299f2bbaab2400ab513e0d923e916b45175c98c4f4405ba4707eaafa9a54",
     "tutor-system/src/pages/RoomPagePost.tsx": "937d77b01272efd47792023c2f98f5af514d3fb9e911db99b0005c65d93c1bf4",
     "tutor-system/package.json": "465472674cb9655c6038fb7efd09e9bdcf980700fd54b09a6da6bdb2374f2f9a",
     "tutor-system/package-lock.json": "501922254f2f40ad292541217c55294d13e76c747361153718d310d01177f6c0",

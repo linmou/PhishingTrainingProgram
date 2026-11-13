@@ -108,4 +108,10 @@ Grounding: P2/P4/P5 support live visibility; P6 and P7/R7 favor reusing Realtime
 
 ## Delivery status
 
-Draft PR [#76](https://github.com/linmou/PhishingTrainingProgram/pull/76), issue [#75](https://github.com/linmou/PhishingTrainingProgram/issues/75). Reviewed implementation `b4e5dcb`; 1,602 tests and production build pass. All three independent follow-up reviews found no actionable local blocker. Status remains in-review: migration validation and staging/production acceptance are blocked on Supabase MCP, with owner and concrete resumption steps in the dated release record.
+### Local PR review follow-up — 2026-11-12
+
+- [x] Fix draft edits accepted during pending promotion: reject mutations in the hook and disable the visible draft controls until synchronization settles. Regression tests cover success, failure, text/priority mutations, and actual panel/hook integration.
+- [x] Integrate current `no_sign_up` locally at merge `3d1a1dd0b6ce2e7be0af0bb962321ff0def1ea39`; full frontend regression passes 1,608 tests and the production build passes.
+- [ ] Complete release acceptance: SQL diagnostics pass on retained-baseline clones, but fresh-baseline parity and hosted two-viewer delivery remain unverified. User requested local-only work. See the dated release record for command results and retained evidence.
+
+Draft PR [#76](https://github.com/linmou/PhishingTrainingProgram/pull/76), issue [#75](https://github.com/linmou/PhishingTrainingProgram/issues/75). The original pre-PR reviews covered implementation `b4e5dcb`; the subsequent merge review found the draft-promotion race repaired locally above. Supabase MCP is now available. Status remains in-review pending fresh-baseline migration validation and staging/production acceptance. The repair and verification updates remain local, with evidence and resumption steps in the dated release record.

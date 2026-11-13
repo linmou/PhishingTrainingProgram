@@ -86,6 +86,24 @@ it('updates nonedited fields independently while preserving an active note draft
   expect(screen.getByText('New saved target', { selector: '.text-display' })).toBeInTheDocument();
 });
 
+it('disables draft controls during promotion and restores them after a failed sync', () => {
+  checklist = { ...checklist!, id: 'draft-room' };
+  loading = true;
+  const { rerender } = render(view());
+  expand();
+  expect(within(card()).getByLabelText('Status:')).toBeDisabled();
+  const editButtons = within(card()).getAllByRole('button', { name: 'Edit' });
+  expect(editButtons).toHaveLength(2);
+  editButtons.forEach(button => expect(button).toBeDisabled());
+  expect(screen.getByRole('button', { name: 'Add Custom Area' })).toBeDisabled();
+  loading = false;
+  error = 'Sync failed';
+  rerender(view());
+  const restoredEditButtons = within(card()).getAllByRole('button', { name: 'Edit' });
+  expect(restoredEditButtons).toHaveLength(2);
+  restoredEditButtons.forEach(button => expect(button).toBeEnabled());
+});
+
 it('keeps the card and evidence visible with independent refresh and feed warnings', () => {
   const rendered = render(view());
   expand();
