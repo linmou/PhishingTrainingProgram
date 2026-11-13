@@ -6,7 +6,7 @@ import { supabase } from '../supabase';
 import { buildRoomExportData, buildRoomTextExport } from '../../contexts/roomExportBuilder';
 import { transferRoom } from '../../test-support/transferRoomFixtures';
 
-jest.mock('../supabase', () => ({ supabase: { from: jest.fn() } }));
+jest.mock('../supabase', () => ({ supabase: { from: jest.fn(), functions: { invoke: jest.fn() } } }));
 
 const historicalTargets = [
   { key: 'recognize_cyberbullying_impact', description: 'Recognize harmful online behavior and explain its impact on the person targeted.' },
@@ -25,12 +25,20 @@ test.each(['cyberbullying_v1', CYBERBULLYING_TARGET_VERSION])('reads and exports
     id: 'item-' + index, target_key: target.key, area_text: target.description,
     item_type: index === 0 ? 'understanding' : 'behavior', priority: 'important',
     status: index === 1 ? 'covered' : 'pending', understanding_level: index === 1 ? 'good' : 'none',
-    coverage_evidence: index === 1 ? [evidence] : [], created_at: now, updated_at: now,
+    created_at: now, updated_at: now,
   }));
   const checklist = { id: 'checklist-1', room_id: transferRoom.id, student_id: 'learner-1',
     target_version: targetVersion, template_name: 'Cyberbullying', session_start: now,
     total_items: 5, completed_items: 1, completion_percentage: 20, created_at: now, updated_at: now, is_active: true };
   const queries: any[] = [];
+  window.localStorage.setItem('tutor_system_user', JSON.stringify({ id: 'learner-1' }));
+  (supabase.functions.invoke as jest.Mock).mockImplementation(async (name, { body, headers }) => {
+    expect(name).toBe('assessment-api');
+    expect(body).toEqual({ operation: 'read_learning_evidence', room_id: transferRoom.id,
+      checklist_id: 'checklist-1', request_id: expect.any(String) });
+    expect(headers).toEqual({ 'x-application-user-id': 'learner-1' });
+    return { data: { ok: true, data: [{ ...evidence, item_id: 'item-1' }] }, error: null };
+  });
   // Identical timestamps cannot order the revised targets; simulate arbitrary DB order.
   if (targetVersion === CYBERBULLYING_TARGET_VERSION) items.reverse();
   (supabase.from as jest.Mock).mockImplementation(table => {
@@ -47,6 +55,8 @@ test.each(['cyberbullying_v1', CYBERBULLYING_TARGET_VERSION])('reads and exports
   expect([...(progress?.detection_areas || []), ...(progress?.verification_steps || [])].map(item => item.area_text))
     .toEqual(targets.map(target => target.description));
   expect(progress?.verification_steps[0].coverage_evidence[0].message_id).toBe('message-1');
+  expect(progress?.detection_areas[0].coverage_evidence).toEqual([]);
+  expect(progress?.verification_steps.slice(1).every(item => item.coverage_evidence.length === 0)).toBe(true);
   const args = { room: { ...transferRoom, practice_type: 'cyberbullying' as const }, messages: [],
     messageFeedbackStats: {}, feedbackSummary: null, aiInteractions: [], userRole: 'student' as const,
     userId: 'learner-1', learningProgress: progress };

@@ -106,6 +106,8 @@ describe('ChecklistPanel export report', () => {
 
     mockUseChecklist.mockReturnValue({
       checklist,
+      priorChecklist: null,
+      liveError: null,
       loading: false,
       error: null,
       progress,

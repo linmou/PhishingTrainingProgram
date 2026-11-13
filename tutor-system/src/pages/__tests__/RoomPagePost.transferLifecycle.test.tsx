@@ -15,6 +15,7 @@ import { HashRouter, MemoryRouter, Route, Routes } from 'react-router-dom';
 import RoomPagePost from '../RoomPagePost';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRoom } from '../../contexts/RoomContext';
+import { supabase } from '../../services/supabase';
 import { ChecklistService } from '../../services/checklistService';
 import { transferAssessmentService } from '../../services/transferAssessmentService';
 import {
@@ -41,8 +42,15 @@ import type { Message } from '../../types';
 
 jest.mock('../../contexts/AuthContext');
 jest.mock('../../contexts/RoomContext');
-jest.mock('../../components/ChecklistPanel', () => function MockChecklistPanel() {
-  return <div data-testid="checklist-panel" />;
+let mockPanelProps: any;
+let mockMembershipRead: () => Promise<void>;
+let mockMembershipBindings: any[];
+jest.mock('../../hooks/useRealtimeInvalidation', () => ({ useRealtimeInvalidation: (_scope: string, bindings: any[], read: () => Promise<void>) => {
+  mockMembershipRead = read; mockMembershipBindings = bindings; return null;
+} }));
+jest.mock('../../components/ChecklistPanel', () => function MockChecklistPanel(props: any) {
+  mockPanelProps = props;
+  return <div data-testid="checklist-panel" data-read-only={props.readOnly} data-visible={props.isVisible} />;
 });
 jest.mock('../../components/AIAssistantSettings', () => function MockAIAssistantSettings() {
   return <div data-testid="ai-settings-modal" />;
@@ -151,36 +159,96 @@ describe('RoomPagePost transfer lifecycle states', () => {
     jest.useRealTimers();
   });
 
-  // RoomPagePost.tsx: targets synchronized after learner join clear waiting without a reload or new message.
-  it('refreshes learner target readiness and stops polling when targets arrive', async () => {
-    jest.useFakeTimers();
-    const readTargets = jest.spyOn(ChecklistService, 'getChecklistForStudent')
-      .mockResolvedValueOnce(null).mockResolvedValueOnce(transferChecklist as never);
+  it('mounts a read-only learner panel while collapsed and uses its live setup state', async () => {
+    const readTargets = jest.spyOn(ChecklistService, 'getChecklistForStudent');
     (useAuth as jest.Mock).mockReturnValue({ user: learnerAUser, loading: false });
     mount();
     await act(async () => undefined);
-    expect(screen.getByRole('status')).toHaveTextContent('Waiting for the tutor');
-    await act(async () => { jest.advanceTimersByTime(3000); });
+    expect(screen.getByTestId('checklist-panel')).toHaveAttribute('data-read-only', 'true');
+    expect(screen.getByTestId('checklist-panel')).toHaveAttribute('data-visible', 'false');
+    expect(mockPanelProps.studentId).toBe(learnerAUser.id);
+    act(() => mockPanelProps.onSetupStateChange(true));
+    expect(screen.getByText('Waiting for the tutor to set up learning targets.')).toBeInTheDocument();
+    act(() => mockPanelProps.onSetupStateChange(false));
     expect(screen.queryByText('Waiting for the tutor to set up learning targets.')).not.toBeInTheDocument();
-    expect(readTargets).toHaveBeenCalledTimes(2);
-    await act(async () => { jest.advanceTimersByTime(9000); });
-    expect(readTargets).toHaveBeenCalledTimes(2);
+    expect(readTargets).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByTitle('Learning Progress Checklist'));
+    expect(screen.getByTestId('checklist-panel')).toHaveAttribute('data-visible', 'true');
   });
 
-  // RoomPagePost.tsx: failed readiness reads retry, but leaving the room cancels scheduled checks.
-  it('retries failed learner readiness reads and cancels polling on unmount', async () => {
+  it('updates the tutor learner scope on membership events while the panel is collapsed', async () => {
     jest.useFakeTimers();
-    const readTargets = jest.spyOn(ChecklistService, 'getChecklistForStudent')
-      .mockRejectedValueOnce(new Error('Unavailable')).mockResolvedValue(null);
-    (useAuth as jest.Mock).mockReturnValue({ user: learnerAUser, loading: false });
-    const { unmount } = mount();
+    const rows = jest.fn().mockResolvedValue({ data: [], error: null });
+    const query: any = { select: jest.fn(), eq: jest.fn(), not: rows };
+    query.select.mockReturnValue(query); query.eq.mockReturnValue(query);
+    jest.spyOn(supabase, 'from').mockReturnValue(query);
+    (useAuth as jest.Mock).mockReturnValue({ user: { id: transferRoom.tutor_id, current_role: 'tutor' }, loading: false });
+    mount(); await act(async () => undefined);
+    expect(mockMembershipBindings).toEqual([{ table: 'sessions', filter: `room_id=eq.${TRANSFER_ROOM_ID}` }]);
+    expect(mockPanelProps.isVisible).toBe(false);
+    expect(mockPanelProps.studentId).toBe('learner-a');
+    rows.mockResolvedValue({ data: [{ student_id: 'new-learner' }], error: null });
+    await act(async () => mockMembershipRead());
+    expect(mockPanelProps.studentId).toBe('new-learner');
+    await act(async () => { jest.advanceTimersByTime(12000); });
+    expect(rows).toHaveBeenCalledTimes(2);
+  });
+
+  it('serializes membership reads and adopts each valid result during continual invalidations', async () => {
+    let resolveFirst!: (value: any) => void;
+    let resolveSecond!: (value: any) => void;
+    const first = new Promise(resolve => { resolveFirst = resolve; });
+    const second = new Promise(resolve => { resolveSecond = resolve; });
+    const rows = jest.fn().mockReturnValueOnce(first).mockReturnValueOnce(second);
+    const query: any = { select: jest.fn(), eq: jest.fn(), not: rows };
+    query.select.mockReturnValue(query); query.eq.mockReturnValue(query);
+    jest.spyOn(supabase, 'from').mockReturnValue(query);
+    (useAuth as jest.Mock).mockReturnValue({ user: { id: transferRoom.tutor_id, current_role: 'tutor' }, loading: false });
+    mount();
+    act(() => { void mockMembershipRead(); void mockMembershipRead(); });
+    expect(rows).toHaveBeenCalledTimes(1);
+    await act(async () => resolveFirst({ data: [{ student_id: 'first-learner' }], error: null }));
+    expect(mockPanelProps.studentId).toBe('first-learner');
+    expect(rows).toHaveBeenCalledTimes(2);
+    await act(async () => resolveSecond({ data: [{ student_id: 'latest-learner' }], error: null }));
+    expect(mockPanelProps.studentId).toBe('latest-learner');
+  });
+
+  it('never passes the previous room learner into a new room after a membership failure', async () => {
+    const originalUrl = window.location.href;
+    window.history.replaceState(null, '', `#/room/${TRANSFER_ROOM_ID}`);
+    const rows = jest.fn().mockResolvedValueOnce({ data: [{ student_id: 'previous-learner' }], error: null })
+      .mockRejectedValue(new Error('membership unavailable'));
+    const query: any = { select: jest.fn(), eq: jest.fn(), not: rows };
+    query.select.mockReturnValue(query); query.eq.mockReturnValue(query);
+    jest.spyOn(supabase, 'from').mockReturnValue(query);
+    (useAuth as jest.Mock).mockReturnValue({ user: { id: transferRoom.tutor_id, current_role: 'tutor' }, loading: false });
+    const rendered = mount({}, true);
     await act(async () => undefined);
-    expect(screen.getByRole('status')).toHaveTextContent('Waiting for the tutor');
-    await act(async () => { jest.advanceTimersByTime(3000); });
-    expect(readTargets).toHaveBeenCalledTimes(2);
-    unmount();
-    await act(async () => { jest.advanceTimersByTime(9000); });
-    expect(readTargets).toHaveBeenCalledTimes(2);
+    expect(mockPanelProps.studentId).toBe('previous-learner');
+    const oldContext = (useRoom as jest.Mock).mock.results[(useRoom as jest.Mock).mock.results.length - 1].value;
+    (useRoom as jest.Mock).mockReturnValue({ ...oldContext, currentRoom: { ...transferRoom, id: 'next-room' } });
+    window.history.replaceState(null, '', '#/room/next-room');
+    await act(async () => { fireEvent(window, new PopStateEvent('popstate')); });
+    expect(mockPanelProps.roomId).toBe('next-room');
+    expect(mockPanelProps.studentId).toBeNull();
+    expect(screen.getByText(/Learner membership could not be refreshed/)).toBeInTheDocument();
+    rows.mockResolvedValue({ data: [], error: null });
+    await act(async () => mockMembershipRead());
+    expect(mockPanelProps.studentId).toBeNull(); // Old-room messages cannot supply a new-room fallback.
+    rendered.unmount();
+    window.history.replaceState(null, '', originalUrl);
+  });
+
+  it('does not mount learning progress for an observer or a tutor who does not own the room', async () => {
+    (useAuth as jest.Mock).mockReturnValue({ user: { ...learnerAUser, current_role: 'observer' }, loading: false });
+    const first = mount();
+    await act(async () => undefined);
+    expect(screen.queryByTestId('checklist-panel')).not.toBeInTheDocument();
+    first.unmount();
+    (useAuth as jest.Mock).mockReturnValue({ user: { ...learnerAUser, current_role: 'tutor' }, loading: false });
+    mount();
+    expect(screen.queryByTestId('checklist-panel')).not.toBeInTheDocument();
   });
 
   it('shows a preparing state while a transfer turn is being prepared', () => {

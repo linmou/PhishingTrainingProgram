@@ -29,7 +29,7 @@ For the people who plan and build the platform: before a new feature is built, t
 - R4 (prd FR-4, FR-5, FR-6, FR-7, FR-8, FR-9): A tutor creates a room of one practice type, fixed at creation, from a template of that practice type; test rooms stay out of teaching lists; the owner sees the rooms they own and can delete one after confirming.
 - R5 (prd FR-14, FR-15, FR-16, NFR-8): Every participant sees the same live conversation within about 2 seconds, and the learner rates every tutor reply before writing again.
 - R6 (prd FR-18, FR-19, FR-20, FR-44, NFR-9): Every learner has learner-owned learning targets; each learner message is judged against each target on the server; the quality of that judging is governed by the AI behavior specifications.
-- R7 (prd FR-21, FR-22, FR-23, FR-53): Learning progress moves only through the defined states and events, is shown to the room owner, can be corrected by hand by the room owner, and pauses while Guard is on.
+- R7 (prd FR-21, FR-22, FR-23, FR-53, NFR-8): Learning progress moves only through the defined states and events, updates automatically for the room owner and learner without interrupting edits, can be corrected by hand by the room owner, and pauses while Guard is on.
 - R8 (prd FR-24 to FR-29, NFR-9, NFR-10): The room owner requests an AI suggestion, reviews, edits and sends it, and sets the AI role; a change of AI model or prompt is re-evaluated before release.
 - R9 (prd FR-31 to FR-43, FR-54, NFR-3): When a learner moves a learning target from Partial to Covered, a transfer assessment becomes due; the room owner reviews and sends or rejects it; the learner answers with option controls; the server grades up to two attempts and saves result messages, publishing the correct answer only after the second wrong attempt. While the temporary exit assessment is in force, a transfer assessment becomes due for every learning target the learner's own learning event makes Covered, whether from Pending, from Partial or by spontaneous transfer, and the learner answers open transfer assessments in a pop-up when leaving the room instead of in the conversation.
 - R10 (prd FR-7, FR-44 to FR-49): In a cyberbullying room the learner writes about a scenario from a cyberbullying template, the server judges against five shared learning targets, and the room owner replies through reviewed character drafts that every participant sees under the same character.
@@ -67,3 +67,5 @@ This initiative covers the platform as built; it does not change behavior. Out: 
 ## Notes
 
 - Assumption: A tutor who is not the room owner takes part as an observer (prd section 12).
+
+- Approved extension 2026-11-12 (#75): R7 includes automatic progress visibility under FR-23/NFR-8. Its implementation and hosted acceptance are tracked separately from this baseline.

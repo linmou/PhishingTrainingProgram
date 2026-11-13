@@ -5,6 +5,8 @@
 
 import { renderHook, act, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
+jest.mock('../../hooks/useRealtimeInvalidation', () => ({ useRealtimeInvalidation: () => null }));
+
 import { useChecklist } from '../useChecklist';
 import { RoomFeaturesService } from '../../services/roomFeaturesService';
 import { assessChecklistGenerationContext } from '../../services/checklistGenerationContext';

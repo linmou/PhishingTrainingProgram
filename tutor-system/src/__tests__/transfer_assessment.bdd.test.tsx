@@ -74,7 +74,18 @@ jest.mock('../services/checklistService', () => ({
   },
 }));
 
-jest.mock('../components/ChecklistPanel', () => function MockChecklistPanel({ isVisible }: { isVisible: boolean }) {
+jest.mock('../components/ChecklistPanel', () => function MockChecklistPanel({ isVisible, roomId, onSetupStateChange }: {
+  isVisible: boolean; roomId: string; onSetupStateChange: (waiting: boolean) => void;
+}) {
+  const React = require('react');
+  const { ChecklistService: checklistService } = require('../services/checklistService');
+  React.useEffect(() => {
+    let active = true;
+    void checklistService.getActiveTransferChecklistForRoom(roomId).then((checklist: { detection_areas: unknown[]; verification_steps: unknown[] } | null) => {
+      if (active) onSetupStateChange(!checklist || checklist.detection_areas.length + checklist.verification_steps.length === 0);
+    });
+    return () => { active = false; };
+  }, [roomId, onSetupStateChange]);
   return isVisible ? <div data-testid="checklist-panel" /> : null;
 });
 jest.mock('../components/AIAssistantSettings', () => function MockAIAssistantSettings() {
@@ -294,6 +305,7 @@ async function mountTeacherRoom(
 }
 
 beforeEach(() => {
+  Element.prototype.scrollIntoView = jest.fn();
   jest.clearAllMocks();
   (ChecklistService.analyzeStudentMessages as jest.Mock).mockImplementation((roomId, _studentId, focusId) =>
     transferAssessmentService.analyzeMessage(focusId, roomId));

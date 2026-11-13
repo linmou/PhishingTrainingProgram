@@ -14,6 +14,7 @@ const { acquireFixtureLock } = require('./browser-e2e/fixture-lock');
 const { acquireProjectLock } = require('../../scripts/staging-coordination');
 
 const workflows = {
+  'learning-progress-realtime': require('./browser-e2e/workflows/learning-progress-realtime'),
   'cyberbullying': require('./browser-e2e/workflows/cyberbullying'),
   'tutor-response': require('./browser-e2e/workflows/tutor-response'),
   'checklist-generation': require('./browser-e2e/workflows/checklist-generation'),

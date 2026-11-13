@@ -173,6 +173,7 @@ test('used template room is rejected before the workflow can write', async () =>
 
 test('selects the transfer status workflow alongside the existing browser workflows', () => {
   assert.deepEqual(selectWorkflows([]), [
+    'learning-progress-realtime',
     'cyberbullying',
     'tutor-response', 'checklist-generation', 'room-assessment-setup', 'checklist-management', 'checklist-coverage', 'guard-mode',
     'assessment-delivery', 'assessment-answer', 'transfer-status-events', 'early-message-recheck'
@@ -183,6 +184,7 @@ test('selects the transfer status workflow alongside the existing browser workfl
   assert.deepEqual(selectWorkflows(['--workflow=exit-assessment']), ['exit-assessment']);
   assert.deepEqual(selectWorkflows(['--workflow=transfer-status-events']), ['transfer-status-events']);
   assert.deepEqual(selectWorkflows(['--workflow=early-message-recheck']), ['early-message-recheck']);
+  assert.deepEqual(selectWorkflows(['--workflow=learning-progress-realtime']), ['learning-progress-realtime']);
   assert.throws(() => selectWorkflows(['--workflow=unknown']), /Unknown workflow/);
   assert.throws(() => selectWorkflows(['--workflow=tutor-response', '--workflow=assessment-answer']), /Use --workflow/);
 });

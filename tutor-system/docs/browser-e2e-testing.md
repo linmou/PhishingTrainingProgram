@@ -1,5 +1,22 @@
 # Browser E2E Testing
 
+<!-- Realtime acceptance updated: 2026-11-12; baseline 33aaeec. -->
+
+`--workflow=learning-progress-realtime` checks two live browser viewers, remote
+progress updates, preserved drafts and evidence view, read-only learner controls,
+an isolated evidence INSERT, hidden-panel catch-up, websocket reconnect and
+pre-entry draft promotion. It creates two tagged rooms and uses the runner's
+ownership-checked cleanup. The isolated evidence INSERT is a service-role fixture
+diagnostic; progress edits and joins use the normal Edge API. Its report records
+latency and distinguishes fixture writes from functional calls. Run against the
+explicit target under the release owner's project lease.
+
+The realtime workflow reloads after installing its websocket probe (hash
+navigation does not run init scripts), captures scoped GET/POST evidence, and
+restores its temporary 390px learner viewport. Guard uses the common learner-send
+helper, including rating auto-send. Login waits for DOM-ready route navigation;
+failure evidence includes the actual route and displayed login error.
+
 <!-- Learning-target integration updated: 2026-11-12; baseline 84d7a50. -->
 
 Template-settings readiness uses blank lines between detection targets so each

@@ -317,9 +317,13 @@ While Guard is on, no learning progress advances; learning events gathered meanw
 
 #### FR-23: Learning Progress panel
 The room owner and the learner can open the Learning Progress panel showing each learning target's progress state and evidence for that learner.
-**Grounding:** P2, P1.
+**Grounding:** P2, P1, P4, P5.
 
 **Consequences (testable):**
+- The room owner and learner see committed learning-target, progress and evidence changes automatically, including initial setup, catch-up, manual edits, Guard replay and assessment results. The learner view is read-only.
+- Background refresh preserves unsaved target text and notes, expanded cards and an open evidence view, including when a target changes priority. It does not replace existing content with a loading screen.
+- Subscriptions remain active while the panel is hidden. Initial subscription and reconnect reconcile the latest saved state; switching room or identity cannot display a previous learner's progress.
+- A failed feed or refresh retains the last valid data with a visible warning and a manual Refresh fallback. Automatic refresh only reads; it never judges messages or retries a failed target save.
 - The panel never covers the room owner's AI and send controls on desktop.
 - On narrow screens the panel uses the full width.
 
@@ -693,7 +697,7 @@ Each AI job's boundary FR states what the system guarantees around it. The quali
 - **NFR-5 Reliable repetition.** Repeating any request (send, attempt, delivery, judging) produces no duplicate effect. Concurrent requests resolve to one outcome. **Grounding:** P4.
 - **NFR-6 Persistence.** The application identity, conversation, learning progress and transfer-assessment state survive reloads, reconnects and multiple tabs. Rooms are kept after use. **Grounding:** P4, P8, C4.
 - **NFR-7 Fail visibly.** When something needed is missing or fails (conversation history, learning targets, AI output, configuration), the user gets a clear error. No placeholder content and no hidden fallback. **Grounding:** P7.
-- **NFR-8 Live updates.** Messages appear for all participants within about 2 seconds; room lists and ratings update without refresh. **Grounding:** P5.
+- **NFR-8 Live updates.** Messages appear for all participants within about 2 seconds; room lists and ratings update without refresh. Learning targets, progress and evidence update for the room owner and learner within about 2 seconds of a committed change under normal connectivity. This latency starts after server judging finishes, not when a message is sent. Reconnection reconciles changes missed while offline. **Grounding:** P2, P4, P5.
 - **NFR-9 AI behavior governance.** The quality of every AI job's output is governed by an AI behavior constitution and specification (§7), each child principle naming its parent in the product constitution. The tutoring constitution governs phishing only; AI jobs without a constitution fall directly under the product constitution until one exists. **Grounding:** P1, P3.
 - **NFR-10 Behavior change control.** Changing an AI model, a shared prompt or the learning-event judge changes behavior for every practice type that uses it, and must be re-evaluated for each. Constitutions change only through an explicit human decision; passing evaluations cannot authorize a change. **Grounding:** P7.
 - **NFR-11 Client compatibility.** A browser running an outdated version of the app is told to reload, rather than writing data under old rules. **Grounding:** P4.
@@ -738,3 +742,7 @@ Questions OQ-1 to OQ-15 were all resolved on 2026-10-22. Each decision is built 
 ## 12. Assumptions Index
 
 - FR-52 — A tutor who is not the room owner takes part as an observer.
+
+### Approved extension: automatic learning progress (2026-11-12)
+
+Issue #75 extends FR-23 and NFR-8 under the owner-approved automatic refresh design. P2/P4/P5 favor timely visibility; P6 and P7/R7 favor the existing Realtime mechanism. The P1 tension of learners seeing progress sooner is accepted by the owner; progress rules and assessment privacy remain unchanged. This is a target contract, not evidence of deployment. Release status is recorded in `tutor-system/docs/doc_update_record/documentation_update_record_v2026_11_12_learning_target_auto_refresh.md`.

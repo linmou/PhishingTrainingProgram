@@ -16,7 +16,7 @@ import { applyLearningEvent, isValidTransferProgress } from '../../../src/servic
 import type { LearningEventKind, TransferProgress } from '../../../src/services/learningProgressTransitions.ts';
 
 const OPERATIONS = new Set([
-  'initialize_checklist', 'join_room', 'edit_learning_progress', 'post_message', 'analyze_message',
+  'initialize_checklist', 'join_room', 'edit_learning_progress', 'read_learning_evidence', 'post_message', 'analyze_message',
   'prepare_turn', 'send_reviewed', 'read_review', 'process_message', 'clear_chat_history',
 ]);
 const OPTION_IDS = new Set(['A', 'B', 'C', 'D']);
@@ -695,6 +695,13 @@ export function createAssessmentApiHandler(deps: AssessmentApiDependencies) {
     try {
       let data: unknown;
       switch (body.operation) {
+        case 'read_learning_evidence':
+          data = await rpc(deps, 'read_learning_evidence_v1', {
+            p_room_id: assertRoom(principal, body.room_id),
+            p_checklist_id: requiredString(body.checklist_id),
+            p_actor_id: principal.application_user_id,
+          });
+          break;
         case 'read_review': {
           assertTeacher(principal);
           const args={

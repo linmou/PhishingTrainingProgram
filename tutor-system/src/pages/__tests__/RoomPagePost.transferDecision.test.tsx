@@ -231,7 +231,7 @@ describe('RoomPagePost structured decision consumption', () => {
 
   it('keeps the room text export available alongside the tutor progress view', () => {
     const downloadChatHistory = jest.fn();
-    mount({ downloadChatHistory });
+    mount({ downloadChatHistory, currentRoom: { ...transferRoom, tutor_id: 'tutor-1', transfer_learning_enabled: false } });
 
     expect(screen.getByTitle('Learning Progress Checklist')).toBeInTheDocument();
     fireEvent.click(screen.getByTitle('Download Chat History'));
@@ -241,7 +241,7 @@ describe('RoomPagePost structured decision consumption', () => {
   });
 
   it.each(['student', 'observer'] as const)(
-    'keeps the progress checklist control hidden for a %s viewer',
+    'shows the progress control to a learner but not an observer (%s)',
     (role) => {
       (useAuth as jest.Mock).mockReturnValue({
         user: {
@@ -256,7 +256,8 @@ describe('RoomPagePost structured decision consumption', () => {
       });
       mount();
 
-      expect(screen.queryByTitle('Learning Progress Checklist')).not.toBeInTheDocument();
+      if (role === 'student') expect(screen.getByTitle('Learning Progress Checklist')).toBeInTheDocument();
+      else expect(screen.queryByTitle('Learning Progress Checklist')).not.toBeInTheDocument();
       expect(screen.getByTitle('Download Chat History')).toBeInTheDocument();
     }
   );

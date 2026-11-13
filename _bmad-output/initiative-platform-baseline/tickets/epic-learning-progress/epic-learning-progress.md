@@ -26,7 +26,7 @@ Test paths are from the repository root.
 - R3 (parent R6; prd FR-20, NFR-9; C2; AD-2): Every learner message is judged against each learning target separately, in message order, using the conversation up to that message, and only learning events that pass the contract are applied. A learning event is applied only if it quotes the learner message it is about; tutor replies, character replies and pre-populated dialogue can never supply evidence. A message is judged only after all of that learner's earlier messages. If judging fails for any target, no progress is applied for that message and it stays retryable. Whether a judgment is correct is governed by the learning-event judging specification and checked by evaluation. Guard: `tutor-system/supabase/functions/assessment-api/index.test.ts` ("Cyberbullying settles all five target analyses before applying progress and records failed attempts"; "rejects historical speaker evidence before updating learner status"); `evals/promptfoo/learning-progress-analyzer/`.
 - R4 (parent R7; prd FR-21; C2; AD-1, AD-10): Learning targets move between progress states only in three ways: learning events as defined in the transfer-status response contract, a transfer assessment result, and a manual edit. Pending to Partial on an initial signal; Pending or Partial to Covered on demonstrated understanding; Needs review to Partial on a post-repair signal; any state except Covered to Covered on spontaneous transfer; Partial or Covered to Needs review on contradiction. A learning event not allowed from the current state is recorded as rejected and changes nothing. Guard: `tutor-system/src/services/__tests__/learningProgressTransitions.test.ts` ("applies the complete %s transition column").
 - R5 (parent R7; prd FR-22; AD-5): While Guard is on, no learning progress advances. Learning events gathered meanwhile are applied when Guard ends, unless the target's progress state no longer allows them. Guard: `tutor-system/supabase/tests/final_assessment_after_understanding.sql` (scenario guard); `tutor-system/supabase/tests/transfer_assessment_rpc_behaviour.sql` (case guard_manual_replay).
-- R6 (parent R7; prd FR-23): The room owner and the learner can open the Learning Progress panel showing each target's progress state and evidence for that learner. The panel never covers the room owner's AI and send controls on desktop, and on narrow screens it uses the full width. Guard: `tutor-system/src/components/__tests__/ChecklistPanel.transfer.test.tsx` ("shows Guard protection while keeping the shared assessment targets visible").
+- R6 (parent R7; prd FR-23, NFR-7, NFR-8): The room owner and the learner can open the Learning Progress panel showing each target's progress state and evidence for that learner. Committed target/progress/evidence changes update automatically for both viewers, including while the panel is hidden, with reconciliation after reconnect. Background reads preserve edits, expanded cards and evidence; failures retain data with a warning and manual Refresh. The learner view is read-only. The panel never covers the room owner's AI and send controls on desktop, and on narrow screens it uses the full width. Guard: `tutor-system/src/components/__tests__/ChecklistPanel.transfer.test.tsx` ("shows Guard protection while keeping the shared assessment targets visible").
 - R7 (parent R7; prd FR-53; C2): The room owner can manually change a target's progress state and add a note. The change appears in the Learning Progress panel for the room owner and the learner, and is recorded as evidence attributed to the room owner. Guard: `tutor-system/src/__tests__/checklist_management.test.ts` ("saves a tutor status update with its note, history row, and manual evidence").
 
 ## Constraints
@@ -43,7 +43,7 @@ Test paths are from the repository root.
 
 ## Boundaries
 
-- Touch point: server authority and repeatable requests — owner: epic-platform-guarantees
+- Touch point: server authority, repeatable requests, live progress recovery and visible refresh failures — owner: epic-platform-guarantees
 - Touch point: saved learner messages that judging reads — owner: epic-conversation
 - Touch point: Guard, which pauses progress — owner: epic-supervision-and-guard
 - Touch point: AI suggestions that read the learner's progress — owner: epic-ai-suggestions
@@ -63,3 +63,5 @@ Test paths are from the repository root.
 ## Notes
 
 - Source conflict: R1 — prd FR-18 says a failed generation invents no targets; a test asserts a silent fallback to the template's targets when extraction fails.
+
+- Approved extension 2026-11-12 (#75): automatic visibility refines R6/R7; hosted acceptance remains open in the dated release record.
