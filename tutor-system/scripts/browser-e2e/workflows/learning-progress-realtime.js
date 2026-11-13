@@ -23,7 +23,8 @@ module.exports = async function learningProgressRealtime(ctx) {
         'x-practice-contract': 'cyberbullying-v2' }, body: JSON.stringify(body), signal: AbortSignal.timeout(30000)
     });
     const payloadResult = await response.json();
-    evidence.calls.push({ operation, request_id: body.request_id, status: response.status, error: payloadResult.error }); persist();
+    evidence.calls.push({ operation, request_id: body.request_id, status: response.status, error: payloadResult.error,
+      ...(operation === 'join_room' ? { result: payloadResult.data } : {}) }); persist();
     assert.equal(response.status, 200, `${operation} failed`);
     assert.equal(payloadResult.ok, true, `${operation} rejected`);
     return payloadResult.data;
@@ -94,6 +95,8 @@ module.exports = async function learningProgressRealtime(ctx) {
       }
     };
   });
+  // The runner has already loaded this origin; hash navigation does not run init scripts.
+  await studentPage.reload({ waitUntil: 'domcontentloaded' });
   persist();
   try {
     const room = await createRoom('after-join');

@@ -198,3 +198,14 @@ workflow to distinguish failed draft promotion from event/read delivery on the
 next run. Harness syntax and 33 unit tests pass. Release owner remains Codex in
 `pr-76-local`; next action is diagnose and repair this setup failure, then complete
 all selected staging checks before merge.
+
+Diagnostic candidate `7296222` retained the exact deployed runtime. Run
+`staging-template-20261113010748-c6decd51` passed target setup, both-viewer priority
+(826ms), status (841ms), evidence-only delivery (1752ms), evidence modal refresh
+(1577ms), draft/card preservation and reopen (816ms). It then failed in the test
+probe: `window.__progressTestSockets` was undefined because `addInitScript` was
+installed after the runner loaded the app and hash-only navigation did not run it.
+The harness now reloads the learner page before the journey to install the probe.
+Cleanup passed and the lease was released. The earlier setup failure remains
+unexplained; a successful diagnostic setup alone does not close that uncertainty.
+The next complete run and repeated setup will retain request/state evidence.
