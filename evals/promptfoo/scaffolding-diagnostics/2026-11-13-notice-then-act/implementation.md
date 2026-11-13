@@ -1,8 +1,14 @@
-# Experimental integration and learning-target audit
+# Integration and learning-target audit
 
-Intent: record the user's requested branch implementation and verify which learning targets the tutor evaluation actually supplies.
+Intent: record the tested prompt integration, its adoption scope, and which learning targets the tutor evaluation actually supplies.
 
 Updated: 2026-11-13 UTC. Source baseline commit: `81bb3c91608c38532c53cab27f722133c64e8e91`.
+
+Adoption base: `968331f`. The user subsequently explicitly requested: "Merge the Notice → action instruction." The focused adoption branch is `fix/notice-action-tutor`; it retains the exact tested instruction and placement. It changes the client request builder, not an Edge Function or schema. The prior user instruction excludes staging for this simple prompt change. Broader evaluation with the real targets proceeds separately; adoption is not a claim that the candidate passed that evaluation.
+
+The preceding eight-state, three-condition, three-repetition diagnostic generated 72 valid replies using qwen3.8-flash. At the selected sender-to-link transition, explicit hidden-destination disclosure was baseline 2/3, label-only 2/3, and sequence 1/3. After learner recognition, genuine action elicitation without providing the route was 1/3, 2/3, and 3/3. The sequence still disclosed answers in other cases and did not fix old-answer attribution (3/3 failures in every condition). Safety and actual failed-scaffold exceptions passed 3/3 for the sequence. Independent review covered all72 outputs and recorded36 automated evaluator disagreements/errors; agent judgments are not human labels. One malformed judge result caused process exit1 despite complete target generation. There is no formal behavioral acceptance claim.
+
+Full local diagnostic evidence remains in the original `scaffolding-target-ablation` worktree at experiment commits `a3b80cf` and `81bb3c9`, including frozen requests, raw responses, provider metadata, calibration failures and independent review. This focused adoption change includes the instruction and concise evidence record instead of copying the entire diagnostic history.
 
 ## Implementation
 
@@ -13,6 +19,8 @@ Branch: `auto-experiment/scaffolding-target-ablation` in the existing `PhishingT
 This integrates the tested instruction without further behavioral refinement. The earlier independent candidate audit and limitations still apply. It is not evidence of reliable scaffolding across templates.
 
 ## Verification
+
+On the focused adoption branch based on `968331f`, all four listed suites passed together (31/31) with the dummy local Supabase initialization values. Rebuilt all24 sequence requests again against the original worktree's frozen manifest: byte-identical; the instruction hash remains unchanged. `git diff --check` passed. Hosted CI and current-head code review are recorded on the adoption PR.
 
 - Rebuilt every sequence-condition request from the saved room prompt and each frozen case's input. All 24 requests (eight states × three repetitions) match `raw/v4/frozen.json` byte-for-byte, including full learning targets and user context. The exported instruction exactly equals `candidate.txt`.
 - Existing request packaging/ownership/contract suites passed: 31 tests across `ecologicalTutorCall.test.ts`, `promptfooBrevityScaffold.test.ts`, `aiService.requestOwnership.test.ts`, and `tutor_behavior_contract.test.ts`. Only the existing structural prompt-composition expectation changed; no semantic wording assertions were added.
