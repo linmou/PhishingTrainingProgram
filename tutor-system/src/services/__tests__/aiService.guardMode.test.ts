@@ -27,7 +27,9 @@ jest.mock('../supabase', () => ({
 }));
 
 jest.mock('../checklistService', () => ({ ChecklistService: {
-    getChecklistByRoom: jest.fn().mockResolvedValue(null)
+    getChecklistByRoom: jest.fn().mockResolvedValue(null),
+    getChecklistForStudent: jest.fn().mockResolvedValue(null),
+    getActiveTransferChecklistForRoom: jest.fn().mockResolvedValue(null)
 } }));
 
 describe('Guard Mode AI decision contract', () => {

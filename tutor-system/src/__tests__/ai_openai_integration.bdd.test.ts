@@ -13,7 +13,11 @@ jest.mock('../services/simplifiedAIContext', () => ({
   ]),
 }));
 jest.mock('../services/checklistService', () => ({
-  ChecklistService: { getChecklistByRoom: jest.fn().mockResolvedValue(null) },
+  ChecklistService: {
+    getChecklistByRoom: jest.fn().mockResolvedValue(null),
+    getChecklistForStudent: jest.fn().mockResolvedValue(null),
+    getActiveTransferChecklistForRoom: jest.fn().mockResolvedValue(null)
+  },
 }));
 
 const ROOM_ID = 'qwen-feature-room';

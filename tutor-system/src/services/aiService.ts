@@ -898,8 +898,15 @@ export const generateTutorSuggestion = async (
         // 3. Apply parameter overrides if provided
         aiConfig = SystemPromptProcessor.processOverrides(aiConfig, parameterOverrides);
 
+        // Learner-owned progress is independent of whether transfer quizzes are enabled.
+        // An ambiguous or failed transfer read must not substitute another learner's state.
+        const transferChecklist = options?.focusStudentId
+            ? await ChecklistService.getChecklistForStudent(roomId, options.focusStudentId)
+            : await ChecklistService.getActiveTransferChecklistForRoom(roomId);
         try {
-            const checklist = await ChecklistService.getChecklistByRoom(roomId);
+            const checklist = transferChecklist ?? (options?.focusStudentId
+                ? null
+                : await ChecklistService.getChecklistByRoom(roomId));
             if (checklist) {
                 const items = [...checklist.detection_areas, ...checklist.verification_steps];
                 const progress = items.map(item => `- ${item.area_text}: ${item.status}`).join('\n');

@@ -17,7 +17,11 @@ jest.mock('../supabase', () => ({
 }));
 
 jest.mock('../checklistService', () => ({
-  ChecklistService: { getChecklistByRoom: jest.fn().mockResolvedValue(null) }
+  ChecklistService: {
+    getChecklistByRoom: jest.fn().mockResolvedValue(null),
+    getChecklistForStudent: jest.fn().mockResolvedValue(null),
+    getActiveTransferChecklistForRoom: jest.fn().mockResolvedValue(null)
+  }
 }));
 
 const promptConfig = (interactionMode: 'single_agent' | 'multi_agent') => ({
