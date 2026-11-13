@@ -47,6 +47,10 @@ Predeclared joint checks: recognition order × component disclosure × progressi
 
 Stop after baseline and the two planned candidates or 30 minutes of model execution. An additional focused repair may use remaining time only with recorded evidence and independent exact-hash audit. Report each rubric to the user as soon as its results are available, including failures, applicable count and calibration caveats. Full-suite benchmark acceptance and product release remain unassessed even if this focused set meets its criteria.
 
+### Configured DeepSeek comparison follow-up
+
+On 2026-11-13 the user requested the same four primary tutoring metrics with the newly configured DeepSeek model, compared with Qwen3.8-flash. The [comparison plan](../../../evals/promptfoo/scaffolding-diagnostics/2026-11-13-deepseek-comparison/README.md) pins the saved final full-cleanup prompt and cases: 105 new DeepSeek responses and 105 saved Qwen responses, both scored by the same freshly calibrated DeepSeek judge. The 81 fixed requests match exactly; 24 controlled trajectory turns retain each model's actual preceding replies. Rubrics and target meaning remain unchanged. This is a new focused diagnostic with a fresh 30-minute active execution cap; the original runs and judgments remain immutable. Per-metric calibration, errors, partitions and paired differences must accompany the comparison.
+
 ## Transfer assessment v3 readiness boundary
 
 The transfer implementation adds deterministic checks for the progress reducer, normalized answer parsing, exact-set grading, bounded rendering, and reason-first v3 decision validation. These checks are executable contract evidence, not model-quality results. They cover valid transition pairs, invalid transitions, ambiguous selections, duplicate labels, four-option/key cardinality boundaries, known target/evidence IDs, and mode/instruction compatibility.
