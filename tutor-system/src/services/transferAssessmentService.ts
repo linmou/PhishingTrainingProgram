@@ -2,7 +2,7 @@
 
 import { supabase } from './supabase';
 import type { Room } from '../types';
-import type { LearningTargetInput } from '../types/checklist';
+import type { CoverageEvidence, LearningTargetInput } from '../types/checklist';
 import type { AssessmentEvent, AssessmentHistoryReadiness, AssessmentOption, AssessmentOptionId, PrivateAssessment, TransferAssessmentDraft } from '../types/assessment';
 import { parseAssessmentEvent } from './assessmentRendering';
 import {
@@ -126,6 +126,11 @@ export interface TransferAssessmentApi {
 export interface TransferAssessmentServiceOptions {
   api?: TransferAssessmentApi;
   requestId?: () => string;
+}
+
+export interface LearningEvidenceRow extends Omit<CoverageEvidence, 'timestamp'> {
+  item_id: string;
+  timestamp: string;
 }
 
 export class AssessmentApiRequestError extends Error {
@@ -346,6 +351,15 @@ export class TransferAssessmentService {
 
   readReview(roomId: string, assessmentId: string): Promise<TutorAssessmentReview> {
     return this.request('read_review', { room_id: roomId, assessment_id: assessmentId });
+  }
+
+  async readLearningEvidence(roomId: string, checklistId: string): Promise<LearningEvidenceRow[]> {
+    const rows = await this.request<LearningEvidenceRow[]>('read_learning_evidence', {
+      room_id: roomId,
+      checklist_id: checklistId,
+    });
+    if (!Array.isArray(rows)) throw new Error('Invalid learning evidence response');
+    return rows;
   }
 
   clearChatHistory(roomId:string):Promise<{success:boolean;title:string;prePopulatedMessagesPreserved:boolean}> {

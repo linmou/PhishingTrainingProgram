@@ -103,7 +103,7 @@ describe('goals saved after learner messages', () => {
         if (table === 'checklist_items') return { data: [{
           id: 'target-1', checklist_id: 'checklist-1', area_text: 'Verify the sender', item_type: 'detection_area',
           priority: 'important', status: processed.size ? 'partially_covered' : 'pending',
-          understanding_level: processed.size ? 'basic' : 'none', coverage_evidence: [], tutor_notes: '',
+          understanding_level: processed.size ? 'basic' : 'none', tutor_notes: '',
           last_addressed: null, attempts_count: processed.size, original_template_area: false,
           created_at: createdAt, updated_at: createdAt,
         }], error: null };
@@ -136,6 +136,16 @@ describe('goals saved after learner messages', () => {
         initialized = true;
         return { data: { ok: true, data: { checklist_id: 'checklist-1' } }, error: null };
       }
+      if (body.operation === 'read_learning_evidence') {
+        expect(body.room_id).toBe(ROOM);
+        expect(body.checklist_id).toBe(returnedChecklistId);
+        const evidence = Array.from(processed, messageId => ({
+          id: `evidence-${messageId}`, item_id: 'target-1', message_id: messageId,
+          evidence_text: `Saved evidence for ${messageId}`, analysis: 'Recorded analysis',
+          confidence_score: 80, detection_method: 'ai_analysis', timestamp: createdAt,
+        }));
+        return { data: { ok: true, data: evidence }, error: null };
+      }
       if (body.operation === 'analyze_message') {
         expect(typeof body.room_id).toBe('string');
         if (pauseAnalysis) await pauseAnalysis(body.message_id);
@@ -165,6 +175,7 @@ describe('goals saved after learner messages', () => {
     expect(analysisIds()).toEqual(['earlier', 'earlier', 'later', 'later']);
     expect(events.indexOf('initialize_checklist')).toBeLessThan(events.indexOf('inventory'));
     expect(result.current.checklist?.detection_areas[0]).toMatchObject({ attempts_count: 2, status: 'partially_covered' });
+    expect(result.current.checklist?.detection_areas[0].coverage_evidence.map(row => row.message_id)).toEqual(['earlier', 'later']);
     expect(result.current.progress?.partially_covered_areas).toBe(1);
     expect(result.current.error).toBeNull();
     expect(window.localStorage.getItem(DRAFT_KEY)).toBeNull();

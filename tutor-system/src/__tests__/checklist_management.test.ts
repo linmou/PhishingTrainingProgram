@@ -15,7 +15,8 @@ jest.mock('../services/supabase', () => {
   return {
     supabase: {
       from: jest.fn(),
-      rpc: jest.fn()
+      rpc: jest.fn(),
+      functions: { invoke: jest.fn() }
     }
   };
 });
@@ -40,6 +41,7 @@ type MockQuery = {
 const mockSupabase = supabase as unknown as {
   from: jest.Mock;
   rpc: jest.Mock;
+  functions: { invoke: jest.Mock };
 };
 
 let mockQuery: MockQuery;
@@ -114,6 +116,8 @@ describe('Checklist Management System', () => {
     mockQuery.single.mockReturnValue(mockQuery);
     mockSupabase.from.mockReturnValue(mockQuery);
     mockSupabase.rpc.mockReset();
+    mockSupabase.functions.invoke.mockReset().mockResolvedValue({ data: { ok: true, data: [] }, error: null });
+    window.localStorage.setItem('tutor_system_user', JSON.stringify({ id: 'tutor-1' }));
     (LLMExtractionService.extractFromSystemPrompt as jest.Mock).mockReset();
   });
 
@@ -394,6 +398,42 @@ describe('Checklist Management System', () => {
         progress_policy_version: 'transfer_v1'
       });
       expect(result?.detection_areas[0].status).toBe('partially_covered');
+      expect(result?.detection_areas[0].coverage_evidence).toEqual([]);
+      expect(mockSupabase.functions.invoke).toHaveBeenCalledWith('assessment-api', {
+        body: { operation: 'read_learning_evidence', request_id: expect.any(String), room_id: 'room-1', checklist_id: 'transfer-checklist' },
+        headers: { 'x-application-user-id': 'tutor-1' },
+      });
+      expect(mockQuery.select.mock.calls.every(([columns]) => !columns.includes('coverage_evidence'))).toBe(true);
+    });
+
+    it('maps scoped evidence to its own item and preserves evidence dates', async () => {
+      mockQuery.maybeSingle.mockResolvedValueOnce({ data: { ...buildChecklist(), student_id: 'student-1' }, error: null });
+      mockQuery.order.mockResolvedValueOnce({ data: [databaseItem({ id: 'detect' }), databaseItem({ id: 'verify', item_type: 'verification_step' })], error: null });
+      const row = { id: 'evidence-1', item_id: 'verify', evidence_text: 'Saved observation', analysis: 'Saved analysis',
+        confidence_score: 80, detection_method: 'tutor_manual', message_id: 'message-1', timestamp: '2026-11-12T12:00:00Z' };
+      mockSupabase.functions.invoke.mockResolvedValueOnce({ data: { ok: true, data: [row, { ...row, id: 'foreign-evidence', item_id: 'foreign-item' }] }, error: null });
+      const result = await ChecklistService.getChecklistForStudent('room-1', 'student-1');
+      expect(result?.detection_areas[0].coverage_evidence).toEqual([]);
+      expect(result?.verification_steps[0].coverage_evidence).toEqual([{
+        id: row.id, evidence_text: row.evidence_text, analysis: row.analysis, confidence_score: row.confidence_score,
+        detection_method: row.detection_method, message_id: row.message_id, timestamp: new Date(row.timestamp),
+      }]);
+      expect(JSON.stringify(result)).not.toContain('foreign-evidence');
+    });
+
+    it.each(['FORBIDDEN', 'PERSISTENCE_FAILED'])('surfaces evidence %s rather than returning apparently empty progress', async code => {
+      mockQuery.maybeSingle.mockResolvedValueOnce({ data: { ...buildChecklist(), student_id: 'student-1' }, error: null });
+      mockQuery.order.mockResolvedValueOnce({ data: [databaseItem()], error: null });
+      mockSupabase.functions.invoke.mockResolvedValueOnce({ data: { ok: false, error: { code, message: 'Evidence unavailable', retryable: false } }, error: null });
+      await expect(ChecklistService.getChecklistForStudent('room-1', 'student-1')).rejects.toMatchObject({ code, message: 'Evidence unavailable' });
+    });
+
+    it('does not read evidence when the requested learner has no active checklist', async () => {
+      mockQuery.maybeSingle.mockResolvedValueOnce({ data: null, error: null });
+      await expect(ChecklistService.getChecklistForStudent('room-1', 'another-learner')).resolves.toBeNull();
+      expect(mockSupabase.functions.invoke).not.toHaveBeenCalled();
+      expect(mockQuery.eq).toHaveBeenCalledWith('student_id', 'another-learner');
+      expect(mockQuery.eq).toHaveBeenCalledWith('is_active', true);
     });
 
     it('records AI-detected coverage without replacing the room prompt', async () => {

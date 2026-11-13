@@ -13,7 +13,7 @@ async function waitForTemplateSettings(page, promptConfig) {
     const detection = document.querySelector('textarea[placeholder="Red flags to watch for (optional - will use template if empty)"]');
     const verification = document.querySelector('textarea[placeholder="Steps students should take to verify content (optional)"]');
     return detection && verification && !detection.disabled && !verification.disabled &&
-      detection.value === expected.detection_areas.join('\n') &&
+      detection.value === expected.detection_areas.join('\n\n') &&
       verification.value === expected.verification_steps.join('\n');
   }, promptConfig, { timeout: TIMEOUT });
 }

@@ -310,7 +310,18 @@ describe('Real-time Chat System BDD Tests', () => {
       };
       return query;
     });
-    mockSupabase.channel.mockReturnValue(mockChannel);
+    mockSupabase.channel.mockImplementation((name: string) => {
+      if (!name.startsWith('learning_progress_')) return mockChannel;
+      const progressChannel: any = {
+        on: jest.fn().mockReturnThis(),
+        subscribe: jest.fn((callback?: (status: string) => void) => {
+          callback?.('SUBSCRIBED');
+          return progressChannel;
+        }),
+        unsubscribe: jest.fn(),
+      };
+      return progressChannel;
+    });
 
     console.log('🔧 Setting up mock data:', { mockRoom });
   });

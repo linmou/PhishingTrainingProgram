@@ -12,7 +12,8 @@ import AssessmentDraftEditor from '../components/AssessmentDraftEditor';
 import { classifyAssessmentFailure as classifyReviewFailure } from '../contexts/transferAssessmentUiAdapter';
 import ChecklistPanel from '../components/ChecklistPanel';
 import { supabase } from '../services/supabase';
-import { ChecklistService } from '../services/checklistService';
+import { useRealtimeInvalidation } from '../hooks/useRealtimeInvalidation';
+import { boundedRead } from '../hooks/boundedRead';
 import { transferAssessmentService } from '../services/transferAssessmentService';
 import { Download, Settings, ArrowLeft, Trash2, CheckSquare } from 'lucide-react';
 import { getConfigurationPreset } from '../services/prompts/parameterConfig';
@@ -93,7 +94,6 @@ const RoomPagePost: React.FC = () => {
     const [showClearChatModal, setShowClearChatModal] = useState(false);
     const [clearingChat, setClearingChat] = useState(false);
     const [showChecklist, setShowChecklist] = useState(false);
-    const [transferStudentId, setTransferStudentId] = useState<string | null>(null);
     const [replyingTo, setReplyingTo] = useState<{ id: string; authorName: string } | null>(null);
     const isGuardComposer = user?.current_role === 'tutor' && currentRoom?.guard_mode === true;
     const composerIdentity = isGuardComposer
@@ -645,59 +645,68 @@ const RoomPagePost: React.FC = () => {
     const canSendMessages = user && user.current_role !== 'observer' && !roomObserver;
     const canUseAI = Boolean(user && user.current_role === 'tutor' && currentRoom);
     const isAIEnabled = Boolean(currentRoom?.ai_assistant_enabled);
-    const firstPersistedStudentId = findFirstPersistedStudentId(messages);
+    const firstPersistedStudentId = findFirstPersistedStudentId(messages.filter(message => message.room_id === currentRoom?.id));
+    const canViewLearningProgress = Boolean(currentRoom && currentRoom.id === roomId && !roomObserver && (
+        (user?.current_role === 'tutor' && user.id === currentRoom.tutor_id) || user?.current_role === 'student'
+    ));
+    const learnerLookupScope = JSON.stringify([roomId, currentRoom?.id, currentRoom?.transfer_learning_enabled, user?.id, user?.current_role, roomObserver]);
+    const activeLearnerLookup = useRef(learnerLookupScope);
+    activeLearnerLookup.current = learnerLookupScope;
+    const fallbackLearner = useRef(firstPersistedStudentId);
+    fallbackLearner.current = firstPersistedStudentId;
+    const membershipRead = useRef<{ scope: string; pending: boolean; promise: Promise<void>; controller: AbortController } | null>(null);
+    const [membership, setMembership] = useState<{ scope: string; studentId: string | null; error: string | null }>({
+        scope: learnerLookupScope, studentId: null, error: null,
+    });
+    const transferStudentId = membership.scope === learnerLookupScope ? membership.studentId : null;
+    const learnerLookupError = membership.scope === learnerLookupScope ? membership.error : null;
     useEffect(() => {
-        if (!currentRoom?.transfer_learning_enabled || !user?.id ||
-            (user?.current_role !== 'student' && user?.current_role !== 'tutor')) {
-            setWaitingForTargets(false);
-            return;
-        }
-        let active = true;
-        let retryTimer: number | undefined;
-        const checkTargets = async () => {
-            let waiting = true;
-            try {
-                const checklist = user.current_role === 'tutor'
-                    ? await ChecklistService.getActiveTransferChecklistForRoom(currentRoom.id)
-                    : await ChecklistService.getChecklistForStudent(currentRoom.id, user.id);
-                waiting = !checklist || checklist.detection_areas.length + checklist.verification_steps.length === 0;
-            } catch {
-                // Keep the waiting state and retry while learner target setup is unavailable.
-            }
-            if (!active) return;
-            setWaitingForTargets(waiting);
-            if (waiting && user.current_role === 'student') {
-                retryTimer = window.setTimeout(checkTargets, 3000);
-            }
+        setMembership({ scope: learnerLookupScope, studentId: null, error: null });
+        setWaitingForTargets(false);
+        return () => {
+            membershipRead.current?.controller.abort();
+            membershipRead.current = null;
         };
-        void checkTargets();
-        return () => { active = false; window.clearTimeout(retryTimer); };
-    }, [currentRoom?.id, currentRoom?.transfer_learning_enabled, user?.id, user?.current_role, messages.length, showChecklist]);
-    useEffect(() => {
-        if (!currentRoom?.transfer_learning_enabled || user?.current_role !== 'tutor' || !showChecklist) {
-            setTransferStudentId(null);
-            return;
+    }, [learnerLookupScope]);
+    const loadLearner = useCallback(async () => {
+        if (!currentRoom?.transfer_learning_enabled || user?.current_role !== 'tutor' || !canViewLearningProgress) return;
+        const running = membershipRead.current;
+        if (running?.scope === learnerLookupScope) {
+            running.pending = true;
+            return running.promise;
         }
-        let active = true;
-        const loadLearner = async () => {
-            const { data, error } = await supabase.from('sessions')
-                .select('student_id')
-                .eq('room_id', currentRoom.id)
-                .eq('status', 'active')
-                .not('student_id', 'is', null);
-            if (active && !error) {
-                setTransferStudentId(resolveTransferLearnerId(
-                    (data || []).map(session => session.student_id),
-                    firstPersistedStudentId,
-                ));
-            } else if (active && error) {
-                setTransferStudentId(firstPersistedStudentId);
-            }
-        };
-        loadLearner();
-        const interval = window.setInterval(loadLearner, 3000);
-        return () => { active = false; window.clearInterval(interval); };
-    }, [currentRoom?.id, currentRoom?.transfer_learning_enabled, user?.current_role, showChecklist, firstPersistedStudentId]);
+        const request = { scope: learnerLookupScope, pending: false, promise: Promise.resolve(), controller: new AbortController() };
+        membershipRead.current = request;
+        const current = () => activeLearnerLookup.current === learnerLookupScope && membershipRead.current === request;
+        request.promise = (async () => {
+            do {
+                request.pending = false;
+                try {
+                    const { data, error } = await boundedRead(supabase.from('sessions')
+                        .select('student_id').eq('room_id', currentRoom.id).eq('status', 'active').not('student_id', 'is', null),
+                    request.controller.signal);
+                    if (!current()) return;
+                    if (error) throw error;
+                    setMembership({ scope: learnerLookupScope, error: null, studentId: resolveTransferLearnerId(
+                        (data || []).map(session => session.student_id), fallbackLearner.current,
+                    ) });
+                } catch {
+                    if (current()) setMembership(previous => ({
+                        scope: learnerLookupScope,
+                        studentId: previous.scope === learnerLookupScope ? previous.studentId : null,
+                        error: 'Learner membership could not be refreshed. Retry to check for a learner.',
+                    }));
+                }
+            } while (current() && request.pending);
+        })();
+        try { await request.promise; }
+        finally { if (current()) membershipRead.current = null; }
+    }, [currentRoom?.id, currentRoom?.transfer_learning_enabled, user?.current_role,
+        canViewLearningProgress, learnerLookupScope]);
+    const membershipError = useRealtimeInvalidation(learnerLookupScope,
+        currentRoom?.transfer_learning_enabled && user?.current_role === 'tutor' && canViewLearningProgress
+            ? [{ table: 'sessions', filter: `room_id=eq.${currentRoom.id}` }] : [], loadLearner);
+    useEffect(() => { void loadLearner(); }, [loadLearner, firstPersistedStudentId]);
 
     const handleToggleGuardMode = async () => {
         if (!currentRoom) return;
@@ -810,7 +819,7 @@ const RoomPagePost: React.FC = () => {
     }
 
     return (
-        <div className={`room-post-layout${user?.current_role === 'tutor' && showChecklist ? ' room-post-layout-with-checklist' : ''}`}>
+        <div className={`room-post-layout${canViewLearningProgress && showChecklist ? ' room-post-layout-with-checklist' : ''}`}>
             {exitQuestionIds && (
                 <div className="modal-overlay">
                     <section className="modal-content exit-assessment-dialog" role="dialog" aria-modal="true" aria-labelledby="exit-assessment-title">
@@ -858,7 +867,7 @@ const RoomPagePost: React.FC = () => {
                     </Link>
                     
                     <div className="room-post-nav-actions">
-                        {/* Learning Progress Button - Only for tutors */}
+                        {/* Room supervision and learning progress controls */}
                         {user?.current_role === 'tutor' && canUseAI && (
                             <button
                                 onClick={handleToggleGuardMode}
@@ -868,7 +877,7 @@ const RoomPagePost: React.FC = () => {
                                 {currentRoom.guard_mode === true ? 'Deactivate Guard' : 'Activate Guard'}
                             </button>
                         )}
-                        {user?.current_role === 'tutor' && canUseAI && (
+                        {canViewLearningProgress && (
                             <button
                                 onClick={() => setShowChecklist(true)}
                                 className="btn btn-secondary btn-small"
@@ -1196,7 +1205,7 @@ const RoomPagePost: React.FC = () => {
                 </div>
             )}
 
-            {/* Checklist Panel - Only for tutors */}
+            {/* Keep learning progress subscribed while the owner/learner panel is collapsed. */}
             {waitingForTargets && user?.current_role === 'student' &&
                 <p role="status">Waiting for the tutor to set up learning targets.</p>}
             {waitingForTargets && user?.current_role === 'tutor' && !showChecklist && (
@@ -1205,12 +1214,18 @@ const RoomPagePost: React.FC = () => {
                     <button type="button" onClick={() => setShowChecklist(true)}>Open Learning Targets</button>
                 </div>
             )}
-            {roomId && user?.current_role === 'tutor' && (
+            {(membershipError || learnerLookupError) && <div role="status">
+                <p>{membershipError || learnerLookupError}</p>
+                <button type="button" onClick={() => { void loadLearner(); }}>Refresh learner membership</button>
+            </div>}
+            {roomId && canViewLearningProgress && (
                 <ChecklistPanel
                     roomId={roomId}
                     transferEnabled={currentRoom.transfer_learning_enabled === true}
                     sharedTargets={currentRoom.practice_type === 'cyberbullying'}
-                    studentId={transferStudentId}
+                    studentId={user?.current_role === 'student' ? user.id : transferStudentId}
+                    readOnly={user?.current_role === 'student'}
+                    onSetupStateChange={setWaitingForTargets}
                     isVisible={showChecklist}
                     onToggleVisibility={() => setShowChecklist(!showChecklist)}
                     progressLocked={currentRoom.guard_mode === true}

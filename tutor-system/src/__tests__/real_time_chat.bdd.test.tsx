@@ -525,7 +525,7 @@ defineFeature(feature, test => {
       await ensureClient('tutor');
       await ensureClient('student');
       mockNetworkConnected = false;
-      const channel = realtimeListeners.find(listener => listener.actor === 'student')?.channel;
+      const channel = realtimeListeners.find(listener => listener.actor === 'student' && listener.active && listener.filter.table === 'messages')?.channel;
       await act(async () => { channel.subscriptionStatus('CHANNEL_ERROR'); });
       expect(mockOfflinePollObserved).toBe(true);
       mockOfflinePollObserved = false;
@@ -540,7 +540,7 @@ defineFeature(feature, test => {
     and('the student reconnects to the network', async () => {
       expect(within(roomClients.student.container).queryByText('Can you see this message?')).not.toBeInTheDocument();
       mockNetworkConnected = true;
-      const channel = realtimeListeners.find(listener => listener.actor === 'student')?.channel;
+      const channel = realtimeListeners.find(listener => listener.actor === 'student' && listener.active && listener.filter.table === 'messages')?.channel;
       await act(async () => { channel.subscriptionStatus('SUBSCRIBED'); });
       await act(async () => { jest.advanceTimersByTime(1000); });
       expect(mockSupabase.removeChannel).not.toHaveBeenCalled();

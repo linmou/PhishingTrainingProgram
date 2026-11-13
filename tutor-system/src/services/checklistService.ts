@@ -11,7 +11,7 @@ import {
   SessionChecklist, 
   ChecklistProgress
 } from '../types/checklist';
-import { SCENARIO_TEMPLATES } from './detectionTemplates';
+import { SCENARIO_TEMPLATES, CYBERBULLYING_LEARNING_TARGETS, CYBERBULLYING_TARGET_VERSION } from './detectionTemplates';
 import { ConversationMessage } from '../types';
 import { generateChecklistFromSystemPrompt } from './checklistIntegration';
 import { transferAssessmentService } from './transferAssessmentService';
@@ -409,15 +409,27 @@ export class ChecklistService {
 
     const { data: items, error: itemsError } = await (supabase as any)
       .from('checklist_items')
-      .select(`
-        *,
-        coverage_evidence (*)
-      `)
+      .select('*')
       .eq('checklist_id', checklist.id)
       .order('created_at', { ascending: true });
 
     if (itemsError) {
       throw new Error(`Failed to fetch transfer checklist items: ${itemsError.message}`);
+    }
+
+    // Evidence reads use the existing API actor/room checks while table RLS stays unchanged.
+    const evidence = await transferAssessmentService.readLearningEvidence(roomId, checklist.id);
+    const scopedItems = (items || []).map((item: any) => ({
+      ...item,
+      coverage_evidence: evidence.filter(row => row.item_id === item.id),
+    }));
+
+    // A single insert gives every target the same timestamp; use document order.
+    if (checklist.target_version === CYBERBULLYING_TARGET_VERSION) {
+      const targetOrder = new Map(CYBERBULLYING_LEARNING_TARGETS.map((target, index) => [target.key, index]));
+      scopedItems.sort((a: any, b: any) =>
+        (targetOrder.get(a.target_key) ?? targetOrder.size) -
+        (targetOrder.get(b.target_key) ?? targetOrder.size));
     }
 
     return {
@@ -428,10 +440,10 @@ export class ChecklistService {
       target_version: checklist.target_version ?? null,
       template_name: checklist.template_name,
       session_start: new Date(checklist.session_start),
-      detection_areas: (items || [])
+      detection_areas: scopedItems
         .filter((item: any) => item.item_type === 'detection_area' || item.item_type === 'understanding')
         .map(this.transformDatabaseItem),
-      verification_steps: (items || [])
+      verification_steps: scopedItems
         .filter((item: any) => item.item_type === 'verification_step' || item.item_type === 'behavior')
         .map(this.transformDatabaseItem),
       total_items: checklist.total_items,

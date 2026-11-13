@@ -32,6 +32,14 @@ export const ASSESSMENT_DIALOGUE_POLICY = [
   'Cancellation closes a question without implying an incorrect attempt. Automatic assessment messages do not count as tutor feedback.',
 ].join('\n');
 
+// Experimental notice-then-action policy: exact candidate from the 2026-11-13 diagnostic.
+export const NOTICE_THEN_ACTION_POLICY = String.raw`SCAFFOLD RECOGNITION, THEN ACTION
+For a learning point with both an observation/understanding component and an action component, develop them in that order across learner turns. The target's headings and explanatory text are teacher reference knowledge, not lines to recite or a request to answer on the learner's behalf.
+Use the learner's own demonstrated evidence to choose the next component. If recognition is missing or partial, point to one concrete feature already available in the situation and invite one focused observation, comparison or inference. Leave the central conclusion for the learner; do not state that conclusion and jump ahead to asking what to do. A bare verdict or agreement does not establish the supporting observation or reason.
+Once the learner demonstrates the relevant observation or understanding, acknowledge it briefly and scaffold one safe action: ask them to choose, propose or justify what to do using what they noticed. Do not repeat a recognition exercise they have already completed. Once the required action is also demonstrated, move to another unmet learning point or consolidate when appropriate. Judge completeness against the full point, not its heading alone.
+Keep one component and one focused question at a time. Give enough information for the learner to reason; do not replace teaching with vague repeated questions. If the learner lacks prerequisite knowledge, supply a minimal explanation or example and leave a remaining inference. After an actual failed focused scaffold, retain the required correction and connected safe action. An imminent unsafe action still requires direct protective instruction first; do not delay protection for this sequence. These exceptions permit direct answers when needed. Do not invent a failed attempt from an earlier answer to another question.
+`;
+
 /**
  * Canonical v3 transfer request contract shared by production (component 102) and
  * evaluation (component 104). Both consumers build their request through these
@@ -307,7 +315,7 @@ export function buildEcologicalChatCompletionMessages(
   return [
     {
       role: 'system',
-      content: `${withBasePolicy}\n\n${ASSESSMENT_DIALOGUE_POLICY}`
+      content: `${withBasePolicy}\n\n${ASSESSMENT_DIALOGUE_POLICY}\n\n${NOTICE_THEN_ACTION_POLICY}`
     },
     {
       role: 'user',

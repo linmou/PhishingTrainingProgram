@@ -11,6 +11,8 @@ import React from 'react';
 import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ChecklistPanel from '../ChecklistPanel';
+jest.mock('../../hooks/useRealtimeInvalidation', () => ({ useRealtimeInvalidation: () => null }));
+
 import { useChecklist } from '../../hooks/useChecklist';
 import { useOptionalAuth } from '../../contexts/AuthContext';
 import { RoomFeaturesService } from '../../services/roomFeaturesService';
