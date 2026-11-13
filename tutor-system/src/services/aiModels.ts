@@ -1,5 +1,5 @@
 /** Frontend model metadata. The build exposes only OAI_MODEL, never provider credentials. */
-export const OAI_MODEL = process.env.REACT_APP_OAI_MODEL?.trim() || '';
+export const OAI_MODEL = process.env.REACT_APP_OAI_MODEL?.trim() || process.env.OAI_MODEL?.trim() || '';
 
 export type AIModelName = string;
 

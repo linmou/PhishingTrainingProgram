@@ -3,7 +3,11 @@ import { OAI_MODEL } from '../aiModels';
 
 describe('environment-configured AI model', () => {
   const original = process.env.REACT_APP_OAI_MODEL;
+  const originalCanonical = process.env.OAI_MODEL;
+  beforeEach(() => { delete process.env.OAI_MODEL; });
   afterEach(() => {
+    if (originalCanonical === undefined) delete process.env.OAI_MODEL;
+    else process.env.OAI_MODEL = originalCanonical;
     if (original === undefined) delete process.env.REACT_APP_OAI_MODEL;
     else process.env.REACT_APP_OAI_MODEL = original;
   });
@@ -16,6 +20,11 @@ describe('environment-configured AI model', () => {
       expect(Object.keys(models.AI_MODELS)).toEqual(['alternate-provider-model']);
       expect(models.AI_MODELS[models.OAI_MODEL].name).toBe('alternate-provider-model');
     });
+  });
+  it('supports Node scripts using the canonical model variable', () => {
+    delete process.env.REACT_APP_OAI_MODEL;
+    process.env.OAI_MODEL = 'node-configured-model';
+    jest.isolateModules(() => expect(require('../aiModels').OAI_MODEL).toBe('node-configured-model'));
   });
   it.each([undefined, '', '   '])('has no hard-coded fallback for %p', value => {
     if (value === undefined) delete process.env.REACT_APP_OAI_MODEL;
