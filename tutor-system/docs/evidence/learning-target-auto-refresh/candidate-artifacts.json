@@ -16,6 +16,6 @@
     "tutor-system/src/services/transferAssessmentService.ts": "b6c898a6a729c045f355520a7a099ffad646e491095f36a4298f63cb38c600cb",
     "tutor-system/src/types/assessmentApi.ts": "bac215f07b614ccc95e877f256424e2bf1b9fca5166fad0496e5e2606b94a2df",
     "tutor-system/supabase/functions/assessment-api/index.ts": "4ad58eb3d6f17d967256c42f277f929a9eb3f7cbfda7905d396c353c72ab2a55",
-    "tutor-system/scripts/browser-e2e/workflows/learning-progress-realtime.js": "ca372687f94d3125c71bf2699ecf617431bee960feb48f081bda0bc437c55276"
+    "tutor-system/scripts/browser-e2e/workflows/learning-progress-realtime.js": "2b8ee63f5d20a405422123a2dad988a1483a1b67aba6819762a4e8d3fdcd9925"
   }
 }

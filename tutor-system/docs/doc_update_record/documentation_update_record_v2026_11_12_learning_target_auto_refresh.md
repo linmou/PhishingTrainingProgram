@@ -1,6 +1,6 @@
 # Learning target auto-refresh — issue #75
 
-Status: **staging SQL and Edge applied; first two-viewer acceptance failed at target setup; diagnosis active**. Current continuation below supersedes historical blockers. This record does not certify a release.
+Status: **staging SQL and Edge applied; realtime and five lifecycle workflows passed; remaining acceptance and initial failure diagnosis active**. Current continuation below supersedes historical blockers. This record does not certify a release.
 
 - Issue: https://github.com/linmou/PhishingTrainingProgram/issues/75
 - Draft PR: https://github.com/linmou/PhishingTrainingProgram/pull/76
@@ -209,3 +209,42 @@ The harness now reloads the learner page before the journey to install the probe
 Cleanup passed and the lease was released. The earlier setup failure remains
 unexplained; a successful diagnostic setup alone does not close that uncertainty.
 The next complete run and repeated setup will retain request/state evidence.
+
+### Staging behavioral checks — 2026-11-12
+
+Runtime/SQL remain identical to `9a4da2e`; harness head `33aaeec` passed all three
+required CI checks. Reports under `tmp/browser_demo_runs/`:
+
+| Run suffix | Workflow | Result |
+| --- | --- | --- |
+| `20261113011105-40df66f9` | learning-progress-realtime | Pass; both setup orders, draft/card/evidence retention, learner readonly, offline catch-up and fresh subscribed delivery |
+| `20261113011154-75a4f674` | learning-progress-realtime repeated | Pass; all same checks |
+| `20261113011243-bf2126cb` | checklist-management | Pass |
+| `20261113011257-85c1dcba` | checklist-coverage | Pass |
+| `20261113011322-e4ac0954` | early-message-recheck | Pass |
+| `20261113011350-fff29592` | guard-mode | Failed in harness: rating submission auto-sent the message, then old test clicked disabled Send again |
+| `20261113011537-aedd3918` | assessment-answer | Failed in shared login before room fixtures: route wait used page load rather than DOM readiness |
+| `20261113011747-d12d0d26` | cyberbullying | Pass |
+| `20261113011938-4aa77e4b` | exit-assessment | Pass |
+
+Every created/used room cleanup passed. Realtime observed latencies across the
+two complete runs: priority/status 1058–1682ms; evidence-only 1244–1286ms;
+reconnect catch-up 804–1309ms; a subsequent mutation after fresh channel
+acknowledgement 503–504ms. These checks do not involve manual Refresh.
+
+The Guard workflow now reuses the existing tested learner-send helper. Login
+waits for DOM-ready route navigation and reports the actual route/login error on
+failure; the earlier timeout had no such diagnostic, so its exact cause is not
+established. The realtime harness now captures GET responses as well as POSTs
+and checks the actual learner panel at 390px. Supabase analytics inspection was
+attempted for the first setup timeout; the current logs endpoint returned a
+backend error even for a basic latest-five query. No platform-cause claim is
+made. Keep the first failure explicit and repeat setup with diagnostics before
+the merge decision. Lease `pr76-staging-33aaeec` released after fixture cleanup;
+the next diagnostic commit requires a new lease. Staging stays on SQL + API v83.
+
+Independent harness follow-up found two test-isolation gaps: the mobile viewport
+was not restored, and response listeners could survive diagnostic failure. Both
+are repaired in finally cleanup; diagnostic failures retain the original journey
+error. Browser harness unit suite passes 33 tests and modified scripts pass syntax
+checks. These are harness-only changes; deployed runtime hashes are unchanged.

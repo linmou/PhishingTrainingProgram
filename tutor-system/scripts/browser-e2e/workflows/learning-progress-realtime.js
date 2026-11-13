@@ -7,12 +7,26 @@ const { openRoom, query, waitForMatch, requestId, screenshot, writeJson, managem
 
 module.exports = async function learningProgressRealtime(ctx) {
   const { tutorPage, studentPage, client, appUrl } = ctx;
+  const originalViewport = studentPage.viewportSize();
   const evidence = { status: 'running', started_at: new Date().toISOString(), rooms: [], checks: [], calls: [],
     latency_basis: 'Elapsed from successful mutation response; browser polling included; limit 2000ms.' };
   const persist = () => writeJson(path.join(ctx.evidenceDir, 'learning-progress-realtime.json'), evidence);
   const capture = response => /\/rest\/v1\/(sessions|session_checklists|checklist_items)\?|\/functions\/v1\/assessment-api/.test(response.url());
   const stopTutor = await captureResponses(tutorPage, capture);
   const stopLearner = await captureResponses(studentPage, capture);
+  const pendingReads = [];
+  evidence.browser_reads = [];
+  const listeners = [tutorPage, studentPage].map((page, index) => {
+    const listener = response => {
+      if (response.request().method() !== 'GET' || !capture(response)) return;
+      pendingReads.push(response.json().then(body => evidence.browser_reads.push({
+        viewer: index === 0 ? 'tutor' : 'learner', url: response.url(), status: response.status(), body
+      })).catch(error => evidence.browser_reads.push({ viewer: index === 0 ? 'tutor' : 'learner',
+        url: response.url(), status: response.status(), error: error.message })));
+    };
+    page.on('response', listener);
+    return { page, listener };
+  });
   const panel = page => page.locator('.checklist-panel');
   const card = (page, target) => page.locator('.checklist-item').filter({ hasText: target });
   async function api(actor, operation, payload) {
@@ -197,21 +211,40 @@ module.exports = async function learningProgressRealtime(ctx) {
     assert.equal((await query(client, 'messages', 'id,user_id', 'room_id', preEntry.id)).filter(row => row.user_id === ctx.student.id).length, 0,
       'Promotion relied on a learner message');
     evidence.checks.push({ label: 'local draft automatically promoted on learner membership before first message', status: 'pass' });
+    await studentPage.setViewportSize({ width: 390, height: 844 });
+    await card(studentPage, draftTarget).waitFor({ timeout: TIMEOUT });
+    const bounds = await panel(studentPage).boundingBox();
+    assert(bounds && bounds.x >= -1 && bounds.x + bounds.width <= 391, 'Learner panel exceeds narrow viewport');
+    evidence.learner_mobile_screenshot = await screenshot(studentPage, ctx.evidenceDir, 'learning-progress-learner-mobile');
+    evidence.checks.push({ label: 'learner progress fits 390px viewport', status: 'pass' });
     evidence.status = 'pass';
   } catch (error) {
     evidence.status = 'fail'; evidence.error = { message: error.message, stack: error.stack }; throw error;
   } finally {
-    await studentPage.context().setOffline(false);
-    evidence.final_database = await Promise.all(evidence.rooms.map(async room => ({
-      room_id: room.id,
-      sessions: await query(client, 'sessions', 'id,student_id,tutor_id,status', 'room_id', room.id),
-      checklists: await query(client, 'session_checklists', 'id,student_id,is_active,progress_policy_version', 'room_id', room.id),
-    })));
-    evidence.browser_requests = { tutor: await stopTutor(), learner: await stopLearner() };
-    evidence.local_draft = await tutorPage.evaluate(roomIds => Object.fromEntries(
-      Object.entries(localStorage).filter(([key]) => roomIds.some(id => key.includes(id)))
-    ), evidence.rooms.map(room => room.id));
-    evidence.completed_at = new Date().toISOString(); persist();
+    listeners.forEach(({ page, listener }) => page.off('response', listener));
+    const captures = Promise.allSettled([stopTutor(), stopLearner()]);
+    try {
+      await studentPage.context().setOffline(false);
+      if (originalViewport) await studentPage.setViewportSize(originalViewport);
+      evidence.final_database = await Promise.all(evidence.rooms.map(async room => ({
+        room_id: room.id,
+        sessions: await query(client, 'sessions', 'id,student_id,tutor_id,status', 'room_id', room.id),
+        checklists: await query(client, 'session_checklists', 'id,student_id,is_active,progress_policy_version', 'room_id', room.id),
+      })));
+      const [tutor, learner] = await captures;
+      if (tutor.status === 'rejected') throw tutor.reason;
+      if (learner.status === 'rejected') throw learner.reason;
+      evidence.browser_requests = { tutor: tutor.value, learner: learner.value };
+      evidence.local_draft = await tutorPage.evaluate(roomIds => Object.fromEntries(
+        Object.entries(localStorage).filter(([key]) => roomIds.some(id => key.includes(id)))
+      ), evidence.rooms.map(room => room.id));
+    } catch (error) {
+      evidence.diagnostic_error = error.message;
+      if (evidence.status !== 'fail') { evidence.status = 'fail'; throw error; }
+    } finally {
+      await Promise.allSettled([captures, ...pendingReads]);
+      evidence.completed_at = new Date().toISOString(); persist();
+    }
   }
   return evidence;
 };
