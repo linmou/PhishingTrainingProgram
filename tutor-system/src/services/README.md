@@ -1,6 +1,6 @@
 # Service configuration
 
-<!-- Intent: locate maintained scenario targets, AI configuration and their verification. Updated: 2026-11-12. Baseline commit: d8e1b1d. -->
+<!-- Intent: locate maintained scenario targets, AI configuration and their verification. Updated: 2026-11-13. Baseline commit: 81bb3c9. -->
 
 The supported tutor/context path is `aiService.ts` → `simplifiedAIContext.ts`,
 with transport through the `ai-api` Edge Function. The application is private;
@@ -32,6 +32,16 @@ temperature0.3, max_tokens600 and thinking disabled. `aiModels.ts` declares
 Qwen3.8 Flash for React and ai-api; assessment-api retains Qwen3.5. See the
 [candidate11 release record](../../docs/doc_update_record/documentation_update_record_v2026_10_15_candidate11_qwen38_conditional_release.md)
 for evaluation limitations and staging/production verification status.
+
+On experiment branch `auto-experiment/scaffolding-target-ablation`,
+`ecologicalTutorCall.ts` appends `NOTICE_THEN_ACTION_POLICY` after the assessment
+policy in ordinary phishing/privacy tutor requests. It is the exact
+[notice-then-action diagnostic candidate](../../../evals/promptfoo/scaffolding-diagnostics/2026-11-13-notice-then-act/candidate.txt),
+including its prerequisite-teaching, correction and immediate-protection exceptions.
+The original target labels and complete target text remain in the room prompt.
+This is an experimental implementation; the diagnostic did not establish reliable
+behavior or release acceptance. See the
+[implementation and fixture audit](../../../evals/promptfoo/scaffolding-diagnostics/2026-11-13-notice-then-act/implementation.md).
 
 `aiService.ts` dispatches from the stored practice type; Cyberbullying proposals
 use the existing ai-api and tutor approval path. Shared Guard state uses a boolean.
