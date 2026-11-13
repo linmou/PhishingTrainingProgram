@@ -112,6 +112,24 @@ Grounding: P2/P4/P5 support live visibility; P6 and P7/R7 favor reusing Realtime
 
 - [x] Fix draft edits accepted during pending promotion: reject mutations in the hook and disable the visible draft controls until synchronization settles. Regression tests cover success, failure, text/priority mutations, and actual panel/hook integration.
 - [x] Integrate current `no_sign_up` locally at merge `3d1a1dd0b6ce2e7be0af0bb962321ff0def1ea39`; full frontend regression passes 1,608 tests and the production build passes.
-- [ ] Complete release acceptance: SQL diagnostics pass on retained-baseline clones, but fresh-baseline parity and hosted two-viewer delivery remain unverified. User requested local-only work. See the dated release record for command results and retained evidence.
+- [ ] Complete release acceptance: fresh-baseline catalog/data parity and three publication migration tests passed. The user subsequently authorized the full merge/release workflow. Hosted checks exposed an existing transfer-evidence visibility gap; the repair and hosted two-viewer acceptance remain open. See the dated release record for exact hashes and evidence.
 
 Draft PR [#76](https://github.com/linmou/PhishingTrainingProgram/pull/76), issue [#75](https://github.com/linmou/PhishingTrainingProgram/issues/75). The original pre-PR reviews covered implementation `b4e5dcb`; the subsequent merge review found the draft-promotion race repaired locally above. Supabase MCP is now available. Status remains in-review pending fresh-baseline migration validation and staging/production acceptance. The repair and verification updates remain local, with evidence and resumption steps in the dated release record.
+
+### Evidence access repair — 2026-11-12
+
+Read-only staging verification found 49 transfer-evidence rows but zero visible
+to the anonymous browser role: the existing SELECT policy expects auth.uid,
+whereas this application uses an offline application identity. Publication alone
+does not fulfill the approved owner/learner evidence contract. The repair uses
+the existing assessment API identity model and a service-role-only scoped read,
+limited to the active checklist's learner or room owner. It preserves table RLS
+and grants and must not expose assessment answers or other learners' evidence.
+
+Evidence INSERT/UPDATE invalidates its parent item by timestamp only so the
+existing permitted subscription can request a fresh scoped read. This does not
+judge content or write progress/status. Reassignment must invalidate both parents;
+the transaction must retain normal write guards and roll back on failure. Local
+permission/atomicity tests, independent review, new exact SQL validation and
+hosted evidence-only delivery checks are required before promotion. The earlier
+publication-only test result does not validate this amended candidate.

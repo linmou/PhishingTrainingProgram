@@ -3,7 +3,7 @@
 'use strict';
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const { openRoom, query, waitForMatch, requestId, screenshot, writeJson, TIMEOUT } = require('../browser-e2e-support');
+const { openRoom, query, waitForMatch, requestId, screenshot, writeJson, managementQuery, TIMEOUT } = require('../browser-e2e-support');
 
 module.exports = async function learningProgressRealtime(ctx) {
   const { tutorPage, studentPage, client, appUrl } = ctx;
@@ -123,16 +123,31 @@ module.exports = async function learningProgressRealtime(ctx) {
     assert(await tutorCard.locator('.checklist-item-details').isVisible(), 'Expanded card collapsed');
     evidence.checks.push({ label: 'unsaved text/note and expansion survive remote priority/status', status: 'pass' });
 
-    // A fixture-only INSERT deliberately does not update checklist_items. This isolates evidence event delivery and browser RLS visibility.
+    // Write only evidence; the database trigger supplies timestamp-only parent invalidation.
     const evidenceText = `Isolated evidence event ${ctx.runId}`;
     const itemBeforeEvidence = await query(client, 'checklist_items', '*', 'id', item.id);
-    const inserted = await client.from('coverage_evidence').insert({ item_id: item.id, evidence_text: evidenceText,
-      analysis: 'Fixture diagnostic for evidence-only subscription delivery.', confidence_score: 80, detection_method: 'tutor_manual' }).select('*').single();
-    assert.equal(inserted.error, null);
-    evidence.evidence_fixture = { mutation: 'service-role isolated INSERT; no parent item update', row: inserted.data }; persist();
-    await visibleWithin('isolated evidence visible in both browsers', [tutorCard.locator('.evidence-text').filter({ hasText: evidenceText }), learnerCard.locator('.evidence-text').filter({ hasText: evidenceText })], Date.now());
-    assert.deepEqual(await query(client, 'checklist_items', '*', 'id', item.id), itemBeforeEvidence,
-      'Evidence-only diagnostic also changed the parent item');
+    const literal = value => `'${String(value).replace(/'/g, "''")}'`;
+    await managementQuery(ctx.config, `
+      BEGIN;
+      SET LOCAL ROLE service_role;
+      SELECT set_config('request.headers', '{"x-practice-contract":"cyberbullying-v2"}', true);
+      SELECT set_config('app.transfer_operation', 'on', true);
+      INSERT INTO public.coverage_evidence(item_id,evidence_text,analysis,confidence_score,detection_method)
+      VALUES (${literal(item.id)}::uuid,${literal(evidenceText)},
+        'Fixture diagnostic for evidence-only subscription delivery.',80,'tutor_manual') RETURNING *;
+      COMMIT;`);
+    const evidenceCommitted = Date.now();
+    const inserted = (await query(client, 'coverage_evidence', '*', 'item_id', item.id))
+      .filter(row => row.evidence_text === evidenceText);
+    assert.equal(inserted.length, 1);
+    evidence.evidence_fixture = { mutation: 'isolated SQL INSERT under service_role and normal transfer-write context; trigger supplies parent invalidation', row: inserted[0] }; persist();
+    await visibleWithin('isolated evidence visible in both browsers', [tutorCard.locator('.evidence-text').filter({ hasText: evidenceText }), learnerCard.locator('.evidence-text').filter({ hasText: evidenceText })], evidenceCommitted);
+    const itemAfterEvidence = await query(client, 'checklist_items', '*', 'id', item.id);
+    const withoutTimestamp = rows => rows.map(({ updated_at, ...row }) => row);
+    assert.deepEqual(withoutTimestamp(itemAfterEvidence), withoutTimestamp(itemBeforeEvidence),
+      'Evidence-only notification changed parent progress or content');
+    assert.notEqual(itemAfterEvidence[0].updated_at, itemBeforeEvidence[0].updated_at,
+      'Evidence-only notification did not invalidate the parent timestamp');
     await tutorCard.locator('.evidence-button').click();
     await edit('set_understanding', { understanding_level: 'good' });
     await visibleWithin('open evidence view refreshes understanding', [tutorPage.getByRole('dialog', { name: 'Learning Evidence' }).locator('.understanding-good'), learnerCard.locator('.understanding-good')], Date.now());

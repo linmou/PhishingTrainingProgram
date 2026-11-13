@@ -19,6 +19,16 @@ const assessment = {
 };
 
 describe('transfer assessment DTO projections', () => {
+  it('rejects malformed evidence envelopes instead of treating them as empty evidence', async () => {
+    await expect(serviceWith({ evidence: [] }).readLearningEvidence('room-1', 'checklist-1'))
+      .rejects.toThrow('Invalid learning evidence response');
+  });
+
+  it('surfaces evidence transport failures', async () => {
+    const service = new TransferAssessmentService({ api: { invoke: async () => ({ data: null, error: { message: 'network unavailable' } }) } });
+    await expect(service.readLearningEvidence('room-1', 'checklist-1')).rejects.toThrow('network unavailable');
+  });
+
   it('records page visits with the same supplied key and leaves pre-navigation joins unkeyed', async () => {
     const invoke = jest.fn().mockResolvedValue({ data: { ok: true, data: { room_role: 'student' } }, error: null });
     const service = new TransferAssessmentService({ api: { invoke }, requestId: () => 'request-1' });

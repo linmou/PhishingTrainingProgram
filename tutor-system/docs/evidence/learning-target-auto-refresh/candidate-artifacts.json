@@ -1,6 +1,6 @@
 {
   "purpose": "Reviewed local candidate; not an integrated production release manifest",
-  "baseline_commit": "0d4428843c2a7aaba9d11c491bfdb770167d3ab5",
+  "baseline_commit": "4da7cc2741da44419338e40441eb213e371d2dfa",
   "files": {
     "tutor-system/src/hooks/useChecklist.ts": "9243ce8c0d8cb7a3ba2090eeba579ebcb7ef8d317803af196a7993964f485592",
     "tutor-system/src/hooks/useRealtimeInvalidation.ts": "146f79c8876a948985c73f5ae8825c1c1b83178359cb3469557d80cb9c085186",
@@ -9,8 +9,13 @@
     "tutor-system/src/pages/RoomPagePost.tsx": "937d77b01272efd47792023c2f98f5af514d3fb9e911db99b0005c65d93c1bf4",
     "tutor-system/package.json": "465472674cb9655c6038fb7efd09e9bdcf980700fd54b09a6da6bdb2374f2f9a",
     "tutor-system/package-lock.json": "501922254f2f40ad292541217c55294d13e76c747361153718d310d01177f6c0",
-    "tutor-system/supabase/migrations/20261112180000_enable_learning_progress_realtime.sql": "6ba89bb65b730c02d3b9a1174888587a15a215447e254789d4e30b4b5220cd7a",
+    "tutor-system/supabase/migrations/20261112180000_enable_learning_progress_realtime.sql": "36760ca5352aae0e3ff1b41a1331e1f7ca667a260605eb095a726ce4f482b9d9",
     "tutor-system/supabase/tests/learning_progress_realtime_publication.sql": "e22bc7e48c5144b3555b7d84767a43b054f56c2cae9b2098189dafbdea3b24dd",
-    "scripts/database/learning-progress-realtime.integration.test.js": "c9d64dcd21d6cc8c2233e7e0a00e01c5916aa05272b786e1bc6b7baab334d521"
+    "scripts/database/learning-progress-realtime.integration.test.js": "9cb1306013deac579a58cb64d3e911a5045cb2ca23e6d7438fe10b33e662bb59",
+    "tutor-system/src/services/checklistService.ts": "2e69a8e2a1463b8521436d4919709ca941f81a22874a0c59a450c095b02b8bfe",
+    "tutor-system/src/services/transferAssessmentService.ts": "b6c898a6a729c045f355520a7a099ffad646e491095f36a4298f63cb38c600cb",
+    "tutor-system/src/types/assessmentApi.ts": "bac215f07b614ccc95e877f256424e2bf1b9fca5166fad0496e5e2606b94a2df",
+    "tutor-system/supabase/functions/assessment-api/index.ts": "4ad58eb3d6f17d967256c42f277f929a9eb3f7cbfda7905d396c353c72ab2a55",
+    "tutor-system/scripts/browser-e2e/workflows/learning-progress-realtime.js": "0036f17adb3be9ee3d96f38b9025e5cce052ef0cc1648b142161114897a8dcf4"
   }
 }

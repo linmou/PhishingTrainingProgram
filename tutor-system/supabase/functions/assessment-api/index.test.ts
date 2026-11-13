@@ -64,6 +64,37 @@ function dependencies(overrides: Partial<AssessmentApiDependencies> = {}): Asses
   };
 }
 
+Deno.test('evidence read derives actor from verifier and forwards only scoped identifiers', async () => {
+  const calls: unknown[] = [];
+  const rows = [{ id: 'evidence-1', item_id: 'item-1', evidence_text: 'Recorded evidence' }];
+  const handler = createAssessmentApiHandler(dependencies({ rpc: async (name, args) => {
+    calls.push([name, args]);
+    return { data: rows, error: null };
+  } }));
+  const response = await handler(request('read_learning_evidence', {
+    room_id: 'room-1', checklist_id: 'checklist-1', actor_id: 'forged-actor',
+  }));
+  assertEquals(response.status, 200);
+  assertEquals((await response.json()).data, rows);
+  assertEquals(calls, [['read_learning_evidence_v1', {
+    p_room_id: 'room-1', p_checklist_id: 'checklist-1', p_actor_id: 'teacher-1',
+  }]]);
+});
+
+Deno.test('evidence read rejects unauthorized room before RPC and propagates scoped denial', async () => {
+  let calls = 0;
+  const handler = createAssessmentApiHandler(dependencies({ rpc: async () => {
+    calls += 1;
+    return { data: null, error: { message: 'FORBIDDEN' } };
+  } }));
+  const outside = await handler(request('read_learning_evidence', { room_id: 'other-room', checklist_id: 'c' }));
+  assertEquals(outside.status, 403);
+  assertEquals(calls, 0);
+  const denied = await handler(request('read_learning_evidence', { room_id: 'room-1', checklist_id: 'other-checklist' }));
+  assertEquals(denied.status, 403);
+  assertEquals(calls, 1);
+});
+
 // Covers assessment-api/index.ts: stale clients must fail before identity, database or provider access.
 Deno.test('rejects missing and outdated client contracts before assessment side effects', async () => {
   let touched = false;

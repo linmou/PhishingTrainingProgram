@@ -1,6 +1,6 @@
 # Learning target auto-refresh — issue #75
 
-Status: **frontend and fresh-baseline SQL validation passed; hosted acceptance pending shared staging availability**. Current continuation below supersedes historical blockers. This record does not certify a release.
+Status: **evidence visibility repair implemented; frontend, Edge and amended fresh-baseline SQL tests passed; hosted acceptance pending**. Current continuation below supersedes historical blockers. This record does not certify a release.
 
 - Issue: https://github.com/linmou/PhishingTrainingProgram/issues/75
 - Draft PR: https://github.com/linmou/PhishingTrainingProgram/pull/76
@@ -153,3 +153,23 @@ Selected staging checks: new realtime workflow, checklist-management, checklist-
 Independent harness review found that the browser `online` event's HTTP reconciliation could falsely satisfy the reconnect check. The test now requires a fresh checklist channel acknowledgement and a new remote mutation delivered while continuously online. Read-only MCP inspection independently confirmed an evidence-visibility defect: staging has 49 transfer-evidence rows, while `SET LOCAL ROLE anon` with `auth.uid() IS NULL` sees 0. The existing transfer policy requires auth.uid; browser reads use the anonymous client. This blocks evidence acceptance until repaired without silently broadening data permissions.
 
 Read-only inspection found staging assessment-api v82 (bundle `97d00565fb94cc2775338e8dbac3e4869d80c583f4d9cf1c7ca3d568bbdd6929`) and production v21 (bundle `3421ec777c8316f3e3fca32e847f4e6159ba0c6e7d39dde685c5f9e493a9b037`); ai-api staging v8 and production v6. Source comparison identifies the concurrent analyzer Candidate01 release and already-merged shared tutor prompt as differing inherited dependencies; do not overwrite that release. Shared staging lease at inspection belongs to candidate `fd1ec70a9ee54cb4e728e3d0d327e0efdc26e6bc`, operation `staging-release`, run `d213e20f-f621-4d6f-8d80-bb950f72fcd6`, owner `fix/learning-progress-candidate01`. Next action: obtain staging availability after that owner's cleanup/release, refresh dependency/default-branch state, acquire our exact-candidate lease and apply the validated migration before browser acceptance. No PR76 hosted mutation or production deployment has occurred.
+
+### Evidence repair and integrated verification — 2026-11-12
+
+PR #79 merged as `4da7cc2741da44419338e40441eb213e371d2dfa` and is integrated in this branch at `b6e5789`. All three required CI checks passed on that integrated head. Render reports that default commit live in deploy `dep-dbr5p9u1egvs73fdt700`; automatic deployment remains enabled. PR76 briefly acquired and released two staging leases without hosted writes while integrating and investigating the evidence defect. No lease was retained during local repair.
+
+The repair preserves existing table RLS/grants. `read_learning_evidence` uses the current API's application UUID identity model, then a service-role-only RPC requires the active checklist's exact learner or owning tutor with an active profile. It explicitly projects evidence fields without private assessment answers. This reuses the existing offline identity boundary; it does not introduce cryptographic authentication. The frontend requests scoped evidence separately, attaches rows only to matching items, and surfaces read failures.
+
+Evidence INSERT/UPDATE touches parent item timestamps under the existing invoker permissions and write guards. Reassignment touches both parents. It does not change progress/status or run judging. Existing checklist-total aggregation still runs after timestamp touches; same-transaction learning events can produce an additional parent update. No concurrency deduplication mechanism is introduced. The browser diagnostic supplies the normal transfer-write context and writes only evidence; it verifies timestamp notification without progress/content changes.
+
+Amended SQL SHA-256: `36760ca5352aae0e3ff1b41a1331e1f7ca667a260605eb095a726ce4f482b9d9`. Fresh-baseline harness **3 passed, 0 skipped**, including real learner/tutor evidence visibility; unrelated actor, wrong room and inactive checklist denial; anon/authenticated RPC denial; INSERT/UPDATE/reassignment timestamp notification; rollback; Guard refusal; and preserved legacy anonymous evidence INSERT. Final disposable clones `scenario-A5Cym0` and `scenario-juUsGi` are cleaned. Full evidence: `/Users/admin/.transfer-assessment-pg17/runs/baseline.wzS4uHcZ/pr76-validation/evidence-read-repair.md`.
+
+Edge suite: **53 passed**, including type checking, with `/Users/admin/.deno/bin/deno test --sloppy-imports --allow-env --allow-net --allow-run --allow-read tutor-system/supabase/functions/assessment-api/index.test.ts`. Frontend focused tests: **36 passed**. Initial full regression exposed 14 failures in two mocks still using anonymous nested evidence. Updating those mocks to the API contract preserved and strengthened chronology, export and item-scope assertions; affected suites **23 passed**. Final full Jest **154 suites / 1,614 tests / 1 snapshot passed**, 5 suites / 93 existing skips, exit 0, 42.798 seconds (execution session `86612`). Production build passed with existing warnings; browser harness **33 passed**. Standalone tsc remains failing on 436 diagnostics in 37 preexisting files, none in the changed frontend files.
+
+Scoped code-smell monitor has zero ESLint errors/warnings across the four changed runtime modules. Existing repeated-read candidates do not establish redundancy in the new scoped evidence request. Several unavailable tools and package-wide type/dependency findings mean incomplete coverage; report retained in ignored `audits/pr76-evidence-code-smell/`. Re-run current-head CI, complete independent repair review, acquire the exact-candidate staging lease, apply amended SQL before the dependent Edge function, and run the selected acceptance journeys. Production gates remain open.
+
+Three independent repair reviewers converged on pass for scoped evidence access,
+notification/guard semantics, frontend mapping/failure propagation and local
+validation. The strict phase gate accepted round 1 (`pr76_evidence`, `review` to
+`staging`). Audit JSON is locally ignored under `audits/`. The reviewers explicitly
+bounded untested concurrency interleavings and did not certify hosted delivery.

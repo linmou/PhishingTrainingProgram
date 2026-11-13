@@ -64,7 +64,8 @@ if (process.argv[2] === '--scenario') {
         SELECT id FROM public.session_checklists LIMIT 1;
         SELECT id FROM public.checklist_items LIMIT 1;
         SELECT id FROM public.coverage_evidence LIMIT 1; ROLLBACK;`));
-      for (const forbidden of ['SELECT id FROM private.transfer_assessments LIMIT 1', 'ALTER PUBLICATION supabase_realtime DROP TABLE public.checklist_items']) {
+      for (const forbidden of ['SELECT id FROM private.transfer_assessments LIMIT 1', 'ALTER PUBLICATION supabase_realtime DROP TABLE public.checklist_items',
+        'SELECT public.read_learning_evidence_v1(NULL,NULL,NULL)']) {
         const denied = query(`BEGIN; SET LOCAL ROLE ${role}; ${forbidden}; ROLLBACK;`);
         assert.notEqual(denied.status, 0);
         assert.match(denied.stderr, /permission denied|must be owner/);
@@ -72,6 +73,99 @@ if (process.argv[2] === '--scenario') {
     }
     assert.equal(snapshot(), before);
     assert.equal(membership(), afterMembers);
+    // Use actual restored learner/tutor rows, isolate all fixture writes in a rollback.
+    ok(query(`BEGIN;
+      SET LOCAL app.transfer_operation = 'on';
+      SET LOCAL request.headers = '{"x-practice-contract":"cyberbullying-v2"}';
+      DO $test$
+      DECLARE c public.session_checklists%ROWTYPE; i uuid; other_item uuid;
+        teacher uuid; outsider uuid; evidence uuid := gen_random_uuid();
+        before_time timestamptz; after_time timestamptz; other_time timestamptz; rows jsonb;
+      BEGIN
+        SELECT sc.* INTO c FROM public.session_checklists sc
+          JOIN public.users u ON u.id=sc.student_id AND u.status='active'
+          JOIN public.rooms r ON r.id=sc.room_id
+          JOIN public.users tutor ON tutor.id=r.tutor_id AND tutor.status='active'
+          WHERE sc.is_active AND sc.progress_policy_version='transfer_v1'
+            AND (SELECT count(*) FROM public.checklist_items ci WHERE ci.checklist_id=sc.id AND NOT ci.deleted)>1
+          LIMIT 1;
+        IF c.id IS NULL THEN RAISE EXCEPTION 'RESTORED_LEARNER_FIXTURE_REQUIRED'; END IF;
+        SELECT tutor_id INTO teacher FROM public.rooms WHERE id=c.room_id;
+        SELECT id INTO outsider FROM public.users WHERE id NOT IN (teacher,c.student_id) AND status='active' LIMIT 1;
+        IF outsider IS NULL THEN RAISE EXCEPTION 'RESTORED_OUTSIDER_REQUIRED'; END IF;
+        SELECT id,updated_at INTO i,before_time FROM public.checklist_items
+          WHERE checklist_id=c.id AND NOT deleted ORDER BY id LIMIT 1;
+        SELECT id,updated_at INTO other_item,other_time FROM public.checklist_items
+          WHERE checklist_id=c.id AND NOT deleted AND id<>i ORDER BY id LIMIT 1;
+        UPDATE public.rooms SET guard_mode=false WHERE id=c.room_id;
+        SET LOCAL ROLE service_role;
+        INSERT INTO public.coverage_evidence(id,item_id,evidence_text,analysis,confidence_score,detection_method)
+          VALUES(evidence,i,'integration fixture','integration fixture',100,'tutor_manual');
+        SELECT updated_at INTO after_time FROM public.checklist_items WHERE id=i;
+        IF after_time IS NOT DISTINCT FROM before_time THEN RAISE EXCEPTION 'INSERT_INVALIDATION_MISSING'; END IF;
+        SET LOCAL ROLE service_role;
+        rows := public.read_learning_evidence_v1(c.room_id,c.id,c.student_id);
+        IF NOT EXISTS(SELECT FROM jsonb_array_elements(rows) e WHERE e->>'id'=evidence::text) THEN
+          RAISE EXCEPTION 'LEARNER_EVIDENCE_MISSING'; END IF;
+        rows := public.read_learning_evidence_v1(c.room_id,c.id,teacher);
+        IF NOT EXISTS(SELECT FROM jsonb_array_elements(rows) e WHERE e->>'id'=evidence::text) THEN
+          RAISE EXCEPTION 'TUTOR_EVIDENCE_MISSING'; END IF;
+        BEGIN
+          PERFORM public.read_learning_evidence_v1(c.room_id,c.id,outsider);
+          RAISE EXCEPTION 'PEER_OR_OBSERVER_READ_ALLOWED';
+        EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+        BEGIN
+          PERFORM public.read_learning_evidence_v1(gen_random_uuid(),c.id,teacher);
+          RAISE EXCEPTION 'CROSS_ROOM_READ_ALLOWED';
+        EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+        RESET ROLE;
+        UPDATE public.session_checklists SET is_active=false WHERE id=c.id;
+        BEGIN
+          PERFORM public.read_learning_evidence_v1(c.room_id,c.id,teacher);
+          RAISE EXCEPTION 'INACTIVE_READ_ALLOWED';
+        EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+        UPDATE public.session_checklists SET is_active=true WHERE id=c.id;
+        UPDATE public.coverage_evidence SET analysis='updated fixture' WHERE id=evidence;
+        IF (SELECT updated_at FROM public.checklist_items WHERE id=i) IS NOT DISTINCT FROM after_time THEN
+          RAISE EXCEPTION 'UPDATE_INVALIDATION_MISSING'; END IF;
+        SELECT updated_at INTO after_time FROM public.checklist_items WHERE id=i;
+        UPDATE public.coverage_evidence SET item_id=other_item WHERE id=evidence;
+        IF (SELECT updated_at FROM public.checklist_items WHERE id=i) IS NOT DISTINCT FROM after_time
+          OR (SELECT updated_at FROM public.checklist_items WHERE id=other_item) IS NOT DISTINCT FROM other_time THEN
+          RAISE EXCEPTION 'REASSIGNMENT_INVALIDATION_MISSING'; END IF;
+        SELECT updated_at INTO other_time FROM public.checklist_items WHERE id=other_item;
+        BEGIN
+          UPDATE public.coverage_evidence SET analysis='rolled back' WHERE id=evidence;
+          RAISE EXCEPTION 'ROLLBACK_PROBE';
+        EXCEPTION WHEN raise_exception THEN
+          IF SQLERRM <> 'ROLLBACK_PROBE' THEN RAISE; END IF;
+        END;
+        IF (SELECT updated_at FROM public.checklist_items WHERE id=other_item) IS DISTINCT FROM other_time THEN
+          RAISE EXCEPTION 'INVALIDATION_ESCAPED_ROLLBACK'; END IF;
+        UPDATE public.rooms SET guard_mode=true WHERE id=c.room_id;
+        BEGIN
+          UPDATE public.coverage_evidence SET analysis='guard forbidden' WHERE id=evidence;
+          RAISE EXCEPTION 'GUARD_WRITE_ALLOWED';
+        EXCEPTION WHEN raise_exception THEN
+          IF SQLERRM NOT LIKE 'Learning progression is locked%' THEN RAISE; END IF;
+        END;
+        IF (SELECT updated_at FROM public.checklist_items WHERE id=other_item) IS DISTINCT FROM other_time THEN
+          RAISE EXCEPTION 'GUARD_INVALIDATION_ESCAPED'; END IF;
+        SELECT ci.id,ci.updated_at,sc.room_id INTO i,before_time,c.room_id
+          FROM public.checklist_items ci JOIN public.session_checklists sc ON sc.id=ci.checklist_id
+          WHERE sc.progress_policy_version='legacy_v1' AND NOT ci.deleted LIMIT 1;
+        IF i IS NULL THEN RAISE EXCEPTION 'RESTORED_LEGACY_FIXTURE_REQUIRED'; END IF;
+        UPDATE public.rooms SET guard_mode=false WHERE id=c.room_id;
+        SET LOCAL ROLE anon;
+        INSERT INTO public.coverage_evidence(item_id,evidence_text,analysis,confidence_score,detection_method)
+          VALUES(i,'legacy fixture','legacy fixture',100,'tutor_manual');
+        IF (SELECT updated_at FROM public.checklist_items WHERE id=i) IS NOT DISTINCT FROM before_time THEN
+          RAISE EXCEPTION 'LEGACY_INVALIDATION_MISSING'; END IF;
+        RESET ROLE;
+      END;
+      $test$;
+      ROLLBACK;`));
+    assert.equal(snapshot(), before, 'Evidence fixture transaction leaves no rows or progress changes');
   } else if (scenario === 'atomic') {
     ok(query('ALTER TABLE public.coverage_evidence RENAME TO coverage_evidence_unavailable;'));
     const failed = file(migration);
