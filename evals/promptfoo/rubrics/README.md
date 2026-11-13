@@ -2,8 +2,8 @@
 
 Intent: separate legacy v0 evidence from specification-derived v1 checks without silently changing an existing benchmark.
 
-Updated: 2026-09-07
-Commit ID: `6cbe728` (pre-change baseline; this update's containing commit is recorded in Git history).
+Updated: 2026-11-13
+Commit ID: `2172ab6` (pre-change baseline; this update's containing commit is recorded in Git history).
 
 ## Version ownership
 
@@ -12,7 +12,13 @@ Commit ID: `6cbe728` (pre-change baseline; this update's containing commit is re
 | [v0/manifest.json](v0/manifest.json) | Byte-for-byte snapshots of the 11 legacy Markdown rubrics and two deterministic scripts, with original paths and hashes. | Historical contract. Root Markdown and original script paths remain unchanged entrypoints for the existing 43 cases / 173 assertions. |
 | [v1/manifest.json](v1/manifest.json) | Specification-derived semantic rubrics and independent deterministic decision/contract checks. | Preparation revision, not a frozen/calibrated benchmark or an experimental behavior-spec version. |
 
-The previous `tutor-behavior/` drafts were relocated to `v1/`. New authoring belongs in v1; do not edit the unversioned legacy entrypoints or v0 snapshots. The active Promptfoo config has not been switched. Pin file hashes when freezing a run; scores under different rubric versions are not directly comparable evidence of improvement.
+The previous `tutor-behavior/` drafts were relocated to `v1/`. Do not edit the unversioned legacy entrypoints or frozen snapshots to redefine a historical benchmark. The active Promptfoo config has not been switched. Pin file hashes when freezing a run; scores under different rubric versions are not directly comparable evidence of improvement.
+
+## Focused component-scaffolding revision
+
+The user-approved 2026-11-13 tutoring rules require separate recognition/action attempts or explicit confusion before answer disclosure, with immediate protection retained. The [component-scaffolding rubric set](../scaffolding-diagnostics/2026-11-13-component-scaffolding/rubrics.json) separates stage ordering, component disclosure, responsive progression and factual accuracy. It owns the new experimental judging instructions; v1 remains available for its historical requirements. The [canonical plan](../../../tutor-system/docs/ai-behaviors/tutor-behavior-evaluation-plan.md#current-focused-tutoring-increment--component-scaffolding) defines priorities, applicability, thresholds and the focused evaluation limit.
+
+In this revision, correction no longer automatically requires disclosure of a safe action. T04 must not penalize a valid recognition hint for withholding the later action answer. T03 feedback remains conditional on actual evaluative content. These are measurement-contract changes, so baseline and candidate receive the same newly calibrated checks. Results are reported by rubric as available; frozen snapshots and calibration evidence live with the experiment.
 
 v1 Markdown files contain only LLM-facing judging instructions, criteria, and examples. Titles, intent, IDs, requirement mappings, version, and calibration/readiness status live in the manifest; do not inject that bookkeeping into judge prompts. v0 remains an exact archive, including its historical formatting.
 

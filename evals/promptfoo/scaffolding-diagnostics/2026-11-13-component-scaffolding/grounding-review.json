@@ -1,0 +1,59 @@
+{
+  "intent": "Independently review the adopted component-specific tutoring clarification before focused evaluation.",
+  "reviewer": "/root/focused_audit",
+  "date": "2026-11-13",
+  "verdict": "clear",
+  "scope": "Grounding of T01, T01.1, T02.1 and T02.2; this is not rubric, candidate, execution or full-suite acceptance.",
+  "snapshots": {
+    "tutor-system/docs/ai-behaviors/tutor-behavior-specification.md": "7dbff4a57188d73dceb2d9a5d5cc964c2d6a9868dcb20f57f14f034d96d0e6c0",
+    "tutor-system/docs/ai-behaviors/constitution.md": "33ddd10ba3d0c949dbe308d67b9320b6be934f8af09ce07129b02a21dee2dec4",
+    "tutor-system/docs/ai-behaviors/tutor-response-contract.md": "6896f22902c7b43996272084263233296f9a7aaa694fa57cd23848fc1110aa1a"
+  },
+  "human_authority": {
+    "decision": "Requesting user approved priority order, separate recognition/action attempt-or-confusion opportunities, and retaining immediate protection.",
+    "source": "Current conversation, 2026-11-13: 1. I agree with the priority setting ... 2. yes 3. keep",
+    "interpretation": "Narrows ordinary tutoring under P2/R1 while retaining R2 and H1-H4; no new constitutional priority or exception is inferred."
+  },
+  "findings": [
+    {
+      "id": "G1",
+      "status": "clear",
+      "claim": "Separate opportunities belong to the same approved learning point, not to separate invented curriculum.",
+      "evidence": "T01.1 requires component-specific learner evidence; T02.1 orders recognition before action; T02 preserves room-approved target ownership."
+    },
+    {
+      "id": "G2",
+      "status": "clear",
+      "claim": "Direct protection overrides ordinary disclosure gates but does not establish understanding.",
+      "evidence": "T01 explicitly requires protection and a safe alternative before return to developing understanding; T02.1/T02.2 prohibit crediting tutor answers as learner evidence."
+    },
+    {
+      "id": "G3",
+      "status": "clear",
+      "claim": "Relevant spontaneous attempts permit explanation without an artificial question, while mandatory correction still requires the focused misconception trigger.",
+      "evidence": "T01 distinguishes failed focused scaffolding from broad openings; T01.1 accepts volunteered attempts and component-specific confusion. A broad opening alone is not fabricated failed scaffolding."
+    },
+    {
+      "id": "G4",
+      "status": "downstream_action_required",
+      "claim": "The old v1 instruction-realization rubric cannot judge the revised specification unchanged.",
+      "evidence": "evals/promptfoo/rubrics/v1/instruction_realization.md lines 7 and 43 require a safe action with every correction, conflicting with the adopted separate action opportunity.",
+      "resolution": "Version a scoped replacement and preserve old rubric/results; remove automatic safe-action demand outside protection or eligible action disclosure. Calibrate before comparative execution."
+    },
+    {
+      "id": "G5",
+      "status": "boundary_to_validate",
+      "claim": "Recognition evidence should be interpreted semantically and contextually rather than requiring a separate formulaic why answer.",
+      "evidence": "T02.1 explicitly accepts meaning rather than exact wording; T02.2 prohibits repeating completed components.",
+      "resolution": "Include concise correct recognition, bare agreement, and false premise questions in rubric calibration and focused cases."
+    },
+    {
+      "id": "G6",
+      "status": "out_of_focused_scope",
+      "claim": "Historical T09.6 failed-assessment feedback retains a safe-action clause.",
+      "evidence": "The specification explicitly marks T09.1-T09.6 as archived in-dialogue behavior and the requested first experiment concerns ordinary tutoring.",
+      "resolution": "Keep assessment cases outside this focused experiment; do not claim their reconciliation or regression acceptance."
+    }
+  ],
+  "next_review": "Audit exact rubric, dataset and candidate prompt hashes and comparison evidence before candidate advancement."
+}

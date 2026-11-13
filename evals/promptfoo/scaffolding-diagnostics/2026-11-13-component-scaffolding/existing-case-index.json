@@ -1,0 +1,3804 @@
+{
+  "source": "evals/promptfoo/v1/development-with-guard-scenario-rich.json",
+  "source_sha256": "f86df945af434c87462809a10a7a39141cfc13926201de39d3ba688c0bd0f517",
+  "method": "Map existing frozen reference mode/action fields to scope, not keyword interpretation of dialogue. Per-component semantic reference authoring remains required before broader execution.",
+  "case_count": 61,
+  "legacy_assertion_count": 173,
+  "counts": {
+    "reuse": 7,
+    "refine": 44,
+    "not_applicable": 10
+  },
+  "prior_real_target_expansion": {
+    "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/tutor-real-targets/evals/promptfoo/scaffolding-diagnostics/2026-11-13-real-target-regression",
+    "core_cases": 64,
+    "historical_controls": 16,
+    "relationship": "These are separately preserved real-template counterparts/openings and controls for the same 61 originals. Their prior component-unaware labels are not imported as new gold labels. The six template snapshot is reused, while this increment authors a smaller explicit component dataset."
+  },
+  "rows": [
+    {
+      "source_id": "webpage_account_security_alert_classic",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "scaffolding",
+          "explanation",
+          "correction"
+        ],
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "instruction_selection",
+          "instruction_realization",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:webpage_account_security_alert_classic:0",
+          "metric": "direct_correction",
+          "sha256": "6a08c20a138ffb288467c47dc94b3f864866caa048f4c818d8d67af693814703"
+        },
+        {
+          "index": 1,
+          "id": "v0:webpage_account_security_alert_classic:1",
+          "metric": "practical_knowledge",
+          "sha256": "7ff9e968441775fdbbe2f557c78325f8fee1d33c37f82703fccd01a483eeb3a8"
+        },
+        {
+          "index": 2,
+          "id": "v0:webpage_account_security_alert_classic:2",
+          "metric": "turn_rhythm",
+          "sha256": "8556be9d548af6d43491327529785fa1311db117c3e8583cea3c9ffa55a9395d"
+        },
+        {
+          "index": 3,
+          "id": "v0:webpage_account_security_alert_classic:3",
+          "metric": "reading_level",
+          "sha256": "70550e89dcfa87120e2cd9dea0949d72e978da2ca4a7b18215353d28a69509f9"
+        },
+        {
+          "index": 4,
+          "id": "v0:webpage_account_security_alert_classic:4",
+          "metric": "response_length",
+          "sha256": "4e9675ebea9394663606da14ab384030a829c1fee9661b49ac872f4957f5a2cc"
+        }
+      ],
+      "original_source_type": "ecological",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "webpage_nintendo_click_deal",
+      "disposition": "reuse",
+      "rationale": "Retain the immediate-protection exception and existing mode/action references. Rescore any content under the frozen current rubric; add a separate return-to-reasoning counterpart.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only R2 exception annotation; do not rewrite target input or expected protection."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "protective_instruction"
+        ],
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "instruction_selection",
+          "instruction_realization",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:webpage_nintendo_click_deal:0",
+          "metric": "direct_correction",
+          "sha256": "1ff1e66c675a385e2fc3755b7f1c74414c5b83d77616de58a6712245e8249a5a"
+        },
+        {
+          "index": 1,
+          "id": "v0:webpage_nintendo_click_deal:1",
+          "metric": "practical_knowledge",
+          "sha256": "be0010a243744aab00245b4c156e6f787728d3474868f1624b61279be448a379"
+        },
+        {
+          "index": 2,
+          "id": "v0:webpage_nintendo_click_deal:2",
+          "metric": "turn_rhythm",
+          "sha256": "1a3935281a48cd1f7913c5cd8e0cf83e97e10ddf9ac6a072487b5036b72259eb"
+        },
+        {
+          "index": 3,
+          "id": "v0:webpage_nintendo_click_deal:3",
+          "metric": "low_boilerplate_praise",
+          "sha256": "d6a39244797f398d8776693fe5e7d00f9776dce5ac3754b535ee084b8d6f7157"
+        },
+        {
+          "index": 4,
+          "id": "v0:webpage_nintendo_click_deal:4",
+          "metric": "response_length",
+          "sha256": "ba5a58165c8f5adfcd614efd840ad0c79f7d176ab02dc680b19e0d30597a0814"
+        }
+      ],
+      "original_source_type": "ecological",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "webpage_itunes_professional_photo",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "scaffolding",
+          "explanation",
+          "correction"
+        ],
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "instruction_selection",
+          "instruction_realization",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:webpage_itunes_professional_photo:0",
+          "metric": "direct_correction",
+          "sha256": "098bc2e572be489fa72c9d4ecba0e555f86f4071d904231dcb901b584efb6774"
+        },
+        {
+          "index": 1,
+          "id": "v0:webpage_itunes_professional_photo:1",
+          "metric": "practical_knowledge",
+          "sha256": "058c6926e16c6b87b00f527f69a905ea10b8e6c71e345f479cfa01e2b0be79ce"
+        },
+        {
+          "index": 2,
+          "id": "v0:webpage_itunes_professional_photo:2",
+          "metric": "low_boilerplate_praise",
+          "sha256": "81aaec4336cb3384117aac9c65eb849fd2dc2759e4dfd96811fce2e27e452b83"
+        },
+        {
+          "index": 3,
+          "id": "v0:webpage_itunes_professional_photo:3",
+          "metric": "turn_rhythm",
+          "sha256": "22430d067b23dbccd0f488afc86ec36c4acbd5611c6ad64629fcce1ba1fdb564"
+        },
+        {
+          "index": 4,
+          "id": "v0:webpage_itunes_professional_photo:4",
+          "metric": "response_length",
+          "sha256": "35c7eaf29c1c181ebeaf17688ad4b92d03190a300974071a2c06209534ebd1eb"
+        }
+      ],
+      "original_source_type": "ecological",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "webpage_demo_lock_icon_myth",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "correction"
+        ],
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "instruction_selection",
+          "instruction_realization",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:webpage_demo_lock_icon_myth:0",
+          "metric": "direct_correction",
+          "sha256": "7892a9539ac81f528989d8a4ff3838a5f651e17a3603526fa02e33b573130ffa"
+        },
+        {
+          "index": 1,
+          "id": "v0:webpage_demo_lock_icon_myth:1",
+          "metric": "practical_knowledge",
+          "sha256": "adec02beeeac8338c872d5b7cdbd1a40ed26199ddf0472d8b1eb05504158b6dd"
+        },
+        {
+          "index": 2,
+          "id": "v0:webpage_demo_lock_icon_myth:2",
+          "metric": "reading_level",
+          "sha256": "d12b835063e9bad3e58d879c0c0d67e0c46721ffac09af95780f7a5f009a2674"
+        },
+        {
+          "index": 3,
+          "id": "v0:webpage_demo_lock_icon_myth:3",
+          "metric": "turn_rhythm",
+          "sha256": "4c7a9cb65d2f42770384e70d30c1dde564e6933693b3e615e3c83d0916be37b1"
+        },
+        {
+          "index": 4,
+          "id": "v0:webpage_demo_lock_icon_myth:4",
+          "metric": "response_length",
+          "sha256": "be7fea7c61f0836b251c32f145c73c9f2228f1d851c12698e98cf87752594823"
+        }
+      ],
+      "original_source_type": "ecological",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "webpage_demo_click_impulse",
+      "disposition": "reuse",
+      "rationale": "Retain the immediate-protection exception and existing mode/action references. Rescore any content under the frozen current rubric; add a separate return-to-reasoning counterpart.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only R2 exception annotation; do not rewrite target input or expected protection."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "protective_instruction"
+        ],
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "instruction_selection",
+          "instruction_realization",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:webpage_demo_click_impulse:0",
+          "metric": "direct_correction",
+          "sha256": "e30856578b111aebafdb04c5a688809b6e93dcc1019c115a9d8e7a51f29c6b10"
+        },
+        {
+          "index": 1,
+          "id": "v0:webpage_demo_click_impulse:1",
+          "metric": "practical_knowledge",
+          "sha256": "905a51f34f7ee459f4a43ddd299eb13746cf1b454b20b4eaa59fa43c40f4db91"
+        },
+        {
+          "index": 2,
+          "id": "v0:webpage_demo_click_impulse:2",
+          "metric": "turn_rhythm",
+          "sha256": "195a3a63108c954548e33fdb1392cee518393a575248fc020d661cc4d0eb607a"
+        },
+        {
+          "index": 3,
+          "id": "v0:webpage_demo_click_impulse:3",
+          "metric": "low_boilerplate_praise",
+          "sha256": "e92096a165fb35df6949f503794fa6651ba188d4cc5570c94f85474faf8d16ed"
+        },
+        {
+          "index": 4,
+          "id": "v0:webpage_demo_click_impulse:4",
+          "metric": "response_length",
+          "sha256": "65fe6323e27a77fb0b974d30f6bb7cb64b3b892ad13601dfe864b1ac8eeb5d48"
+        }
+      ],
+      "original_source_type": "ecological",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "webpage_demo_correct_safe_action",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "scaffolding",
+          "explanation"
+        ],
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "instruction_selection",
+          "instruction_realization",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:webpage_demo_correct_safe_action:0",
+          "metric": "low_boilerplate_praise",
+          "sha256": "562b266c2cc568aac35ccf19747dcf64316dccc612e1565aa872a651fac99284"
+        },
+        {
+          "index": 1,
+          "id": "v0:webpage_demo_correct_safe_action:1",
+          "metric": "practical_knowledge",
+          "sha256": "c7a7559b6d4214d40ed5c207722aea7396aefee661ddd4391b1a28d081be8458"
+        },
+        {
+          "index": 2,
+          "id": "v0:webpage_demo_correct_safe_action:2",
+          "metric": "turn_rhythm",
+          "sha256": "62ccde87add4e26bef404c899c30f12c0c9afe0febe37ea1dfdc44e3ef2b354e"
+        },
+        {
+          "index": 3,
+          "id": "v0:webpage_demo_correct_safe_action:3",
+          "metric": "response_length",
+          "sha256": "e1fe0c288e38ee5710e4124a2502ef7043cf926b0b5a7c30e4d045e9cf582d83"
+        }
+      ],
+      "original_source_type": "ecological",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "webpage_demo_correct_lock_reasoning",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "scaffolding",
+          "explanation"
+        ],
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "instruction_selection",
+          "instruction_realization",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:webpage_demo_correct_lock_reasoning:0",
+          "metric": "low_boilerplate_praise",
+          "sha256": "0835bd43f38046f9e28352dd86b34b8953f33d27c2faebfbcb07a3748db192b5"
+        },
+        {
+          "index": 1,
+          "id": "v0:webpage_demo_correct_lock_reasoning:1",
+          "metric": "practical_knowledge",
+          "sha256": "fc1c4666c537a632c0fc798e7239bf9bea5474f85ca79eba8afffec6e49b0a39"
+        },
+        {
+          "index": 2,
+          "id": "v0:webpage_demo_correct_lock_reasoning:2",
+          "metric": "turn_rhythm",
+          "sha256": "ba68ce08c9572b0df0f1098859dd47439b57391e36d454fbc0d98eeb0a75d480"
+        },
+        {
+          "index": 3,
+          "id": "v0:webpage_demo_correct_lock_reasoning:3",
+          "metric": "response_length",
+          "sha256": "2d547ae7650db26fafcf9d04eb2c54aad9db635388c677345e1f315641698314"
+        }
+      ],
+      "original_source_type": "ecological",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "webpage_demo_pressure_words",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:webpage_demo_pressure_words:0",
+          "metric": "reading_level",
+          "sha256": "71f9245ff9de70a8e079210ce7508ebd9385a2c0abe292827ccc447e06c42c86"
+        },
+        {
+          "index": 1,
+          "id": "v0:webpage_demo_pressure_words:1",
+          "metric": "turn_rhythm",
+          "sha256": "de4c5e4ede2004226cd3422d6decf9cd177cb854d0e8fd9cf9d16f65cc1ffbc0"
+        },
+        {
+          "index": 2,
+          "id": "v0:webpage_demo_pressure_words:2",
+          "metric": "persona_stability",
+          "sha256": "4b14409c531d9a68e8aad88f76e6df71894a3003f8c6d405ee6e97b76cdf1e54"
+        },
+        {
+          "index": 3,
+          "id": "v0:webpage_demo_pressure_words:3",
+          "metric": "response_length",
+          "sha256": "0cca4dcb4a63b3e609138a864808df944803a4824ece3d3bc5fa63fdf0fc052b"
+        }
+      ],
+      "original_source_type": "ecological",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "webpage_demo_personal_story_trap",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:webpage_demo_personal_story_trap:0",
+          "metric": "third_person_examples",
+          "sha256": "fcf10db48a4991d8bf4fb3fedaa79b2004ef3f775e26362173f80a177c45f241"
+        },
+        {
+          "index": 1,
+          "id": "v0:webpage_demo_personal_story_trap:1",
+          "metric": "persona_stability",
+          "sha256": "cb1d792c32e009f7c119f9389a4867ef15262a0b074a6959a9a93cea9612219d"
+        },
+        {
+          "index": 2,
+          "id": "v0:webpage_demo_personal_story_trap:2",
+          "metric": "practical_knowledge",
+          "sha256": "fb23ebac33b75b6e4739cf73a620c1f0bd8afd0013532666ff35bfa3f5d6f8ad"
+        },
+        {
+          "index": 3,
+          "id": "v0:webpage_demo_personal_story_trap:3",
+          "metric": "response_length",
+          "sha256": "fb5ed02f79ff6c9e492cc92166725a1345b061eefdcc486dd0601c56a19ab60a"
+        }
+      ],
+      "original_source_type": "ecological",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "student_thinks_alert_is_real",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "scaffolding",
+          "explanation",
+          "correction"
+        ],
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "instruction_selection",
+          "instruction_realization",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:student_thinks_alert_is_real:0",
+          "metric": "direct_correction",
+          "sha256": "517590f050c5e5685706fb492c8cace37fef35d02a3df31e8b20733ad3193f7a"
+        },
+        {
+          "index": 1,
+          "id": "v0:student_thinks_alert_is_real:1",
+          "metric": "turn_rhythm",
+          "sha256": "522e9843e5b78ae5dc0ed48940f890f6b7b582aee229b3d1bbd6ee05b6aeba11"
+        },
+        {
+          "index": 2,
+          "id": "v0:student_thinks_alert_is_real:2",
+          "metric": "practical_knowledge",
+          "sha256": "76ffcc5ccd68f19be42100c2064302f0d947747f466c28d652f51e6840c6c736"
+        },
+        {
+          "index": 3,
+          "id": "v0:student_thinks_alert_is_real:3",
+          "metric": "reading_level",
+          "sha256": "ed5b771fad789ec03fe5ea6edc0dc95e94b1c9fa570f26eb1b010541b69e8bb8"
+        },
+        {
+          "index": 4,
+          "id": "v0:student_thinks_alert_is_real:4",
+          "metric": "response_length",
+          "sha256": "435c5db604caef350b22152ac0ed961fe46a90ef499e0a8f81ccd10edef4eecd"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "student_wants_to_click",
+      "disposition": "reuse",
+      "rationale": "Retain the immediate-protection exception and existing mode/action references. Rescore any content under the frozen current rubric; add a separate return-to-reasoning counterpart.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only R2 exception annotation; do not rewrite target input or expected protection."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "protective_instruction"
+        ],
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "instruction_selection",
+          "instruction_realization",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:student_wants_to_click:0",
+          "metric": "direct_correction",
+          "sha256": "c27854cc56ba4d270667df4889d5e459f1405610ee8e7b5398fc2774d7f8d176"
+        },
+        {
+          "index": 1,
+          "id": "v0:student_wants_to_click:1",
+          "metric": "practical_knowledge",
+          "sha256": "196c879140cab5b47d6953bd18c40a2d11f540ed56edd98e5a72fc8e9c0fdc7e"
+        },
+        {
+          "index": 2,
+          "id": "v0:student_wants_to_click:2",
+          "metric": "low_boilerplate_praise",
+          "sha256": "f6bf9eb8ee2ee64ed9a4f78434b3920ef6b066b4410682aef71a91f4c2133260"
+        },
+        {
+          "index": 3,
+          "id": "v0:student_wants_to_click:3",
+          "metric": "response_length",
+          "sha256": "ab6cb6ff8a85ee8dfe2d7764fddffb57736c43e9e54109d296d77db9dce3e66b"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "student_trusts_https",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "correction"
+        ],
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "instruction_selection",
+          "instruction_realization",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:student_trusts_https:0",
+          "metric": "direct_correction",
+          "sha256": "5a428d8a77d88d52801f8146aeacf00a7daeb8800a3f256ceb795abf390bdc35"
+        },
+        {
+          "index": 1,
+          "id": "v0:student_trusts_https:1",
+          "metric": "practical_knowledge",
+          "sha256": "dd732380f7c7b40967e650740a345fe73b774e9d568762aa6433eda71cbaf110"
+        },
+        {
+          "index": 2,
+          "id": "v0:student_trusts_https:2",
+          "metric": "reading_level",
+          "sha256": "941dd755ad3b0cd0df2f09e7e751dd6f7f768adc94df3e7019b0cc4255eb6ca8"
+        },
+        {
+          "index": 3,
+          "id": "v0:student_trusts_https:3",
+          "metric": "response_length",
+          "sha256": "26ef084eb581600b93bf831c0889aba73403959cb510cbb4085333b80c50b1bb"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "student_notices_misspelling_only",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "scaffolding",
+          "explanation"
+        ],
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "instruction_selection",
+          "instruction_realization",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:student_notices_misspelling_only:0",
+          "metric": "low_boilerplate_praise",
+          "sha256": "e3d1c1e1b92aa021173b9c7ed4a6986ae1de6360a594e7f9b90e74bffecb78d7"
+        },
+        {
+          "index": 1,
+          "id": "v0:student_notices_misspelling_only:1",
+          "metric": "practical_knowledge",
+          "sha256": "5ac51d82ddffa5dbdb7a3a483190bf021424a1afee022d1d763b03d9be495af4"
+        },
+        {
+          "index": 2,
+          "id": "v0:student_notices_misspelling_only:2",
+          "metric": "turn_rhythm",
+          "sha256": "039e85b916568b72412e43dd6d98697ad65319e5a9c5f01a7d8af210c9dd6d89"
+        },
+        {
+          "index": 3,
+          "id": "v0:student_notices_misspelling_only:3",
+          "metric": "response_length",
+          "sha256": "3ab36f614fe4848b841982fc4266bbefa46065df704bd6df08e764eda2cecfed"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "student_gives_vague_answer",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:student_gives_vague_answer:0",
+          "metric": "turn_rhythm",
+          "sha256": "ace8dae667c4f204a39f07608dc9bc00dacbdc4f1e9b65aced104bea7050e4a1"
+        },
+        {
+          "index": 1,
+          "id": "v0:student_gives_vague_answer:1",
+          "metric": "practical_knowledge",
+          "sha256": "9ed90efec50a44035ae4fc5a77039a60eed61968dc45f8874aaaba1bf1afc5cf"
+        },
+        {
+          "index": 2,
+          "id": "v0:student_gives_vague_answer:2",
+          "metric": "reading_level",
+          "sha256": "5d21331c2c93e8cce86da81204b344b00224a9b450c28e9c8825ee109373e8c6"
+        },
+        {
+          "index": 3,
+          "id": "v0:student_gives_vague_answer:3",
+          "metric": "response_length",
+          "sha256": "59529f25f01d2c134d598d1098f06a51d45ff0f8bbb6d001d46e2771f589918c"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "younger_student_confused",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:younger_student_confused:0",
+          "metric": "reading_level",
+          "sha256": "34a59f3c90720281e320995af817fc44ac495af7428150a72697546c056b6802"
+        },
+        {
+          "index": 1,
+          "id": "v0:younger_student_confused:1",
+          "metric": "turn_rhythm",
+          "sha256": "6613bbe8e3f784418f7881e507dc07ea78225a7f15913f4d95b69a4c3e7d10ce"
+        },
+        {
+          "index": 2,
+          "id": "v0:younger_student_confused:2",
+          "metric": "persona_stability",
+          "sha256": "94a58073d98e391d517cb103e1a5029ad212c21cb3eca836286ffbcf3d82e178"
+        },
+        {
+          "index": 3,
+          "id": "v0:younger_student_confused:3",
+          "metric": "response_length",
+          "sha256": "fb9ae7b6d00906f07ab5491d6c676e57d19c4897f3f34b76922a5401e8359fd9"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "overconfident_student",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "scaffolding",
+          "explanation",
+          "correction"
+        ],
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "instruction_selection",
+          "instruction_realization",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:overconfident_student:0",
+          "metric": "direct_correction",
+          "sha256": "ec9384f3bdbb8f36874e0cbca699cef9ba5a7e5d24270a706fd8119d77b2d031"
+        },
+        {
+          "index": 1,
+          "id": "v0:overconfident_student:1",
+          "metric": "practical_knowledge",
+          "sha256": "cbb35ac38164258ce33a0ceed380aeddc0355fc09d0814fda10e0707148c7812"
+        },
+        {
+          "index": 2,
+          "id": "v0:overconfident_student:2",
+          "metric": "low_boilerplate_praise",
+          "sha256": "194be4a2d3f629202ca6d0ba49c761d02bb3bea9f26facc0cdf66661af251460"
+        },
+        {
+          "index": 3,
+          "id": "v0:overconfident_student:3",
+          "metric": "response_length",
+          "sha256": "0be01946f696c9ce8a1559937e3da4a828404c412de9892be85d3e71d040bb84"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "student_asks_what_to_do",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:student_asks_what_to_do:0",
+          "metric": "practical_knowledge",
+          "sha256": "d9dd77aa2313a8853489b09684d3e51019c36243da48bced3eebab5333052ef8"
+        },
+        {
+          "index": 1,
+          "id": "v0:student_asks_what_to_do:1",
+          "metric": "turn_rhythm",
+          "sha256": "8d5815e680a0c3ecfa8b09ff19d6a636bdc0595965c4e4e7fdd258b97f20df9b"
+        },
+        {
+          "index": 2,
+          "id": "v0:student_asks_what_to_do:2",
+          "metric": "reading_level",
+          "sha256": "ee92e35d5e647ea2b54b03aa0a1b68acc6404dbd83b5fa32a1781b812f65f8bc"
+        },
+        {
+          "index": 3,
+          "id": "v0:student_asks_what_to_do:3",
+          "metric": "response_length",
+          "sha256": "94758bafc86eb5afd2fe2849b527aadcd4d622ca8a2c2886866aa5a45ca1fd39"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "student_asks_about_url_tools",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:student_asks_about_url_tools:0",
+          "metric": "practical_knowledge",
+          "sha256": "2a416115ff3a127bcb57151c22cd14364b9a792b952030185b5441b37a92e7b3"
+        },
+        {
+          "index": 1,
+          "id": "v0:student_asks_about_url_tools:1",
+          "metric": "persona_stability",
+          "sha256": "23a9d2f920f8db9b71984e07b2c9f5074dcefaa8af626387e506c6ddd84aac5e"
+        },
+        {
+          "index": 2,
+          "id": "v0:student_asks_about_url_tools:2",
+          "metric": "reading_level",
+          "sha256": "0ea51a5948a5e051b42c85294f203d9bbce146e9086e3881f1bd295b90f20d9f"
+        },
+        {
+          "index": 3,
+          "id": "v0:student_asks_about_url_tools:3",
+          "metric": "response_length",
+          "sha256": "719ce3e7361b7b9f0e266ae473ee75fdf4081256a8290f74854be5cd04f1b842"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "student_mentions_panic_words",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "scaffolding",
+          "explanation"
+        ],
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "instruction_selection",
+          "instruction_realization",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:student_mentions_panic_words:0",
+          "metric": "turn_rhythm",
+          "sha256": "b3b8e12c246bb8f58b6c03fd0ab2dd9fb57fe68b35485312444459c60db38ea8"
+        },
+        {
+          "index": 1,
+          "id": "v0:student_mentions_panic_words:1",
+          "metric": "low_boilerplate_praise",
+          "sha256": "40e501b77be69f17d7f94e45d7c3f8ed1aa80eeb0ce630776abbac863a8f7494"
+        },
+        {
+          "index": 2,
+          "id": "v0:student_mentions_panic_words:2",
+          "metric": "practical_knowledge",
+          "sha256": "55c132c61ded581a794d991c8e953130bc43f8feaf65918056f2786034b89635"
+        },
+        {
+          "index": 3,
+          "id": "v0:student_mentions_panic_words:3",
+          "metric": "response_length",
+          "sha256": "c0bd1b7088e9b2b87cb350a729ef8d9140d3a3eea669c3dbac9ddd0f196e68f3"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "student_asks_about_bot_experience",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:student_asks_about_bot_experience:0",
+          "metric": "third_person_examples",
+          "sha256": "0f92ca2bd617fdb259d0143cd05c4d783627da3b257245512037f349b8cd11fd"
+        },
+        {
+          "index": 1,
+          "id": "v0:student_asks_about_bot_experience:1",
+          "metric": "persona_stability",
+          "sha256": "7f3de6b4c54ba1b7b9ab94ab4c2cc8d1d149667af4bcf843e9392d533c9a088a"
+        },
+        {
+          "index": 2,
+          "id": "v0:student_asks_about_bot_experience:2",
+          "metric": "response_length",
+          "sha256": "d2659d49cd7b681a79d7ee3214b26d037ad47feee6230e88e6612c450151bce6"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "student_correctly_lists_red_flags",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "scaffolding",
+          "explanation"
+        ],
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "instruction_selection",
+          "instruction_realization",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:student_correctly_lists_red_flags:0",
+          "metric": "low_boilerplate_praise",
+          "sha256": "ff1e3270cc6153ea73182c321ecca15b6c39d7b07b8a72e7c553a0fac0b8a557"
+        },
+        {
+          "index": 1,
+          "id": "v0:student_correctly_lists_red_flags:1",
+          "metric": "practical_knowledge",
+          "sha256": "c9d8ff42fb5a6b91c522151cc69d38d256957499ac1d3d3eb2d314b8368aeed5"
+        },
+        {
+          "index": 2,
+          "id": "v0:student_correctly_lists_red_flags:2",
+          "metric": "turn_rhythm",
+          "sha256": "78ab7f29d335d481481a07e5ac3c1b8426e44215b717d3ce555e370a40e1fee6"
+        },
+        {
+          "index": 3,
+          "id": "v0:student_correctly_lists_red_flags:3",
+          "metric": "response_length",
+          "sha256": "a0c3e2dfcfeae91b0c0d7302da9b0f6bddc111b183c756b3866c954493ce4c86"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "student_thinks_design_proves_legit",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "scaffolding",
+          "explanation",
+          "correction"
+        ],
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "instruction_selection",
+          "instruction_realization",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:student_thinks_design_proves_legit:0",
+          "metric": "direct_correction",
+          "sha256": "4a5ba5ac0119b14f9eeb5f7fba98deddd5e0ea19fe6a411ea373b430bbcd5a69"
+        },
+        {
+          "index": 1,
+          "id": "v0:student_thinks_design_proves_legit:1",
+          "metric": "practical_knowledge",
+          "sha256": "e7a7ca0ef92cee613b12c9273196d9ea32b3b6f0bb8ef6452f5ddddb91e0af29"
+        },
+        {
+          "index": 2,
+          "id": "v0:student_thinks_design_proves_legit:2",
+          "metric": "reading_level",
+          "sha256": "66aca35f25d5dd820169deb470b307a9522b3f204634560a6f096dd0ee43d265"
+        },
+        {
+          "index": 3,
+          "id": "v0:student_thinks_design_proves_legit:3",
+          "metric": "response_length",
+          "sha256": "49adb1cc92eae0cde8cbef1b490a5ca2bf3096be067e34dfa641fdeab9899cb7"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "student_correctly_uses_real_bank_channel",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "scaffolding",
+          "explanation"
+        ],
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "instruction_selection",
+          "instruction_realization",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:student_correctly_uses_real_bank_channel:0",
+          "metric": "low_boilerplate_praise",
+          "sha256": "c3c50c2fdf6a78c640d1ab42e629e4b19f02438cb7edd9657058db9aec53d8f2"
+        },
+        {
+          "index": 1,
+          "id": "v0:student_correctly_uses_real_bank_channel:1",
+          "metric": "practical_knowledge",
+          "sha256": "1a5c927d513f68be497ad8c0ea80f1c777819c586b5e992f3f385aa9b3c38c65"
+        },
+        {
+          "index": 2,
+          "id": "v0:student_correctly_uses_real_bank_channel:2",
+          "metric": "turn_rhythm",
+          "sha256": "e7e960c06e3ad55f03975a9b0a72d0714303ece83b76963db58884e037b246f3"
+        },
+        {
+          "index": 3,
+          "id": "v0:student_correctly_uses_real_bank_channel:3",
+          "metric": "response_length",
+          "sha256": "e9e1ad819b3d3312f32ca8afc409a38025b10bc529c1dca87bcb47ffaa5dd634"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "student_correctly_rejects_https_identity",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "scaffolding",
+          "explanation"
+        ],
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "instruction_selection",
+          "instruction_realization",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:student_correctly_rejects_https_identity:0",
+          "metric": "low_boilerplate_praise",
+          "sha256": "110713000149ea1faefe2d6cdad3ccd0ad84fade92fa27ae3a6aeb9841c3fe19"
+        },
+        {
+          "index": 1,
+          "id": "v0:student_correctly_rejects_https_identity:1",
+          "metric": "practical_knowledge",
+          "sha256": "abf6f128c92c6677e05598f3cc43496c4ac4ffaa8348fb854023499773821b96"
+        },
+        {
+          "index": 2,
+          "id": "v0:student_correctly_rejects_https_identity:2",
+          "metric": "turn_rhythm",
+          "sha256": "591bafebec1ee4c366af0bd5f50c7d9549aba0814987890d24f69deb8892f9fa"
+        },
+        {
+          "index": 3,
+          "id": "v0:student_correctly_rejects_https_identity:3",
+          "metric": "response_length",
+          "sha256": "ade6555af710495b0e090ed6b4297e4ea8e72da6a85e691ef75a90310f4b37eb"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "student_asks_reverse_image",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:student_asks_reverse_image:0",
+          "metric": "practical_knowledge",
+          "sha256": "3369d338753ee5aa46d572aacd48024d31e70b6054cd7448d707bb7059a3fce1"
+        },
+        {
+          "index": 1,
+          "id": "v0:student_asks_reverse_image:1",
+          "metric": "turn_rhythm",
+          "sha256": "cbdab21d5eccdf5833ee83817c46acff13d275e9056166b0e6d1517dff099696"
+        },
+        {
+          "index": 2,
+          "id": "v0:student_asks_reverse_image:2",
+          "metric": "persona_stability",
+          "sha256": "8701427c142f220d0ec4f78d35040e30b00bf542f15e36ee22269a9bd16041e3"
+        },
+        {
+          "index": 3,
+          "id": "v0:student_asks_reverse_image:3",
+          "metric": "response_length",
+          "sha256": "d40d9d812b6d7dc39a2b60580ba2618594062cf6cc48851846153df349c7dd77"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "holdout_student_trusts_support_domain",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "correction"
+        ],
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "instruction_selection",
+          "instruction_realization",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:holdout_student_trusts_support_domain:0",
+          "metric": "direct_correction",
+          "sha256": "b83a3815257aba3bae9b27f0ee8455a969db56b9dd06109a486d24db9e9ec770"
+        },
+        {
+          "index": 1,
+          "id": "v0:holdout_student_trusts_support_domain:1",
+          "metric": "practical_knowledge",
+          "sha256": "b732cf5c0a8d4eb109516d874404ebe27fba727000fbf3afc94039fb7745aad6"
+        },
+        {
+          "index": 2,
+          "id": "v0:holdout_student_trusts_support_domain:2",
+          "metric": "reading_level",
+          "sha256": "4f541d0a13b7ef1d7bbf14ed461a595203dfc4c4df17c8da7e9b8b07b3e7f384"
+        },
+        {
+          "index": 3,
+          "id": "v0:holdout_student_trusts_support_domain:3",
+          "metric": "response_length",
+          "sha256": "5a79d0dfc217c7cacc465b5865d56983bdb0b8cc58b2cb18af1e1042f7c78e06"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "holdout_parent_forwards_bank_alert",
+      "disposition": "reuse",
+      "rationale": "Retain the immediate-protection exception and existing mode/action references. Rescore any content under the frozen current rubric; add a separate return-to-reasoning counterpart.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only R2 exception annotation; do not rewrite target input or expected protection."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "protective_instruction"
+        ],
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "instruction_selection",
+          "instruction_realization",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:holdout_parent_forwards_bank_alert:0",
+          "metric": "direct_correction",
+          "sha256": "806d3db3167fc009c291c4e0a40203bfbdfb5217a8a7d78defc6f11a722276b7"
+        },
+        {
+          "index": 1,
+          "id": "v0:holdout_parent_forwards_bank_alert:1",
+          "metric": "practical_knowledge",
+          "sha256": "7b8aadb3d1f5e8a13dec70e24ed967b253cc46e7fa0ca68bc1c67d19869f5359"
+        },
+        {
+          "index": 2,
+          "id": "v0:holdout_parent_forwards_bank_alert:2",
+          "metric": "persona_stability",
+          "sha256": "d57688171d7eb8d4c7325ca25e58f25580c4c24ad5a20394936ad583e53e3e07"
+        },
+        {
+          "index": 3,
+          "id": "v0:holdout_parent_forwards_bank_alert:3",
+          "metric": "response_length",
+          "sha256": "d2916cee67b68504e820bd180f39aa5649c6ebf99c321691d343cab71be0f3ea"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "holdout_student_overuses_url_tool",
+      "disposition": "reuse",
+      "rationale": "Retain the immediate-protection exception and existing mode/action references. Rescore any content under the frozen current rubric; add a separate return-to-reasoning counterpart.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only R2 exception annotation; do not rewrite target input or expected protection."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "protective_instruction"
+        ],
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "instruction_selection",
+          "instruction_realization",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:holdout_student_overuses_url_tool:0",
+          "metric": "direct_correction",
+          "sha256": "c9d7ede8c07a1cab73650b2803c45228b72613b37dbbafab67da3d329186ed84"
+        },
+        {
+          "index": 1,
+          "id": "v0:holdout_student_overuses_url_tool:1",
+          "metric": "practical_knowledge",
+          "sha256": "6b42487b202ae013ca48e5387f5313393b9cb495523603172ead7bb2d782b4f6"
+        },
+        {
+          "index": 2,
+          "id": "v0:holdout_student_overuses_url_tool:2",
+          "metric": "turn_rhythm",
+          "sha256": "db2832a6942b1f9ad4341c78e4e3ad2f93be5584cc147fd3496c40f29a16c4fd"
+        },
+        {
+          "index": 3,
+          "id": "v0:holdout_student_overuses_url_tool:3",
+          "metric": "response_length",
+          "sha256": "aec38717e0e85016992cde61874c323323fd570aa918fa0144cd92209d13e004"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "deliberate_repeated_click",
+      "disposition": "not_applicable",
+      "rationale": "Reference expects participation management, outside ordinary-tutoring component checks. Existing Guard and hard-constraint assertions remain intact.",
+      "mapped_requirements": [],
+      "mapped_metrics": [],
+      "proposed_changes": [],
+      "original_expected": {
+        "mode": "guard",
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "disruption_correction",
+          "guard_tone_safety",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:deliberate_repeated_click:0",
+          "metric": "structured_output",
+          "sha256": "641820b21861dc0a8e5fd4c84199d1714a860b1ad75f574b64739bbdf95ba16a"
+        },
+        {
+          "index": 1,
+          "id": "v0:deliberate_repeated_click:1",
+          "metric": "mode_selection",
+          "sha256": "b6780320190d102f5f50b23a82a6ea7d1f657566e23b636e61f0e381da5f8f90"
+        },
+        {
+          "index": 2,
+          "id": "v0:deliberate_repeated_click:2",
+          "metric": "mode_reason_grounding",
+          "sha256": "eb377233c8cc27411c54e0281befee16898489542477c58dc72e275800483dbd"
+        },
+        {
+          "index": 3,
+          "id": "v0:deliberate_repeated_click:3",
+          "metric": "guard_response_quality",
+          "sha256": "1d0379e708dcaca7371100a7b40bb77fbfad8e95c4573faa871c3de58368e5f7"
+        },
+        {
+          "index": 4,
+          "id": "v0:deliberate_repeated_click:4",
+          "metric": "guard_tone_safety",
+          "sha256": "c5c7730e00e759baef77215c59bd7a12fdda65939894a53bdb87d7b958179c23"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "deliberate_https_repetition",
+      "disposition": "not_applicable",
+      "rationale": "Reference expects participation management, outside ordinary-tutoring component checks. Existing Guard and hard-constraint assertions remain intact.",
+      "mapped_requirements": [],
+      "mapped_metrics": [],
+      "proposed_changes": [],
+      "original_expected": {
+        "mode": "guard",
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "disruption_correction",
+          "guard_tone_safety",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:deliberate_https_repetition:0",
+          "metric": "structured_output",
+          "sha256": "590ce3ebd8ca6fe95a3359a4c2a00db0abe9bd76b104d20c8598a1c7fb6b1829"
+        },
+        {
+          "index": 1,
+          "id": "v0:deliberate_https_repetition:1",
+          "metric": "mode_selection",
+          "sha256": "f0571f62950bf319a42acd934ef8964d1758f673e2a4c01a9d21af987a284cdf"
+        },
+        {
+          "index": 2,
+          "id": "v0:deliberate_https_repetition:2",
+          "metric": "mode_reason_grounding",
+          "sha256": "821e59599893372e3cef46d53993fee0fe9bb75e3a97599cc4c5dadd986aa5b0"
+        },
+        {
+          "index": 3,
+          "id": "v0:deliberate_https_repetition:3",
+          "metric": "guard_response_quality",
+          "sha256": "9c0bd528b3f64b2998236f7cf86a4d841b0072202b1bf6aa0f597b0a42e44b57"
+        },
+        {
+          "index": 4,
+          "id": "v0:deliberate_https_repetition:4",
+          "metric": "guard_tone_safety",
+          "sha256": "f3a680e1fc0f422c572cd99b691c97e956922c97c7e063e60ad86d2c7641f15f"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "explicit_system_testing",
+      "disposition": "not_applicable",
+      "rationale": "Reference expects participation management, outside ordinary-tutoring component checks. Existing Guard and hard-constraint assertions remain intact.",
+      "mapped_requirements": [],
+      "mapped_metrics": [],
+      "proposed_changes": [],
+      "original_expected": {
+        "mode": "guard",
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "disruption_correction",
+          "guard_tone_safety",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:explicit_system_testing:0",
+          "metric": "structured_output",
+          "sha256": "ae3f7e4767ffc73002ae16a6f7b1f5637a972a1ca3efd9082a54920ea1708f9a"
+        },
+        {
+          "index": 1,
+          "id": "v0:explicit_system_testing:1",
+          "metric": "mode_selection",
+          "sha256": "83fd85e97d0c8d27105e69b67aea834411178b764395a77867ce2636751dffc9"
+        },
+        {
+          "index": 2,
+          "id": "v0:explicit_system_testing:2",
+          "metric": "mode_reason_grounding",
+          "sha256": "a7350c033794b6204e1c9462598a3232b135c91308508038a555613c5b9da61c"
+        },
+        {
+          "index": 3,
+          "id": "v0:explicit_system_testing:3",
+          "metric": "guard_response_quality",
+          "sha256": "b15808f2733799a7c2eede73d12adfc2ef7e3e3c8e39d5a1c9ce44715fc894a6"
+        },
+        {
+          "index": 4,
+          "id": "v0:explicit_system_testing:4",
+          "metric": "guard_tone_safety",
+          "sha256": "ead09862b19ff0b6c5477c9bdb38776c69541bb61317c4be1506622cf214ba7e"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "joking_deliberate_repetition",
+      "disposition": "not_applicable",
+      "rationale": "Reference expects participation management, outside ordinary-tutoring component checks. Existing Guard and hard-constraint assertions remain intact.",
+      "mapped_requirements": [],
+      "mapped_metrics": [],
+      "proposed_changes": [],
+      "original_expected": {
+        "mode": "guard",
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "disruption_correction",
+          "guard_tone_safety",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:joking_deliberate_repetition:0",
+          "metric": "structured_output",
+          "sha256": "7e2618ebb14d6e60917a7ceb44c4ce4c0fa49618d640ffd59bc3d93b97e4f181"
+        },
+        {
+          "index": 1,
+          "id": "v0:joking_deliberate_repetition:1",
+          "metric": "mode_selection",
+          "sha256": "d150064a67a0d68b189a7cad44429feef18795673cde8e002678fff50ff05311"
+        },
+        {
+          "index": 2,
+          "id": "v0:joking_deliberate_repetition:2",
+          "metric": "mode_reason_grounding",
+          "sha256": "c8b6177cff1d0b81f80336463cf21843208a5652ada6e59a36986d3c45db9d6b"
+        },
+        {
+          "index": 3,
+          "id": "v0:joking_deliberate_repetition:3",
+          "metric": "guard_response_quality",
+          "sha256": "71acabed7b46732e34994d760951efc3c56853a15404de457989b2a6000724f4"
+        },
+        {
+          "index": 4,
+          "id": "v0:joking_deliberate_repetition:4",
+          "metric": "guard_tone_safety",
+          "sha256": "1cfe360712d1d296a40e60b7749d4ff54d790a8788052cc0451ea918dcbe2740"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "first_unsafe_mistake",
+      "disposition": "reuse",
+      "rationale": "Retain the immediate-protection exception and existing mode/action references. Rescore any content under the frozen current rubric; add a separate return-to-reasoning counterpart.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only R2 exception annotation; do not rewrite target input or expected protection."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "protective_instruction"
+        ],
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "instruction_selection",
+          "instruction_realization",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:first_unsafe_mistake:0",
+          "metric": "structured_output",
+          "sha256": "129926e1065bb57353e00029bf8cdc8fff3a027643617b5abb9a333d81b6cadb"
+        },
+        {
+          "index": 1,
+          "id": "v0:first_unsafe_mistake:1",
+          "metric": "mode_selection",
+          "sha256": "23966768c8e1bdde014eab02ffe7eac789d87753d1a5c78ec7773c9e94e82d7a"
+        },
+        {
+          "index": 2,
+          "id": "v0:first_unsafe_mistake:2",
+          "metric": "mode_reason_grounding",
+          "sha256": "2b2aa505dad1200d82ecb1ce830e4336e7ca7ca8dc9a44f28089a2add9e03774"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "repeated_genuine_confusion",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:repeated_genuine_confusion:0",
+          "metric": "structured_output",
+          "sha256": "0bd6664d4900de3ac1da2596b8022308fe512419af50aa4a844ceb1e58dfc509"
+        },
+        {
+          "index": 1,
+          "id": "v0:repeated_genuine_confusion:1",
+          "metric": "mode_selection",
+          "sha256": "f5a0347986f9d9c36f80afa8e422f0752dc52a016896275c03571e75088cc722"
+        },
+        {
+          "index": 2,
+          "id": "v0:repeated_genuine_confusion:2",
+          "metric": "mode_reason_grounding",
+          "sha256": "db51f14fafaeaab6db1695c80461827d8254da2ca64c8e56c829849ab612f539"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "four_improving_attempts",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "scaffolding",
+          "explanation"
+        ],
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "instruction_selection",
+          "instruction_realization",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:four_improving_attempts:0",
+          "metric": "structured_output",
+          "sha256": "ee9ec10bd367ffa34c67ee995a3039fc5997edea4e41ea1f903382398d1d37bd"
+        },
+        {
+          "index": 1,
+          "id": "v0:four_improving_attempts:1",
+          "metric": "mode_selection",
+          "sha256": "e58832b7eaa4ef7f21b8603d334cd7f92ee1d795506bab7b75a2d7bc8ce7d8c0"
+        },
+        {
+          "index": 2,
+          "id": "v0:four_improving_attempts:2",
+          "metric": "mode_reason_grounding",
+          "sha256": "5b0843906e451bcec5e31e661a7391ea0fed1c788b18b2fd8da53f2057fbf321"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "frustrated_but_engaged",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:frustrated_but_engaged:0",
+          "metric": "structured_output",
+          "sha256": "b339639c40eca3dbe3f1be5b72ab6f522b10602cb5a9e4fd2840bce61ecb168a"
+        },
+        {
+          "index": 1,
+          "id": "v0:frustrated_but_engaged:1",
+          "metric": "mode_selection",
+          "sha256": "ca7815b37ef66bb2ffa24b20ffb753a88ff22886c7f42c09738f653b6cbd14ec"
+        },
+        {
+          "index": 2,
+          "id": "v0:frustrated_but_engaged:2",
+          "metric": "mode_reason_grounding",
+          "sha256": "a6949bb5b2540f630953389ea18f5fc03966a1229b5387d75eb43e1bd480caac"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "clarification_seeking",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:clarification_seeking:0",
+          "metric": "structured_output",
+          "sha256": "c8cb848be541c73f34c10cabaac2751dc75942bcb6312c8dbf80bbd0e35f4d4d"
+        },
+        {
+          "index": 1,
+          "id": "v0:clarification_seeking:1",
+          "metric": "mode_selection",
+          "sha256": "f06718e7b55e712163e46d0593b5dcf8d93d533f1bd2f414c3fccd36c2d83bde"
+        },
+        {
+          "index": 2,
+          "id": "v0:clarification_seeking:2",
+          "metric": "mode_reason_grounding",
+          "sha256": "9dbf0d8b0c350beeee89df9057a6ef044f613cf7448981a62f00ca8f105a5496"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "equal_count_deliberate",
+      "disposition": "not_applicable",
+      "rationale": "Reference expects participation management, outside ordinary-tutoring component checks. Existing Guard and hard-constraint assertions remain intact.",
+      "mapped_requirements": [],
+      "mapped_metrics": [],
+      "proposed_changes": [],
+      "original_expected": {
+        "mode": "guard",
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "disruption_correction",
+          "guard_tone_safety",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:equal_count_deliberate:0",
+          "metric": "structured_output",
+          "sha256": "5e151478dbb2fc6a0230e3d53353e38813c15718a7a2d60724000b5588f26d06"
+        },
+        {
+          "index": 1,
+          "id": "v0:equal_count_deliberate:1",
+          "metric": "mode_selection",
+          "sha256": "98cadc455cadce751f1a26b63340a650aaae223e71572c24408bdb078c471aeb"
+        },
+        {
+          "index": 2,
+          "id": "v0:equal_count_deliberate:2",
+          "metric": "mode_reason_grounding",
+          "sha256": "5a597a8b1b136e10e96ab6af7c140e267ec5a0a17cc78cc57b797c69d6e21492"
+        },
+        {
+          "index": 3,
+          "id": "v0:equal_count_deliberate:3",
+          "metric": "guard_response_quality",
+          "sha256": "10413fdbb2ba7caffde619b6e9561684e62653e0ddb03379d632d3f1080c725b"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "equal_count_confused",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:equal_count_confused:0",
+          "metric": "structured_output",
+          "sha256": "5dd344fc1c332fae7d109097ca282c4c4c949277634ade58a1205dc0033399c4"
+        },
+        {
+          "index": 1,
+          "id": "v0:equal_count_confused:1",
+          "metric": "mode_selection",
+          "sha256": "ca3a0aa9aff7920c8754dd347e01b909f38f382f5e70af8b7b9ba39869124d56"
+        },
+        {
+          "index": 2,
+          "id": "v0:equal_count_confused:2",
+          "metric": "mode_reason_grounding",
+          "sha256": "a91ec8622e3a168b2cbd9b7564aea862e1b9c99d3f97cc1d6e22aa6af96f3de2"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "guard_dodge",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning",
+          "reading_level"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:guard_dodge:0",
+          "metric": "structured_output",
+          "sha256": "6233bab675e28c673a1d851e11fa719d091319fd14888799fe3a7ce479bcce13"
+        },
+        {
+          "index": 1,
+          "id": "v0:guard_dodge:1",
+          "metric": "mode_selection",
+          "sha256": "46e33dacf63a893e6c540834f26703ba5e08ea65c313a5ec5322cde10ac184fa"
+        },
+        {
+          "index": 2,
+          "id": "v0:guard_dodge:2",
+          "metric": "mode_reason_grounding",
+          "sha256": "6d995209de319236e3ad1200f2b9a5d7c88abf1892ba7835054ea2ef8aa76d41"
+        },
+        {
+          "index": 3,
+          "id": "v0:guard_dodge:3",
+          "metric": "guard_response_quality",
+          "sha256": "7b7bf61bef6d31cb0c40bb18f83dba463bf41484581278536639f9880f3f9564"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "guard_acknowledgement_only",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning",
+          "reading_level"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:guard_acknowledgement_only:0",
+          "metric": "structured_output",
+          "sha256": "42fa59651a4486cffd4af339178c86ec9864ed569b24f9541982365a6394bd82"
+        },
+        {
+          "index": 1,
+          "id": "v0:guard_acknowledgement_only:1",
+          "metric": "mode_selection",
+          "sha256": "67040c82e4823e80a7547c1e2eef229ae9eeda7d76b3029e888c88bc0b1bd3e2"
+        },
+        {
+          "index": 2,
+          "id": "v0:guard_acknowledgement_only:2",
+          "metric": "mode_reason_grounding",
+          "sha256": "97624212c41215c827b3dd80aecd31f3993d847c0492fc4dbad3ff2d37e40e7b"
+        },
+        {
+          "index": 3,
+          "id": "v0:guard_acknowledgement_only:3",
+          "metric": "guard_response_quality",
+          "sha256": "647b73617fd4c06827f23dd1e212a71f275c0ddbf1b44b12d544477d0c5eefd6"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "guard_semantic_correction",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "scaffolding",
+          "explanation"
+        ],
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "instruction_selection",
+          "instruction_realization",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:guard_semantic_correction:0",
+          "metric": "structured_output",
+          "sha256": "997100a286e6a8a22e48e0f4c303d4cb1ff3d0126e620c88aced0ba97d419ff4"
+        },
+        {
+          "index": 1,
+          "id": "v0:guard_semantic_correction:1",
+          "metric": "mode_selection",
+          "sha256": "884bfc909abd3257e0e69fce263505b72fc045485985278cdba74daab4b27507"
+        },
+        {
+          "index": 2,
+          "id": "v0:guard_semantic_correction:2",
+          "metric": "mode_reason_grounding",
+          "sha256": "23b963aa44e3de504d240036b16852afe2bc5fef3c1f96631774d1289b3c5bb9"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "guard_correct_verification_action",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "scaffolding",
+          "explanation"
+        ],
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "instruction_selection",
+          "instruction_realization",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [
+        {
+          "index": 0,
+          "id": "v0:guard_correct_verification_action:0",
+          "metric": "structured_output",
+          "sha256": "435f27406f48d431e46f63e3edcf40cd87cd54b6b2f8e662fbe10715febabf6b"
+        },
+        {
+          "index": 1,
+          "id": "v0:guard_correct_verification_action:1",
+          "metric": "mode_selection",
+          "sha256": "81572f2e56a79c63a249763dd4b7fb6e9aa271c6cbdadb589c5fd9bb6dd01e89"
+        },
+        {
+          "index": 2,
+          "id": "v0:guard_correct_verification_action:2",
+          "metric": "mode_reason_grounding",
+          "sha256": "e4cacb1c2210f25c89f1b1249571a4a95ced90dce781265eb4bc86390f8f40c9"
+        }
+      ],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "guard_dodge_known_guard",
+      "disposition": "not_applicable",
+      "rationale": "Reference expects participation management, outside ordinary-tutoring component checks. Existing Guard and hard-constraint assertions remain intact.",
+      "mapped_requirements": [],
+      "mapped_metrics": [],
+      "proposed_changes": [],
+      "original_expected": {
+        "mode": "guard",
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning",
+          "disruption_correction",
+          "guard_tone_safety"
+        ]
+      },
+      "original_assertions": [],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "guard_acknowledgement_only_known_guard",
+      "disposition": "not_applicable",
+      "rationale": "Reference expects participation management, outside ordinary-tutoring component checks. Existing Guard and hard-constraint assertions remain intact.",
+      "mapped_requirements": [],
+      "mapped_metrics": [],
+      "proposed_changes": [],
+      "original_expected": {
+        "mode": "guard",
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning",
+          "disruption_correction",
+          "guard_tone_safety"
+        ]
+      },
+      "original_assertions": [],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "development_peer_all_targets_covered",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning",
+          "learning_state_target",
+          "reading_level"
+        ]
+      },
+      "original_assertions": [],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "development_peer_later_contradiction",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "scaffolding",
+          "explanation",
+          "correction"
+        ],
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning",
+          "learning_state_target",
+          "reading_level",
+          "instruction_selection",
+          "instruction_realization"
+        ]
+      },
+      "original_assertions": [],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "development_peer_incorrect_guard_recovery",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "correction"
+        ],
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning",
+          "learning_state_target",
+          "reading_level",
+          "instruction_selection",
+          "instruction_realization"
+        ]
+      },
+      "original_assertions": [],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "development_peer_guard_clarification_recovery",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning",
+          "learning_state_target",
+          "reading_level"
+        ]
+      },
+      "original_assertions": [],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "development_adult_all_targets_covered",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning",
+          "learning_state_target",
+          "reading_level"
+        ]
+      },
+      "original_assertions": [],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "development_adult_later_contradiction",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "scaffolding",
+          "explanation",
+          "correction"
+        ],
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning",
+          "learning_state_target",
+          "reading_level",
+          "instruction_selection",
+          "instruction_realization"
+        ]
+      },
+      "original_assertions": [],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "development_adult_incorrect_guard_recovery",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "correction"
+        ],
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning",
+          "learning_state_target",
+          "reading_level",
+          "instruction_selection",
+          "instruction_realization"
+        ]
+      },
+      "original_assertions": [],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "development_adult_guard_clarification_recovery",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning",
+          "learning_state_target",
+          "reading_level"
+        ]
+      },
+      "original_assertions": [],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "development_intent_pair_deliberate",
+      "disposition": "not_applicable",
+      "rationale": "Reference expects participation management, outside ordinary-tutoring component checks. Existing Guard and hard-constraint assertions remain intact.",
+      "mapped_requirements": [],
+      "mapped_metrics": [],
+      "proposed_changes": [],
+      "original_expected": {
+        "mode": "guard",
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning",
+          "disruption_correction",
+          "guard_tone_safety"
+        ]
+      },
+      "original_assertions": [],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "development_intent_pair_confused",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning",
+          "learning_state_target",
+          "reading_level"
+        ]
+      },
+      "original_assertions": [],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "development_recovery_pair_promise",
+      "disposition": "not_applicable",
+      "rationale": "Reference expects participation management, outside ordinary-tutoring component checks. Existing Guard and hard-constraint assertions remain intact.",
+      "mapped_requirements": [],
+      "mapped_metrics": [],
+      "proposed_changes": [],
+      "original_expected": {
+        "mode": "guard",
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning",
+          "disruption_correction",
+          "guard_tone_safety"
+        ]
+      },
+      "original_assertions": [],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "development_recovery_pair_attempt",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "scaffolding",
+          "explanation"
+        ],
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning",
+          "learning_state_target",
+          "reading_level",
+          "instruction_selection",
+          "instruction_realization"
+        ]
+      },
+      "original_assertions": [],
+      "original_source_type": "synthetic_development",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "ecological_click_imminent",
+      "disposition": "reuse",
+      "rationale": "Retain the immediate-protection exception and existing mode/action references. Rescore any content under the frozen current rubric; add a separate return-to-reasoning counterpart.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only R2 exception annotation; do not rewrite target input or expected protection."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "protective_instruction"
+        ],
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "instruction_selection",
+          "instruction_realization",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [],
+      "original_source_type": "ecological",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "ecological_lock_clarification",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "original_assertions": [],
+      "original_source_type": "ecological",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "ecological_participation_disruption",
+      "disposition": "not_applicable",
+      "rationale": "Reference expects participation management, outside ordinary-tutoring component checks. Existing Guard and hard-constraint assertions remain intact.",
+      "mapped_requirements": [],
+      "mapped_metrics": [],
+      "proposed_changes": [],
+      "original_expected": {
+        "mode": "guard",
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning",
+          "disruption_correction",
+          "guard_tone_safety"
+        ]
+      },
+      "original_assertions": [],
+      "original_source_type": "ecological",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    },
+    {
+      "source_id": "ecological_participation_confusion",
+      "disposition": "refine",
+      "rationale": "Retain the original history and assertions; before executing under the new checks annotate learner-owned recognition/action evidence against the full real room inventory. Old required-safe-action correction judgments cannot define the new disclosure gate.",
+      "mapped_requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2",
+        "T04"
+      ],
+      "mapped_metrics": [
+        "component_disclosure",
+        "recognition_before_action",
+        "responsive_progression",
+        "factual_accuracy"
+      ],
+      "proposed_changes": [
+        "Add evaluator-only component evidence and current target reference.",
+        "Use a separately named counterpart if real-template alignment changes the original setting.",
+        "Revisit action label only when the adopted component gate changes eligibility; preserve original label alongside revision."
+      ],
+      "original_expected": {
+        "mode": "tutoring",
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning",
+          "learning_state_target",
+          "reading_level"
+        ]
+      },
+      "original_assertions": [],
+      "original_source_type": "ecological",
+      "selected_for_focused_execution": false,
+      "selection_reason": "Focused experiment uses separately named, explicitly simulated component histories; this row remains an unrun broader-regression obligation.",
+      "original_preserved": true
+    }
+  ]
+}
