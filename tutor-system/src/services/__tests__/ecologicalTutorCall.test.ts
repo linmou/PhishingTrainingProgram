@@ -17,6 +17,32 @@ import fs from 'fs';
 import path from 'path';
 
 describe('ecologicalTutorCall', () => {
+  // File: ecologicalTutorCall.ts. Verify transport formatting of both inventory copies without changing learner evidence.
+  it('formats saved inventory and progress labels while preserving headings, payloads, and user input', () => {
+    const target = 'Knowledge Point 3: Original heading. (Harder)\nWhat to notice: observed detail\nWhat to do: action detail';
+    const expected = 'Knowledge Point 3: Original heading. (Harder)\nObservation task: observed detail\nBehavior task: action detail';
+    const vars = {
+      scenario_context: 'room',
+      conversation_history: 'What to notice: learner quote',
+      student_message: 'What to do: learner question'
+    };
+    const system = `${target}\n\nCURRENT LEARNING PROGRESS\n${target}: pending`;
+    const messages = buildEcologicalChatCompletionMessages(system, vars);
+    expect(messages[0].content.startsWith(`${expected}\n\nCURRENT LEARNING PROGRESS\n${expected}: pending`)).toBe(true);
+    expect(messages[1].content).toBe(buildEcologicalTutorUserTurn(vars));
+    expect(system).toContain('What to notice:');
+  });
+
+  // File: ecologicalTutorCall.ts. Already formatted target labels and an existing base policy must remain stable.
+  it('keeps preformatted labels and includes the base policy only once', () => {
+    const target = 'Knowledge Point 1\nObservation task: detail\nBehavior task: action';
+    const messages = buildEcologicalChatCompletionMessages(`${target}\n\n${ACTIVE_TUTOR_AGENT_PROMPT}`, {
+      scenario_context: '', conversation_history: '', student_message: ''
+    });
+    expect(messages[0].content.startsWith(target)).toBe(true);
+    expect(messages[0].content.split(ACTIVE_TUTOR_AGENT_PROMPT)).toHaveLength(2);
+  });
+
   it('formats room scenario like the webpage header', () => {
     expect(formatRoomScenarioContext('Demo: Lock Icon Myth', 'Practice room')).toBe(
       'Demo: Lock Icon Myth — Practice room'

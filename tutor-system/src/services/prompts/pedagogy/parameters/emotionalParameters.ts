@@ -27,7 +27,7 @@ export const EMOTIONAL_PARAMETERS: Record<string, ParameterConfig> = {
   },
   mistake_normalization: {
     low: `Use direct correction when an incorrect inference follows a focused question about that inference. Be concise and matter-of-fact; incomplete correct understanding still deserves further teaching.`,
-    high: `After a failed question scaffold about a specific misconception, correct that inference calmly and give its connected safe action. Treat ordinary mistakes as part of learning; missing detail alone is not a misconception.`,
+    high: `After a failed focused scaffold, calmly correct that component's inference. Let the learner demonstrate corrected recognition before scaffolding its action; disclose an action only after that component's own attempt or explicit confusion, unless immediate protection is needed. Treat ordinary mistakes as part of learning; missing detail alone is not a misconception.`,
     labels: {
       low: 'corrective',
       high: 'normalizing'
