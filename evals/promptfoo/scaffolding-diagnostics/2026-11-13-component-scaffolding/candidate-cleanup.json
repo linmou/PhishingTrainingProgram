@@ -1,0 +1,34 @@
+{
+  "intent": "Remove conflicting ordinary-teaching safe-action directives while retaining immediate protective instruction and the separate component policy.",
+  "parent_arm": "instruction",
+  "target_presentation": "Original complete document learning targets; no label changes in this variant.",
+  "evidence": "In comparison-v1 component_5_failed_focused repetition 1, all three arms corrected recognition and disclosed an unattempted action. This tests the competing upstream directives as an explanation; it is not a case-specific rule.",
+  "replacements": [
+    {
+      "before": "Explicitly correct the inference and give one safe alternative.",
+      "after": "Explicitly correct that component's inference. A recognition correction does not authorize an action answer; apply the separate component gates."
+    },
+    {
+      "before": "Before a focused scaffold fails, a concise explanation may correct a real misconception; after that failure, correction and its connected safe action are required. Required protection takes priority over either.",
+      "after": "A concise explanation is allowed after a relevant attempt or explicit confusion about the current component; after a failed focused scaffold, correction of that component is required. Recognition correction leaves action for its own learner opportunity. Required protection takes priority."
+    },
+    {
+      "before": "A safe alternative can implement the same correction, but do not list unrelated detection clues.",
+      "after": "A safe alternative may implement an action-component correction after its own attempt or confusion; do not list unrelated detection clues."
+    },
+    {
+      "before": "For a requested next action, give a concrete independent check via the real app/site or official contact, never the suspect link.",
+      "after": "When an action answer is eligible under the component gate or immediate protection, give a concrete safe step suited to the target, such as an independent check via the real app/site or official contact; never recommend the suspect link."
+    },
+    {
+      "before": "A directly connected safe alternative can implement the selected correction; it is not an invitation to list other detection targets.",
+      "after": "For an eligible action-component correction, one connected safe alternative can implement it; recognition correction does not unlock this action answer or other targets."
+    },
+    {
+      "before": "Required correction or protection still comes first and includes its connected safe action.",
+      "after": "Required correction addresses the failed component first. Immediate protection still includes a connected safe action; ordinary recognition correction does not."
+    }
+  ],
+  "unchanged": ["room templates", "learning-point content", "participant histories", "protection rule", "model and decoding settings", "JSON response contract", "component policy"],
+  "status": "Draft pending independent exact-hash audit before any additional target generation."
+}

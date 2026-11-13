@@ -6,9 +6,9 @@ Record the question, controlled changes, execution evidence, and limitations nee
 
 ## Metadata
 
-- Log status: running; calibration passed, focused comparison authorized
+- Log status: completed diagnostic; user-authorized 80% reassessment not yet validated; original frozen 100% verdict retained; semantic estimates provisional
 - Created: 2026-11-13T07:20:19Z
-- Updated: 2026-11-13T07:51:14Z
+- Updated: 2026-11-13T08:27:31Z
 - Author or agent: root; log maintained by focused_log using experiment-log-writer 1.1
 - Repository: PhishingTrainingProgram
 - Initial source commit: `2172ab600c042f454553e9369f057b2f65cb3c60`
@@ -425,3 +425,206 @@ Planned scope: 105 new target replies under six generic upstream safe-action-cla
 - All four primary scores remain recorded on every arm, but component-disclosure values are explicitly **uncalibrated/provisional**. No focused acceptance claim will be made, and independent AI adjudication of all 105 cleanup disclosure records will be reported separately.
 - Three invalid secondary-judgment requests may receive format-only retries. Original requests/invalid outputs are preserved, and no valid behavioral failure is resampled. Exact completed retry evidence remains pending.
 - No additional semantic measurement tuning is planned. This avoids changing criteria repeatedly in response to the generated results while preserving the known measurement limitation.
+
+## Correction and Planned Full-Request Cleanup: 2026-11-13T07:55:46Z
+
+- Target of correction: interpreting the original six-clause cleanup as removal of all conflicting disclosure instructions.
+- Correction: the six replacements in `candidate-cleanup.json` cover agent-policy clauses only. Root and the independent reviewer found **three additional mandatory-disclosure clauses** in the rendered room prompt, originating in `responsePolicy.ts` and `emotionalParameters.ts`. The first cleanup is therefore a **partial-cleanup diagnostic**, not a test of complete conflict removal.
+- Reason and evidence: `raw/cleanup-v1/targets/component_5_failed_focused__cleanup__r1.json` still says, “That is incorrect. Public posts are seen by strangers, not just friends. Check the privacy settings before posting personal info.” Recognition correction again supplies an unattempted action. Full rendered-request inspection found each of the three overlooked clauses once in every instruction-arm request.
+- Review provenance: the independent reviewer is recording that the earlier static review missed the room-policy clauses. The prior clear review is not treated as evidence that those clauses were removed.
+- Planned new factor: `candidate-cleanup-full.json` contains nine generic replacements: the original six plus the three room-policy clauses. It derives from the instruction-only condition, preserves original complete learning targets and labels, and leaves room-template content, learner history, role, model/decoding, response contract and immediate-protection exception unchanged.
+- Planned execution: a new `cleanup_full` condition with 105 replies under `raw/cleanup-full-v1/`, after the first cleanup and before replaying the original 315 primary judgments. The cumulative active-execution budget remains 30 minutes. Exact command/environment selector is pending the executor; no new execution or outcome is claimed here.
+- Measurement remains fixed at the repaired version. Disclosure scores retain their uncalibrated/provisional status, with separate independent AI adjudication. The additional candidate is not an opportunity to tune the judge again.
+- Interpretation: the retained failure motivates testing the still-conflicting room-policy instructions. It does not establish that the nine-clause candidate will solve premature disclosure or meet the full tutoring goal.
+
+## Iteration 6: 2026-11-13T07:58:36Z
+
+- Hypothesis: H1, partial upstream-instruction cleanup diagnostic.
+- Source commit used for the original run: `2172ab600c042f454553e9369f057b2f65cb3c60` plus the frozen experiment snapshots. Preparation was later recorded in verified commit `7d9e6486e17dcc33c23703e062fe67bc76a3b819`; this later commit is provenance, not a retroactive claim about the source HEAD of earlier calls.
+- Files or configs changed: six-clause `candidate-cleanup.json` treatment derived from instruction-only/original-target presentation; repaired primary measurement; secondary criteria unchanged.
+- Commands: Command 9 completed with exit 0; bounded repair of one invalid primary judgment is planned and will preserve its original output.
+- Results: Result 6, 105 target replies and complete secondary scoring, with one primary judgment-format error.
+- Decision: **revise**. The partial cleanup still leaks the safe action in the motivating case and left three contradictory room-policy clauses in the rendered request. The next full-rendered cleanup is a distinct candidate, not a relabeling of this run.
+- Revision note: disclosure estimates remain uncalibrated/provisional. An exit 0 does not waive the unresolved primary error or establish behavior acceptance.
+
+### Command 9 completion: Partial cleanup
+
+- Status: Executed as planned.
+- Timestamp: preserved provider attempts span `2026-11-13T07:51:05.985Z` to `2026-11-13T07:55:40.436Z`; exact process timestamps not supplied.
+- Working directory: Metadata working directory.
+- Environment: main-checkout `tutor-system/.env`; explicit qwen3.8-flash; frozen settings; concurrency 8. The locally observed Node runtime is v22.12.0.
+- Exit status: **0**.
+- Output or log: `raw/cleanup-v1/primary-summary-1794556540651.json`, `secondary-summary-1794556540783.json`, and full target/judge records.
+
+### Result 6: Partial-cleanup outcomes before format repair
+
+- Informs: RQ1/H1; this arm does not change target presentation and cannot isolate H2.
+- Run status: completed target generation and secondary judging; primary evidence partial because one judgment is invalid.
+- Input: all 105 expected cleanup-condition replies on the frozen 35-turn/repetition design.
+- Configuration: `raw/cleanup-v1/frozen.json` and `execution-scope.json`; the six-clause cleanup and repaired primary rubric.
+- Metric definition: semantic passes over every expected applicable output. Primary denominators remain 105, including the one unevaluable output; the raw summary separately reports 104 evaluable judgments.
+- Metric values: recognition before action **94/105 expected**, component disclosure **68/105 expected**, responsive progression **87/105 expected**, factual accuracy **102/105 expected**; each has **one error** and zero missing judgments. Valid failures are therefore 10, 36, 17, and 2 respectively.
+- Secondary results: instruction realization **100/105**; contribution feedback **43/43 applicable**, with 62 inapplicable; reading accessibility, learner dignity, honest self-representation, and persona stability **105/105 each**; decision reasoning **101/105**. Secondary errors/missing are zero.
+- Observation: the motivating failed-recognition case still corrects recognition and immediately supplies an action answer. High secondary scores do not remedy that sequence failure.
+- Interpretation: this is evidence about partial cleanup only. Full removal of the identified conflicting clauses remains untested at this entry, and no disclosure acceptance estimate is available.
+- Evidence path: the primary and secondary summary files above; full representative pair in `raw/cleanup-v1/targets/component_5_failed_focused__cleanup__r1.json`.
+- Raw evidence location: `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/tutor-stage-scaffolding/evals/promptfoo/scaffolding-diagnostics/2026-11-13-component-scaffolding/raw/cleanup-v1/`.
+- Run identifier: `cleanup-v1`.
+- Evidence inventory at this update, before planned repair: **319 files, 17,922,193 bytes**.
+- Evidence content hash: SHA-256 `5855f578829845855eb28a422a1e29020bc8a1d6155eb1de742450b685e1fe12`, with the previously defined sorted path/NUL/content/NUL algorithm. A later format-repair update must preserve these original records and report its own inventory.
+- Generation command: Command 9 above.
+
+### Command 10: Full rendered-request cleanup
+
+- Status: Planned.
+- Timestamp: Not executed for this entry.
+- Working directory: Metadata working directory.
+- Environment: main-checkout `tutor-system/.env`; explicit qwen3.8-flash; unchanged frozen settings; concurrency 8.
+- Exit status: Not executed.
+- Output or log: Not executed; planned `raw/cleanup-full-v1/`.
+
+```bash
+rtk proxy env PTP_EVAL_MODEL=qwen3.8-flash node evals/promptfoo/scaffolding-diagnostics/2026-11-13-component-scaffolding/refine.cjs cleanup_full evals/promptfoo/scaffolding-diagnostics/2026-11-13-component-scaffolding/raw/cleanup-full-v1 8
+```
+
+- Treatment: nine generic replacements in `candidate-cleanup-full.json`, including the three missed room-policy clauses at `emotionalParameters.ts:30` and `responsePolicy.ts:17–18`. Each added match was verified once in every instruction-arm rendered request. The direct style in BasePrompt remains unchanged; this candidate is not claimed to remove every possible source of answer priming.
+- Audited refinement-runner SHA-256: `179bf65ea22051600ed0448af682b1370236b5f73a8cca41c8ba823e676ae580`.
+- The exact full-rendered recipe has been independently audited. Its outcome is not inferred from the earlier partial cleanup.
+
+## Final Execution and Analysis: 2026-11-13T08:17:30Z
+
+### Iteration 7: Full cleanup and comparable measurement replay
+
+- Hypothesis: H1 and H2.
+- Source baseline: `2172ab600c042f454553e9369f057b2f65cb3c60` with exact frozen prompt/spec/rubric/input snapshots. Preparation commit: `7d9e6486e17dcc33c23703e062fe67bc76a3b819`; final evidence commit pending at this entry.
+- Files or configs changed: nine-clause full-rendered cleanup; one common repaired primary rubric applied to all five arms; original secondary criteria retained. Final artifacts include `analysis.json`, `evidence-summary.json`, `report.md`, and independent adjudication records.
+- Commands: Command 10 full cleanup completed, followed by Command 8 replay. Six bounded invalid-judge format retries ran separately; valid behavioral failures were not resampled. Offline analysis/inventory/structural validation completed as recorded below.
+- Results: Results 7–9 below.
+- Decision: **reject the claim that the goal is met**. The final prompt has useful examples and improved provisional counts, but clear premature disclosure remains. H1 has limited descriptive support, not validated acceptance; H2 has no clear disclosure advantage over instruction alone. No runtime prompt was adopted from this diagnostic.
+- Revision note: stop model calls within the cumulative active budget. Preserve errors, provisional scores and all intermediate conditions rather than converting a selected candidate into a pass.
+
+### Completed model-command evidence
+
+All commands use the Metadata working directory, main-checkout `tutor-system/.env`, explicit qwen3.8-flash, and their frozen target/judge settings. Exact process exit codes not supplied in an executor message remain Unknown rather than inferred from artifact completeness.
+
+| Command | Preserved active/provider timing | Completion evidence |
+| --- | --- | --- |
+| 6: original secondary scoring | Budget segment begins `2026-11-13T07:42:15.974Z`, elapsed 339,447 ms | Original secondary records retained; three invalid judgments recovered by a bounded retry. |
+| 10: full cleanup | Active segment `2026-11-13T07:58:57.338Z`, elapsed 280,022 ms; target attempts through `08:03:25.557Z`, primary through `08:03:30.790Z`, secondary through `08:03:37.360Z` | 105 target replies; `raw/cleanup-full-v1/primary-summary-1794557017577.json`, `secondary-summary-1794557017689.json`; two invalid primary verdicts subsequently recovered. |
+| 8: original-output primary replay | Active segment `2026-11-13T08:04:21.883Z`, elapsed 294,742 ms; final provider attempt completed `08:09:16.625Z` | `raw/comparison-measurement-v2/primary-summary-1794557357290.json`; all 315 target records are verified identical to their original records. |
+
+Executor completion clarification, with a subsequent correction: the executor initially supplied “the initial full-cleanup process exited 1” but retracted that statement after inspecting the source. The initial full-cleanup **shell exit code is Unknown**; its observed result is 105 targets, 103 valid primary judgments, and two invalid judgments. `cleanupSummary` does not set a nonzero exit for invalid judgments, so normal completion could exit 0, but this is not substituted for missing historical exit evidence. Both invalid judgments were later recovered. The replay process exited **0**. After context compaction, the executor could confirm the remaining outcomes and CLI entrypoints but could not recover the literal shell prefixes/environment invocation for the retry commands. The following are explicitly **reproducible reconstructions**, not claimed verbatim historical tool calls:
+
+```bash
+rtk proxy node evals/promptfoo/scaffolding-diagnostics/2026-11-13-component-scaffolding/retry-judge.cjs
+rtk proxy node evals/promptfoo/scaffolding-diagnostics/2026-11-13-component-scaffolding/retry-primary.cjs evals/promptfoo/scaffolding-diagnostics/2026-11-13-component-scaffolding/raw/cleanup-v1
+rtk proxy node evals/promptfoo/scaffolding-diagnostics/2026-11-13-component-scaffolding/retry-primary.cjs evals/promptfoo/scaffolding-diagnostics/2026-11-13-component-scaffolding/raw/cleanup-full-v1
+```
+
+The secondary retry exited **0**, recovering 3/3; partial-cleanup primary retry exited **1**, retaining one invalid judgment; full-cleanup primary retry exited **0**, recovering 2/2. Provider attempts span `07:50:01.424Z–07:50:29.466Z`, `08:09:51.788Z–08:10:03.130Z`, and `08:10:58.845Z–08:11:13.783Z` respectively on 2026-11-13. Full requests, endpoint/model and responses are preserved in their repair records, despite the limited shell-command provenance.
+
+Target replay does not count as another 315 target generations. The experiment generated **525 distinct target replies**: 315 initial, 105 partial cleanup, and 105 full cleanup.
+
+### Result 7: Comparable primary metrics remain provisional
+
+- Informs: RQ1/H1/H2.
+- Run status: final baseline and full-cleanup arms have zero unresolved execution errors. The partial-cleanup arm retains one invalid primary verdict after its allowed retry.
+- Input: 27 fixed cases and two four-turn trajectories, three repetitions per arm; 105 replies per arm. Fixed cases are matched across arms. Trajectory histories contain each arm's generated tutor replies and are reported separately in `analysis.json`; they are not identical histories.
+- Configuration: common repaired primary criteria, unchanged secondary criteria, pinned snapshots from all raw run directories.
+- Metric definition: passes over 105 expected outputs per arm, keeping errors in the denominator. These are automated semantic estimates, not independently validated population rates.
+
+| Primary metric | Baseline | Instruction | Instruction + expression | Partial cleanup | Full cleanup |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Recognition before action | 92/105 | 93/105 | 91/105 | 94/105 + 1 error | 98/105 |
+| Component-specific disclosure | 63/105 | 69/105 | 69/105 | 68/105 + 1 error | 72/105 |
+| Responsive progression | 87/105 | 86/105 | 89/105 | 87/105 + 1 error | 91/105 |
+| Factual accuracy | 104/105 | 104/105 | 105/105 | 102/105 + 1 error | 105/105 |
+
+The “+ 1 error” notation describes an error already included in the 105 expected outputs, not an extra 106th observation. Each row's raw valid/invalid detail is preserved.
+
+- Observation: the final full cleanup has higher provisional primary counts than baseline, but disclosure is still frequently judged to fail. Instruction-plus-expression has the same disclosure count as instruction-only, so this sample does not establish an incremental benefit from renamed/reference-style target presentation.
+- Measurement limitation: disclosure calibration remained **12/14**, with two known false failures. Subsequent independent output inspection also found residual recognition-order judgments incorrectly penalizing recognition-only replies for disclosure. Therefore **all automated semantic conclusions remain provisional**, not only the disclosure aggregate. No post-hoc rubric edits or overwritten judgments remove these failures.
+- Evidence: `analysis.json` links every case/repetition, paired pass-to-fail/fail-to-pass change, fixed/trajectory partition and joint outcome. All 315 original-to-replay target records match verified SHA-256 values (`target_replay_integrity.all_identical: true`).
+- Representative full input/output pair: `raw/cleanup-full-v1/targets/component_5_failed_focused__cleanup_full__r1.json` still supplies “Check who can see your posts to keep info private” after recognition correction without an action attempt. Repetition 2 stays within recognition, demonstrating inconsistent conformance rather than an impossible requirement.
+
+### Result 8: Secondary properties and independent disclosure audit
+
+- Informs: RQ1 and the limits of a scaffolding-improvement claim.
+- Run status: all secondary judgments complete with zero unresolved errors after bounded format repair.
+- Metric definition: applicable semantic passes; feedback applicability depends on whether the response evaluates the learner contribution and is reported explicitly.
+- Baseline → full-cleanup secondary results: instruction realization **102/105 → 101/105**; contribution feedback **45/45 applicable (60 NA) → 40/40 applicable (65 NA)**; reading accessibility **105/105 → 105/105**; dignity **105/105 → 105/105**; honest self-representation **105/105 → 105/105**; persona stability **105/105 → 105/105**; decision reasoning **101/105 → 103/105**. These remain automated scores with the same general measurement caveat.
+- Independent audit: `/root/focused_audit` inspected **all 105 full-cleanup replies** against their complete inputs and histories, using the separate-opportunity rule. It assigned **79 pass, 19 clear failures, 7 ambiguous** for component disclosure. Ambiguity is not counted as a pass.
+- Evidence: `disclosure-adjudication-cleanup-full.json` contains exact frozen/candidate hashes, explicit per-repetition annotations, reason codes, full target-path mappings and representative examples. It is an independent **AI audit**, not human reference labels or human agreement evidence, and it does not overwrite automated scores.
+- Interpretation: the clear failures independently establish that the strict user goal remains unmet. The count is specific to these constructed cases; it is not a claim about real students or a population failure rate.
+- Counterevidence to impossibility: `journey_3__cleanup_full__r2__t2` asks, “You found the exact address. What is one safe thing to do with that post now?” After explicit action confusion, the next response provides action help. Some trajectories satisfy the intended sequence, but consistency remains insufficient.
+
+### Result 9: Error recovery, evidence inventory, and resource accounting
+
+- Informs: execution validity and reproducibility, not educational effects.
+- Six invalid judge records received one bounded identical-request retry each: three original secondary records recovered; two full-cleanup primary records recovered; one partial-cleanup primary record remained invalid. Every original invalid output and retry is retained. Full cleanup and baseline finish with zero execution errors; the partial arm's remaining error stays visible in every applicable denominator.
+- The initial 62 HTTP 400 responses came from the two failed calibration attempts. A 63rd HTTP 400 occurred for partial-cleanup target `component_5_other_learner__cleanup__r1` with provider `data_inspection_failed`; the existing production-format repair path recovered that target. No claim of an error-free execution history is made.
+- Unique HTTP attempts: **2,032**, comprising **1,969 HTTP 200** and **63 HTTP 400** responses. Recorded tokens: **5,509,549**; 63 attempts provide no usage. The evidence counter deduplicates copied target records in measurement replay using endpoint, model, attempt start, raw response and status.
+- Active-execution time: **1,695,382 ms (28.26 minutes)**, including the original failed run's 1,630 ms and all recorded budget segments. Configuration waits are excluded according to the predeclared budget interpretation. No further model calls are planned.
+- Canonical raw evidence location: `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/tutor-stage-scaffolding/evals/promptfoo/scaffolding-diagnostics/2026-11-13-component-scaffolding/raw/`.
+- Final source inventory: **2,381 files, 133,992,792 bytes**. Inventory SHA-256: `e397e5e4db8b49bb30f1c7c7db9e2f70bdee6f8d0d371ed9731a0557f9e3ac34`, as defined by `evidence.cjs` and recorded in `evidence-summary.json`. This final inventory hash is the inventory-file hash, distinct from the earlier incremental path/content directory hashes.
+- Evidence manifests: `raw/evidence-inventory.json`, `raw/http-attempt-index.json`, `evidence-summary.json`. Each original frozen run retains its input/prompt/rubric/settings snapshots.
+- Document provenance: `General Learning Goals.docx` SHA-256 `fd0a0f49106e1b37795886dc39f974c3e99758e0007df5c2b0ba5d730dd6655b`; inventories assert equality with the merged catalog and retained standard-template snapshot. Learning-point semantics and standard rooms were not modified.
+
+### Offline analysis and validation commands
+
+These commands executed in the Metadata working directory with the existing Node runtime v22.12.0. Exact shell execution timestamps and terminal-log addresses were not supplied; generated artifacts and reported exit results are listed explicitly rather than fabricated.
+
+```bash
+rtk proxy node evals/promptfoo/scaffolding-diagnostics/2026-11-13-component-scaffolding/analyze.cjs
+rtk proxy node evals/promptfoo/scaffolding-diagnostics/2026-11-13-component-scaffolding/evidence.cjs
+rtk proxy node --test evals/promptfoo/scaffolding-diagnostics/2026-11-13-component-scaffolding/refine.test.cjs
+```
+
+- Analysis first failed because verification compared a canonical JSON-content hash against raw file bytes. The source-hash check was corrected to use the source's JSON serialization convention, then rerun with **exit 0**, producing `analysis.json`. No target output or judgment changed.
+- Evidence inventory completed with **exit 0**, producing `evidence-summary.json` and the two raw manifests.
+- Refinement structural tests completed with **2/2 pass, exit 0**, in addition to the previously reported **10/10** preparation/harness checks. These validate machinery and source transformations, not semantic model wording.
+
+### Final analysis and metric interactions
+
+The user-approved specification is now explicit about separate recognition and action opportunities. The experiment tests its implementation under complete real learning targets, but **the prompt goal is not met**. Removing conflicting directives improved several descriptive counts, yet learner attempts/confusion are still not reliably tracked per component. Changing target labels alone supplies no clear incremental disclosure benefit in this sample.
+
+Accuracy and accessibility can coexist with premature disclosure: factual correctness does not establish that the learner was allowed to reason first. Conversely, successful staged examples show that the requirements are not universally incompatible. The report's joint and per-case evidence distinguishes actual leakage, target switching, grader boundary errors, and ambiguous scripted-history antecedents. No aggregate score offsets a known hard failure or converts an invalid judgment into a pass.
+
+The result is a completed **focused diagnostic**, not full-suite acceptance, release readiness, or a human-learning-effect finding. Production behavior and the merged runtime prompt remain unchanged by these experimental candidates. The partial-cleanup judge error, failed disclosure calibration, residual order-grader errors, and seven ambiguous audit records are retained as limitations.
+
+### Next Research Directions
+
+1. **Explicit component state, high priority.** Motivating evidence: the full request cleanup still discloses actions after recognition-only evidence and sometimes teaches another unattempted point. Question: does an explicit per-point/component evidence state reduce leakage? Change the representation of recognized/attempted/confused components while holding room content, roles, model and case histories fixed. Evaluate on controlled same-component/different-component and current-learner/other-learner contrasts, with a reliable independent disclosure protocol.
+2. **Disclosure measurement boundaries, high priority before acceptance.** Motivating evidence: two failed calibration boundaries and residual order/disclosure ownership errors. Question: can independent annotations consistently separate a useful feature hint from disclosure of the central inference? Hold target replies fixed, vary only a reviewed measurement protocol, preserve ambiguous labels, and recalibrate on newly authored contrasts before treating counts as acceptance evidence.
+3. **Responsive trajectories, subsequent priority.** Motivating evidence: scripted learner turns can become ambiguous when the tutor changes target. Question: does the candidate preserve the intended sequence in responsive student trajectories? Hold the learning-point content and stage criteria fixed, vary the learner-response generation/branch protocol, and report trajectory-level outcomes separately from fixed-history comparisons. This requires a new declared design and budget, not silent expansion of this completed run.
+
+## Final Packaging and Verification: 2026-11-13T08:23:13Z
+
+- Observation: root compacted the reportable analysis without changing any target output, metric judgment, count, comparison, or joint result. The full `analysis.json` remains locally retained and Git-ignored; tracked `analysis-summary.json` preserves counts, joint outcomes, failure IDs, full-analysis location and content hash. Report links now point to the compact summary.
+- Full analysis verified by this log writer: **705,140 bytes**, SHA-256 `376e90b67a2bf608efeee086797177901ac297a7a23f1098ad773dcdd9313810`, file modification metadata `2026-11-13T08:13:25.990Z`. This resolves the caller's approximate 688-KiB description to an exact byte count.
+- Compact summary verified by this log writer: **176,729 bytes**, SHA-256 `0cb467dc5952554ebaa0eb8c23c7657d027e3ac6ea1093585f6fcaffcbbec2b8`, file modification metadata `2026-11-13T08:22:35.054Z`.
+- Root executed the commands below in the Metadata working directory. Exact shell start/end timestamps are Unknown; the file metadata above is not presented as process timing.
+
+```bash
+rtk proxy node evals/promptfoo/scaffolding-diagnostics/2026-11-13-component-scaffolding/compact-analysis.cjs
+rtk proxy node --test evals/promptfoo/scaffolding-diagnostics/2026-11-13-component-scaffolding/harness.test.cjs evals/promptfoo/scaffolding-diagnostics/2026-11-13-component-scaffolding/refine.test.cjs
+```
+
+- Packaging command: **exit 0**; output `analysis-summary.json`, full analysis preserved.
+- Combined structural validation: **12/12 pass, exit 0**. This supersedes separate test-count summaries as the final combined check; it does not add semantic model tests.
+- Root reconciliation: all **165 denominator cells** and paired outcome counts reconcile; all **315 replayed target records** remain byte-identical; all **2,381 raw manifest file hashes** were reverified unchanged.
+- Runtime-source check: `git diff 2172ab6 -- tutor-system/src` is empty. Experimental prompts and specifications have not altered deployed application source in this worktree.
+- No further model calls occurred during packaging. The 28.26-minute active-execution total and the final diagnostic verdict remain unchanged.
+- Final commit is pending at this entry. Root will cite its verified hash in the PR/final response after committing this log; the log does not invent a self-referential commit hash.
+
+## Human-Authorized Threshold Reassessment: 2026-11-13T08:27:31Z
+
+- Human decision: after reviewing the run, the user explicitly stated that the skill's default **at least 80%** is sufficient for ordinary tutoring behavior. Root acknowledged that the earlier 100% ordinary ordering/disclosure gate was imposed by the agent, not requested by the user.
+- Correction to authority: separate recognition/action opportunities remain the desired per-response behavior, but the user did not require perfect aggregate compliance across all ordinary tutoring cases. The earlier frozen 100% threshold must not be attributed to the user's approval of the learning journey.
+- Scope of the authorized change: the working canonical evaluation plan now uses **80% for ordinary metrics**. H1–H4, immediate protection, coverage, non-regression and the other distinct validity/acceptance gates remain unchanged. Root updated the plan, report and documentation record.
+- Provenance: this is an explicitly **post-hoc, human-authorized reassessment**, not a predeclared 80% result. Original frozen plan snapshots and the original 100% verdict remain intact. Existing independent audit annotations remain attached to their original reviewed criterion and are not rewritten.
+- No new model calls, raw outputs, rubric judgments, expected labels, or audit annotations changed. Only the requested threshold interpretation and current conclusion changed.
+- At 80%, a 105-output set requires **at least 84 passes**. The independent disclosure audit has **79 pass, 19 clear fail, 7 ambiguous**. Its supported interval is therefore **79/105 to 86/105 (75.2%–81.9%)**; at least **five of the seven ambiguous records** would need to be confirmed as passing to reach 84/105. Ambiguous records are not automatically passes.
+- The automated disclosure score of **72/105** cannot settle this reassessment because the disclosure grader remains uncalibrated at known boundaries. The independent audit also does not establish full-suite acceptance, non-regression, or human learning effects.
+- **Current conclusion: not yet validated at the user-approved 80% threshold.** The evidence does not prove that the candidate is below 80%, because the independent audit interval crosses that threshold. Earlier log statements that the “goal is not met” retain their historical meaning under the original frozen 100% test; they are superseded as the current aggregate acceptance conclusion by this explicit correction.
+- Next decision-relevant evidence: resolve the seven ambiguous disclosure cases using a consistent reviewed boundary, retaining each disposition and its rationale. Any further model execution needs its own declared budget; this reassessment itself uses only preserved evidence.

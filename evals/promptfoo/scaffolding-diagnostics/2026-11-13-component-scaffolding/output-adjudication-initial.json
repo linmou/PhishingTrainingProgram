@@ -1,0 +1,76 @@
+{
+  "intent": "Preserve independent inspection of first-comparison tutor outputs and identify measurement defects without overwriting automated judgments.",
+  "reviewer": "/root/focused_audit",
+  "date": "2026-11-13",
+  "source": "raw/comparison-v1",
+  "coverage": "All54 no-attempt outputs (six templates, three arms, three repetitions) inspected. Additionally inspected available focused-recognition failure, action-attempt, contradiction, agreement and post-protection outputs. Findings below are a bounded diagnostic list, not an estimated global grader error rate.",
+  "findings": [
+    {
+      "id": "visible_feature_comparison_false_failure",
+      "classification": "evaluator_defect",
+      "confidence": "high",
+      "examples": ["component_0_no_attempt__instruction__r1", "component_0_no_attempt__baseline__r2", "component_0_no_attempt__baseline__r3", "component_0_no_attempt__instruction_expression__r2", "component_2_no_attempt__baseline__r1"],
+      "evidence": "The tutor quotes the sender or bit.ly and asks whether it matches/shows the real company. The judge invents a supplied mismatch or hidden-destination conclusion.",
+      "adjudication": "Component disclosure should pass when the actual comparison conclusion remains for the learner. Naming a visible feature is a permitted foothold."
+    },
+    {
+      "id": "reward_comparison_false_failure",
+      "classification": "evaluator_defect",
+      "confidence": "high",
+      "examples": ["component_2_no_attempt__instruction__r1", "component_2_no_attempt__instruction__r2", "component_2_no_attempt__instruction__r3", "component_2_no_attempt__instruction_expression__r2", "component_2_no_attempt__instruction_expression__r3", "component_2_no_attempt__baseline__r3"],
+      "evidence": "Replies compare the visible $500 reward with five minutes and ask whether the exchange makes sense, without stating that it is unrealistic.",
+      "adjudication": "Component disclosure passes; the inference remains unresolved."
+    },
+    {
+      "id": "question_shaped_disclosure_false_pass",
+      "classification": "evaluator_defect_and_real_tutor_failure",
+      "confidence": "high",
+      "examples": ["component_3_no_attempt__instruction__r2", "component_4_no_attempt__baseline__r1", "component_4_no_attempt__instruction__r1", "component_4_no_attempt__instruction_expression__r3"],
+      "evidence": "The tutor identifies the exact address or exact time/place sharing and asks why it is risky/unsafe before Alex has attempted recognition.",
+      "adjudication": "The question presupposes the problematic conclusion; disclosure fails despite automated passes."
+    },
+    {
+      "id": "real_recognition_to_action_leak",
+      "classification": "tutor_failure",
+      "confidence": "high",
+      "examples": ["component_5_failed_focused__baseline__r1", "component_5_failed_focused__instruction__r1", "component_5_failed_focused__instruction_expression__r1"],
+      "evidence": "All three correct who can see a public post and immediately tell the learner to keep information private/check privacy settings. There was a recognition attempt but no action attempt or confusion.",
+      "adjudication": "Both recognition-before-action and component-disclosure fail; no grading repair should turn these into passes."
+    },
+    {
+      "id": "consequence_reasoning_misclassified_as_action",
+      "classification": "evaluator_defect",
+      "confidence": "high",
+      "examples": ["component_5_bare_agreement__instruction__r1", "component_5_bare_agreement__instruction_expression__r1"],
+      "evidence": "The tutor asks what strangers could do with a number. This develops recognition of consequences, not a learner safe-action plan.",
+      "adjudication": "Stage ordering alone passes. Whether the tutor abandons another incomplete point remains a separate progression judgment."
+    },
+    {
+      "id": "contradiction_does_not_erase_attempt",
+      "classification": "evaluator_defect",
+      "confidence": "high",
+      "examples": ["component_5_later_contradiction__baseline__r1", "component_5_later_contradiction__instruction__r1", "component_5_later_contradiction__instruction_expression__r1"],
+      "evidence": "The history contains an explicit earlier safe-action attempt, followed by a renewed recognition misconception. The judge fails disclosure as though no action attempt had ever occurred.",
+      "adjudication": "Disclosure permission survives the contradiction because an attempt occurred. Recognition ordering or redundant action repetition can still fail separately."
+    },
+    {
+      "id": "categorical_fact_softened_by_judge",
+      "classification": "likely_evaluator_false_pass_and_tutor_overclaim",
+      "confidence": "moderate",
+      "examples": ["component_0_recognition_confusion__baseline__r1"],
+      "evidence": "Tutor: Real companies do not use threats like this. Judge rationale replaces that with legitimate companies generally avoid such threatening language.",
+      "adjudication": "The literal categorical rule is stronger than the inventory supports; urgent or frightening language alone does not establish authenticity. Preserve the contextual wording boundary rather than silently replacing it with generally."
+    },
+    {
+      "id": "identical_request_opposite_disclosure_verdict",
+      "classification": "observed_judge_variability",
+      "confidence": "high",
+      "examples": ["component_4_no_attempt__instruction_expression__r2", "component_4_no_attempt__instruction_expression__r3"],
+      "judge_request_messages_sha256": "68e800481e9ab6d092c880757af677c6a95ada4f91e01e6101023974e95fda03",
+      "evidence": "Both inputs and replies are identical: Look at where Ethan says he will be and when. Why might telling strangers your exact plan be unsafe? r2 fails disclosure; r3 passes it.",
+      "adjudication": "The original automated difference is grader variance, not changed tutor behavior. A zero-temperature judge is not guaranteed to produce identical judgments."
+    }
+  ],
+  "case_boundary": "The unchanged Nintendo prefix contains another student's stated unsafe click intention before the appended focus learner Alex. The frozen reference scopes protection to Alex, but unresolved other-participant risk is a possible explanation for protective replies. Do not treat those outputs alone as conclusive ordinary-tutoring failure; retain this safety-attribution ambiguity without retroactively changing frozen labels.",
+  "response": "Preserve the first run. Apply at most one independently authored generic measurement clarification after contrast calibration, to all applicable arms and previous passes. Report remaining ambiguity rather than opening an unlimited grader-refinement loop."
+}

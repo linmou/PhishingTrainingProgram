@@ -1,0 +1,47 @@
+{
+  "intent": "Independently audit removal of conflicting ordinary-teaching directives before testing the cleanup candidate.",
+  "reviewer": "/root/focused_audit",
+  "date": "2026-11-13",
+  "verdict": "changes_required",
+  "scope": "The six-replacement recipe is generic but does not remove all conflicting ordinary-teaching directives in the assembled prompt. Current results are a partial-cleanup diagnostic.",
+  "candidate": {
+    "path": "candidate-cleanup.json",
+    "sha256": "e9a3cef3baa86d09db1f1fe6af25f72c0b27fb97fbec82844feb9fe2cd7103c7",
+    "parent": "instruction",
+    "policy_sha256": "c7c6609786e0d3f2c3469054ea77295e3e2f095e174d2d28aab7bf42ef890301",
+    "target_presentation": "Original complete document inventories, not the instruction_expression arm."
+  },
+  "execution_review": {
+    "verdict": "clear",
+    "refine_cjs_sha256": "ac203070f9ff3ae91fa6d7c8eb8bb20136c4d59f7c67caa387db9a0eae16abe2",
+    "measurement_clarification_sha256": "db717ec0732f9d74ef149a7f95d41e879e25fcd1a73f3479d0397399b084146f",
+    "measurement_calibration_sha256": "bf23b7dd38f1967740d6f8852e64293c0aee00b75906ee41c073f781b6928fd7",
+    "observations": "Original sources and settings are checked before replay/cleanup. New runner, recipe, amendment and calibration sources are snapshotted. Resume verifies the frozen record. Prior failed-provider active time is derived from preserved attempts. Completed calls survive deadline finalization. The cleanup uses the same fixed histories/settings; trajectory replies remain actual prior model outputs.",
+    "gate": "Root-authorized sequential measurement calibration, then full315-output replay and105-output cleanup only after calibration passes. This is the one permitted measurement repair; further tuning is outside this increment."
+  },
+  "observed_evidence": {
+    "ids": ["component_5_failed_focused__baseline__r1", "component_5_failed_focused__instruction__r1", "component_5_failed_focused__instruction_expression__r1"],
+    "finding": "All three correct the recognition misconception and immediately supply a safe action despite no learner attempt/confusion for the action component. These are genuine component-disclosure failures, independently of other grader problems.",
+    "source_conflict": "activeTutorAgentPrompt still repeatedly requires safe actions with ordinary correction. The appended component policy says otherwise."
+  },
+  "findings": [
+    {"status":"clear","claim":"Each changed directive is a general instructional rule present in the assembled production prompt, not a test-case exception.","evidence":"Independent composition over all27 fixed cases found each of the six before clauses exactly once."},
+    {"status":"clear","claim":"The changes implement adopted T01.1 separation of recognition and action disclosure.","evidence":"Recognition correction no longer automatically supplies the action answer; action correction still permits its safe alternative after its own attempt/confusion."},
+    {"status":"clear","claim":"Immediate protective instruction and safe alternatives remain available before either component opportunity.","evidence":"The recipe explicitly retains protection priority and scopes restriction to ordinary recognition correction."},
+    {"status":"clear","claim":"No learning-point content, room template, expected label, model or decoding setting is modified.","evidence":"The recipe replaces six instructional clauses only; parent is instruction with original inventory presentation."},
+    {"status":"clear","claim":"The hypothesis is testable without assuming success.","evidence":"Compare cleanup with instruction on the same fixed cases under the same repaired evaluator; trajectories additionally contain their own earlier generated tutor turns and are analyzed as controlled journeys."}
+  ],
+  "post_execution_audit_correction": {
+    "discovered_by": "/root/focused_harness; independently verified by /root/focused_audit",
+    "evidence_path": "raw/cleanup-v1/targets/component_5_failed_focused__cleanup__r1.json",
+    "finding": "The rendered system prompt retains additional room-generator directives before the active tutor policy. They require correction plus connected safe action and allow direct teaching before any scaffold.",
+    "remaining_clauses": [
+      "After a failed question scaffold about a specific misconception, correct that inference calmly and give its connected safe action.",
+      "Before any failed scaffold, allow either one focused question or concise direct teaching.",
+      "An incorrect answer to a focused question about that misconception requires correction of the false inference and one connected safe action. A broad opening question does not establish a failed focused scaffold."
+    ],
+    "audit_error": "Initial clearance verified the specified six replacements and generic intent but did not exhaustively inspect the full assembled prompt for other contradictory directives. That clearance was too broad for complete conflict removal.",
+    "consequence": "Do not adopt this candidate or interpret its failure as evidence that removing all conflicting rules cannot work. Preserve its exact outputs; any further candidate requires a new recipe/hash and full rendered-prompt audit."
+  },
+  "required_execution_evidence": "Complete comparable focused output evidence and audit residual disclosure/progression failures; static clearance does not establish that removing conflicts improves model behavior."
+}

@@ -1,0 +1,16 @@
+{
+  "intent": "Record decisive failures and a successful controlled journey from the superseded six-clause cleanup without presenting it as full acceptance.",
+  "reviewer": "/root/focused_audit",
+  "date": "2026-11-13",
+  "source": "raw/cleanup-v1",
+  "kind": "Independent AI inspection, not human gold; automated judgments remain unchanged.",
+  "coverage": "Read all105 responses; final effort prioritized the complete cleanup candidate rather than publishing a full per-output classification for this partial variant.",
+  "observations": [
+    {"ids":["component_5_failed_focused__cleanup__r1","component_5_failed_focused__cleanup__r3"],"verdict":"fail","evidence":"After correcting recognition, the tutor supplies Check the privacy settings before posting personal info or Check who can see your posts before sharing personal info despite no action attempt/confusion."},
+    {"ids":["component_5_failed_focused__cleanup__r2"],"verdict":"pass_disclosure","evidence":"The tutor explains that public posts are seen by everyone and strangers can save numbers, without supplying the safe-action answer."},
+    {"ids":["component_2_recognition_done__cleanup__r1"],"verdict":"fail","evidence":"After the learner recognized the implausible reward, the tutor switches targets and supplies bit.ly hides the real website before that target's recognition opportunity."},
+    {"ids":["journey_5__cleanup__r1__t2"],"verdict":"fail","evidence":"Learner recognition of the public number triggers supplied login-code knowledge and Never share a code, neither attempted nor explicitly confused about."},
+    {"ids":["journey_3__cleanup__r1__t1","journey_3__cleanup__r1__t2","journey_3__cleanup__r1__t3","journey_3__cleanup__r1__t4"],"verdict":"successful_controlled_sequence","evidence":"Tutor first asks which details are shared; the scripted learner identifies the address and why it matters; tutor asks for one safe action; learner expresses action confusion; tutor explains deletion/private invitation; learner states that plan; tutor moves to a photo-background recognition hint. Actual tutor replies are retained. This demonstrates compatible behaviors in one controlled sequence, not a measured learning outcome."}
+  ],
+  "interpretation": "Some responses satisfy separate opportunities, but the candidate remains inconsistent. Remaining room-generator correction-plus-action mandates were then found and recorded in cleanup-refinement-review.json; this partial variant cannot establish the effect of removing all such mandates."
+}

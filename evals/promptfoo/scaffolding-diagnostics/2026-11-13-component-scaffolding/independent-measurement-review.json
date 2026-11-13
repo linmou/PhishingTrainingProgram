@@ -1,0 +1,42 @@
+{
+  "intent": "Assess the one bounded measurement repair without converting unresolved calibration errors into acceptance.",
+  "reviewer": "/root/focused_audit",
+  "date": "2026-11-13",
+  "verdict": "incomplete",
+  "scope": "The repaired component-disclosure judge is not fully calibrated. Other rubric calibrations agreed on the small constructed set, but final-output inspection also confirms residual recognition-order grading errors. All automated semantic aggregates remain provisional; calibration agreement does not establish reliable grading of the executed outputs.",
+  "artifacts": {
+    "clarification": "measurement-clarification.json",
+    "calibration": "raw/calibration-repair-v1",
+    "frozen_sha256": "f360c939d49d3cd95d1bcfcfa39c59e711ff263d1adecffe254b479191127107",
+    "summary_sha256": "24c5a732aaa7b544b320b6a855b3efa0547be5db5abfd593b6dfa271fe0622b9"
+  },
+  "independent_recomputation": {"agreed":69,"expected":71,"errors":0,"disclosure_agreed":12,"disclosure_expected":14},
+  "disagreements": [
+    {
+      "id": "disclosure_positive",
+      "expected_pass": true,
+      "judge_pass": false,
+      "reviewer_pass": true,
+      "evidence": "Look at the details in the post. What could a reader use to contact him?",
+      "finding": "The question leaves the actual personal detail for the learner to identify. The judge invents a supplied phone-number answer that the response does not contain."
+    },
+    {
+      "id": "earlier_action_attempt_retained",
+      "expected_pass": true,
+      "judge_pass": false,
+      "reviewer_pass": true,
+      "evidence": "The case history explicitly contains the learner's earlier safe-action contribution; later recognition contradiction reopens understanding but does not erase the attempted action.",
+      "finding": "The judge conflates recognition-before-action with component-disclosure permission and incorrectly requires another action opportunity. The separate order check correctly fails."
+    }
+  ],
+  "residual_order_errors": {
+    "reviewed_source": "raw/cleanup-full-v1",
+    "examples": [
+      {"id":"component_5_bare_agreement__cleanup_full__r3","judge_order_pass":false,"independent_order_pass":true,"evidence":"Strangers might use that number to send spam or trick you. What could happen if someone texts Jake from his public post?","finding":"The judge itself says the question asks for recognition consequences and does not violate ordering, yet fails ordering because the recognition answer was disclosed. That is a separate disclosure failure."},
+      {"id":"component_5_unrelated_attempt__cleanup_full__r2","judge_order_pass":false,"independent_order_pass":true,"evidence":"Jake posted his new phone number for everyone to see. Is that safe?","finding":"The tutor supplies recognition and asks for a safety judgment, with no safe-action instruction or question. The premature recognition disclosure is real, but cannot independently fail recognition-before-action."},
+      {"id":"component_5_unrelated_attempt__cleanup_full__r3","judge_order_pass":false,"independent_order_pass":true,"evidence":"He shared his new phone number for everyone to see. Is it safe to put your number in a public post?","finding":"The response remains a recognition/safety appraisal. The judge uses premature recognition disclosure as its reason for failing the separate ordering metric."}
+    ],
+    "consequence": "Do not describe the repaired order aggregate as established tutor conformance merely because its calibration was13/13. Keep the automated values unchanged and qualify all semantic aggregate comparisons. These three responses remain independent disclosure failures, so the final goal verdict does not improve."
+  },
+  "decision": "No second measurement refinement in this increment and no additional model calls for these findings. Preserve both calibrations and all original judgments. The independent final disclosure audit of79pass/19fail/7ambiguous remains separate evidence, not human gold. The observed clear failures mean the strict separate-opportunity goal is not satisfied."
+}

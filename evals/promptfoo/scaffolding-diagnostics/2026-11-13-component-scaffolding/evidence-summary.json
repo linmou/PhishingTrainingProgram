@@ -1,0 +1,24 @@
+{
+  "created_at": "2026-11-13T08:12:53.992Z",
+  "evidence_root": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/tutor-stage-scaffolding/evals/promptfoo/scaffolding-diagnostics/2026-11-13-component-scaffolding/raw",
+  "source_baseline": "2172ab600c042f454553e9369f057b2f65cb3c60",
+  "learning_goals_docx": {
+    "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram/General Learning Goals.docx",
+    "sha256": "fd0a0f49106e1b37795886dc39f974c3e99758e0007df5c2b0ba5d730dd6655b",
+    "relationship": "Matches the prior document-grounding hash; generated inventories assert equality with the merged catalog and retained standard-template snapshot."
+  },
+  "generation_commands": "See experiment_log.md; initial run.cjs and versioned refine.cjs snapshots are preserved in raw frozen files.",
+  "file_count": 2381,
+  "size_bytes": 133992792,
+  "inventory_sha256": "e397e5e4db8b49bb30f1c7c7db9e2f70bdee6f8d0d371ed9731a0557f9e3ac34",
+  "unique_http_attempts": 2032,
+  "statuses": {
+    "200": 1969,
+    "400": 63
+  },
+  "recorded_tokens": 5509549,
+  "attempts_without_usage": 63,
+  "deduplication": "Endpoint, model, attempt start time, raw response and status; removes duplicate target records copied during measurement replay.",
+  "raw_inventory": "raw/evidence-inventory.json",
+  "raw_attempt_index": "raw/http-attempt-index.json"
+}

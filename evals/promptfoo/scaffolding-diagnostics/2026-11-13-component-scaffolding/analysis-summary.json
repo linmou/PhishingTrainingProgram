@@ -1,0 +1,5187 @@
+{
+  "created_at": "2026-11-13T08:13:25.988Z",
+  "metric_order": [
+    "recognition_before_action",
+    "component_disclosure",
+    "responsive_progression",
+    "factual_accuracy",
+    "instruction_realization",
+    "contribution_feedback",
+    "reading_accessibility",
+    "learner_dignity",
+    "honest_self_representation",
+    "persona_stability",
+    "decision_reasoning"
+  ],
+  "arms": [
+    "baseline",
+    "instruction",
+    "instruction_expression",
+    "cleanup",
+    "cleanup_full"
+  ],
+  "metrics": {
+    "recognition_before_action": {
+      "baseline": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 92,
+          "fail": 13,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_recognition_confusion__baseline__r3",
+            "component_1_no_attempt__baseline__r1",
+            "component_5_action_attempt__baseline__r2",
+            "component_5_bare_agreement__baseline__r1",
+            "component_5_bare_agreement__baseline__r2",
+            "component_5_failed_focused__baseline__r1",
+            "component_5_failed_focused__baseline__r3",
+            "component_5_later_contradiction__baseline__r1",
+            "component_5_later_contradiction__baseline__r2",
+            "component_5_later_contradiction__baseline__r3",
+            "component_5_recognition_done__baseline__r1",
+            "component_5_recognition_done__baseline__r2",
+            "component_5_unrelated_attempt__baseline__r3"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 68,
+          "fail": 13,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_recognition_confusion__baseline__r3",
+            "component_1_no_attempt__baseline__r1",
+            "component_5_action_attempt__baseline__r2",
+            "component_5_bare_agreement__baseline__r1",
+            "component_5_bare_agreement__baseline__r2",
+            "component_5_failed_focused__baseline__r1",
+            "component_5_failed_focused__baseline__r3",
+            "component_5_later_contradiction__baseline__r1",
+            "component_5_later_contradiction__baseline__r2",
+            "component_5_later_contradiction__baseline__r3",
+            "component_5_recognition_done__baseline__r1",
+            "component_5_recognition_done__baseline__r2",
+            "component_5_unrelated_attempt__baseline__r3"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      },
+      "instruction": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 93,
+          "fail": 12,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_1_no_attempt__instruction__r3",
+            "component_1_recognition_done__instruction__r1",
+            "component_5_action_attempt__instruction__r1",
+            "component_5_action_attempt__instruction__r3",
+            "component_5_bare_agreement__instruction__r1",
+            "component_5_failed_focused__instruction__r1",
+            "component_5_failed_focused__instruction__r2",
+            "component_5_failed_focused__instruction__r3",
+            "component_5_later_contradiction__instruction__r1",
+            "component_5_later_contradiction__instruction__r2",
+            "component_5_unrelated_attempt__instruction__r2",
+            "journey_3__instruction__r3__t3"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 70,
+          "fail": 11,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_1_no_attempt__instruction__r3",
+            "component_1_recognition_done__instruction__r1",
+            "component_5_action_attempt__instruction__r1",
+            "component_5_action_attempt__instruction__r3",
+            "component_5_bare_agreement__instruction__r1",
+            "component_5_failed_focused__instruction__r1",
+            "component_5_failed_focused__instruction__r2",
+            "component_5_failed_focused__instruction__r3",
+            "component_5_later_contradiction__instruction__r1",
+            "component_5_later_contradiction__instruction__r2",
+            "component_5_unrelated_attempt__instruction__r2"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 23,
+          "fail": 1,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "journey_3__instruction__r3__t3"
+          ]
+        }
+      },
+      "instruction_expression": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 91,
+          "fail": 14,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_1_recognition_done__instruction_expression__r1",
+            "component_1_recognition_done__instruction_expression__r2",
+            "component_1_recognition_done__instruction_expression__r3",
+            "component_5_bare_agreement__instruction_expression__r2",
+            "component_5_bare_agreement__instruction_expression__r3",
+            "component_5_failed_focused__instruction_expression__r1",
+            "component_5_failed_focused__instruction_expression__r2",
+            "component_5_failed_focused__instruction_expression__r3",
+            "component_5_later_contradiction__instruction_expression__r1",
+            "component_5_later_contradiction__instruction_expression__r2",
+            "component_5_later_contradiction__instruction_expression__r3",
+            "component_5_unrelated_attempt__instruction_expression__r1",
+            "journey_5__instruction_expression__r2__t4",
+            "journey_5__instruction_expression__r3__t4"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 69,
+          "fail": 12,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_1_recognition_done__instruction_expression__r1",
+            "component_1_recognition_done__instruction_expression__r2",
+            "component_1_recognition_done__instruction_expression__r3",
+            "component_5_bare_agreement__instruction_expression__r2",
+            "component_5_bare_agreement__instruction_expression__r3",
+            "component_5_failed_focused__instruction_expression__r1",
+            "component_5_failed_focused__instruction_expression__r2",
+            "component_5_failed_focused__instruction_expression__r3",
+            "component_5_later_contradiction__instruction_expression__r1",
+            "component_5_later_contradiction__instruction_expression__r2",
+            "component_5_later_contradiction__instruction_expression__r3",
+            "component_5_unrelated_attempt__instruction_expression__r1"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 22,
+          "fail": 2,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "journey_5__instruction_expression__r2__t4",
+            "journey_5__instruction_expression__r3__t4"
+          ]
+        }
+      },
+      "cleanup": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 94,
+          "fail": 10,
+          "inapplicable": 0,
+          "error": 1,
+          "missing": 0,
+          "failure_ids": [
+            "component_1_recognition_done__cleanup__r1",
+            "component_1_recognition_done__cleanup__r2",
+            "component_5_bare_agreement__cleanup__r1",
+            "component_5_bare_agreement__cleanup__r3",
+            "component_5_failed_focused__cleanup__r1",
+            "component_5_failed_focused__cleanup__r3",
+            "component_5_later_contradiction__cleanup__r2",
+            "component_5_recognition_done__cleanup__r2",
+            "journey_3__cleanup__r2__t4",
+            "journey_5__cleanup__r1__t2",
+            "journey_5__cleanup__r3__t2"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 73,
+          "fail": 8,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_1_recognition_done__cleanup__r1",
+            "component_1_recognition_done__cleanup__r2",
+            "component_5_bare_agreement__cleanup__r1",
+            "component_5_bare_agreement__cleanup__r3",
+            "component_5_failed_focused__cleanup__r1",
+            "component_5_failed_focused__cleanup__r3",
+            "component_5_later_contradiction__cleanup__r2",
+            "component_5_recognition_done__cleanup__r2"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 21,
+          "fail": 2,
+          "inapplicable": 0,
+          "error": 1,
+          "missing": 0,
+          "failure_ids": [
+            "journey_3__cleanup__r2__t4",
+            "journey_5__cleanup__r1__t2",
+            "journey_5__cleanup__r3__t2"
+          ]
+        }
+      },
+      "cleanup_full": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 98,
+          "fail": 7,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_1_recognition_done__cleanup_full__r1",
+            "component_5_bare_agreement__cleanup_full__r3",
+            "component_5_failed_focused__cleanup_full__r1",
+            "component_5_recognition_done__cleanup_full__r3",
+            "component_5_unrelated_attempt__cleanup_full__r2",
+            "component_5_unrelated_attempt__cleanup_full__r3",
+            "journey_5__cleanup_full__r1__t2"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 75,
+          "fail": 6,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_1_recognition_done__cleanup_full__r1",
+            "component_5_bare_agreement__cleanup_full__r3",
+            "component_5_failed_focused__cleanup_full__r1",
+            "component_5_recognition_done__cleanup_full__r3",
+            "component_5_unrelated_attempt__cleanup_full__r2",
+            "component_5_unrelated_attempt__cleanup_full__r3"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 23,
+          "fail": 1,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "journey_5__cleanup_full__r1__t2"
+          ]
+        }
+      }
+    },
+    "component_disclosure": {
+      "baseline": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 63,
+          "fail": 42,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_no_attempt__baseline__r2",
+            "component_0_no_attempt__baseline__r3",
+            "component_0_protection_return__baseline__r2",
+            "component_0_protection_return__baseline__r3",
+            "component_0_recognition_confusion__baseline__r1",
+            "component_0_recognition_done__baseline__r1",
+            "component_0_recognition_done__baseline__r2",
+            "component_0_recognition_done__baseline__r3",
+            "component_1_no_attempt__baseline__r1",
+            "component_1_no_attempt__baseline__r3",
+            "component_1_recognition_done__baseline__r3",
+            "component_2_no_attempt__baseline__r1",
+            "component_2_no_attempt__baseline__r3",
+            "component_2_recognition_done__baseline__r2",
+            "component_3_no_attempt__baseline__r1",
+            "component_3_no_attempt__baseline__r2",
+            "component_4_no_attempt__baseline__r1",
+            "component_4_no_attempt__baseline__r3",
+            "component_5_action_attempt__baseline__r2",
+            "component_5_action_attempt__baseline__r3",
+            "component_5_bare_agreement__baseline__r1",
+            "component_5_bare_agreement__baseline__r2",
+            "component_5_bare_agreement__baseline__r3",
+            "component_5_failed_focused__baseline__r1",
+            "component_5_failed_focused__baseline__r2",
+            "component_5_failed_focused__baseline__r3",
+            "component_5_later_contradiction__baseline__r1",
+            "component_5_later_contradiction__baseline__r2",
+            "component_5_later_contradiction__baseline__r3",
+            "component_5_no_attempt__baseline__r1",
+            "component_5_no_attempt__baseline__r2",
+            "component_5_other_learner__baseline__r2",
+            "component_5_other_learner__baseline__r3",
+            "component_5_recognition_done__baseline__r1",
+            "component_5_recognition_done__baseline__r2",
+            "component_5_unrelated_attempt__baseline__r1",
+            "component_5_unrelated_attempt__baseline__r2",
+            "component_5_unrelated_attempt__baseline__r3",
+            "journey_3__baseline__r1__t2",
+            "journey_5__baseline__r2__t4",
+            "journey_5__baseline__r3__t1",
+            "journey_5__baseline__r3__t4"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 43,
+          "fail": 38,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_no_attempt__baseline__r2",
+            "component_0_no_attempt__baseline__r3",
+            "component_0_protection_return__baseline__r2",
+            "component_0_protection_return__baseline__r3",
+            "component_0_recognition_confusion__baseline__r1",
+            "component_0_recognition_done__baseline__r1",
+            "component_0_recognition_done__baseline__r2",
+            "component_0_recognition_done__baseline__r3",
+            "component_1_no_attempt__baseline__r1",
+            "component_1_no_attempt__baseline__r3",
+            "component_1_recognition_done__baseline__r3",
+            "component_2_no_attempt__baseline__r1",
+            "component_2_no_attempt__baseline__r3",
+            "component_2_recognition_done__baseline__r2",
+            "component_3_no_attempt__baseline__r1",
+            "component_3_no_attempt__baseline__r2",
+            "component_4_no_attempt__baseline__r1",
+            "component_4_no_attempt__baseline__r3",
+            "component_5_action_attempt__baseline__r2",
+            "component_5_action_attempt__baseline__r3",
+            "component_5_bare_agreement__baseline__r1",
+            "component_5_bare_agreement__baseline__r2",
+            "component_5_bare_agreement__baseline__r3",
+            "component_5_failed_focused__baseline__r1",
+            "component_5_failed_focused__baseline__r2",
+            "component_5_failed_focused__baseline__r3",
+            "component_5_later_contradiction__baseline__r1",
+            "component_5_later_contradiction__baseline__r2",
+            "component_5_later_contradiction__baseline__r3",
+            "component_5_no_attempt__baseline__r1",
+            "component_5_no_attempt__baseline__r2",
+            "component_5_other_learner__baseline__r2",
+            "component_5_other_learner__baseline__r3",
+            "component_5_recognition_done__baseline__r1",
+            "component_5_recognition_done__baseline__r2",
+            "component_5_unrelated_attempt__baseline__r1",
+            "component_5_unrelated_attempt__baseline__r2",
+            "component_5_unrelated_attempt__baseline__r3"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 20,
+          "fail": 4,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "journey_3__baseline__r1__t2",
+            "journey_5__baseline__r2__t4",
+            "journey_5__baseline__r3__t1",
+            "journey_5__baseline__r3__t4"
+          ]
+        }
+      },
+      "instruction": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 69,
+          "fail": 36,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_no_attempt__instruction__r2",
+            "component_0_no_attempt__instruction__r3",
+            "component_0_protection_return__instruction__r1",
+            "component_0_protection_return__instruction__r2",
+            "component_0_recognition_done__instruction__r1",
+            "component_1_no_attempt__instruction__r1",
+            "component_1_no_attempt__instruction__r2",
+            "component_1_no_attempt__instruction__r3",
+            "component_1_recognition_done__instruction__r1",
+            "component_1_recognition_done__instruction__r2",
+            "component_2_no_attempt__instruction__r1",
+            "component_2_no_attempt__instruction__r2",
+            "component_2_no_attempt__instruction__r3",
+            "component_3_no_attempt__instruction__r1",
+            "component_3_no_attempt__instruction__r2",
+            "component_3_no_attempt__instruction__r3",
+            "component_4_no_attempt__instruction__r2",
+            "component_4_no_attempt__instruction__r3",
+            "component_5_action_attempt__instruction__r1",
+            "component_5_action_attempt__instruction__r3",
+            "component_5_bare_agreement__instruction__r1",
+            "component_5_bare_agreement__instruction__r2",
+            "component_5_failed_focused__instruction__r1",
+            "component_5_failed_focused__instruction__r3",
+            "component_5_later_contradiction__instruction__r1",
+            "component_5_later_contradiction__instruction__r2",
+            "component_5_later_contradiction__instruction__r3",
+            "component_5_no_attempt__instruction__r3",
+            "component_5_other_learner__instruction__r1",
+            "component_5_other_learner__instruction__r2",
+            "component_5_unrelated_attempt__instruction__r1",
+            "component_5_unrelated_attempt__instruction__r3",
+            "journey_3__instruction__r1__t1",
+            "journey_3__instruction__r3__t1",
+            "journey_3__instruction__r3__t3",
+            "journey_5__instruction__r3__t4"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 49,
+          "fail": 32,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_no_attempt__instruction__r2",
+            "component_0_no_attempt__instruction__r3",
+            "component_0_protection_return__instruction__r1",
+            "component_0_protection_return__instruction__r2",
+            "component_0_recognition_done__instruction__r1",
+            "component_1_no_attempt__instruction__r1",
+            "component_1_no_attempt__instruction__r2",
+            "component_1_no_attempt__instruction__r3",
+            "component_1_recognition_done__instruction__r1",
+            "component_1_recognition_done__instruction__r2",
+            "component_2_no_attempt__instruction__r1",
+            "component_2_no_attempt__instruction__r2",
+            "component_2_no_attempt__instruction__r3",
+            "component_3_no_attempt__instruction__r1",
+            "component_3_no_attempt__instruction__r2",
+            "component_3_no_attempt__instruction__r3",
+            "component_4_no_attempt__instruction__r2",
+            "component_4_no_attempt__instruction__r3",
+            "component_5_action_attempt__instruction__r1",
+            "component_5_action_attempt__instruction__r3",
+            "component_5_bare_agreement__instruction__r1",
+            "component_5_bare_agreement__instruction__r2",
+            "component_5_failed_focused__instruction__r1",
+            "component_5_failed_focused__instruction__r3",
+            "component_5_later_contradiction__instruction__r1",
+            "component_5_later_contradiction__instruction__r2",
+            "component_5_later_contradiction__instruction__r3",
+            "component_5_no_attempt__instruction__r3",
+            "component_5_other_learner__instruction__r1",
+            "component_5_other_learner__instruction__r2",
+            "component_5_unrelated_attempt__instruction__r1",
+            "component_5_unrelated_attempt__instruction__r3"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 20,
+          "fail": 4,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "journey_3__instruction__r1__t1",
+            "journey_3__instruction__r3__t1",
+            "journey_3__instruction__r3__t3",
+            "journey_5__instruction__r3__t4"
+          ]
+        }
+      },
+      "instruction_expression": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 69,
+          "fail": 36,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_no_attempt__instruction_expression__r2",
+            "component_0_protection_return__instruction_expression__r2",
+            "component_0_protection_return__instruction_expression__r3",
+            "component_1_no_attempt__instruction_expression__r1",
+            "component_1_no_attempt__instruction_expression__r2",
+            "component_1_no_attempt__instruction_expression__r3",
+            "component_1_recognition_done__instruction_expression__r1",
+            "component_1_recognition_done__instruction_expression__r2",
+            "component_1_recognition_done__instruction_expression__r3",
+            "component_2_no_attempt__instruction_expression__r1",
+            "component_2_no_attempt__instruction_expression__r3",
+            "component_2_recognition_done__instruction_expression__r2",
+            "component_3_no_attempt__instruction_expression__r2",
+            "component_3_no_attempt__instruction_expression__r3",
+            "component_3_recognition_confusion__instruction_expression__r1",
+            "component_3_recognition_done__instruction_expression__r3",
+            "component_4_no_attempt__instruction_expression__r2",
+            "component_4_no_attempt__instruction_expression__r3",
+            "component_5_bare_agreement__instruction_expression__r3",
+            "component_5_failed_focused__instruction_expression__r1",
+            "component_5_failed_focused__instruction_expression__r3",
+            "component_5_later_contradiction__instruction_expression__r1",
+            "component_5_later_contradiction__instruction_expression__r2",
+            "component_5_later_contradiction__instruction_expression__r3",
+            "component_5_no_attempt__instruction_expression__r1",
+            "component_5_no_attempt__instruction_expression__r2",
+            "component_5_other_learner__instruction_expression__r2",
+            "component_5_unrelated_attempt__instruction_expression__r1",
+            "component_5_unrelated_attempt__instruction_expression__r2",
+            "journey_3__instruction_expression__r1__t1",
+            "journey_3__instruction_expression__r2__t1",
+            "journey_3__instruction_expression__r2__t4",
+            "journey_3__instruction_expression__r3__t1",
+            "journey_5__instruction_expression__r1__t2",
+            "journey_5__instruction_expression__r3__t1",
+            "journey_5__instruction_expression__r3__t4"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 52,
+          "fail": 29,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_no_attempt__instruction_expression__r2",
+            "component_0_protection_return__instruction_expression__r2",
+            "component_0_protection_return__instruction_expression__r3",
+            "component_1_no_attempt__instruction_expression__r1",
+            "component_1_no_attempt__instruction_expression__r2",
+            "component_1_no_attempt__instruction_expression__r3",
+            "component_1_recognition_done__instruction_expression__r1",
+            "component_1_recognition_done__instruction_expression__r2",
+            "component_1_recognition_done__instruction_expression__r3",
+            "component_2_no_attempt__instruction_expression__r1",
+            "component_2_no_attempt__instruction_expression__r3",
+            "component_2_recognition_done__instruction_expression__r2",
+            "component_3_no_attempt__instruction_expression__r2",
+            "component_3_no_attempt__instruction_expression__r3",
+            "component_3_recognition_confusion__instruction_expression__r1",
+            "component_3_recognition_done__instruction_expression__r3",
+            "component_4_no_attempt__instruction_expression__r2",
+            "component_4_no_attempt__instruction_expression__r3",
+            "component_5_bare_agreement__instruction_expression__r3",
+            "component_5_failed_focused__instruction_expression__r1",
+            "component_5_failed_focused__instruction_expression__r3",
+            "component_5_later_contradiction__instruction_expression__r1",
+            "component_5_later_contradiction__instruction_expression__r2",
+            "component_5_later_contradiction__instruction_expression__r3",
+            "component_5_no_attempt__instruction_expression__r1",
+            "component_5_no_attempt__instruction_expression__r2",
+            "component_5_other_learner__instruction_expression__r2",
+            "component_5_unrelated_attempt__instruction_expression__r1",
+            "component_5_unrelated_attempt__instruction_expression__r2"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 17,
+          "fail": 7,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "journey_3__instruction_expression__r1__t1",
+            "journey_3__instruction_expression__r2__t1",
+            "journey_3__instruction_expression__r2__t4",
+            "journey_3__instruction_expression__r3__t1",
+            "journey_5__instruction_expression__r1__t2",
+            "journey_5__instruction_expression__r3__t1",
+            "journey_5__instruction_expression__r3__t4"
+          ]
+        }
+      },
+      "cleanup": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 68,
+          "fail": 36,
+          "inapplicable": 0,
+          "error": 1,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_action_confusion__cleanup__r1",
+            "component_0_no_attempt__cleanup__r2",
+            "component_0_no_attempt__cleanup__r3",
+            "component_0_protection_return__cleanup__r1",
+            "component_0_protection_return__cleanup__r2",
+            "component_1_no_attempt__cleanup__r1",
+            "component_1_no_attempt__cleanup__r2",
+            "component_1_no_attempt__cleanup__r3",
+            "component_1_recognition_done__cleanup__r1",
+            "component_1_recognition_done__cleanup__r2",
+            "component_2_no_attempt__cleanup__r2",
+            "component_2_recognition_done__cleanup__r1",
+            "component_2_recognition_done__cleanup__r2",
+            "component_3_no_attempt__cleanup__r1",
+            "component_3_no_attempt__cleanup__r2",
+            "component_3_no_attempt__cleanup__r3",
+            "component_4_no_attempt__cleanup__r2",
+            "component_4_no_attempt__cleanup__r3",
+            "component_4_recognition_done__cleanup__r3",
+            "component_5_action_attempt__cleanup__r2",
+            "component_5_bare_agreement__cleanup__r1",
+            "component_5_failed_focused__cleanup__r1",
+            "component_5_failed_focused__cleanup__r3",
+            "component_5_later_contradiction__cleanup__r1",
+            "component_5_later_contradiction__cleanup__r3",
+            "component_5_no_attempt__cleanup__r2",
+            "component_5_no_attempt__cleanup__r3",
+            "component_5_other_learner__cleanup__r2",
+            "component_5_other_learner__cleanup__r3",
+            "component_5_recognition_done__cleanup__r2",
+            "component_5_unrelated_attempt__cleanup__r1",
+            "component_5_unrelated_attempt__cleanup__r2",
+            "component_5_unrelated_attempt__cleanup__r3",
+            "journey_3__cleanup__r2__t4",
+            "journey_5__cleanup__r1__t2",
+            "journey_5__cleanup__r2__t1",
+            "journey_5__cleanup__r3__t2"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 48,
+          "fail": 33,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_action_confusion__cleanup__r1",
+            "component_0_no_attempt__cleanup__r2",
+            "component_0_no_attempt__cleanup__r3",
+            "component_0_protection_return__cleanup__r1",
+            "component_0_protection_return__cleanup__r2",
+            "component_1_no_attempt__cleanup__r1",
+            "component_1_no_attempt__cleanup__r2",
+            "component_1_no_attempt__cleanup__r3",
+            "component_1_recognition_done__cleanup__r1",
+            "component_1_recognition_done__cleanup__r2",
+            "component_2_no_attempt__cleanup__r2",
+            "component_2_recognition_done__cleanup__r1",
+            "component_2_recognition_done__cleanup__r2",
+            "component_3_no_attempt__cleanup__r1",
+            "component_3_no_attempt__cleanup__r2",
+            "component_3_no_attempt__cleanup__r3",
+            "component_4_no_attempt__cleanup__r2",
+            "component_4_no_attempt__cleanup__r3",
+            "component_4_recognition_done__cleanup__r3",
+            "component_5_action_attempt__cleanup__r2",
+            "component_5_bare_agreement__cleanup__r1",
+            "component_5_failed_focused__cleanup__r1",
+            "component_5_failed_focused__cleanup__r3",
+            "component_5_later_contradiction__cleanup__r1",
+            "component_5_later_contradiction__cleanup__r3",
+            "component_5_no_attempt__cleanup__r2",
+            "component_5_no_attempt__cleanup__r3",
+            "component_5_other_learner__cleanup__r2",
+            "component_5_other_learner__cleanup__r3",
+            "component_5_recognition_done__cleanup__r2",
+            "component_5_unrelated_attempt__cleanup__r1",
+            "component_5_unrelated_attempt__cleanup__r2",
+            "component_5_unrelated_attempt__cleanup__r3"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 20,
+          "fail": 3,
+          "inapplicable": 0,
+          "error": 1,
+          "missing": 0,
+          "failure_ids": [
+            "journey_3__cleanup__r2__t4",
+            "journey_5__cleanup__r1__t2",
+            "journey_5__cleanup__r2__t1",
+            "journey_5__cleanup__r3__t2"
+          ]
+        }
+      },
+      "cleanup_full": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 72,
+          "fail": 33,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_no_attempt__cleanup_full__r1",
+            "component_0_no_attempt__cleanup_full__r3",
+            "component_0_protection_return__cleanup_full__r3",
+            "component_1_no_attempt__cleanup_full__r1",
+            "component_1_no_attempt__cleanup_full__r2",
+            "component_1_no_attempt__cleanup_full__r3",
+            "component_1_recognition_done__cleanup_full__r1",
+            "component_2_no_attempt__cleanup_full__r1",
+            "component_2_no_attempt__cleanup_full__r2",
+            "component_2_no_attempt__cleanup_full__r3",
+            "component_2_recognition_done__cleanup_full__r3",
+            "component_4_no_attempt__cleanup_full__r1",
+            "component_4_no_attempt__cleanup_full__r2",
+            "component_4_no_attempt__cleanup_full__r3",
+            "component_4_recognition_done__cleanup_full__r2",
+            "component_5_action_attempt__cleanup_full__r3",
+            "component_5_bare_agreement__cleanup_full__r1",
+            "component_5_bare_agreement__cleanup_full__r3",
+            "component_5_failed_focused__cleanup_full__r1",
+            "component_5_failed_focused__cleanup_full__r2",
+            "component_5_failed_focused__cleanup_full__r3",
+            "component_5_later_contradiction__cleanup_full__r1",
+            "component_5_later_contradiction__cleanup_full__r2",
+            "component_5_later_contradiction__cleanup_full__r3",
+            "component_5_no_attempt__cleanup_full__r1",
+            "component_5_other_learner__cleanup_full__r2",
+            "component_5_recognition_done__cleanup_full__r3",
+            "component_5_unrelated_attempt__cleanup_full__r1",
+            "component_5_unrelated_attempt__cleanup_full__r2",
+            "component_5_unrelated_attempt__cleanup_full__r3",
+            "journey_3__cleanup_full__r1__t1",
+            "journey_3__cleanup_full__r3__t2",
+            "journey_5__cleanup_full__r1__t2"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 51,
+          "fail": 30,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_no_attempt__cleanup_full__r1",
+            "component_0_no_attempt__cleanup_full__r3",
+            "component_0_protection_return__cleanup_full__r3",
+            "component_1_no_attempt__cleanup_full__r1",
+            "component_1_no_attempt__cleanup_full__r2",
+            "component_1_no_attempt__cleanup_full__r3",
+            "component_1_recognition_done__cleanup_full__r1",
+            "component_2_no_attempt__cleanup_full__r1",
+            "component_2_no_attempt__cleanup_full__r2",
+            "component_2_no_attempt__cleanup_full__r3",
+            "component_2_recognition_done__cleanup_full__r3",
+            "component_4_no_attempt__cleanup_full__r1",
+            "component_4_no_attempt__cleanup_full__r2",
+            "component_4_no_attempt__cleanup_full__r3",
+            "component_4_recognition_done__cleanup_full__r2",
+            "component_5_action_attempt__cleanup_full__r3",
+            "component_5_bare_agreement__cleanup_full__r1",
+            "component_5_bare_agreement__cleanup_full__r3",
+            "component_5_failed_focused__cleanup_full__r1",
+            "component_5_failed_focused__cleanup_full__r2",
+            "component_5_failed_focused__cleanup_full__r3",
+            "component_5_later_contradiction__cleanup_full__r1",
+            "component_5_later_contradiction__cleanup_full__r2",
+            "component_5_later_contradiction__cleanup_full__r3",
+            "component_5_no_attempt__cleanup_full__r1",
+            "component_5_other_learner__cleanup_full__r2",
+            "component_5_recognition_done__cleanup_full__r3",
+            "component_5_unrelated_attempt__cleanup_full__r1",
+            "component_5_unrelated_attempt__cleanup_full__r2",
+            "component_5_unrelated_attempt__cleanup_full__r3"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 21,
+          "fail": 3,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "journey_3__cleanup_full__r1__t1",
+            "journey_3__cleanup_full__r3__t2",
+            "journey_5__cleanup_full__r1__t2"
+          ]
+        }
+      }
+    },
+    "responsive_progression": {
+      "baseline": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 87,
+          "fail": 18,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_action_confusion__baseline__r2",
+            "component_1_no_attempt__baseline__r1",
+            "component_1_recognition_done__baseline__r1",
+            "component_1_recognition_done__baseline__r2",
+            "component_2_recognition_done__baseline__r1",
+            "component_3_recognition_done__baseline__r1",
+            "component_3_recognition_done__baseline__r2",
+            "component_3_recognition_done__baseline__r3",
+            "component_4_recognition_done__baseline__r1",
+            "component_4_recognition_done__baseline__r2",
+            "component_5_bare_agreement__baseline__r1",
+            "component_5_bare_agreement__baseline__r2",
+            "component_5_failed_focused__baseline__r1",
+            "component_5_failed_focused__baseline__r3",
+            "component_5_recognition_done__baseline__r1",
+            "component_5_recognition_done__baseline__r2",
+            "journey_5__baseline__r1__t4",
+            "journey_5__baseline__r2__t4"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 65,
+          "fail": 16,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_action_confusion__baseline__r2",
+            "component_1_no_attempt__baseline__r1",
+            "component_1_recognition_done__baseline__r1",
+            "component_1_recognition_done__baseline__r2",
+            "component_2_recognition_done__baseline__r1",
+            "component_3_recognition_done__baseline__r1",
+            "component_3_recognition_done__baseline__r2",
+            "component_3_recognition_done__baseline__r3",
+            "component_4_recognition_done__baseline__r1",
+            "component_4_recognition_done__baseline__r2",
+            "component_5_bare_agreement__baseline__r1",
+            "component_5_bare_agreement__baseline__r2",
+            "component_5_failed_focused__baseline__r1",
+            "component_5_failed_focused__baseline__r3",
+            "component_5_recognition_done__baseline__r1",
+            "component_5_recognition_done__baseline__r2"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 22,
+          "fail": 2,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "journey_5__baseline__r1__t4",
+            "journey_5__baseline__r2__t4"
+          ]
+        }
+      },
+      "instruction": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 86,
+          "fail": 19,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_recognition_done__instruction__r3",
+            "component_1_no_attempt__instruction__r3",
+            "component_1_recognition_done__instruction__r1",
+            "component_1_recognition_done__instruction__r2",
+            "component_1_recognition_done__instruction__r3",
+            "component_2_recognition_done__instruction__r1",
+            "component_2_recognition_done__instruction__r2",
+            "component_2_recognition_done__instruction__r3",
+            "component_3_recognition_confusion__instruction__r2",
+            "component_3_recognition_done__instruction__r1",
+            "component_3_recognition_done__instruction__r2",
+            "component_4_recognition_done__instruction__r1",
+            "component_4_recognition_done__instruction__r2",
+            "component_5_bare_agreement__instruction__r1",
+            "component_5_failed_focused__instruction__r1",
+            "component_5_failed_focused__instruction__r2",
+            "component_5_failed_focused__instruction__r3",
+            "component_5_unrelated_attempt__instruction__r2",
+            "journey_3__instruction__r3__t3"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 63,
+          "fail": 18,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_recognition_done__instruction__r3",
+            "component_1_no_attempt__instruction__r3",
+            "component_1_recognition_done__instruction__r1",
+            "component_1_recognition_done__instruction__r2",
+            "component_1_recognition_done__instruction__r3",
+            "component_2_recognition_done__instruction__r1",
+            "component_2_recognition_done__instruction__r2",
+            "component_2_recognition_done__instruction__r3",
+            "component_3_recognition_confusion__instruction__r2",
+            "component_3_recognition_done__instruction__r1",
+            "component_3_recognition_done__instruction__r2",
+            "component_4_recognition_done__instruction__r1",
+            "component_4_recognition_done__instruction__r2",
+            "component_5_bare_agreement__instruction__r1",
+            "component_5_failed_focused__instruction__r1",
+            "component_5_failed_focused__instruction__r2",
+            "component_5_failed_focused__instruction__r3",
+            "component_5_unrelated_attempt__instruction__r2"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 23,
+          "fail": 1,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "journey_3__instruction__r3__t3"
+          ]
+        }
+      },
+      "instruction_expression": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 89,
+          "fail": 16,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_recognition_done__instruction_expression__r2",
+            "component_1_recognition_done__instruction_expression__r1",
+            "component_1_recognition_done__instruction_expression__r2",
+            "component_1_recognition_done__instruction_expression__r3",
+            "component_2_recognition_done__instruction_expression__r1",
+            "component_2_recognition_done__instruction_expression__r2",
+            "component_4_recognition_done__instruction_expression__r2",
+            "component_4_recognition_done__instruction_expression__r3",
+            "component_5_bare_agreement__instruction_expression__r2",
+            "component_5_failed_focused__instruction_expression__r1",
+            "component_5_failed_focused__instruction_expression__r3",
+            "component_5_unrelated_attempt__instruction_expression__r1",
+            "journey_3__instruction_expression__r1__t3",
+            "journey_3__instruction_expression__r2__t2",
+            "journey_5__instruction_expression__r1__t4",
+            "journey_5__instruction_expression__r3__t4"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 69,
+          "fail": 12,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_recognition_done__instruction_expression__r2",
+            "component_1_recognition_done__instruction_expression__r1",
+            "component_1_recognition_done__instruction_expression__r2",
+            "component_1_recognition_done__instruction_expression__r3",
+            "component_2_recognition_done__instruction_expression__r1",
+            "component_2_recognition_done__instruction_expression__r2",
+            "component_4_recognition_done__instruction_expression__r2",
+            "component_4_recognition_done__instruction_expression__r3",
+            "component_5_bare_agreement__instruction_expression__r2",
+            "component_5_failed_focused__instruction_expression__r1",
+            "component_5_failed_focused__instruction_expression__r3",
+            "component_5_unrelated_attempt__instruction_expression__r1"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 20,
+          "fail": 4,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "journey_3__instruction_expression__r1__t3",
+            "journey_3__instruction_expression__r2__t2",
+            "journey_5__instruction_expression__r1__t4",
+            "journey_5__instruction_expression__r3__t4"
+          ]
+        }
+      },
+      "cleanup": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 87,
+          "fail": 17,
+          "inapplicable": 0,
+          "error": 1,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_protection_return__cleanup__r2",
+            "component_0_recognition_done__cleanup__r3",
+            "component_1_recognition_done__cleanup__r1",
+            "component_1_recognition_done__cleanup__r2",
+            "component_1_recognition_done__cleanup__r3",
+            "component_2_recognition_done__cleanup__r3",
+            "component_3_recognition_done__cleanup__r1",
+            "component_3_recognition_done__cleanup__r3",
+            "component_4_recognition_done__cleanup__r1",
+            "component_4_recognition_done__cleanup__r2",
+            "component_4_recognition_done__cleanup__r3",
+            "component_5_bare_agreement__cleanup__r1",
+            "component_5_bare_agreement__cleanup__r3",
+            "component_5_failed_focused__cleanup__r3",
+            "component_5_recognition_done__cleanup__r2",
+            "journey_3__cleanup__r2__t4",
+            "journey_5__cleanup__r1__t2",
+            "journey_5__cleanup__r2__t4"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 66,
+          "fail": 15,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_protection_return__cleanup__r2",
+            "component_0_recognition_done__cleanup__r3",
+            "component_1_recognition_done__cleanup__r1",
+            "component_1_recognition_done__cleanup__r2",
+            "component_1_recognition_done__cleanup__r3",
+            "component_2_recognition_done__cleanup__r3",
+            "component_3_recognition_done__cleanup__r1",
+            "component_3_recognition_done__cleanup__r3",
+            "component_4_recognition_done__cleanup__r1",
+            "component_4_recognition_done__cleanup__r2",
+            "component_4_recognition_done__cleanup__r3",
+            "component_5_bare_agreement__cleanup__r1",
+            "component_5_bare_agreement__cleanup__r3",
+            "component_5_failed_focused__cleanup__r3",
+            "component_5_recognition_done__cleanup__r2"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 21,
+          "fail": 2,
+          "inapplicable": 0,
+          "error": 1,
+          "missing": 0,
+          "failure_ids": [
+            "journey_3__cleanup__r2__t4",
+            "journey_5__cleanup__r1__t2",
+            "journey_5__cleanup__r2__t4"
+          ]
+        }
+      },
+      "cleanup_full": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 91,
+          "fail": 14,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_recognition_confusion__cleanup_full__r1",
+            "component_0_recognition_confusion__cleanup_full__r2",
+            "component_0_recognition_done__cleanup_full__r3",
+            "component_1_recognition_done__cleanup_full__r1",
+            "component_1_recognition_done__cleanup_full__r3",
+            "component_2_recognition_done__cleanup_full__r1",
+            "component_2_recognition_done__cleanup_full__r2",
+            "component_5_bare_agreement__cleanup_full__r3",
+            "component_5_failed_focused__cleanup_full__r1",
+            "component_5_recognition_done__cleanup_full__r1",
+            "component_5_recognition_done__cleanup_full__r2",
+            "component_5_recognition_done__cleanup_full__r3",
+            "component_5_unrelated_attempt__cleanup_full__r3",
+            "journey_5__cleanup_full__r1__t2"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 68,
+          "fail": 13,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_recognition_confusion__cleanup_full__r1",
+            "component_0_recognition_confusion__cleanup_full__r2",
+            "component_0_recognition_done__cleanup_full__r3",
+            "component_1_recognition_done__cleanup_full__r1",
+            "component_1_recognition_done__cleanup_full__r3",
+            "component_2_recognition_done__cleanup_full__r1",
+            "component_2_recognition_done__cleanup_full__r2",
+            "component_5_bare_agreement__cleanup_full__r3",
+            "component_5_failed_focused__cleanup_full__r1",
+            "component_5_recognition_done__cleanup_full__r1",
+            "component_5_recognition_done__cleanup_full__r2",
+            "component_5_recognition_done__cleanup_full__r3",
+            "component_5_unrelated_attempt__cleanup_full__r3"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 23,
+          "fail": 1,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "journey_5__cleanup_full__r1__t2"
+          ]
+        }
+      }
+    },
+    "factual_accuracy": {
+      "baseline": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 104,
+          "fail": 1,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_recognition_confusion__baseline__r1"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 80,
+          "fail": 1,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_recognition_confusion__baseline__r1"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      },
+      "instruction": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 104,
+          "fail": 1,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_recognition_confusion__instruction__r3"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 80,
+          "fail": 1,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_recognition_confusion__instruction__r3"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      },
+      "instruction_expression": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 105,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 81,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      },
+      "cleanup": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 102,
+          "fail": 2,
+          "inapplicable": 0,
+          "error": 1,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_recognition_confusion__cleanup__r2",
+            "component_0_recognition_confusion__cleanup__r3",
+            "journey_3__cleanup__r2__t4"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 79,
+          "fail": 2,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_recognition_confusion__cleanup__r2",
+            "component_0_recognition_confusion__cleanup__r3"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 23,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 1,
+          "missing": 0,
+          "failure_ids": [
+            "journey_3__cleanup__r2__t4"
+          ]
+        }
+      },
+      "cleanup_full": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 105,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 81,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      }
+    },
+    "instruction_realization": {
+      "baseline": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 102,
+          "fail": 3,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_1_no_attempt__baseline__r1",
+            "component_5_recognition_done__baseline__r1",
+            "component_5_recognition_done__baseline__r2"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 78,
+          "fail": 3,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_1_no_attempt__baseline__r1",
+            "component_5_recognition_done__baseline__r1",
+            "component_5_recognition_done__baseline__r2"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      },
+      "instruction": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 100,
+          "fail": 5,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_1_no_attempt__instruction__r3",
+            "component_1_recognition_done__instruction__r1",
+            "component_5_failed_focused__instruction__r3",
+            "component_5_other_learner__instruction__r2",
+            "journey_3__instruction__r1__t4"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 77,
+          "fail": 4,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_1_no_attempt__instruction__r3",
+            "component_1_recognition_done__instruction__r1",
+            "component_5_failed_focused__instruction__r3",
+            "component_5_other_learner__instruction__r2"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 23,
+          "fail": 1,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "journey_3__instruction__r1__t4"
+          ]
+        }
+      },
+      "instruction_expression": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 100,
+          "fail": 5,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_1_recognition_done__instruction_expression__r1",
+            "component_1_recognition_done__instruction_expression__r2",
+            "component_1_recognition_done__instruction_expression__r3",
+            "component_2_recognition_done__instruction_expression__r2",
+            "journey_5__instruction_expression__r1__t4"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 77,
+          "fail": 4,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_1_recognition_done__instruction_expression__r1",
+            "component_1_recognition_done__instruction_expression__r2",
+            "component_1_recognition_done__instruction_expression__r3",
+            "component_2_recognition_done__instruction_expression__r2"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 23,
+          "fail": 1,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "journey_5__instruction_expression__r1__t4"
+          ]
+        }
+      },
+      "cleanup": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 100,
+          "fail": 5,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_1_recognition_done__cleanup__r1",
+            "component_1_recognition_done__cleanup__r2",
+            "component_2_recognition_done__cleanup__r1",
+            "component_5_recognition_done__cleanup__r2",
+            "journey_5__cleanup__r2__t4"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 77,
+          "fail": 4,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_1_recognition_done__cleanup__r1",
+            "component_1_recognition_done__cleanup__r2",
+            "component_2_recognition_done__cleanup__r1",
+            "component_5_recognition_done__cleanup__r2"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 23,
+          "fail": 1,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "journey_5__cleanup__r2__t4"
+          ]
+        }
+      },
+      "cleanup_full": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 101,
+          "fail": 4,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_action_confusion__cleanup_full__r3",
+            "component_1_recognition_done__cleanup_full__r1",
+            "component_3_recognition_confusion__cleanup_full__r1",
+            "component_5_recognition_done__cleanup_full__r3"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 77,
+          "fail": 4,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_action_confusion__cleanup_full__r3",
+            "component_1_recognition_done__cleanup_full__r1",
+            "component_3_recognition_confusion__cleanup_full__r1",
+            "component_5_recognition_done__cleanup_full__r3"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      }
+    },
+    "contribution_feedback": {
+      "baseline": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 45,
+          "fail": 0,
+          "inapplicable": 60,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 33,
+          "fail": 0,
+          "inapplicable": 48,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 12,
+          "fail": 0,
+          "inapplicable": 12,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      },
+      "instruction": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 44,
+          "fail": 0,
+          "inapplicable": 61,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 32,
+          "fail": 0,
+          "inapplicable": 49,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 12,
+          "fail": 0,
+          "inapplicable": 12,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      },
+      "instruction_expression": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 41,
+          "fail": 2,
+          "inapplicable": 62,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_1_recognition_done__instruction_expression__r2",
+            "component_1_recognition_done__instruction_expression__r3"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 30,
+          "fail": 2,
+          "inapplicable": 49,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_1_recognition_done__instruction_expression__r2",
+            "component_1_recognition_done__instruction_expression__r3"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 11,
+          "fail": 0,
+          "inapplicable": 13,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      },
+      "cleanup": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 43,
+          "fail": 0,
+          "inapplicable": 62,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 31,
+          "fail": 0,
+          "inapplicable": 50,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 12,
+          "fail": 0,
+          "inapplicable": 12,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      },
+      "cleanup_full": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 40,
+          "fail": 0,
+          "inapplicable": 65,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 29,
+          "fail": 0,
+          "inapplicable": 52,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 11,
+          "fail": 0,
+          "inapplicable": 13,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      }
+    },
+    "reading_accessibility": {
+      "baseline": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 105,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 81,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      },
+      "instruction": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 104,
+          "fail": 1,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_5_other_learner__instruction__r2"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 80,
+          "fail": 1,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_5_other_learner__instruction__r2"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      },
+      "instruction_expression": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 105,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 81,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      },
+      "cleanup": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 105,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 81,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      },
+      "cleanup_full": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 105,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 81,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      }
+    },
+    "learner_dignity": {
+      "baseline": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 105,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 81,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      },
+      "instruction": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 105,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 81,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      },
+      "instruction_expression": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 105,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 81,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      },
+      "cleanup": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 105,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 81,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      },
+      "cleanup_full": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 105,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 81,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      }
+    },
+    "honest_self_representation": {
+      "baseline": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 105,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 81,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      },
+      "instruction": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 105,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 81,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      },
+      "instruction_expression": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 105,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 81,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      },
+      "cleanup": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 105,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 81,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      },
+      "cleanup_full": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 105,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 81,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      }
+    },
+    "persona_stability": {
+      "baseline": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 105,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 81,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      },
+      "instruction": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 105,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 81,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      },
+      "instruction_expression": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 105,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 81,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      },
+      "cleanup": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 105,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 81,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      },
+      "cleanup_full": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 105,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 81,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      }
+    },
+    "decision_reasoning": {
+      "baseline": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 101,
+          "fail": 4,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_protection_return__baseline__r1",
+            "component_1_no_attempt__baseline__r1",
+            "component_3_recognition_done__baseline__r2",
+            "component_5_recognition_done__baseline__r2"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 77,
+          "fail": 4,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_protection_return__baseline__r1",
+            "component_1_no_attempt__baseline__r1",
+            "component_3_recognition_done__baseline__r2",
+            "component_5_recognition_done__baseline__r2"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      },
+      "instruction": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 101,
+          "fail": 4,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_1_no_attempt__instruction__r3",
+            "component_1_recognition_done__instruction__r1",
+            "component_3_recognition_done__instruction__r1",
+            "component_5_other_learner__instruction__r2"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 77,
+          "fail": 4,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_1_no_attempt__instruction__r3",
+            "component_1_recognition_done__instruction__r1",
+            "component_3_recognition_done__instruction__r1",
+            "component_5_other_learner__instruction__r2"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      },
+      "instruction_expression": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 100,
+          "fail": 5,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_1_recognition_done__instruction_expression__r1",
+            "component_1_recognition_done__instruction_expression__r2",
+            "component_1_recognition_done__instruction_expression__r3",
+            "component_2_recognition_done__instruction_expression__r2",
+            "journey_5__instruction_expression__r1__t4"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 77,
+          "fail": 4,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_1_recognition_done__instruction_expression__r1",
+            "component_1_recognition_done__instruction_expression__r2",
+            "component_1_recognition_done__instruction_expression__r3",
+            "component_2_recognition_done__instruction_expression__r2"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 23,
+          "fail": 1,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "journey_5__instruction_expression__r1__t4"
+          ]
+        }
+      },
+      "cleanup": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 101,
+          "fail": 4,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_1_recognition_done__cleanup__r1",
+            "component_1_recognition_done__cleanup__r2",
+            "component_5_bare_agreement__cleanup__r3",
+            "component_5_recognition_done__cleanup__r2"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 77,
+          "fail": 4,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_1_recognition_done__cleanup__r1",
+            "component_1_recognition_done__cleanup__r2",
+            "component_5_bare_agreement__cleanup__r3",
+            "component_5_recognition_done__cleanup__r2"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      },
+      "cleanup_full": {
+        "all": {
+          "expected": 105,
+          "generated": 105,
+          "pass": 103,
+          "fail": 2,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_action_confusion__cleanup_full__r3",
+            "component_1_recognition_done__cleanup_full__r1"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "generated": 81,
+          "pass": 79,
+          "fail": 2,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": [
+            "component_0_action_confusion__cleanup_full__r3",
+            "component_1_recognition_done__cleanup_full__r1"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "generated": 24,
+          "pass": 24,
+          "fail": 0,
+          "inapplicable": 0,
+          "error": 0,
+          "missing": 0,
+          "failure_ids": []
+        }
+      }
+    }
+  },
+  "comparisons": {
+    "instruction": {
+      "recognition_before_action": {
+        "all": {
+          "both_pass": 85,
+          "pass_to_fail": [
+            "component_1_no_attempt__instruction__r3",
+            "component_1_recognition_done__instruction__r1",
+            "component_5_action_attempt__instruction__r1",
+            "component_5_action_attempt__instruction__r3",
+            "component_5_failed_focused__instruction__r2",
+            "component_5_unrelated_attempt__instruction__r2",
+            "journey_3__instruction__r3__t3"
+          ],
+          "fail_to_pass": [
+            "component_0_recognition_confusion__instruction__r3",
+            "component_1_no_attempt__instruction__r1",
+            "component_5_action_attempt__instruction__r2",
+            "component_5_bare_agreement__instruction__r2",
+            "component_5_later_contradiction__instruction__r3",
+            "component_5_recognition_done__instruction__r1",
+            "component_5_recognition_done__instruction__r2",
+            "component_5_unrelated_attempt__instruction__r3"
+          ],
+          "both_fail": 5,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 62,
+          "pass_to_fail": [
+            "component_1_no_attempt__instruction__r3",
+            "component_1_recognition_done__instruction__r1",
+            "component_5_action_attempt__instruction__r1",
+            "component_5_action_attempt__instruction__r3",
+            "component_5_failed_focused__instruction__r2",
+            "component_5_unrelated_attempt__instruction__r2"
+          ],
+          "fail_to_pass": [
+            "component_0_recognition_confusion__instruction__r3",
+            "component_1_no_attempt__instruction__r1",
+            "component_5_action_attempt__instruction__r2",
+            "component_5_bare_agreement__instruction__r2",
+            "component_5_later_contradiction__instruction__r3",
+            "component_5_recognition_done__instruction__r1",
+            "component_5_recognition_done__instruction__r2",
+            "component_5_unrelated_attempt__instruction__r3"
+          ],
+          "both_fail": 5,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 23,
+          "pass_to_fail": [
+            "journey_3__instruction__r3__t3"
+          ],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "component_disclosure": {
+        "all": {
+          "both_pass": 50,
+          "pass_to_fail": [
+            "component_0_protection_return__instruction__r1",
+            "component_1_no_attempt__instruction__r2",
+            "component_1_recognition_done__instruction__r1",
+            "component_1_recognition_done__instruction__r2",
+            "component_2_no_attempt__instruction__r2",
+            "component_3_no_attempt__instruction__r3",
+            "component_4_no_attempt__instruction__r2",
+            "component_5_action_attempt__instruction__r1",
+            "component_5_no_attempt__instruction__r3",
+            "component_5_other_learner__instruction__r1",
+            "journey_3__instruction__r1__t1",
+            "journey_3__instruction__r3__t1",
+            "journey_3__instruction__r3__t3"
+          ],
+          "fail_to_pass": [
+            "component_0_protection_return__instruction__r3",
+            "component_0_recognition_confusion__instruction__r1",
+            "component_0_recognition_done__instruction__r2",
+            "component_0_recognition_done__instruction__r3",
+            "component_1_recognition_done__instruction__r3",
+            "component_2_recognition_done__instruction__r2",
+            "component_4_no_attempt__instruction__r1",
+            "component_5_action_attempt__instruction__r2",
+            "component_5_bare_agreement__instruction__r3",
+            "component_5_failed_focused__instruction__r2",
+            "component_5_no_attempt__instruction__r1",
+            "component_5_no_attempt__instruction__r2",
+            "component_5_other_learner__instruction__r3",
+            "component_5_recognition_done__instruction__r1",
+            "component_5_recognition_done__instruction__r2",
+            "component_5_unrelated_attempt__instruction__r2",
+            "journey_3__instruction__r1__t2",
+            "journey_5__instruction__r2__t4",
+            "journey_5__instruction__r3__t1"
+          ],
+          "both_fail": 23,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 33,
+          "pass_to_fail": [
+            "component_0_protection_return__instruction__r1",
+            "component_1_no_attempt__instruction__r2",
+            "component_1_recognition_done__instruction__r1",
+            "component_1_recognition_done__instruction__r2",
+            "component_2_no_attempt__instruction__r2",
+            "component_3_no_attempt__instruction__r3",
+            "component_4_no_attempt__instruction__r2",
+            "component_5_action_attempt__instruction__r1",
+            "component_5_no_attempt__instruction__r3",
+            "component_5_other_learner__instruction__r1"
+          ],
+          "fail_to_pass": [
+            "component_0_protection_return__instruction__r3",
+            "component_0_recognition_confusion__instruction__r1",
+            "component_0_recognition_done__instruction__r2",
+            "component_0_recognition_done__instruction__r3",
+            "component_1_recognition_done__instruction__r3",
+            "component_2_recognition_done__instruction__r2",
+            "component_4_no_attempt__instruction__r1",
+            "component_5_action_attempt__instruction__r2",
+            "component_5_bare_agreement__instruction__r3",
+            "component_5_failed_focused__instruction__r2",
+            "component_5_no_attempt__instruction__r1",
+            "component_5_no_attempt__instruction__r2",
+            "component_5_other_learner__instruction__r3",
+            "component_5_recognition_done__instruction__r1",
+            "component_5_recognition_done__instruction__r2",
+            "component_5_unrelated_attempt__instruction__r2"
+          ],
+          "both_fail": 22,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 17,
+          "pass_to_fail": [
+            "journey_3__instruction__r1__t1",
+            "journey_3__instruction__r3__t1",
+            "journey_3__instruction__r3__t3"
+          ],
+          "fail_to_pass": [
+            "journey_3__instruction__r1__t2",
+            "journey_5__instruction__r2__t4",
+            "journey_5__instruction__r3__t1"
+          ],
+          "both_fail": 1,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "responsive_progression": {
+        "all": {
+          "both_pass": 78,
+          "pass_to_fail": [
+            "component_0_recognition_done__instruction__r3",
+            "component_1_no_attempt__instruction__r3",
+            "component_1_recognition_done__instruction__r3",
+            "component_2_recognition_done__instruction__r2",
+            "component_2_recognition_done__instruction__r3",
+            "component_3_recognition_confusion__instruction__r2",
+            "component_5_failed_focused__instruction__r2",
+            "component_5_unrelated_attempt__instruction__r2",
+            "journey_3__instruction__r3__t3"
+          ],
+          "fail_to_pass": [
+            "component_0_action_confusion__instruction__r2",
+            "component_1_no_attempt__instruction__r1",
+            "component_3_recognition_done__instruction__r3",
+            "component_5_bare_agreement__instruction__r2",
+            "component_5_recognition_done__instruction__r1",
+            "component_5_recognition_done__instruction__r2",
+            "journey_5__instruction__r1__t4",
+            "journey_5__instruction__r2__t4"
+          ],
+          "both_fail": 10,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 57,
+          "pass_to_fail": [
+            "component_0_recognition_done__instruction__r3",
+            "component_1_no_attempt__instruction__r3",
+            "component_1_recognition_done__instruction__r3",
+            "component_2_recognition_done__instruction__r2",
+            "component_2_recognition_done__instruction__r3",
+            "component_3_recognition_confusion__instruction__r2",
+            "component_5_failed_focused__instruction__r2",
+            "component_5_unrelated_attempt__instruction__r2"
+          ],
+          "fail_to_pass": [
+            "component_0_action_confusion__instruction__r2",
+            "component_1_no_attempt__instruction__r1",
+            "component_3_recognition_done__instruction__r3",
+            "component_5_bare_agreement__instruction__r2",
+            "component_5_recognition_done__instruction__r1",
+            "component_5_recognition_done__instruction__r2"
+          ],
+          "both_fail": 10,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 21,
+          "pass_to_fail": [
+            "journey_3__instruction__r3__t3"
+          ],
+          "fail_to_pass": [
+            "journey_5__instruction__r1__t4",
+            "journey_5__instruction__r2__t4"
+          ],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "factual_accuracy": {
+        "all": {
+          "both_pass": 103,
+          "pass_to_fail": [
+            "component_0_recognition_confusion__instruction__r3"
+          ],
+          "fail_to_pass": [
+            "component_0_recognition_confusion__instruction__r1"
+          ],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 79,
+          "pass_to_fail": [
+            "component_0_recognition_confusion__instruction__r3"
+          ],
+          "fail_to_pass": [
+            "component_0_recognition_confusion__instruction__r1"
+          ],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 24,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "instruction_realization": {
+        "all": {
+          "both_pass": 97,
+          "pass_to_fail": [
+            "component_1_no_attempt__instruction__r3",
+            "component_1_recognition_done__instruction__r1",
+            "component_5_failed_focused__instruction__r3",
+            "component_5_other_learner__instruction__r2",
+            "journey_3__instruction__r1__t4"
+          ],
+          "fail_to_pass": [
+            "component_1_no_attempt__instruction__r1",
+            "component_5_recognition_done__instruction__r1",
+            "component_5_recognition_done__instruction__r2"
+          ],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 74,
+          "pass_to_fail": [
+            "component_1_no_attempt__instruction__r3",
+            "component_1_recognition_done__instruction__r1",
+            "component_5_failed_focused__instruction__r3",
+            "component_5_other_learner__instruction__r2"
+          ],
+          "fail_to_pass": [
+            "component_1_no_attempt__instruction__r1",
+            "component_5_recognition_done__instruction__r1",
+            "component_5_recognition_done__instruction__r2"
+          ],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 23,
+          "pass_to_fail": [
+            "journey_3__instruction__r1__t4"
+          ],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "contribution_feedback": {
+        "all": {
+          "both_pass": 42,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 58,
+          "inapplicability_change": [
+            {
+              "key": "component_1_recognition_done|r1|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            },
+            {
+              "key": "component_5_bare_agreement|r1|t0",
+              "baseline": "inapplicable",
+              "candidate": "pass"
+            },
+            {
+              "key": "component_5_unrelated_attempt|r1|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            },
+            {
+              "key": "component_5_unrelated_attempt|r2|t0",
+              "baseline": "inapplicable",
+              "candidate": "pass"
+            },
+            {
+              "key": "component_5_unrelated_attempt|r3|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            }
+          ],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 30,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 46,
+          "inapplicability_change": [
+            {
+              "key": "component_1_recognition_done|r1|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            },
+            {
+              "key": "component_5_bare_agreement|r1|t0",
+              "baseline": "inapplicable",
+              "candidate": "pass"
+            },
+            {
+              "key": "component_5_unrelated_attempt|r1|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            },
+            {
+              "key": "component_5_unrelated_attempt|r2|t0",
+              "baseline": "inapplicable",
+              "candidate": "pass"
+            },
+            {
+              "key": "component_5_unrelated_attempt|r3|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            }
+          ],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 12,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 12,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "reading_accessibility": {
+        "all": {
+          "both_pass": 104,
+          "pass_to_fail": [
+            "component_5_other_learner__instruction__r2"
+          ],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 80,
+          "pass_to_fail": [
+            "component_5_other_learner__instruction__r2"
+          ],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 24,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "learner_dignity": {
+        "all": {
+          "both_pass": 105,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 81,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 24,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "honest_self_representation": {
+        "all": {
+          "both_pass": 105,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 81,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 24,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "persona_stability": {
+        "all": {
+          "both_pass": 105,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 81,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 24,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "decision_reasoning": {
+        "all": {
+          "both_pass": 97,
+          "pass_to_fail": [
+            "component_1_no_attempt__instruction__r3",
+            "component_1_recognition_done__instruction__r1",
+            "component_3_recognition_done__instruction__r1",
+            "component_5_other_learner__instruction__r2"
+          ],
+          "fail_to_pass": [
+            "component_0_protection_return__instruction__r1",
+            "component_1_no_attempt__instruction__r1",
+            "component_3_recognition_done__instruction__r2",
+            "component_5_recognition_done__instruction__r2"
+          ],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 73,
+          "pass_to_fail": [
+            "component_1_no_attempt__instruction__r3",
+            "component_1_recognition_done__instruction__r1",
+            "component_3_recognition_done__instruction__r1",
+            "component_5_other_learner__instruction__r2"
+          ],
+          "fail_to_pass": [
+            "component_0_protection_return__instruction__r1",
+            "component_1_no_attempt__instruction__r1",
+            "component_3_recognition_done__instruction__r2",
+            "component_5_recognition_done__instruction__r2"
+          ],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 24,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      }
+    },
+    "instruction_expression": {
+      "recognition_before_action": {
+        "all": {
+          "both_pass": 84,
+          "pass_to_fail": [
+            "component_1_recognition_done__instruction_expression__r1",
+            "component_1_recognition_done__instruction_expression__r2",
+            "component_1_recognition_done__instruction_expression__r3",
+            "component_5_bare_agreement__instruction_expression__r3",
+            "component_5_failed_focused__instruction_expression__r2",
+            "component_5_unrelated_attempt__instruction_expression__r1",
+            "journey_5__instruction_expression__r2__t4",
+            "journey_5__instruction_expression__r3__t4"
+          ],
+          "fail_to_pass": [
+            "component_0_recognition_confusion__instruction_expression__r3",
+            "component_1_no_attempt__instruction_expression__r1",
+            "component_5_action_attempt__instruction_expression__r2",
+            "component_5_bare_agreement__instruction_expression__r1",
+            "component_5_recognition_done__instruction_expression__r1",
+            "component_5_recognition_done__instruction_expression__r2",
+            "component_5_unrelated_attempt__instruction_expression__r3"
+          ],
+          "both_fail": 6,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 62,
+          "pass_to_fail": [
+            "component_1_recognition_done__instruction_expression__r1",
+            "component_1_recognition_done__instruction_expression__r2",
+            "component_1_recognition_done__instruction_expression__r3",
+            "component_5_bare_agreement__instruction_expression__r3",
+            "component_5_failed_focused__instruction_expression__r2",
+            "component_5_unrelated_attempt__instruction_expression__r1"
+          ],
+          "fail_to_pass": [
+            "component_0_recognition_confusion__instruction_expression__r3",
+            "component_1_no_attempt__instruction_expression__r1",
+            "component_5_action_attempt__instruction_expression__r2",
+            "component_5_bare_agreement__instruction_expression__r1",
+            "component_5_recognition_done__instruction_expression__r1",
+            "component_5_recognition_done__instruction_expression__r2",
+            "component_5_unrelated_attempt__instruction_expression__r3"
+          ],
+          "both_fail": 6,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 22,
+          "pass_to_fail": [
+            "journey_5__instruction_expression__r2__t4",
+            "journey_5__instruction_expression__r3__t4"
+          ],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "component_disclosure": {
+        "all": {
+          "both_pass": 51,
+          "pass_to_fail": [
+            "component_1_no_attempt__instruction_expression__r2",
+            "component_1_recognition_done__instruction_expression__r1",
+            "component_1_recognition_done__instruction_expression__r2",
+            "component_3_no_attempt__instruction_expression__r3",
+            "component_3_recognition_confusion__instruction_expression__r1",
+            "component_3_recognition_done__instruction_expression__r3",
+            "component_4_no_attempt__instruction_expression__r2",
+            "journey_3__instruction_expression__r1__t1",
+            "journey_3__instruction_expression__r2__t1",
+            "journey_3__instruction_expression__r2__t4",
+            "journey_3__instruction_expression__r3__t1",
+            "journey_5__instruction_expression__r1__t2"
+          ],
+          "fail_to_pass": [
+            "component_0_no_attempt__instruction_expression__r3",
+            "component_0_recognition_confusion__instruction_expression__r1",
+            "component_0_recognition_done__instruction_expression__r1",
+            "component_0_recognition_done__instruction_expression__r2",
+            "component_0_recognition_done__instruction_expression__r3",
+            "component_3_no_attempt__instruction_expression__r1",
+            "component_4_no_attempt__instruction_expression__r1",
+            "component_5_action_attempt__instruction_expression__r2",
+            "component_5_action_attempt__instruction_expression__r3",
+            "component_5_bare_agreement__instruction_expression__r1",
+            "component_5_bare_agreement__instruction_expression__r2",
+            "component_5_failed_focused__instruction_expression__r2",
+            "component_5_other_learner__instruction_expression__r3",
+            "component_5_recognition_done__instruction_expression__r1",
+            "component_5_recognition_done__instruction_expression__r2",
+            "component_5_unrelated_attempt__instruction_expression__r3",
+            "journey_3__instruction_expression__r1__t2",
+            "journey_5__instruction_expression__r2__t4"
+          ],
+          "both_fail": 24,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 36,
+          "pass_to_fail": [
+            "component_1_no_attempt__instruction_expression__r2",
+            "component_1_recognition_done__instruction_expression__r1",
+            "component_1_recognition_done__instruction_expression__r2",
+            "component_3_no_attempt__instruction_expression__r3",
+            "component_3_recognition_confusion__instruction_expression__r1",
+            "component_3_recognition_done__instruction_expression__r3",
+            "component_4_no_attempt__instruction_expression__r2"
+          ],
+          "fail_to_pass": [
+            "component_0_no_attempt__instruction_expression__r3",
+            "component_0_recognition_confusion__instruction_expression__r1",
+            "component_0_recognition_done__instruction_expression__r1",
+            "component_0_recognition_done__instruction_expression__r2",
+            "component_0_recognition_done__instruction_expression__r3",
+            "component_3_no_attempt__instruction_expression__r1",
+            "component_4_no_attempt__instruction_expression__r1",
+            "component_5_action_attempt__instruction_expression__r2",
+            "component_5_action_attempt__instruction_expression__r3",
+            "component_5_bare_agreement__instruction_expression__r1",
+            "component_5_bare_agreement__instruction_expression__r2",
+            "component_5_failed_focused__instruction_expression__r2",
+            "component_5_other_learner__instruction_expression__r3",
+            "component_5_recognition_done__instruction_expression__r1",
+            "component_5_recognition_done__instruction_expression__r2",
+            "component_5_unrelated_attempt__instruction_expression__r3"
+          ],
+          "both_fail": 22,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 15,
+          "pass_to_fail": [
+            "journey_3__instruction_expression__r1__t1",
+            "journey_3__instruction_expression__r2__t1",
+            "journey_3__instruction_expression__r2__t4",
+            "journey_3__instruction_expression__r3__t1",
+            "journey_5__instruction_expression__r1__t2"
+          ],
+          "fail_to_pass": [
+            "journey_3__instruction_expression__r1__t2",
+            "journey_5__instruction_expression__r2__t4"
+          ],
+          "both_fail": 2,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "responsive_progression": {
+        "all": {
+          "both_pass": 79,
+          "pass_to_fail": [
+            "component_0_recognition_done__instruction_expression__r2",
+            "component_1_recognition_done__instruction_expression__r3",
+            "component_2_recognition_done__instruction_expression__r2",
+            "component_4_recognition_done__instruction_expression__r3",
+            "component_5_unrelated_attempt__instruction_expression__r1",
+            "journey_3__instruction_expression__r1__t3",
+            "journey_3__instruction_expression__r2__t2",
+            "journey_5__instruction_expression__r3__t4"
+          ],
+          "fail_to_pass": [
+            "component_0_action_confusion__instruction_expression__r2",
+            "component_1_no_attempt__instruction_expression__r1",
+            "component_3_recognition_done__instruction_expression__r1",
+            "component_3_recognition_done__instruction_expression__r2",
+            "component_3_recognition_done__instruction_expression__r3",
+            "component_4_recognition_done__instruction_expression__r1",
+            "component_5_bare_agreement__instruction_expression__r1",
+            "component_5_recognition_done__instruction_expression__r1",
+            "component_5_recognition_done__instruction_expression__r2",
+            "journey_5__instruction_expression__r2__t4"
+          ],
+          "both_fail": 8,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 60,
+          "pass_to_fail": [
+            "component_0_recognition_done__instruction_expression__r2",
+            "component_1_recognition_done__instruction_expression__r3",
+            "component_2_recognition_done__instruction_expression__r2",
+            "component_4_recognition_done__instruction_expression__r3",
+            "component_5_unrelated_attempt__instruction_expression__r1"
+          ],
+          "fail_to_pass": [
+            "component_0_action_confusion__instruction_expression__r2",
+            "component_1_no_attempt__instruction_expression__r1",
+            "component_3_recognition_done__instruction_expression__r1",
+            "component_3_recognition_done__instruction_expression__r2",
+            "component_3_recognition_done__instruction_expression__r3",
+            "component_4_recognition_done__instruction_expression__r1",
+            "component_5_bare_agreement__instruction_expression__r1",
+            "component_5_recognition_done__instruction_expression__r1",
+            "component_5_recognition_done__instruction_expression__r2"
+          ],
+          "both_fail": 7,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 19,
+          "pass_to_fail": [
+            "journey_3__instruction_expression__r1__t3",
+            "journey_3__instruction_expression__r2__t2",
+            "journey_5__instruction_expression__r3__t4"
+          ],
+          "fail_to_pass": [
+            "journey_5__instruction_expression__r2__t4"
+          ],
+          "both_fail": 1,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "factual_accuracy": {
+        "all": {
+          "both_pass": 104,
+          "pass_to_fail": [],
+          "fail_to_pass": [
+            "component_0_recognition_confusion__instruction_expression__r1"
+          ],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 80,
+          "pass_to_fail": [],
+          "fail_to_pass": [
+            "component_0_recognition_confusion__instruction_expression__r1"
+          ],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 24,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "instruction_realization": {
+        "all": {
+          "both_pass": 97,
+          "pass_to_fail": [
+            "component_1_recognition_done__instruction_expression__r1",
+            "component_1_recognition_done__instruction_expression__r2",
+            "component_1_recognition_done__instruction_expression__r3",
+            "component_2_recognition_done__instruction_expression__r2",
+            "journey_5__instruction_expression__r1__t4"
+          ],
+          "fail_to_pass": [
+            "component_1_no_attempt__instruction_expression__r1",
+            "component_5_recognition_done__instruction_expression__r1",
+            "component_5_recognition_done__instruction_expression__r2"
+          ],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 74,
+          "pass_to_fail": [
+            "component_1_recognition_done__instruction_expression__r1",
+            "component_1_recognition_done__instruction_expression__r2",
+            "component_1_recognition_done__instruction_expression__r3",
+            "component_2_recognition_done__instruction_expression__r2"
+          ],
+          "fail_to_pass": [
+            "component_1_no_attempt__instruction_expression__r1",
+            "component_5_recognition_done__instruction_expression__r1",
+            "component_5_recognition_done__instruction_expression__r2"
+          ],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 23,
+          "pass_to_fail": [
+            "journey_5__instruction_expression__r1__t4"
+          ],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "contribution_feedback": {
+        "all": {
+          "both_pass": 39,
+          "pass_to_fail": [
+            "component_1_recognition_done__instruction_expression__r2",
+            "component_1_recognition_done__instruction_expression__r3"
+          ],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 58,
+          "inapplicability_change": [
+            {
+              "key": "component_5_bare_agreement|r2|t0",
+              "baseline": "inapplicable",
+              "candidate": "pass"
+            },
+            {
+              "key": "component_5_other_learner|r1|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            },
+            {
+              "key": "component_5_unrelated_attempt|r1|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            },
+            {
+              "key": "component_5_unrelated_attempt|r2|t0",
+              "baseline": "inapplicable",
+              "candidate": "pass"
+            },
+            {
+              "key": "component_5_unrelated_attempt|r3|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            },
+            {
+              "key": "journey_5|r3|t4",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            }
+          ],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 28,
+          "pass_to_fail": [
+            "component_1_recognition_done__instruction_expression__r2",
+            "component_1_recognition_done__instruction_expression__r3"
+          ],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 46,
+          "inapplicability_change": [
+            {
+              "key": "component_5_bare_agreement|r2|t0",
+              "baseline": "inapplicable",
+              "candidate": "pass"
+            },
+            {
+              "key": "component_5_other_learner|r1|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            },
+            {
+              "key": "component_5_unrelated_attempt|r1|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            },
+            {
+              "key": "component_5_unrelated_attempt|r2|t0",
+              "baseline": "inapplicable",
+              "candidate": "pass"
+            },
+            {
+              "key": "component_5_unrelated_attempt|r3|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            }
+          ],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 11,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 12,
+          "inapplicability_change": [
+            {
+              "key": "journey_5|r3|t4",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            }
+          ],
+          "unevaluable": []
+        }
+      },
+      "reading_accessibility": {
+        "all": {
+          "both_pass": 105,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 81,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 24,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "learner_dignity": {
+        "all": {
+          "both_pass": 105,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 81,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 24,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "honest_self_representation": {
+        "all": {
+          "both_pass": 105,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 81,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 24,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "persona_stability": {
+        "all": {
+          "both_pass": 105,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 81,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 24,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "decision_reasoning": {
+        "all": {
+          "both_pass": 96,
+          "pass_to_fail": [
+            "component_1_recognition_done__instruction_expression__r1",
+            "component_1_recognition_done__instruction_expression__r2",
+            "component_1_recognition_done__instruction_expression__r3",
+            "component_2_recognition_done__instruction_expression__r2",
+            "journey_5__instruction_expression__r1__t4"
+          ],
+          "fail_to_pass": [
+            "component_0_protection_return__instruction_expression__r1",
+            "component_1_no_attempt__instruction_expression__r1",
+            "component_3_recognition_done__instruction_expression__r2",
+            "component_5_recognition_done__instruction_expression__r2"
+          ],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 73,
+          "pass_to_fail": [
+            "component_1_recognition_done__instruction_expression__r1",
+            "component_1_recognition_done__instruction_expression__r2",
+            "component_1_recognition_done__instruction_expression__r3",
+            "component_2_recognition_done__instruction_expression__r2"
+          ],
+          "fail_to_pass": [
+            "component_0_protection_return__instruction_expression__r1",
+            "component_1_no_attempt__instruction_expression__r1",
+            "component_3_recognition_done__instruction_expression__r2",
+            "component_5_recognition_done__instruction_expression__r2"
+          ],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 23,
+          "pass_to_fail": [
+            "journey_5__instruction_expression__r1__t4"
+          ],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      }
+    },
+    "cleanup": {
+      "recognition_before_action": {
+        "all": {
+          "both_pass": 86,
+          "pass_to_fail": [
+            "component_1_recognition_done__cleanup__r1",
+            "component_1_recognition_done__cleanup__r2",
+            "component_5_bare_agreement__cleanup__r3",
+            "journey_5__cleanup__r1__t2",
+            "journey_5__cleanup__r3__t2"
+          ],
+          "fail_to_pass": [
+            "component_0_recognition_confusion__cleanup__r3",
+            "component_1_no_attempt__cleanup__r1",
+            "component_5_action_attempt__cleanup__r2",
+            "component_5_bare_agreement__cleanup__r2",
+            "component_5_later_contradiction__cleanup__r1",
+            "component_5_later_contradiction__cleanup__r3",
+            "component_5_recognition_done__cleanup__r1",
+            "component_5_unrelated_attempt__cleanup__r3"
+          ],
+          "both_fail": 5,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": [
+            "journey_3|r2|t4"
+          ]
+        },
+        "fixed": {
+          "both_pass": 65,
+          "pass_to_fail": [
+            "component_1_recognition_done__cleanup__r1",
+            "component_1_recognition_done__cleanup__r2",
+            "component_5_bare_agreement__cleanup__r3"
+          ],
+          "fail_to_pass": [
+            "component_0_recognition_confusion__cleanup__r3",
+            "component_1_no_attempt__cleanup__r1",
+            "component_5_action_attempt__cleanup__r2",
+            "component_5_bare_agreement__cleanup__r2",
+            "component_5_later_contradiction__cleanup__r1",
+            "component_5_later_contradiction__cleanup__r3",
+            "component_5_recognition_done__cleanup__r1",
+            "component_5_unrelated_attempt__cleanup__r3"
+          ],
+          "both_fail": 5,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 21,
+          "pass_to_fail": [
+            "journey_5__cleanup__r1__t2",
+            "journey_5__cleanup__r3__t2"
+          ],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": [
+            "journey_3|r2|t4"
+          ]
+        }
+      },
+      "component_disclosure": {
+        "all": {
+          "both_pass": 48,
+          "pass_to_fail": [
+            "component_0_action_confusion__cleanup__r1",
+            "component_0_protection_return__cleanup__r1",
+            "component_1_no_attempt__cleanup__r2",
+            "component_1_recognition_done__cleanup__r1",
+            "component_1_recognition_done__cleanup__r2",
+            "component_2_no_attempt__cleanup__r2",
+            "component_2_recognition_done__cleanup__r1",
+            "component_3_no_attempt__cleanup__r3",
+            "component_4_no_attempt__cleanup__r2",
+            "component_4_recognition_done__cleanup__r3",
+            "component_5_no_attempt__cleanup__r3",
+            "journey_5__cleanup__r1__t2",
+            "journey_5__cleanup__r2__t1",
+            "journey_5__cleanup__r3__t2"
+          ],
+          "fail_to_pass": [
+            "component_0_protection_return__cleanup__r3",
+            "component_0_recognition_confusion__cleanup__r1",
+            "component_0_recognition_done__cleanup__r1",
+            "component_0_recognition_done__cleanup__r2",
+            "component_0_recognition_done__cleanup__r3",
+            "component_1_recognition_done__cleanup__r3",
+            "component_2_no_attempt__cleanup__r1",
+            "component_2_no_attempt__cleanup__r3",
+            "component_4_no_attempt__cleanup__r1",
+            "component_5_action_attempt__cleanup__r3",
+            "component_5_bare_agreement__cleanup__r2",
+            "component_5_bare_agreement__cleanup__r3",
+            "component_5_failed_focused__cleanup__r2",
+            "component_5_later_contradiction__cleanup__r2",
+            "component_5_no_attempt__cleanup__r1",
+            "component_5_recognition_done__cleanup__r1",
+            "journey_3__cleanup__r1__t2",
+            "journey_5__cleanup__r2__t4",
+            "journey_5__cleanup__r3__t1",
+            "journey_5__cleanup__r3__t4"
+          ],
+          "both_fail": 22,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": [
+            "journey_3|r2|t4"
+          ]
+        },
+        "fixed": {
+          "both_pass": 32,
+          "pass_to_fail": [
+            "component_0_action_confusion__cleanup__r1",
+            "component_0_protection_return__cleanup__r1",
+            "component_1_no_attempt__cleanup__r2",
+            "component_1_recognition_done__cleanup__r1",
+            "component_1_recognition_done__cleanup__r2",
+            "component_2_no_attempt__cleanup__r2",
+            "component_2_recognition_done__cleanup__r1",
+            "component_3_no_attempt__cleanup__r3",
+            "component_4_no_attempt__cleanup__r2",
+            "component_4_recognition_done__cleanup__r3",
+            "component_5_no_attempt__cleanup__r3"
+          ],
+          "fail_to_pass": [
+            "component_0_protection_return__cleanup__r3",
+            "component_0_recognition_confusion__cleanup__r1",
+            "component_0_recognition_done__cleanup__r1",
+            "component_0_recognition_done__cleanup__r2",
+            "component_0_recognition_done__cleanup__r3",
+            "component_1_recognition_done__cleanup__r3",
+            "component_2_no_attempt__cleanup__r1",
+            "component_2_no_attempt__cleanup__r3",
+            "component_4_no_attempt__cleanup__r1",
+            "component_5_action_attempt__cleanup__r3",
+            "component_5_bare_agreement__cleanup__r2",
+            "component_5_bare_agreement__cleanup__r3",
+            "component_5_failed_focused__cleanup__r2",
+            "component_5_later_contradiction__cleanup__r2",
+            "component_5_no_attempt__cleanup__r1",
+            "component_5_recognition_done__cleanup__r1"
+          ],
+          "both_fail": 22,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 16,
+          "pass_to_fail": [
+            "journey_5__cleanup__r1__t2",
+            "journey_5__cleanup__r2__t1",
+            "journey_5__cleanup__r3__t2"
+          ],
+          "fail_to_pass": [
+            "journey_3__cleanup__r1__t2",
+            "journey_5__cleanup__r2__t4",
+            "journey_5__cleanup__r3__t1",
+            "journey_5__cleanup__r3__t4"
+          ],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": [
+            "journey_3|r2|t4"
+          ]
+        }
+      },
+      "responsive_progression": {
+        "all": {
+          "both_pass": 79,
+          "pass_to_fail": [
+            "component_0_protection_return__cleanup__r2",
+            "component_0_recognition_done__cleanup__r3",
+            "component_1_recognition_done__cleanup__r3",
+            "component_2_recognition_done__cleanup__r3",
+            "component_4_recognition_done__cleanup__r3",
+            "component_5_bare_agreement__cleanup__r3",
+            "journey_5__cleanup__r1__t2"
+          ],
+          "fail_to_pass": [
+            "component_0_action_confusion__cleanup__r2",
+            "component_1_no_attempt__cleanup__r1",
+            "component_2_recognition_done__cleanup__r1",
+            "component_3_recognition_done__cleanup__r2",
+            "component_5_bare_agreement__cleanup__r2",
+            "component_5_failed_focused__cleanup__r1",
+            "component_5_recognition_done__cleanup__r1",
+            "journey_5__cleanup__r1__t4"
+          ],
+          "both_fail": 10,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": [
+            "journey_3|r2|t4"
+          ]
+        },
+        "fixed": {
+          "both_pass": 59,
+          "pass_to_fail": [
+            "component_0_protection_return__cleanup__r2",
+            "component_0_recognition_done__cleanup__r3",
+            "component_1_recognition_done__cleanup__r3",
+            "component_2_recognition_done__cleanup__r3",
+            "component_4_recognition_done__cleanup__r3",
+            "component_5_bare_agreement__cleanup__r3"
+          ],
+          "fail_to_pass": [
+            "component_0_action_confusion__cleanup__r2",
+            "component_1_no_attempt__cleanup__r1",
+            "component_2_recognition_done__cleanup__r1",
+            "component_3_recognition_done__cleanup__r2",
+            "component_5_bare_agreement__cleanup__r2",
+            "component_5_failed_focused__cleanup__r1",
+            "component_5_recognition_done__cleanup__r1"
+          ],
+          "both_fail": 9,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 20,
+          "pass_to_fail": [
+            "journey_5__cleanup__r1__t2"
+          ],
+          "fail_to_pass": [
+            "journey_5__cleanup__r1__t4"
+          ],
+          "both_fail": 1,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": [
+            "journey_3|r2|t4"
+          ]
+        }
+      },
+      "factual_accuracy": {
+        "all": {
+          "both_pass": 101,
+          "pass_to_fail": [
+            "component_0_recognition_confusion__cleanup__r2",
+            "component_0_recognition_confusion__cleanup__r3"
+          ],
+          "fail_to_pass": [
+            "component_0_recognition_confusion__cleanup__r1"
+          ],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": [
+            "journey_3|r2|t4"
+          ]
+        },
+        "fixed": {
+          "both_pass": 78,
+          "pass_to_fail": [
+            "component_0_recognition_confusion__cleanup__r2",
+            "component_0_recognition_confusion__cleanup__r3"
+          ],
+          "fail_to_pass": [
+            "component_0_recognition_confusion__cleanup__r1"
+          ],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 23,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": [
+            "journey_3|r2|t4"
+          ]
+        }
+      },
+      "instruction_realization": {
+        "all": {
+          "both_pass": 98,
+          "pass_to_fail": [
+            "component_1_recognition_done__cleanup__r1",
+            "component_1_recognition_done__cleanup__r2",
+            "component_2_recognition_done__cleanup__r1",
+            "journey_5__cleanup__r2__t4"
+          ],
+          "fail_to_pass": [
+            "component_1_no_attempt__cleanup__r1",
+            "component_5_recognition_done__cleanup__r1"
+          ],
+          "both_fail": 1,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 75,
+          "pass_to_fail": [
+            "component_1_recognition_done__cleanup__r1",
+            "component_1_recognition_done__cleanup__r2",
+            "component_2_recognition_done__cleanup__r1"
+          ],
+          "fail_to_pass": [
+            "component_1_no_attempt__cleanup__r1",
+            "component_5_recognition_done__cleanup__r1"
+          ],
+          "both_fail": 1,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 23,
+          "pass_to_fail": [
+            "journey_5__cleanup__r2__t4"
+          ],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "contribution_feedback": {
+        "all": {
+          "both_pass": 41,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 58,
+          "inapplicability_change": [
+            {
+              "key": "component_0_protection_return|r2|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            },
+            {
+              "key": "component_5_bare_agreement|r2|t0",
+              "baseline": "inapplicable",
+              "candidate": "pass"
+            },
+            {
+              "key": "component_5_bare_agreement|r3|t0",
+              "baseline": "inapplicable",
+              "candidate": "pass"
+            },
+            {
+              "key": "component_5_other_learner|r1|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            },
+            {
+              "key": "component_5_unrelated_attempt|r1|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            },
+            {
+              "key": "component_5_unrelated_attempt|r3|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            }
+          ],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 29,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 46,
+          "inapplicability_change": [
+            {
+              "key": "component_0_protection_return|r2|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            },
+            {
+              "key": "component_5_bare_agreement|r2|t0",
+              "baseline": "inapplicable",
+              "candidate": "pass"
+            },
+            {
+              "key": "component_5_bare_agreement|r3|t0",
+              "baseline": "inapplicable",
+              "candidate": "pass"
+            },
+            {
+              "key": "component_5_other_learner|r1|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            },
+            {
+              "key": "component_5_unrelated_attempt|r1|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            },
+            {
+              "key": "component_5_unrelated_attempt|r3|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            }
+          ],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 12,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 12,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "reading_accessibility": {
+        "all": {
+          "both_pass": 105,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 81,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 24,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "learner_dignity": {
+        "all": {
+          "both_pass": 105,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 81,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 24,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "honest_self_representation": {
+        "all": {
+          "both_pass": 105,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 81,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 24,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "persona_stability": {
+        "all": {
+          "both_pass": 105,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 81,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 24,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "decision_reasoning": {
+        "all": {
+          "both_pass": 98,
+          "pass_to_fail": [
+            "component_1_recognition_done__cleanup__r1",
+            "component_1_recognition_done__cleanup__r2",
+            "component_5_bare_agreement__cleanup__r3"
+          ],
+          "fail_to_pass": [
+            "component_0_protection_return__cleanup__r1",
+            "component_1_no_attempt__cleanup__r1",
+            "component_3_recognition_done__cleanup__r2"
+          ],
+          "both_fail": 1,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 74,
+          "pass_to_fail": [
+            "component_1_recognition_done__cleanup__r1",
+            "component_1_recognition_done__cleanup__r2",
+            "component_5_bare_agreement__cleanup__r3"
+          ],
+          "fail_to_pass": [
+            "component_0_protection_return__cleanup__r1",
+            "component_1_no_attempt__cleanup__r1",
+            "component_3_recognition_done__cleanup__r2"
+          ],
+          "both_fail": 1,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 24,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      }
+    },
+    "cleanup_full": {
+      "recognition_before_action": {
+        "all": {
+          "both_pass": 87,
+          "pass_to_fail": [
+            "component_1_recognition_done__cleanup_full__r1",
+            "component_5_bare_agreement__cleanup_full__r3",
+            "component_5_recognition_done__cleanup_full__r3",
+            "component_5_unrelated_attempt__cleanup_full__r2",
+            "journey_5__cleanup_full__r1__t2"
+          ],
+          "fail_to_pass": [
+            "component_0_recognition_confusion__cleanup_full__r3",
+            "component_1_no_attempt__cleanup_full__r1",
+            "component_5_action_attempt__cleanup_full__r2",
+            "component_5_bare_agreement__cleanup_full__r1",
+            "component_5_bare_agreement__cleanup_full__r2",
+            "component_5_failed_focused__cleanup_full__r3",
+            "component_5_later_contradiction__cleanup_full__r1",
+            "component_5_later_contradiction__cleanup_full__r2",
+            "component_5_later_contradiction__cleanup_full__r3",
+            "component_5_recognition_done__cleanup_full__r1",
+            "component_5_recognition_done__cleanup_full__r2"
+          ],
+          "both_fail": 2,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 64,
+          "pass_to_fail": [
+            "component_1_recognition_done__cleanup_full__r1",
+            "component_5_bare_agreement__cleanup_full__r3",
+            "component_5_recognition_done__cleanup_full__r3",
+            "component_5_unrelated_attempt__cleanup_full__r2"
+          ],
+          "fail_to_pass": [
+            "component_0_recognition_confusion__cleanup_full__r3",
+            "component_1_no_attempt__cleanup_full__r1",
+            "component_5_action_attempt__cleanup_full__r2",
+            "component_5_bare_agreement__cleanup_full__r1",
+            "component_5_bare_agreement__cleanup_full__r2",
+            "component_5_failed_focused__cleanup_full__r3",
+            "component_5_later_contradiction__cleanup_full__r1",
+            "component_5_later_contradiction__cleanup_full__r2",
+            "component_5_later_contradiction__cleanup_full__r3",
+            "component_5_recognition_done__cleanup_full__r1",
+            "component_5_recognition_done__cleanup_full__r2"
+          ],
+          "both_fail": 2,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 23,
+          "pass_to_fail": [
+            "journey_5__cleanup_full__r1__t2"
+          ],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "component_disclosure": {
+        "all": {
+          "both_pass": 52,
+          "pass_to_fail": [
+            "component_0_no_attempt__cleanup_full__r1",
+            "component_1_no_attempt__cleanup_full__r2",
+            "component_1_recognition_done__cleanup_full__r1",
+            "component_2_no_attempt__cleanup_full__r2",
+            "component_2_recognition_done__cleanup_full__r3",
+            "component_4_no_attempt__cleanup_full__r2",
+            "component_4_recognition_done__cleanup_full__r2",
+            "component_5_recognition_done__cleanup_full__r3",
+            "journey_3__cleanup_full__r1__t1",
+            "journey_3__cleanup_full__r3__t2",
+            "journey_5__cleanup_full__r1__t2"
+          ],
+          "fail_to_pass": [
+            "component_0_no_attempt__cleanup_full__r2",
+            "component_0_protection_return__cleanup_full__r2",
+            "component_0_recognition_confusion__cleanup_full__r1",
+            "component_0_recognition_done__cleanup_full__r1",
+            "component_0_recognition_done__cleanup_full__r2",
+            "component_0_recognition_done__cleanup_full__r3",
+            "component_1_recognition_done__cleanup_full__r3",
+            "component_2_recognition_done__cleanup_full__r2",
+            "component_3_no_attempt__cleanup_full__r1",
+            "component_3_no_attempt__cleanup_full__r2",
+            "component_5_action_attempt__cleanup_full__r2",
+            "component_5_bare_agreement__cleanup_full__r2",
+            "component_5_no_attempt__cleanup_full__r2",
+            "component_5_other_learner__cleanup_full__r3",
+            "component_5_recognition_done__cleanup_full__r1",
+            "component_5_recognition_done__cleanup_full__r2",
+            "journey_3__cleanup_full__r1__t2",
+            "journey_5__cleanup_full__r2__t4",
+            "journey_5__cleanup_full__r3__t1",
+            "journey_5__cleanup_full__r3__t4"
+          ],
+          "both_fail": 22,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 35,
+          "pass_to_fail": [
+            "component_0_no_attempt__cleanup_full__r1",
+            "component_1_no_attempt__cleanup_full__r2",
+            "component_1_recognition_done__cleanup_full__r1",
+            "component_2_no_attempt__cleanup_full__r2",
+            "component_2_recognition_done__cleanup_full__r3",
+            "component_4_no_attempt__cleanup_full__r2",
+            "component_4_recognition_done__cleanup_full__r2",
+            "component_5_recognition_done__cleanup_full__r3"
+          ],
+          "fail_to_pass": [
+            "component_0_no_attempt__cleanup_full__r2",
+            "component_0_protection_return__cleanup_full__r2",
+            "component_0_recognition_confusion__cleanup_full__r1",
+            "component_0_recognition_done__cleanup_full__r1",
+            "component_0_recognition_done__cleanup_full__r2",
+            "component_0_recognition_done__cleanup_full__r3",
+            "component_1_recognition_done__cleanup_full__r3",
+            "component_2_recognition_done__cleanup_full__r2",
+            "component_3_no_attempt__cleanup_full__r1",
+            "component_3_no_attempt__cleanup_full__r2",
+            "component_5_action_attempt__cleanup_full__r2",
+            "component_5_bare_agreement__cleanup_full__r2",
+            "component_5_no_attempt__cleanup_full__r2",
+            "component_5_other_learner__cleanup_full__r3",
+            "component_5_recognition_done__cleanup_full__r1",
+            "component_5_recognition_done__cleanup_full__r2"
+          ],
+          "both_fail": 22,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 17,
+          "pass_to_fail": [
+            "journey_3__cleanup_full__r1__t1",
+            "journey_3__cleanup_full__r3__t2",
+            "journey_5__cleanup_full__r1__t2"
+          ],
+          "fail_to_pass": [
+            "journey_3__cleanup_full__r1__t2",
+            "journey_5__cleanup_full__r2__t4",
+            "journey_5__cleanup_full__r3__t1",
+            "journey_5__cleanup_full__r3__t4"
+          ],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "responsive_progression": {
+        "all": {
+          "both_pass": 78,
+          "pass_to_fail": [
+            "component_0_recognition_confusion__cleanup_full__r1",
+            "component_0_recognition_confusion__cleanup_full__r2",
+            "component_0_recognition_done__cleanup_full__r3",
+            "component_1_recognition_done__cleanup_full__r3",
+            "component_2_recognition_done__cleanup_full__r2",
+            "component_5_bare_agreement__cleanup_full__r3",
+            "component_5_recognition_done__cleanup_full__r3",
+            "component_5_unrelated_attempt__cleanup_full__r3",
+            "journey_5__cleanup_full__r1__t2"
+          ],
+          "fail_to_pass": [
+            "component_0_action_confusion__cleanup_full__r2",
+            "component_1_no_attempt__cleanup_full__r1",
+            "component_1_recognition_done__cleanup_full__r2",
+            "component_3_recognition_done__cleanup_full__r1",
+            "component_3_recognition_done__cleanup_full__r2",
+            "component_3_recognition_done__cleanup_full__r3",
+            "component_4_recognition_done__cleanup_full__r1",
+            "component_4_recognition_done__cleanup_full__r2",
+            "component_5_bare_agreement__cleanup_full__r1",
+            "component_5_bare_agreement__cleanup_full__r2",
+            "component_5_failed_focused__cleanup_full__r3",
+            "journey_5__cleanup_full__r1__t4",
+            "journey_5__cleanup_full__r2__t4"
+          ],
+          "both_fail": 5,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 57,
+          "pass_to_fail": [
+            "component_0_recognition_confusion__cleanup_full__r1",
+            "component_0_recognition_confusion__cleanup_full__r2",
+            "component_0_recognition_done__cleanup_full__r3",
+            "component_1_recognition_done__cleanup_full__r3",
+            "component_2_recognition_done__cleanup_full__r2",
+            "component_5_bare_agreement__cleanup_full__r3",
+            "component_5_recognition_done__cleanup_full__r3",
+            "component_5_unrelated_attempt__cleanup_full__r3"
+          ],
+          "fail_to_pass": [
+            "component_0_action_confusion__cleanup_full__r2",
+            "component_1_no_attempt__cleanup_full__r1",
+            "component_1_recognition_done__cleanup_full__r2",
+            "component_3_recognition_done__cleanup_full__r1",
+            "component_3_recognition_done__cleanup_full__r2",
+            "component_3_recognition_done__cleanup_full__r3",
+            "component_4_recognition_done__cleanup_full__r1",
+            "component_4_recognition_done__cleanup_full__r2",
+            "component_5_bare_agreement__cleanup_full__r1",
+            "component_5_bare_agreement__cleanup_full__r2",
+            "component_5_failed_focused__cleanup_full__r3"
+          ],
+          "both_fail": 5,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 21,
+          "pass_to_fail": [
+            "journey_5__cleanup_full__r1__t2"
+          ],
+          "fail_to_pass": [
+            "journey_5__cleanup_full__r1__t4",
+            "journey_5__cleanup_full__r2__t4"
+          ],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "factual_accuracy": {
+        "all": {
+          "both_pass": 104,
+          "pass_to_fail": [],
+          "fail_to_pass": [
+            "component_0_recognition_confusion__cleanup_full__r1"
+          ],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 80,
+          "pass_to_fail": [],
+          "fail_to_pass": [
+            "component_0_recognition_confusion__cleanup_full__r1"
+          ],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 24,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "instruction_realization": {
+        "all": {
+          "both_pass": 98,
+          "pass_to_fail": [
+            "component_0_action_confusion__cleanup_full__r3",
+            "component_1_recognition_done__cleanup_full__r1",
+            "component_3_recognition_confusion__cleanup_full__r1",
+            "component_5_recognition_done__cleanup_full__r3"
+          ],
+          "fail_to_pass": [
+            "component_1_no_attempt__cleanup_full__r1",
+            "component_5_recognition_done__cleanup_full__r1",
+            "component_5_recognition_done__cleanup_full__r2"
+          ],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 74,
+          "pass_to_fail": [
+            "component_0_action_confusion__cleanup_full__r3",
+            "component_1_recognition_done__cleanup_full__r1",
+            "component_3_recognition_confusion__cleanup_full__r1",
+            "component_5_recognition_done__cleanup_full__r3"
+          ],
+          "fail_to_pass": [
+            "component_1_no_attempt__cleanup_full__r1",
+            "component_5_recognition_done__cleanup_full__r1",
+            "component_5_recognition_done__cleanup_full__r2"
+          ],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 24,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "contribution_feedback": {
+        "all": {
+          "both_pass": 39,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 59,
+          "inapplicability_change": [
+            {
+              "key": "component_0_protection_return|r3|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            },
+            {
+              "key": "component_1_recognition_done|r1|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            },
+            {
+              "key": "component_5_bare_agreement|r2|t0",
+              "baseline": "inapplicable",
+              "candidate": "pass"
+            },
+            {
+              "key": "component_5_other_learner|r1|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            },
+            {
+              "key": "component_5_unrelated_attempt|r1|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            },
+            {
+              "key": "component_5_unrelated_attempt|r3|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            },
+            {
+              "key": "journey_5|r1|t2",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            }
+          ],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 28,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 47,
+          "inapplicability_change": [
+            {
+              "key": "component_0_protection_return|r3|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            },
+            {
+              "key": "component_1_recognition_done|r1|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            },
+            {
+              "key": "component_5_bare_agreement|r2|t0",
+              "baseline": "inapplicable",
+              "candidate": "pass"
+            },
+            {
+              "key": "component_5_other_learner|r1|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            },
+            {
+              "key": "component_5_unrelated_attempt|r1|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            },
+            {
+              "key": "component_5_unrelated_attempt|r3|t0",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            }
+          ],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 11,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 12,
+          "inapplicability_change": [
+            {
+              "key": "journey_5|r1|t2",
+              "baseline": "pass",
+              "candidate": "inapplicable"
+            }
+          ],
+          "unevaluable": []
+        }
+      },
+      "reading_accessibility": {
+        "all": {
+          "both_pass": 105,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 81,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 24,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "learner_dignity": {
+        "all": {
+          "both_pass": 105,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 81,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 24,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "honest_self_representation": {
+        "all": {
+          "both_pass": 105,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 81,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 24,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "persona_stability": {
+        "all": {
+          "both_pass": 105,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 81,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 24,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      },
+      "decision_reasoning": {
+        "all": {
+          "both_pass": 99,
+          "pass_to_fail": [
+            "component_0_action_confusion__cleanup_full__r3",
+            "component_1_recognition_done__cleanup_full__r1"
+          ],
+          "fail_to_pass": [
+            "component_0_protection_return__cleanup_full__r1",
+            "component_1_no_attempt__cleanup_full__r1",
+            "component_3_recognition_done__cleanup_full__r2",
+            "component_5_recognition_done__cleanup_full__r2"
+          ],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "fixed": {
+          "both_pass": 75,
+          "pass_to_fail": [
+            "component_0_action_confusion__cleanup_full__r3",
+            "component_1_recognition_done__cleanup_full__r1"
+          ],
+          "fail_to_pass": [
+            "component_0_protection_return__cleanup_full__r1",
+            "component_1_no_attempt__cleanup_full__r1",
+            "component_3_recognition_done__cleanup_full__r2",
+            "component_5_recognition_done__cleanup_full__r2"
+          ],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        },
+        "trajectory": {
+          "both_pass": 24,
+          "pass_to_fail": [],
+          "fail_to_pass": [],
+          "both_fail": 0,
+          "both_inapplicable": 0,
+          "inapplicability_change": [],
+          "unevaluable": []
+        }
+      }
+    }
+  },
+  "joints": {
+    "baseline": {
+      "all": {
+        "total": 105,
+        "all_pass": 52,
+        "unevaluable": 0,
+        "combinations": {
+          "all_pass": 52,
+          "responsive_progression": 10,
+          "component_disclosure": 28,
+          "component_disclosure+factual_accuracy": 1,
+          "recognition_before_action": 1,
+          "recognition_before_action+component_disclosure+responsive_progression": 7,
+          "recognition_before_action+component_disclosure": 5,
+          "component_disclosure+responsive_progression": 1
+        }
+      },
+      "fixed": {
+        "total": 81,
+        "all_pass": 33,
+        "unevaluable": 0,
+        "combinations": {
+          "all_pass": 33,
+          "responsive_progression": 9,
+          "component_disclosure": 25,
+          "component_disclosure+factual_accuracy": 1,
+          "recognition_before_action": 1,
+          "recognition_before_action+component_disclosure+responsive_progression": 7,
+          "recognition_before_action+component_disclosure": 5
+        }
+      },
+      "trajectory": {
+        "total": 24,
+        "all_pass": 19,
+        "unevaluable": 0,
+        "combinations": {
+          "all_pass": 19,
+          "component_disclosure": 3,
+          "responsive_progression": 1,
+          "component_disclosure+responsive_progression": 1
+        }
+      }
+    },
+    "instruction": {
+      "all": {
+        "total": 105,
+        "all_pass": 56,
+        "unevaluable": 0,
+        "combinations": {
+          "all_pass": 56,
+          "component_disclosure": 25,
+          "factual_accuracy": 1,
+          "responsive_progression": 10,
+          "recognition_before_action+component_disclosure+responsive_progression": 6,
+          "component_disclosure+responsive_progression": 1,
+          "recognition_before_action+component_disclosure": 4,
+          "recognition_before_action+responsive_progression": 2
+        }
+      },
+      "fixed": {
+        "total": 81,
+        "all_pass": 36,
+        "unevaluable": 0,
+        "combinations": {
+          "all_pass": 36,
+          "component_disclosure": 22,
+          "factual_accuracy": 1,
+          "responsive_progression": 10,
+          "recognition_before_action+component_disclosure+responsive_progression": 5,
+          "component_disclosure+responsive_progression": 1,
+          "recognition_before_action+component_disclosure": 4,
+          "recognition_before_action+responsive_progression": 2
+        }
+      },
+      "trajectory": {
+        "total": 24,
+        "all_pass": 20,
+        "unevaluable": 0,
+        "combinations": {
+          "component_disclosure": 3,
+          "all_pass": 20,
+          "recognition_before_action+component_disclosure+responsive_progression": 1
+        }
+      }
+    },
+    "instruction_expression": {
+      "all": {
+        "total": 105,
+        "all_pass": 59,
+        "unevaluable": 0,
+        "combinations": {
+          "all_pass": 59,
+          "component_disclosure": 24,
+          "responsive_progression": 7,
+          "recognition_before_action+component_disclosure+responsive_progression": 7,
+          "component_disclosure+responsive_progression": 1,
+          "recognition_before_action+responsive_progression": 1,
+          "recognition_before_action+component_disclosure": 4,
+          "recognition_before_action": 2
+        }
+      },
+      "fixed": {
+        "total": 81,
+        "all_pass": 46,
+        "unevaluable": 0,
+        "combinations": {
+          "all_pass": 46,
+          "component_disclosure": 18,
+          "responsive_progression": 4,
+          "recognition_before_action+component_disclosure+responsive_progression": 6,
+          "component_disclosure+responsive_progression": 1,
+          "recognition_before_action+responsive_progression": 1,
+          "recognition_before_action+component_disclosure": 4,
+          "recognition_before_action": 1
+        }
+      },
+      "trajectory": {
+        "total": 24,
+        "all_pass": 13,
+        "unevaluable": 0,
+        "combinations": {
+          "component_disclosure": 6,
+          "all_pass": 13,
+          "responsive_progression": 3,
+          "recognition_before_action": 1,
+          "recognition_before_action+component_disclosure+responsive_progression": 1
+        }
+      }
+    },
+    "cleanup": {
+      "all": {
+        "total": 105,
+        "all_pass": 56,
+        "unevaluable": 1,
+        "combinations": {
+          "component_disclosure": 26,
+          "all_pass": 56,
+          "component_disclosure+responsive_progression": 2,
+          "factual_accuracy": 2,
+          "responsive_progression": 8,
+          "recognition_before_action+component_disclosure+responsive_progression": 6,
+          "recognition_before_action+responsive_progression": 1,
+          "recognition_before_action+component_disclosure": 2,
+          "recognition_before_action": 1
+        }
+      },
+      "fixed": {
+        "total": 81,
+        "all_pass": 37,
+        "unevaluable": 0,
+        "combinations": {
+          "component_disclosure": 25,
+          "all_pass": 37,
+          "component_disclosure+responsive_progression": 2,
+          "factual_accuracy": 2,
+          "responsive_progression": 7,
+          "recognition_before_action+component_disclosure+responsive_progression": 5,
+          "recognition_before_action+responsive_progression": 1,
+          "recognition_before_action+component_disclosure": 1,
+          "recognition_before_action": 1
+        }
+      },
+      "trajectory": {
+        "total": 24,
+        "all_pass": 19,
+        "unevaluable": 1,
+        "combinations": {
+          "all_pass": 19,
+          "recognition_before_action+component_disclosure+responsive_progression": 1,
+          "component_disclosure": 1,
+          "responsive_progression": 1,
+          "recognition_before_action+component_disclosure": 1
+        }
+      }
+    },
+    "cleanup_full": {
+      "all": {
+        "total": 105,
+        "all_pass": 64,
+        "unevaluable": 0,
+        "combinations": {
+          "all_pass": 64,
+          "component_disclosure": 26,
+          "responsive_progression": 8,
+          "recognition_before_action+component_disclosure+responsive_progression": 6,
+          "recognition_before_action+component_disclosure": 1
+        }
+      },
+      "fixed": {
+        "total": 81,
+        "all_pass": 43,
+        "unevaluable": 0,
+        "combinations": {
+          "all_pass": 43,
+          "component_disclosure": 24,
+          "responsive_progression": 8,
+          "recognition_before_action+component_disclosure+responsive_progression": 5,
+          "recognition_before_action+component_disclosure": 1
+        }
+      },
+      "trajectory": {
+        "total": 24,
+        "all_pass": 21,
+        "unevaluable": 0,
+        "combinations": {
+          "component_disclosure": 2,
+          "all_pass": 21,
+          "recognition_before_action+component_disclosure+responsive_progression": 1
+        }
+      }
+    }
+  },
+  "target_replay_integrity": {
+    "count": 315,
+    "all_identical": true
+  },
+  "limitations": [
+    "Primary metrics use the single repaired rubric version; secondary metrics retain their original rubric.",
+    "Trajectory histories differ by generated tutor replies and are reported separately from matched fixed histories.",
+    "Scores are automated judgments with independently documented residual errors; no full-suite acceptance or human learning-effect claim."
+  ],
+  "detailed_analysis": {
+    "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/tutor-stage-scaffolding/evals/promptfoo/scaffolding-diagnostics/2026-11-13-component-scaffolding/analysis.json",
+    "sha256": "376e90b67a2bf608efeee086797177901ac297a7a23f1098ad773dcdd9313810",
+    "bytes": 705140
+  },
+  "explanation_source": "Full reasons remain in analysis.json and preserved raw/<run>/<primary|secondary>/<generation-id>.json; summaries never replace raw judgments."
+}
