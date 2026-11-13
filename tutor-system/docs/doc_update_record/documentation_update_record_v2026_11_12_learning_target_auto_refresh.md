@@ -1,6 +1,6 @@
 # Learning target auto-refresh — issue #75
 
-Status: **staging SQL and Edge applied; realtime and five lifecycle workflows passed; remaining acceptance and initial failure diagnosis active**. Current continuation below supersedes historical blockers. This record does not certify a release.
+Status: **all selected staging workflows passed; merge risk decision remains open for the unexplained first setup timeout**. Latest continuation below supersedes historical checkpoints. PR76 is not merged or production released.
 
 - Issue: https://github.com/linmou/PhishingTrainingProgram/issues/75
 - Draft PR: https://github.com/linmou/PhishingTrainingProgram/pull/76
@@ -248,3 +248,43 @@ was not restored, and response listeners could survive diagnostic failure. Both
 are repaired in finally cleanup; diagnostic failures retain the original journey
 error. Browser harness unit suite passes 33 tests and modified scripts pass syntax
 checks. These are harness-only changes; deployed runtime hashes are unchanged.
+
+### Completed staging runs and merge decision — 2026-11-12
+
+Candidate `f56390666e4e724d0d75271c034a8c416efcdb51` passed all three required
+checks in GitHub run `43344711827`. Under its exact-candidate staging lease:
+
+| Run suffix | Workflow | Result |
+| --- | --- | --- |
+| `20261113012713-07ef06ec` | guard-mode | Pass after duplicate-send harness repair |
+| `20261113012809-2c652734` | assessment-answer | Pass: pass/fail/retry, recovery, cancellation and real-provider follow-up |
+| `20261113013054-e1f4b0bb` | learning-progress-realtime | Pass, including GET/request diagnostics and actual 390px learner layout |
+| `20261113013148-accc9243` | learning-progress-realtime repeated | Pass with the same checks |
+
+Reports and screenshots are retained under `tmp/browser_demo_runs/staging-template-<suffix>/`.
+All fixture cleanup entries passed. The latest lease was released after cleanup.
+Staging MCP readback still reports assessment-api v83 with bundle
+`cb53eee4fe5ecfc4f252ac6e08d9fa9bdf69ac7c398f7443f46beffba1fc1514`;
+SQL and runtime artifacts are unchanged from the earlier complete passes.
+All eight selected workflow types have now passed, with four complete realtime
+passes on unchanged runtime code. The first new realtime run measured remote
+priority/status 1160/1579ms, evidence-only 1126ms, reconnect catch-up 800ms and
+post-rejoin new mutation 517ms. This is evidence of observed successful behavior,
+not proof that the initial timeout was repaired.
+
+Independent follow-up inspected membership null-to-learner transitions, scope
+cleanup, local draft promotion, serialized reads and subscription catch-up. No
+deterministic indefinite race was established. The first failure retained no
+request/storage/database snapshot, and available platform logs could not be
+retrieved. Its screenshots cannot distinguish unpromoted local targets from
+persisted targets missed by the learner. The initial setup timeout remains
+unexplained; no speculative runtime patch was made.
+
+The latest base `43a15d8e9c59f62689eff1e2e3837158574b84c1` only records the
+analyzer release's production acceptance. It is integrated without runtime or
+SQL changes; current-head CI must still pass after this evidence commit.
+Per the PR template risk gate, accepting this unresolved verification uncertainty
+requires an explicit maintainer decision. Codex owns resumption: after that
+decision and current-head checks, recheck deployment/source preconditions,
+coordinate Render, merge, promote SQL then Edge/frontend, and run production
+acceptance. Production has no PR76 changes; issue #75 remains open.
