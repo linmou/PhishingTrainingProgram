@@ -1,0 +1,619 @@
+{
+  "project_id": "zgbufaxooqxeabewktzd",
+  "query": "select id,template_name,practice_type,title_template,description_template,pre_populated_dialogue,ai_config_template->'prompt_config' as prompt_config,scenario_config,updated_at from public.room_templates where template_name not like 'Demo:%' order by template_name",
+  "captured_at": "2026-11-13T05:05:20.695Z",
+  "templates": [
+    {
+      "id": "d12ac65a-04d7-40d8-bf7e-88628420a7fc",
+      "template_name": "Account Security Alert Scam",
+      "practice_type": "phishing",
+      "title_template": "Account Security Alert Scam",
+      "description_template": "YOUR ACCOUNT IS AT RISK — unknown device login detected. Verify now: http://testdrive.info/youraccount — posted by Socail Media Testdrive",
+      "pre_populated_dialogue": [
+        {
+          "role": "others",
+          "message": "!!&$!ALERT!&$!! YOUR ACCOUNT IS AT RISK. Click here to resolve immediately: http://testdrive.info/youraccount",
+          "user_name": "Socail Media Testdrive"
+        },
+        {
+          "role": "others",
+          "message": "wait this just showed up on my feed too is this real??",
+          "user_name": "Maya R."
+        },
+        {
+          "role": "tutor",
+          "message": "Take a look at this alert post. What stands out to you before anyone clicks anything?",
+          "user_name": "Tutor"
+        },
+        {
+          "role": "student",
+          "message": "I think it is real because it says my account is at risk.",
+          "user_name": "Jake Matthews"
+        }
+      ],
+      "prompt_config": {
+        "role": {
+          "role": "low"
+        },
+        "detection_areas": [
+          "Knowledge Point 1: Be careful when a message tries to scare you. (Easiest)\nWhat to notice: The message says \"YOUR ACCOUNT IS AT RISK\" and uses lots of warning symbols to make you feel scared.\nWhat to do: Stay calm. Don't click anything just because a message says something bad will happen.",
+          "Knowledge Point 2: Check who sent the warning.\nWhat to notice: The message comes from \"Socail Media Testdrive,\" which is not the name of a social media company. It also has a spelling mistake in \"Social.\"\nWhat to do: Check the sender's name carefully. Be suspicious of messages from unknown people or companies.",
+          "Knowledge Point 3: Check whether the warning tells you which account is in danger.\nWhat to notice: The message says your account is at risk but does not say whether it means Instagram, TikTok, Snapchat, or another account.\nWhat to do: Ask yourself: \"Which account are they talking about?\" A vague warning from an unknown sender is suspicious.",
+          "Knowledge Point 4: Check the website address before trusting it. (Harder)\nWhat to notice: The link goes to \"testdrive.info,\" not the official website of a social media company.\nWhat to do: Never click a link in a scary security message. Open the real app or type its official website address yourself.",
+          "Knowledge Point 5: Check your account safely. (Most advanced)\nWhat to notice: A real account problem should be checked through the social media company itself, not through a random message.\nWhat to do: Log in through the official app or website. Check your account's security notifications and recent login activity. If you are still worried, ask a trusted adult for help or contact the platform through its official help center."
+        ],
+        "verification_steps": [],
+        "communication_style": {
+          "teen_slang": "low",
+          "conversational_markers": "low",
+          "uncertainty_expression": "high"
+        },
+        "cognitive_parameters": {
+          "concept_density": "low",
+          "personal_examples": "high",
+          "perspective_taking": "low",
+          "consequence_highlighting": "low"
+        },
+        "emotional_parameters": {
+          "enthusiasm_level": "low",
+          "confidence_building": "high",
+          "validation_frequency": "low",
+          "mistake_normalization": "high"
+        }
+      },
+      "scenario_config": null,
+      "updated_at": "2026-11-12 20:34:34.297479+00"
+    },
+    {
+      "id": "b7e452d1-b7b1-c04f-b8b4-3383fc00394a",
+      "template_name": "Cyberbullying: Dylan smells that he did not shower for a week.",
+      "practice_type": "cyberbullying",
+      "title_template": "Cyberbullying practise — copilot-1",
+      "description_template": "Dylan smells that he did not shower for a week.",
+      "pre_populated_dialogue": [
+        {
+          "role": "others",
+          "message": "Hey, leave him alone. You smell worse than Dylan everyday!!",
+          "timestamp": "2025-02-18T12:04:00Z",
+          "user_name": "John Doe",
+          "avatar_url": "/images/default_user_profile.png",
+          "persona_id": "user_1",
+          "source_comment_id": "1_1"
+        },
+        {
+          "role": "others",
+          "message": "Thank you for standing up for Dylan! You are a good friend!",
+          "timestamp": "2025-02-18T12:10:00Z",
+          "user_name": "Jane Doe",
+          "avatar_url": "/images/profile_2.png",
+          "persona_id": "assistant_1",
+          "source_comment_id": "1_2"
+        }
+      ],
+      "prompt_config": null,
+      "scenario_config": {
+        "id": "copilot-1",
+        "post": {
+          "text": "Dylan smells that he did not shower for a week.",
+          "image": "/images/EWWW_meme.jpg",
+          "author": {
+            "id": "assistant_0",
+            "name": "Sarah",
+            "role": "simulated_user",
+            "profile_picture": "/images/profile_1.png"
+          },
+          "timestamp": "2025-02-18T12:00:00Z"
+        },
+        "source_commit": "89e7fda14b9a330c1ae796ca605971a7dc7b1b9b",
+        "initial_comments": [
+          {
+            "id": "1_1",
+            "text": "Hey, leave him alone. You smell worse than Dylan everyday!!",
+            "author": {
+              "id": "user_1",
+              "name": "John Doe",
+              "role": "simulated_user",
+              "profile_picture": "/images/default_user_profile.png"
+            },
+            "timestamp": "2025-02-18T12:04:00Z"
+          },
+          {
+            "id": "1_2",
+            "text": "Thank you for standing up for Dylan! You are a good friend!",
+            "author": {
+              "id": "assistant_1",
+              "name": "Jane Doe",
+              "role": "simulated_user",
+              "profile_picture": "/images/profile_2.png"
+            },
+            "timestamp": "2025-02-18T12:10:00Z"
+          }
+        ]
+      },
+      "updated_at": "2026-10-23 13:33:12.358681+00"
+    },
+    {
+      "id": "6a86347e-3e44-b62a-2e5c-e4a402a1db45",
+      "template_name": "Cyberbullying: No one likes you. Why do you come to school? @Dylan Moore",
+      "practice_type": "cyberbullying",
+      "title_template": "Cyberbullying practise — screenshot-1",
+      "description_template": "No one likes you. Why do you come to school? @Dylan Moore",
+      "pre_populated_dialogue": [
+        {
+          "role": "others",
+          "message": "Lol it's true!! I don't want to see him at school anymore",
+          "timestamp": "2025-02-18T11:36:00Z",
+          "user_name": "Sarah Stella",
+          "avatar_url": "/images/avatar_sarah_stella.png",
+          "persona_id": "sarah_stella",
+          "source_comment_id": "3_1"
+        },
+        {
+          "role": "others",
+          "message": "Dylan you definitely belong at school don't listen to her!",
+          "timestamp": "2025-02-18T11:54:00Z",
+          "user_name": "Lana Sheehan",
+          "avatar_url": "/images/avatar_lana_sheehan.png",
+          "persona_id": "lana_sheehan",
+          "source_comment_id": "3_2"
+        }
+      ],
+      "prompt_config": null,
+      "scenario_config": {
+        "id": "screenshot-1",
+        "post": {
+          "text": "No one likes you. Why do you come to school? @Dylan Moore",
+          "image": "/images/black_sand.jpg",
+          "author": {
+            "id": "ella_sroni",
+            "name": "Ella Sroni",
+            "role": "simulated_user",
+            "profile_picture": "/images/avatar_ella_sroni.png"
+          },
+          "timestamp": "2025-02-18T11:23:00Z"
+        },
+        "source_commit": "manual-screenshots-2026-10-23",
+        "initial_comments": [
+          {
+            "id": "3_1",
+            "text": "Lol it's true!! I don't want to see him at school anymore",
+            "author": {
+              "id": "sarah_stella",
+              "name": "Sarah Stella",
+              "role": "simulated_user",
+              "profile_picture": "/images/avatar_sarah_stella.png"
+            },
+            "timestamp": "2025-02-18T11:36:00Z"
+          },
+          {
+            "id": "3_2",
+            "text": "Dylan you definitely belong at school don't listen to her!",
+            "author": {
+              "id": "lana_sheehan",
+              "name": "Lana Sheehan",
+              "role": "simulated_user",
+              "profile_picture": "/images/avatar_lana_sheehan.png"
+            },
+            "timestamp": "2025-02-18T11:54:00Z"
+          }
+        ]
+      },
+      "updated_at": "2026-10-23 13:33:12.358681+00"
+    },
+    {
+      "id": "ce3b47ec-1f8c-e82a-09c4-62688f1a68a0",
+      "template_name": "Cyberbullying: omg lolll look at Dylan's sketchbook he's such a nerdddd",
+      "practice_type": "cyberbullying",
+      "title_template": "Cyberbullying practise — copilot-2",
+      "description_template": "omg lolll look at Dylan's sketchbook he's such a nerdddd",
+      "pre_populated_dialogue": [
+        {
+          "role": "others",
+          "message": "lol what a loser",
+          "timestamp": "2025-02-18T11:30:00Z",
+          "user_name": "Ella Sroni",
+          "avatar_url": "/images/profile_1.png",
+          "persona_id": "user_3",
+          "source_comment_id": "2_1"
+        },
+        {
+          "role": "others",
+          "message": "Cartoons are for babies!",
+          "timestamp": "2025-02-18T11:41:00Z",
+          "user_name": "Breana Summers",
+          "avatar_url": "/images/profile_2.png",
+          "persona_id": "user_4",
+          "source_comment_id": "2_2"
+        }
+      ],
+      "prompt_config": null,
+      "scenario_config": {
+        "id": "copilot-2",
+        "post": {
+          "text": "omg lolll look at Dylan's sketchbook he's such a nerdddd",
+          "image": "/images/case_notebook.jpg",
+          "author": {
+            "id": "user_2",
+            "name": "Keegan Scott",
+            "role": "user",
+            "profile_picture": "/images/profile_2.png"
+          },
+          "timestamp": "2025-02-18T11:17:00Z"
+        },
+        "source_commit": "89e7fda14b9a330c1ae796ca605971a7dc7b1b9b",
+        "initial_comments": [
+          {
+            "id": "2_1",
+            "text": "lol what a loser",
+            "author": {
+              "id": "user_3",
+              "name": "Ella Sroni",
+              "role": "simulated_user",
+              "profile_picture": "/images/profile_1.png"
+            },
+            "timestamp": "2025-02-18T11:30:00Z"
+          },
+          {
+            "id": "2_2",
+            "text": "Cartoons are for babies!",
+            "author": {
+              "id": "user_4",
+              "name": "Breana Summers",
+              "role": "simulated_user",
+              "profile_picture": "/images/profile_2.png"
+            },
+            "timestamp": "2025-02-18T11:41:00Z"
+          }
+        ]
+      },
+      "updated_at": "2026-10-23 13:33:12.358681+00"
+    },
+    {
+      "id": "a98be844-b609-1256-4d10-64f2816d0223",
+      "template_name": "Cyberbullying: What a cool picture of our theater! Anyone want to go to the movies tomorrow? :D",
+      "practice_type": "cyberbullying",
+      "title_template": "Cyberbullying practise — screenshot-2",
+      "description_template": "What a cool picture of our theater! Anyone want to go to the movies tomorrow? :D",
+      "pre_populated_dialogue": [
+        {
+          "role": "others",
+          "message": "No one wants to hang out with you :P",
+          "timestamp": "2025-02-18T11:39:00Z",
+          "user_name": "Ella Sroni",
+          "avatar_url": "/images/avatar_ella_sroni.png",
+          "persona_id": "ella_sroni",
+          "source_comment_id": "4_1"
+        },
+        {
+          "role": "others",
+          "message": "Yeah^^ why don't you just go by yourself xD",
+          "timestamp": "2025-02-18T11:45:00Z",
+          "user_name": "Keegan Scott",
+          "avatar_url": "/images/avatar_keegan_scott.png",
+          "persona_id": "keegan_scott",
+          "source_comment_id": "4_2"
+        }
+      ],
+      "prompt_config": null,
+      "scenario_config": {
+        "id": "screenshot-2",
+        "post": {
+          "text": "What a cool picture of our theater! Anyone want to go to the movies tomorrow? :D",
+          "image": "/images/cinema_night.jpg",
+          "author": {
+            "id": "dylan_moore",
+            "name": "Dylan Moore",
+            "role": "simulated_user",
+            "profile_picture": "/images/avatar_dylan_moore.png"
+          },
+          "timestamp": "2025-02-18T11:00:00Z"
+        },
+        "source_commit": "manual-screenshots-2026-10-23",
+        "initial_comments": [
+          {
+            "id": "4_1",
+            "text": "No one wants to hang out with you :P",
+            "author": {
+              "id": "ella_sroni",
+              "name": "Ella Sroni",
+              "role": "simulated_user",
+              "profile_picture": "/images/avatar_ella_sroni.png"
+            },
+            "timestamp": "2025-02-18T11:39:00Z"
+          },
+          {
+            "id": "4_2",
+            "text": "Yeah^^ why don't you just go by yourself xD",
+            "author": {
+              "id": "keegan_scott",
+              "name": "Keegan Scott",
+              "role": "simulated_user",
+              "profile_picture": "/images/avatar_keegan_scott.png"
+            },
+            "timestamp": "2025-02-18T11:45:00Z"
+          }
+        ]
+      },
+      "updated_at": "2026-10-23 13:33:12.358681+00"
+    },
+    {
+      "id": "091b0789-cf08-4e02-beb7-985cb4936e76",
+      "template_name": "iTunes Gift Card Survey Scam",
+      "practice_type": "phishing",
+      "title_template": "iTunes Gift Card Survey Scam",
+      "description_template": "You won't believe this crazy deal!! I filled in a 5 minute survey and got a $500 gift to iTunes!! http://bit.ly/FREEGIFTS",
+      "pre_populated_dialogue": [
+        {
+          "role": "others",
+          "message": "You won't believe this crazy deal!! 5 minute survey = $500 iTunes card!! got mine instantly http://bit.ly/FREEGIFTS",
+          "user_name": "Emma Garcia"
+        },
+        {
+          "role": "others",
+          "message": "the photo looks so real tho... has anyone tried it?",
+          "user_name": "Kai"
+        },
+        {
+          "role": "tutor",
+          "message": "Does this offer make sense to you? What are you basing that on?",
+          "user_name": "Tutor"
+        },
+        {
+          "role": "student",
+          "message": "It must be real because the photo looks professional.",
+          "user_name": "Sam"
+        }
+      ],
+      "prompt_config": {
+        "role": {
+          "role": "low"
+        },
+        "detection_areas": [
+          "Knowledge Point 1: Check if the reward makes sense. (Easiest)\nWhat to notice: The post promises a $500 gift card for only five minutes of answering questions.\nWhat to do: Ask yourself: \"Would a company really give away so much money for such a small task?\" Be careful when a reward seems too big.",
+          "Knowledge Point 2: Watch out for exciting promises.\nWhat to notice: Words like \"CRAZY DEAL!!\" and \"got instantly\" make the offer sound exciting and encourage people to act quickly.\nWhat to do: Don't let exciting words or promises make you forget to check whether something is real.",
+          "Knowledge Point 3: Check who is sharing the reward.\nWhat to notice: Emma Garcia is sharing the offer, but there is no proof that she works for Apple or iTunes.\nWhat to do: Look at her profile and past posts. Be careful if the account often shares free gifts or amazing offers.",
+          "Knowledge Point 4: Look carefully at the website link. (Harder)\nWhat to notice: The link uses \"bit.ly,\" which hides the real website address.\nWhat to do: Don't click the link. Go to Apple's official website yourself to check whether the offer is real.",
+          "Knowledge Point 5: Check whether the company really offers the reward. (Most advanced)\nWhat to notice: The post has a gift card picture, but it does not show an official Apple announcement or explain the rules of the giveaway.\nWhat to do: Check Apple's official website and social media pages for the giveaway. Ask a trusted adult to help you check before sharing information or answering a survey."
+        ],
+        "verification_steps": [],
+        "communication_style": {
+          "teen_slang": "low",
+          "conversational_markers": "low",
+          "uncertainty_expression": "high"
+        },
+        "cognitive_parameters": {
+          "concept_density": "low",
+          "personal_examples": "high",
+          "perspective_taking": "low",
+          "consequence_highlighting": "low"
+        },
+        "emotional_parameters": {
+          "enthusiasm_level": "low",
+          "confidence_building": "high",
+          "validation_frequency": "low",
+          "mistake_normalization": "high"
+        }
+      },
+      "scenario_config": null,
+      "updated_at": "2026-11-12 20:34:34.297479+00"
+    },
+    {
+      "id": "53dc48ee-f790-403f-a83a-1c88ed118003",
+      "template_name": "Location Sharing Safety",
+      "practice_type": "phishing",
+      "title_template": "Location Sharing Safety",
+      "description_template": "321 Jefferson Ave come hang out guys, I'm bored.",
+      "pre_populated_dialogue": [
+        {
+          "role": "student",
+          "message": "Come hang out! I'm so bored",
+          "timestamp": "2025-08-20T06:21:49.877Z",
+          "user_name": "Jasmina Weatherly"
+        },
+        {
+          "role": "student",
+          "message": "Maybe don't share your exact address publicly?",
+          "timestamp": "2025-08-20T06:21:49.877Z",
+          "user_name": "Friend 1"
+        }
+      ],
+      "prompt_config": {
+        "role": {
+          "role": "low"
+        },
+        "detection_areas": [
+          "Knowledge Point 1: Never share your home address publicly. (Easiest)\nWhat to notice: Jasmine shares her full home address: 321 Jefferson Ave.\nWhat to do: Never post your full home address online. If you see a friend sharing theirs, let them know and encourage them to delete the post.",
+          "Knowledge Point 2: Remember that photos can reveal where you live.\nWhat to notice: The picture shows Jasmine's actual house. Details like the house color, design, and nearby places can help people find it.\nWhat to do: Before posting a photo, check the background. Make sure it does not show your house, street, address, or other clues about where you live.",
+          "Knowledge Point 3: Don't invite strangers to your home. (Harder)\nWhat to notice: Jasmine's public post invites people to come over. Anyone who sees it might try to visit.\nWhat to do: Never invite people you don't know to your home. Share invitations only with trusted friends through private messages or group chats.",
+          "Knowledge Point 4: Share general places instead of exact locations. (Most advanced)\nWhat to notice: An exact street address tells people exactly where to find Jasmine.\nWhat to do: Use general words like \"my neighborhood\" or \"downtown\" instead of sharing your full address. Check your privacy settings so only people you trust can see your posts."
+        ],
+        "verification_steps": [],
+        "communication_style": {
+          "teen_slang": "low",
+          "conversational_markers": "low",
+          "uncertainty_expression": "high"
+        },
+        "cognitive_parameters": {
+          "concept_density": "low",
+          "personal_examples": "high",
+          "perspective_taking": "low",
+          "consequence_highlighting": "low"
+        },
+        "emotional_parameters": {
+          "enthusiasm_level": "low",
+          "confidence_building": "high",
+          "validation_frequency": "low",
+          "mistake_normalization": "high"
+        }
+      },
+      "scenario_config": null,
+      "updated_at": "2026-11-12 20:34:34.297479+00"
+    },
+    {
+      "id": "81821125-67cb-4ac6-95e0-507cde356dd6",
+      "template_name": "Movie Meetup Social Engineering",
+      "practice_type": "phishing",
+      "title_template": "Movie Meetup Social Engineering",
+      "description_template": "Gonna be at the Regal THIS FRIDAY to see the new Marvel movie! Meet me there at 8 🍿",
+      "pre_populated_dialogue": [
+        {
+          "role": "student",
+          "message": "I'll meet you there!",
+          "timestamp": "2025-08-20T06:21:49.877Z",
+          "user_name": "Emily J"
+        },
+        {
+          "role": "student",
+          "message": "Sounds like fun!",
+          "timestamp": "2025-08-20T06:21:49.877Z",
+          "user_name": "Connor McCormack"
+        }
+      ],
+      "prompt_config": {
+        "role": {
+          "role": "low"
+        },
+        "detection_areas": [
+          "Knowledge Point 1: Be careful about sharing where you are going. (Easiest)\nWhat to notice: Ethan tells everyone which movie theater he plans to visit.\nWhat to do: Avoid sharing your exact location in public posts. You can say, \"I'm excited to watch the new Marvel movie!\" without saying where you will be.",
+          "Knowledge Point 2: Don't share your plans too early.\nWhat to notice: Ethan says he will be at the theater THIS FRIDAY. This tells strangers where he plans to go in the future.\nWhat to do: Share photos or stories after you have left the place, instead of posting your plans ahead of time.",
+          "Knowledge Point 3: Don't share your exact schedule. (Harder)\nWhat to notice: Ethan shares the exact time (8 p.m.) and place. Someone could use this information to find him.\nWhat to do: Keep your exact plans and times private. If you need to make plans with friends, use a private message or group chat.",
+          "Knowledge Point 4: Think about who can see your posts. (Most advanced)\nWhat to notice: A public post can be seen by people Ethan does not know. They may also learn when he is away from home.\nWhat to do: Check your privacy settings. Share plans only with people you trust, and avoid posting information that tells strangers when you are away."
+        ],
+        "verification_steps": [],
+        "communication_style": {
+          "teen_slang": "low",
+          "conversational_markers": "low",
+          "uncertainty_expression": "high"
+        },
+        "cognitive_parameters": {
+          "concept_density": "low",
+          "personal_examples": "high",
+          "perspective_taking": "low",
+          "consequence_highlighting": "low"
+        },
+        "emotional_parameters": {
+          "enthusiasm_level": "low",
+          "confidence_building": "high",
+          "validation_frequency": "low",
+          "mistake_normalization": "high"
+        }
+      },
+      "scenario_config": null,
+      "updated_at": "2026-11-12 20:34:34.297479+00"
+    },
+    {
+      "id": "636247de-a6bc-4606-9ec5-5ebb00603f2f",
+      "template_name": "Nintendo Switch Deal Scam",
+      "practice_type": "phishing",
+      "title_template": "Nintendo Switch Deal Scam",
+      "description_template": "Get a BRAND new Nintendo Switch only $19.99!! Hurry up, this offer WILL NOT LAST long!! http://goo.gl/FreeSwitch",
+      "pre_populated_dialogue": [
+        {
+          "role": "others",
+          "message": "omg get a BRAND new Nintendo Switch only $19.99!! Hurry this WILL NOT LAST!! http://goo.gl/FreeSwitch",
+          "user_name": "Lucy Simms"
+        },
+        {
+          "role": "others",
+          "message": "bro $20 for a switch?? linking this to my group chat rn",
+          "user_name": "Dev_gamer12"
+        },
+        {
+          "role": "tutor",
+          "message": "A friend just shared this deal post with you. What would you do first?",
+          "user_name": "Tutor"
+        },
+        {
+          "role": "student",
+          "message": "I would click it fast before the deal ends.",
+          "user_name": "Brinlee"
+        }
+      ],
+      "prompt_config": {
+        "role": {
+          "role": "low"
+        },
+        "detection_areas": [
+          "Knowledge Point 1: Check if the deal is too good to be true. (Easiest)\nWhat to notice: A Nintendo Switch usually costs hundreds of dollars, but this post offers one for only $19.99.\nWhat to do: Stop and ask yourself: \"Why is this so cheap?\" If a deal seems too good to be true, be careful.",
+          "Knowledge Point 2: Watch out for messages that rush you.\nWhat to notice: Words like \"HURRY UP\" and \"WILL NOT LAST\" try to make you act quickly.\nWhat to do: Take your time. Don't let a post rush you into clicking a link or buying something.",
+          "Knowledge Point 3: Check who shared the deal.\nWhat to notice: The post comes from someone named Lucy Simms, not an official Nintendo account.\nWhat to do: Look at the person's profile. Check when the account was created, what else they have posted, and whether they are connected to Nintendo.",
+          "Knowledge Point 4: Learn to spot suspicious links. (Harder)\nWhat to notice: The link uses \"goo.gl,\" which hides the real website. It does not show Nintendo's official website address.\nWhat to do: Don't click shortened or unfamiliar links. Look for Nintendo's official website address instead. A lock symbol or HTTPS alone does not prove a website is safe.",
+          "Knowledge Point 5: Check the deal with the real company. (Most advanced)\nWhat to notice: There is no proof that Nintendo is really offering this deal.\nWhat to do: Visit Nintendo's official website or social media pages yourself. Check whether the deal is listed there. You can also ask a trusted adult to help."
+        ],
+        "verification_steps": [],
+        "communication_style": {
+          "teen_slang": "low",
+          "conversational_markers": "low",
+          "uncertainty_expression": "high"
+        },
+        "cognitive_parameters": {
+          "concept_density": "low",
+          "personal_examples": "high",
+          "perspective_taking": "low",
+          "consequence_highlighting": "low"
+        },
+        "emotional_parameters": {
+          "enthusiasm_level": "low",
+          "confidence_building": "high",
+          "validation_frequency": "low",
+          "mistake_normalization": "high"
+        }
+      },
+      "scenario_config": null,
+      "updated_at": "2026-11-12 20:34:34.297479+00"
+    },
+    {
+      "id": "7af519ea-d10c-4824-a7a6-f851aa9cf2e6",
+      "template_name": "Phone Number Phishing Training",
+      "practice_type": "phishing",
+      "title_template": "Phone Number Phishing Training",
+      "description_template": "new phone who dis? my new number is 607-252-6771",
+      "pre_populated_dialogue": [
+        {
+          "role": "student",
+          "message": "KK I'll txt you",
+          "timestamp": "2025-08-20T06:21:49.877Z",
+          "user_name": "Vanessa Kemp"
+        },
+        {
+          "role": "student",
+          "message": "finally about time you got a new phone",
+          "timestamp": "2025-08-20T06:21:49.877Z",
+          "user_name": "Zoe Goodall"
+        }
+      ],
+      "prompt_config": {
+        "role": {
+          "role": "low"
+        },
+        "detection_areas": [
+          "Knowledge Point 1: Keep your phone number private. (Easiest)\nWhat to notice: Jake shares his phone number in a public post.\nWhat to do: Never post your phone number where everyone can see it. Only share it privately with people you trust.",
+          "Knowledge Point 2: Think about who can see your personal information.\nWhat to notice: A public phone number can be seen and saved by strangers, not just Jake's friends.\nWhat to do: Check who can see your posts. Keep personal information away from public pages.",
+          "Knowledge Point 3: Know what strangers can do with your phone number. (Harder)\nWhat to notice: Strangers could use Jake's number to send unwanted messages, make spam calls, or try to trick him.\nWhat to do: Never reply to strange messages or calls. Don't share passwords or secret login codes with anyone who contacts you unexpectedly.",
+          "Knowledge Point 4: Know that phone numbers can be used to access accounts. (Most advanced)\nWhat to notice: Some websites use phone numbers to help people log in or prove who they are. Scammers may try to use your number to get into your accounts.\nWhat to do: Never share a login or verification code with anyone. If you receive a code you did not ask for, tell a trusted adult.",
+          "Knowledge Point 5: Know what to do if you accidentally share your number.\nWhat to notice: Once a phone number is posted publicly, other people may have already seen or saved it.\nWhat to do: Delete the post right away. Tell a trusted adult, watch out for strange calls or messages, and share your number privately with close friends instead."
+        ],
+        "verification_steps": [],
+        "communication_style": {
+          "teen_slang": "low",
+          "conversational_markers": "low",
+          "uncertainty_expression": "high"
+        },
+        "cognitive_parameters": {
+          "concept_density": "low",
+          "personal_examples": "high",
+          "perspective_taking": "low",
+          "consequence_highlighting": "low"
+        },
+        "emotional_parameters": {
+          "enthusiasm_level": "low",
+          "confidence_building": "high",
+          "validation_frequency": "low",
+          "mistake_normalization": "high"
+        }
+      },
+      "scenario_config": null,
+      "updated_at": "2026-11-12 20:34:34.297479+00"
+    }
+  ]
+}

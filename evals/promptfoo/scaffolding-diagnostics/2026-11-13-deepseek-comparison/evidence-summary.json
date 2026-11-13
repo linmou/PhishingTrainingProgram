@@ -1,0 +1,19 @@
+{
+  "file_count": 356,
+  "bytes": 35467184,
+  "http_attempts": 346,
+  "statuses": {
+    "200": 346
+  },
+  "reported_tokens": 1062876,
+  "returned_models": {
+    "deepseek-flash": 346
+  },
+  "finish_reasons": {
+    "stop": 346
+  },
+  "manifest_sha256": "d1c9cc033b8c7267336bb07600bacb43f6cdadea33f7300b6767e5817081c1c0",
+  "active_ms": 90870,
+  "file_manifest": "analysis-1794561128064.json#evidence.file_hashes",
+  "source_analysis_sha256": "2ed01d08b233c02598f5a951653a6d4b719ccccdcac76b948c1b191039050437"
+}
