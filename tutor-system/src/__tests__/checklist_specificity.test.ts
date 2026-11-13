@@ -7,7 +7,7 @@ import { ChecklistIntegration, generateChecklistFromSystemPrompt } from '../serv
 import { QwenService } from '../services/aiService';
 
 jest.mock('../services/aiService', () => ({
-  DEFAULT_AI_MODEL: 'qwen3.5-flash',
+  OAI_MODEL: 'qwen3.5-flash',
   QwenService: { generateResponse: jest.fn() }
 }));
 

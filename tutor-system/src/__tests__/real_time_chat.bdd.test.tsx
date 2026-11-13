@@ -50,7 +50,7 @@ jest.mock('../services/aiService', () => ({
   getAIConfig: jest.fn().mockResolvedValue(null),
   initializeAIAssistant: jest.fn(),
   generateAndSaveAIResponse: jest.fn(),
-  DEFAULT_AI_MODEL: 'test-model'
+  OAI_MODEL: 'test-model'
 }));
 
 jest.mock('../services/transferAssessmentService', () => ({

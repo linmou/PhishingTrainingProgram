@@ -1,7 +1,6 @@
 #!/usr/bin/env -S deno run --allow-env --allow-net
 // Purpose: proxy application LLM requests with server-only provider credentials.
 
-import { DEFAULT_AI_MODEL } from '../../../src/services/aiModels.ts';
 import { cyberbullyingMessages, parseCyberbullyingResponse, CYBERBULLYING_PROMPT_VERSION, CYBERBULLYING_SOURCE_COMMIT } from './cyberbullying.ts';
 
 type ChatRole = 'system' | 'user' | 'assistant';
@@ -105,8 +104,9 @@ function parseChatRequest(value: unknown): ChatRequest {
 function providerConfig(deps: AiApiDependencies): { key: string; baseUrl: string; model: string } {
   const key = deps.env('OAI_API_KEY');
   const baseUrl = deps.env('OAI_BASE_URL');
-  if (!key || !baseUrl) throw new Error('AI_PROVIDER_NOT_CONFIGURED');
-  return { key, baseUrl: baseUrl.replace(/\/$/, ''), model: DEFAULT_AI_MODEL };
+  const model = deps.env('OAI_MODEL')?.trim();
+  if (!key || !baseUrl || !model) throw new Error('AI_PROVIDER_NOT_CONFIGURED');
+  return { key, baseUrl: baseUrl.replace(/\/$/, ''), model };
 }
 
 function providerPayload(request: ChatRequest, model: string): Record<string, unknown> {
@@ -173,7 +173,7 @@ async function cyberbullyingOperation(deps: AiApiDependencies, request: Request,
   const actor = request.headers.get('x-application-user-id');
   if (!actor) throw new Error('UNAUTHORIZED');
   const common = { p_room_id: uuid(body.room_id), p_actor_id: uuid(actor) };
-  providerConfig(deps);
+  const provider = providerConfig(deps);
   if (body.character !== undefined && body.character !== null && typeof body.character !== 'string') throw new Error('INVALID_CHARACTER');
   const context = await practiceRpc(deps, 'get_cyberbullying_context_v1', {
     ...common,
@@ -184,7 +184,7 @@ async function cyberbullyingOperation(deps: AiApiDependencies, request: Request,
   const messages = cyberbullyingMessages(context, character);
   const attempts: Array<Record<string, unknown>> = [];
   const provenance = () => ({
-    model: DEFAULT_AI_MODEL,
+    model: provider.model,
     prompt_version: CYBERBULLYING_PROMPT_VERSION,
     source_commit: CYBERBULLYING_SOURCE_COMMIT,
     attempts,
@@ -206,13 +206,13 @@ async function cyberbullyingOperation(deps: AiApiDependencies, request: Request,
       // Repeat the length check for the repair request; every attempt retains the full history.
       parseChatRequest(call);
       const output = await generateChat(deps, call);
-      attempts.push({ ordinal, request: providerPayload(call, DEFAULT_AI_MODEL), output });
+      attempts.push({ ordinal, request: providerPayload(call, provider.model), output });
       if (output.finish_reason === 'length') throw new Error('AI_OUTPUT_TRUNCATED');
       parsed = parseCyberbullyingResponse(String(output.content), character);
       break;
     } catch (error) {
       generationError = error instanceof Error ? error.message : 'AI_PROVIDER_ERROR';
-      if (attempts.length < ordinal) attempts.push({ ordinal, request: providerPayload(call, DEFAULT_AI_MODEL), error: generationError });
+      if (attempts.length < ordinal) attempts.push({ ordinal, request: providerPayload(call, provider.model), error: generationError });
       if (generationError !== 'AI_OUTPUT_INVALID') break;
     }
   }

@@ -18,7 +18,7 @@ Comprehensive AI integration service providing intelligent tutoring suggestions,
 
 The selected tutor policy is full candidate11, including the approved Guard response pattern and its evaluated base-prompt composition. Tutor requests use temperature0.3, max_tokens600 and enable_thinkingfalse, including the bounded JSON repair attempt. These settings override stored room temperature/token values; `appliedConfig` reports the settings actually sent. Room role, style and target inventories still configure the generated base prompt. The user explicitly selected release despite the recorded benchmark failures.
 
-React and `ai-api` import `DEFAULT_AI_MODEL` from `src/services/aiModels.ts`, selecting Qwen3.8. The learning-progress analyzer and assessment generation retain the existing Qwen3.5 provider in `assessment-api`, because their broader Qwen3.8 staging check advanced unrelated targets. Provider credentials remain required server secrets; the application no longer reads the old project OAI_MODEL secret. The similarly named local setting is only for offline evaluations.
+`OAI_MODEL` is required server configuration for both `ai-api` and `assessment-api`, including message analysis and audit provenance. Set it in each project’s Supabase Edge secrets. No provider model is pinned in source. Frontend npm commands load `OAI_MODEL` from the environment or CRA `.env` files and expose only the model name as `REACT_APP_OAI_MODEL`. Rebuild after changing it; keep its value aligned with the target server. Provider credentials remain server-only. Missing or blank model configuration fails before provider calls; frontend commands also reject missing model configuration.
 
 The learning-progress analyzer uses the candidate02 policy with target-text evidence rules at temperature0, max_tokens600 and enable_thinkingfalse. The current unified-target revision is tracked in the [unified release record](doc_update_record/documentation_update_record_v2026_10_15_unified_learning_targets.md). The earlier candidate selection and its observed semantic errors are recorded in [candidate release evidence](doc_update_record/documentation_update_record_v2026_10_15_selected_ai_candidates.md). Assessment-question generation remains a separate call with its existing settings.
 
@@ -79,7 +79,7 @@ interface ParameterOverrides {
 - **Role**: `supportive_adult` preset (high authority, encouraging tone)
 - **Detection areas**: `['Suspicious links', 'Urgent language', 'Unexpected requests']`
 - **Verification steps**: `['Check sender authenticity', 'Verify through official channels', 'Think before clicking']`
-- **Model**: `qwen3.8-flash` (`DEFAULT_AI_MODEL`, the only selectable model)
+- **Model**: `OAI_MODEL` (the configured selectable model)
 - **Transport**: `supabase.functions.invoke('ai-api')` from the localStorage/offline-user session; the Edge Function calls the provider with `enable_thinking: false`. Supabase Auth sign-in is not required.
 - **Response policy**: prompt-controlled maximum of three sentences and 50 words; runtime output is not clipped or rewritten
 
@@ -163,7 +163,7 @@ The ecological prompt includes semantic Guard activation, persistence, exit, and
 **Configuration**:
 - **Context window**: Last 10 messages for conversation context
 - **Streaming**: Not implemented (educational use prioritizes simplicity)
-- **Model**: Always `qwen3.8-flash`; legacy room model values are normalized before use
+- **Model**: Configured `OAI_MODEL`; legacy room model values are normalized before use
 
 ### `TutorSuggestionService` Class (Lines 316-406)
 **Purpose**: Specialized tutor suggestion generation
@@ -370,7 +370,7 @@ tracked in the [unified release record](doc_update_record/documentation_update_r
 
 ### Cost Management
 - **Tutor token limit**: max_tokens600 for the selected candidate11 configuration
-- **Model selection**: qwen3.8-flash
+- **Model selection**: `OAI_MODEL`
 - **Context pruning**: Intelligent conversation history management
 - **Failure handling**: Graceful degradation to dummy service
 

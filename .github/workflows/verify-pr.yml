@@ -50,6 +50,7 @@ jobs:
   frontend-jest:
     runs-on: ubuntu-24.04 # Pinned: Playwright 1.60 --with-deps fails on the ubuntu-latest Ubuntu 26 image.
     env:
+      OAI_MODEL: ci-test-model
       REACT_APP_SUPABASE_URL: http://127.0.0.1:54321
       REACT_APP_SUPABASE_ANON_KEY: ci-placeholder
     defaults:
@@ -74,6 +75,8 @@ jobs:
         run: npm run test:regression -- --runInBand
 
   frontend-build:
+    env:
+      OAI_MODEL: ci-test-model
     runs-on: ubuntu-latest
     defaults:
       run:
