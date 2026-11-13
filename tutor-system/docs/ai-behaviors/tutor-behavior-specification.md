@@ -2,7 +2,7 @@
 
 Intent: define the tutor's observable requirements and annotate each requirement with its constitutional basis.
 
-Updated: 2026-11-13. Source baseline: `2172ab6`.
+Updated: 2026-11-13. Source baseline: `297a1b3`.
 Behavior ID: `current_tutor_behavior`
 Status: working specification; no experimental version has been registered.
 Constitution reference: [phishing_tutor_constitution 1.0](constitution.md); [human decision record](constitution.md#human-decision-record-and-revision-authority). Adopted principles and priorities are unchanged.
@@ -13,6 +13,8 @@ Grounding review: resolved by Codex on 2026-09-07 for the existing T01–T08 and
 The requesting user explicitly approved (1) prioritizing recognition-before-action, attempt/confusion-before-disclosure, responsive progression and factual accuracy, followed by feedback/accessibility, then persona/brevity; (2) a separate learner opportunity at recognition and action; and (3) retaining immediate protection. These are contextual interpretations of P2/R1 with the existing R2 exception, not changes to constitutional priorities or H1–H4. They supersede the older T01 permission to supply a safe-action answer automatically after a failed recognition scaffold. Historical runs keep their original requirements and judgments.
 
 Grounding review for this clarification: independently cleared by `focused_audit` on 2026-11-13; [review evidence](../../../evals/promptfoo/scaffolding-diagnostics/2026-11-13-component-scaffolding/grounding-review.json) pins the reviewed content and records required downstream rubric changes. This status-only update does not change those requirements. The requirement edits remain unversioned until accompanied by a completed experiment package. The focused experiment does not establish full-suite acceptance.
+
+Continuation clarification, requested 2026-11-13: finish the current point's observation task, then its behavior task, before beginning another point. “Observation task” names T02.1's recognition component; “behavior task” names its corresponding action component. T02.2 completion requires this learner's demonstrated understanding. A response that merely agrees or restates a risk after an unanswered action question does not complete the behavior task. Continue responsive support for the unfinished task. Existing evidence can satisfy either task without redundant questioning, and the existing R2 protection exception remains applicable. This clarifies the existing P2/R1 interpretation; no constitutional priority or completion threshold changes. Independent review of the exact continuation snapshot is pending.
 
 ## Scope
 

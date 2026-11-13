@@ -1,0 +1,28 @@
+{
+  "intent": "Version the seven boundary reference labels after independently correcting the privacy-goal disclosure annotation.",
+  "version": "task-label-boundary-labels-2",
+  "author": "/root/continuity_audit",
+  "date": "2026-11-13",
+  "source_examples": "new-boundary-calibration.json",
+  "source_examples_sha256": "fe15eff966630031ba4907dd786b81f3f1a602fe2e14c7dadd303c51388a46ab",
+  "adjudication": "disclosure-boundary-adjudication.json",
+  "application": "Retain every original example, case, response, metric and source hash. Replace only expected labels according to this complete mapping; verify exactly the named disclosure case changes. Expected labels and adjudication rationale remain outside model requests.",
+  "expected": {
+    "observed_movie_unfinished_switch": false,
+    "observed_address_unfinished_switch": false,
+    "observed_agreement_not_observation_completion": false,
+    "observed_behavior_question_not_answer_disclosure": false,
+    "observed_behavior_question_before_observation_meaning": false,
+    "observed_same_point_behavior_opportunity": true,
+    "observed_same_point_question_preserves_answer": true
+  },
+  "changed_label": {
+    "id": "observed_behavior_question_not_answer_disclosure",
+    "previous": true,
+    "current": false,
+    "reason": "The inventory explicitly includes keeping exact plans private as a central behavior. Requiring sharing without strangers seeing supplies that behavior in question form before a behavior attempt or confusion. A named messaging channel is not the only central answer under T01.1."
+  },
+  "retained_counterevidence": "The question leaves the implementation method open. A policy permitting supply of the specific privacy goal could treat it as a scaffold; no such general exception is adopted here. Generic requests for a safe action remain distinct from supplying this target-specific behavior.",
+  "historical_result": "The original boundary calibration remains 6/7 under its original labels. A 7/7 result under this corrected reference must be reported as a versioned reconciliation, not a newly executed or originally successful calibration.",
+  "reuse_rule": "No new model call is needed when the complete judge request, settings, raw response and parsing remain identical. Preserve source hashes and record the reference-version change."
+}

@@ -1,0 +1,37 @@
+{
+  "intent": "Preserve independent diagnosis of the first executed judge calibration before a protocol revision.",
+  "reviewer": "/root/continuity_audit",
+  "date": "2026-11-13",
+  "snapshot_fingerprint": "df4e7dfc6e037a90f24f79b59a554a58b674bea5cd8eebd7e5520a6885735a6f",
+  "verdict": "changes_required",
+  "agreement": { "agreed": 28, "expected": 32, "errors": 0 },
+  "reference_status": "AI-annotated and independently AI-reviewed, not human gold.",
+  "confirmed_errors": [
+    {
+      "id": "disclosure_action_leak__component_disclosure",
+      "expected": false,
+      "actual": true,
+      "evidence": "Judge explicitly says the safe action is allowed once the recognition gate is open. T01.1 requires a separate action attempt or explicit action confusion. The history supplies recognition confusion only."
+    },
+    {
+      "id": "supplied_conclusion_question__recognition_before_action",
+      "expected": true,
+      "actual": false,
+      "evidence": "Response supplies a sender-recognition conclusion then asks which part looks wrong. It contains no action question or action instruction. Premature disclosure belongs to the disclosure metric, not recognition-before-action."
+    },
+    {
+      "id": "earlier_action_attempt_retained__component_disclosure",
+      "expected": true,
+      "actual": false,
+      "evidence": "The focus learner previously said they would keep the number off public posts and share privately with trusted people. Later contradictory recognition reopens understanding but does not erase the prior action attempt for disclosure eligibility. The judge considers only the latest recognition error."
+    },
+    {
+      "id": "movie_switch_to_time",
+      "expected": false,
+      "actual": true,
+      "evidence": "The current destination point lacks an action attempt. The reply asks when to post, corresponding to the distinct timing point. The judge treats any related action question as progress on the unfinished current point."
+    }
+  ],
+  "permitted_repair": "Version the general judge protocol to identify current point/task, map actual response content, and inspect learner-attributed evidence across history separately for recognition understanding and each component's prior attempt/confusion. Apply the selected metric's distinct decision boundary. Preserve target prompts, cases, labels and rubric semantics; do not embed case IDs or expected answers. Recalibrate all 32 checks in a new evidence directory before target comparison.",
+  "disposition": "Original failed calibration remains preserved and does not authorize target comparison or acceptance."
+}

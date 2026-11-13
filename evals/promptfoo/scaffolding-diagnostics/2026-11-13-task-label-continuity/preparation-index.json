@@ -1,0 +1,68 @@
+{
+  "intent": "Index preserved preparation snapshots without committing repeated generated bulk.",
+  "final": "preparation-v12.json",
+  "storage": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/tutor-stage-scaffolding/evals/promptfoo/scaffolding-diagnostics/2026-11-13-task-label-continuity",
+  "provenance": "All snapshots remain locally available. Frozen inputs and exact command history are retained under raw/ and in experiment_log.md. Earlier versions record calibration, parser, judge-thinking, timeout, reference-label, and candidate-scope corrections; they are not new independent trials.",
+  "snapshots": [
+    {
+      "path": "preparation-v10.json",
+      "sha256": "52c39da14b36a7a2371bd82664b2f423488657c9dcec0386f356aa9e2be64d75",
+      "fingerprint": "1952e7f9bd291390852808e355cca15d4d873ebb855cba9a67fde6e511c9568d"
+    },
+    {
+      "path": "preparation-v11.json",
+      "sha256": "824f10b9b594ef4c51f33c0381d84cb356deeec0de69356e316c4f9f7ccfb447",
+      "fingerprint": "077b2d5b6920a0c5704db8e184946623ca653b857ce65ccb208ebb3907bd78fd"
+    },
+    {
+      "path": "preparation-v12.json",
+      "sha256": "97bdaa31111d68743d5b4f37d5f2d4d5cfc306239fd1af4c83827f86604018f7",
+      "fingerprint": "8900d7eb5dba07a2ff6950263c017582ad49fc46420d305b7f042e8785225e53"
+    },
+    {
+      "path": "preparation-v2.json",
+      "sha256": "bfba4f53dd3b6f071fc07dfeb0d93676d09b01a2f3242d2938f104acfa3a9e27",
+      "fingerprint": "df4e7dfc6e037a90f24f79b59a554a58b674bea5cd8eebd7e5520a6885735a6f"
+    },
+    {
+      "path": "preparation-v3.json",
+      "sha256": "a83cb7ed393a1c44ef3125d3e70866e92ee41e3976b918e78e3053afaf0e9187",
+      "fingerprint": "84f81f56545c148239f8b8dfc4732f7e6876b2f4a7db583319159120e7291ed7"
+    },
+    {
+      "path": "preparation-v4.json",
+      "sha256": "a0bfea943bb7dcf5a45a5f4554edef31acbbf0f0b37585394ecfbb045edc9226",
+      "fingerprint": "a317e127b9f5282311568637a29d12ef5e686049a101a0d241e09aa608f53766"
+    },
+    {
+      "path": "preparation-v5.json",
+      "sha256": "67b17b654bd6f1bb84cf8f1fc6a274a8e9410fd3dbe1e324bbb8d5bc13cd9196",
+      "fingerprint": "5229076c8249ad055f71e430657059cbb9fb0c2eba9b02066f238bb42e56964f"
+    },
+    {
+      "path": "preparation-v6.json",
+      "sha256": "68eee429f12258dd04b3ef7db146328756009a65357917c59fa3e67e761c3315",
+      "fingerprint": "ecc7a6ebc1c4bd3f804c1d4d2dfec764faa2085f81574080c473c2636cdcd54c"
+    },
+    {
+      "path": "preparation-v7.json",
+      "sha256": "b889c7981899468162f5676028fcce7687a1efa3b8d40c5abcc720cbbeda533b",
+      "fingerprint": "1b5679d5b2c9c80256d9998214ca9fde824bfb9506181738c3b953238ef91c9d"
+    },
+    {
+      "path": "preparation-v8.json",
+      "sha256": "694256fffc56f4fafde67581ac7cf016d317e9bd8c20fb13533132922523e665",
+      "fingerprint": "2890376a62dd2b465b672fc234055cd9eaddad53057af202f966d0c91e5ac4c5"
+    },
+    {
+      "path": "preparation-v9.json",
+      "sha256": "94e549c22236da76df4256736a69656c73c14a8dec57458c23278e44a832fa89",
+      "fingerprint": "37ba6038c6ebefb8cecb61eae7522429169c940b245b945358d34fedb377a8fe"
+    },
+    {
+      "path": "preparation.json",
+      "sha256": "f555c171ecad1ce37767490537fa765e3af5c7a89c6b6b7543f83d324b170623",
+      "fingerprint": "46d71c2b40b09f51ef793f24f635406250e8ea2287c0f7e861dfd150b7884e23"
+    }
+  ]
+}

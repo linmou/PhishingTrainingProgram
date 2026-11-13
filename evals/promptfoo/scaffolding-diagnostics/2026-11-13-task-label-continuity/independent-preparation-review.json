@@ -1,0 +1,79 @@
+{
+  "intent": "Audit the exact frozen task-label comparison, candidate integrity and calibration references before model execution.",
+  "reviewer": "/root/continuity_audit",
+  "date": "2026-11-13",
+  "verdict": "clear",
+  "scope": "Preparation and refinement integrity. Calibration execution, generated-output quality and behavior acceptance remain unassessed.",
+  "snapshot": "raw/frozen-v2.json",
+  "snapshot_fingerprint": "df4e7dfc6e037a90f24f79b59a554a58b674bea5cd8eebd7e5520a6885735a6f",
+  "candidate_hashes": {
+    "current": "7e8410bcb16ca5c00113600504f36d7800e7c76533e6f01c9877df88a62b4c9f",
+    "labels": "bf4d579dded8ed4e56d7eb0c3313164b153a3eeb34191c9b4d97d5c9b0e2ff37",
+    "sequence": "e082337b3b6db7f69931b833faac709a547331a1b1cda816f720da8ab213d6b5"
+  },
+  "sequence_sha256": "61d54a6734f19ec3d8b7df770a9592804e79b8e5d1305be6f4c7d86b554de241",
+  "runner_sha256": "89cbf29b9c9ebf5f8cfa4366a50cf15f4820fa3a73c167a1722c2d34695980ed",
+  "inspected": [
+    "grounding-review.json",
+    "preparation-v2.json",
+    "raw/frozen-v2.json",
+    "runner.cjs",
+    "harness.test.cjs",
+    "execute.cjs",
+    "candidate-sequence.txt",
+    "../2026-11-13-component-scaffolding/prepare.cjs",
+    "../2026-11-13-component-scaffolding/rubrics.json",
+    "../2026-11-13-component-scaffolding/measurement-clarification.json",
+    "../2026-11-13-deepseek-comparison/independent-calibration-review.json",
+    "../2026-11-13-deepseek-comparison/independent-output-review.json",
+    "../2026-11-13-deepseek-target-continuity/run.cjs"
+  ],
+  "independent_checks": {
+    "frozen_sources": "snapshot() verified every pinned current source SHA-256 and fingerprint.",
+    "shells_checked": 27,
+    "original_heading_occurrences_preserved": 137,
+    "label_only_change": "Reverse substitution recovers each current system request exactly; original heading and component payload remain intact, including the duplicate progress inventory in room requests.",
+    "sequence_only_addition": "Each sequence system request equals its label-only request plus the exact candidate-sequence.txt text.",
+    "target_input_isolation": "All non-system messages are identical across the three main arms. Evaluator reference data is supplied separately to the judge.",
+    "production_reference_requests": "All 66 requests match the immutable initial baseline's same case and repetition exactly; they are a separate historical-production reference, not the current dirty branch baseline.",
+    "expected_generations": 363,
+    "main_arm_generations_each": 99,
+    "fixed_cases": 25,
+    "controlled_trajectories": 2,
+    "calibration_checks": 32,
+    "completion_pair": "Both members share explicit learner-owned observation and meaning plus the same action question. Only the final learner answer changes. The completed member contains a meaningful private-coordination action; the incomplete member remains a bare risk verdict.",
+    "case_scope": "22 inherited ordinary cases reused; five protection/contextual-protection cases excluded with trace. Both original trajectories retained. Added one real room record and a synthetic completion pair. No eligible holdout claim."
+  },
+  "findings": [
+    {
+      "id": "P1",
+      "status": "resolved_before_model_calls",
+      "original": "The first calibration draft marked an audience question as useful next work after the learner had already identified strangers as the audience.",
+      "resolution": "Version 2 uses an unmet timing observation: whether the outing has happened yet. The prior draft freeze remains preserved."
+    },
+    {
+      "id": "P2",
+      "status": "resolved_before_model_calls",
+      "original": "Nintendo calibration contexts retained another participant's unresolved click intention even though the new comparison is scoped to ordinary teaching.",
+      "resolution": "Version 2 omits those four calibration checks. The original records remain preserved, and target-case exclusions record the contextual-protection reason."
+    },
+    {
+      "id": "P3",
+      "status": "clear",
+      "evidence": "The candidate states general learner-evidence, component-order, continuation and reopening rules traceable to T01.1/T02.1/T02.2. It contains no case identifiers, expected-label lookup, example-specific exceptions or scenario names."
+    },
+    {
+      "id": "P4",
+      "status": "clear_with_execution_condition",
+      "evidence": "Single-metric judgments preserve the three distinct properties and use reason/evidence before pass. Calibration includes permitted action disclosure after explicit confusion, retained earlier action attempts, premature disclosure, target switching, completed-task advance and redundant retesting.",
+      "condition": "The versioned calibration must pass before comparison. Its references are independent AI-reviewed annotations, not human-gold labels; passing them does not rule out output-level grading defects."
+    }
+  ],
+  "limits": [
+    "This independent audit supports integrity, not measured generalization or behavior acceptance.",
+    "Existing production-baseline coverage is limited to the inherited fixed cases, so its totals cannot be directly compared with the larger main-arm totals.",
+    "Trajectory histories diverge by actual generated tutor replies; later turns are controlled journey comparisons, not identical-input pairs.",
+    "Checklist state stays frozen. The experiment cannot establish analyzer correctness or human learning gains.",
+    "Full regression, eligible unseen holdout and release verification remain outside this focused run."
+  ]
+}
