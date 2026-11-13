@@ -1,5 +1,6 @@
 {
-  "purpose": "Reviewed local candidate; not an integrated production release manifest",
+  "purpose": "Verified production release; migration path updated after exact-byte archival",
+  "release_commit": "968331f11dc352f16a0d3ae42f9ff708f12bc056",
   "baseline_commit": "4da7cc2741da44419338e40441eb213e371d2dfa",
   "files": {
     "tutor-system/src/hooks/useChecklist.ts": "dc7bdeca6d012c21b8da978fbb7c00833857b4a60e24af5f27d454cf517d6ef1",
@@ -10,9 +11,9 @@
     "tutor-system/src/pages/RoomPagePost.tsx": "937d77b01272efd47792023c2f98f5af514d3fb9e911db99b0005c65d93c1bf4",
     "tutor-system/package.json": "465472674cb9655c6038fb7efd09e9bdcf980700fd54b09a6da6bdb2374f2f9a",
     "tutor-system/package-lock.json": "501922254f2f40ad292541217c55294d13e76c747361153718d310d01177f6c0",
-    "tutor-system/supabase/migrations/20261112180000_enable_learning_progress_realtime.sql": "36760ca5352aae0e3ff1b41a1331e1f7ca667a260605eb095a726ce4f482b9d9",
+    "tutor-system/supabase/archived_migrations/20261112180000_enable_learning_progress_realtime.sql": "36760ca5352aae0e3ff1b41a1331e1f7ca667a260605eb095a726ce4f482b9d9",
     "tutor-system/supabase/tests/learning_progress_realtime_publication.sql": "e22bc7e48c5144b3555b7d84767a43b054f56c2cae9b2098189dafbdea3b24dd",
-    "scripts/database/learning-progress-realtime.integration.test.js": "9cb1306013deac579a58cb64d3e911a5045cb2ca23e6d7438fe10b33e662bb59",
+    "scripts/database/learning-progress-realtime.integration.test.js": "c848ecc0707278b16661bd459928a99aeb9aa5a5e54c6bd2c61fbce5aed140ca",
     "tutor-system/src/services/checklistService.ts": "2e69a8e2a1463b8521436d4919709ca941f81a22874a0c59a450c095b02b8bfe",
     "tutor-system/src/services/transferAssessmentService.ts": "b6c898a6a729c045f355520a7a099ffad646e491095f36a4298f63cb38c600cb",
     "tutor-system/src/types/assessmentApi.ts": "bac215f07b614ccc95e877f256424e2bf1b9fca5166fad0496e5e2606b94a2df",
