@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+import { OAI_MODEL } from '../aiModels';
 /**
  * Test responsible for aiService.ts using room fields for base AI settings and ai_assistant_configs for persisted extended config fields.
  */
@@ -84,7 +84,7 @@ describe('AI Service room source of truth', () => {
         await expect(getAIConfig('room-1')).resolves.toMatchObject({
             id: 'room-1',
             room_id: 'room-1',
-            model_name: 'qwen3.8-flash',
+            model_name: OAI_MODEL,
             system_prompt: generateSystemPrompt({
                 ...normalizedPromptConfig,
                 detection_areas: [],
@@ -330,7 +330,7 @@ describe('AI Service room source of truth', () => {
         ).resolves.toMatchObject({
             id: 'room-2',
             room_id: 'room-2',
-            model_name: 'qwen3.8-flash',
+            model_name: OAI_MODEL,
             system_prompt: 'Updated room prompt.',
             prompt_config: {
                 role: { role: 'low' }
@@ -354,7 +354,7 @@ describe('AI Service room source of truth', () => {
             change_reason: 'settings_update',
             changed_fields: ['system_prompt', 'prompt_config', 'temperature', 'max_tokens'],
             previous_config: {
-                model_name: 'qwen3.8-flash',
+                model_name: OAI_MODEL,
                 system_prompt: 'Old prompt.',
                 prompt_config: null,
                 temperature: 0.7,
@@ -362,7 +362,7 @@ describe('AI Service room source of truth', () => {
                 is_active: true
             },
             new_config: {
-                model_name: 'qwen3.8-flash',
+                model_name: OAI_MODEL,
                 system_prompt: 'Updated room prompt.',
                 prompt_config: {
                     role: { role: 'low' }

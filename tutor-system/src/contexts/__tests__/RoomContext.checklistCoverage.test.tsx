@@ -15,7 +15,7 @@ jest.mock('../../services/supabase', () => ({
   getRoomFeedbackSummary: jest.fn(), clearChatHistory: jest.fn(),
 }));
 jest.mock('../../services/aiService', () => ({
-  getAIConfig: jest.fn().mockResolvedValue(null), DEFAULT_AI_MODEL: 'qwen3.5-flash',
+  getAIConfig: jest.fn().mockResolvedValue(null), OAI_MODEL: 'qwen3.5-flash',
 }));
 jest.mock('../../services/checklistService', () => ({ ChecklistService: {
   getChecklistForStudent: jest.fn().mockResolvedValue(null),

@@ -38,6 +38,8 @@ require.extensions['.ts'] = (module, filename) => {
 };
 
 loadEnv();
+if (!process.env.OAI_MODEL?.trim()) throw new Error('OAI_MODEL is required for template model metadata.');
+process.env.REACT_APP_OAI_MODEL = process.env.OAI_MODEL.trim();
 
 const {
   getDemoRoomTemplateSeeds,

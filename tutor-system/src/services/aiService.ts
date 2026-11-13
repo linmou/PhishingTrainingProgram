@@ -19,12 +19,12 @@ import {
     conversationMessagesToHistoryText,
     formatRoomScenarioContext
 } from './ecologicalTutorCall';
-import { AI_MODELS, DEFAULT_AI_MODEL, type AIModelName } from './aiModels';
+import { AI_MODELS, OAI_MODEL, type AIModelName } from './aiModels';
 import { parseTutorDecision } from './tutorDecisionContract';
 import { ChecklistService } from './checklistService';
 import type { CyberbullyingCharacter, CyberbullyingSuggestion } from '../types';
 
-export { AI_MODELS, DEFAULT_AI_MODEL };
+export { AI_MODELS, OAI_MODEL };
 export type { AIModelName };
 
 export const parseTutorActionDecision = (
@@ -65,7 +65,6 @@ const appendTutorDecisionRepairInstruction = (
 // CONSTANTS AND TYPES
 // ============================================================================
 
-const QWEN_MODEL: AIModelName = DEFAULT_AI_MODEL;
 const MAX_TUTOR_DECISION_ATTEMPTS = 2;
 const TUTOR_GENERATION_SETTINGS = {
     temperature: 0.3,
@@ -169,7 +168,7 @@ const stripWrappedQuotes = (value: string): string => {
     return innerContent.trim();
 };
 
-export const normalizeAIModel = (_modelName: unknown): AIModelName => DEFAULT_AI_MODEL;
+export const normalizeAIModel = (_modelName: unknown): AIModelName => OAI_MODEL;
 
 export const resolveTutorPriorMode = (roomData: {
     guard_mode?: boolean | null;
@@ -622,7 +621,7 @@ export class QwenService {
 
             return {
                 content: responseContent,
-                model_used: data.model || QWEN_MODEL,
+                model_used: data.model || OAI_MODEL,
                 response_time_ms: responseTime,
                 success: true
             };
@@ -632,7 +631,7 @@ export class QwenService {
 
             return {
                 content: '',
-                model_used: QWEN_MODEL,
+                model_used: OAI_MODEL,
                 response_time_ms: responseTime,
                 success: false,
                 error: error instanceof Error ? error.message : 'Unknown error occurred'
@@ -1090,7 +1089,7 @@ const getAIConfigForRoom = async (room: AIConfigRoom | null): Promise<AIAssistan
  */
 export const initializeAIAssistant = async (
     roomId: string,
-    modelName: string = DEFAULT_AI_MODEL,
+    modelName: string = OAI_MODEL,
     systemPrompt?: string,
     userId?: string,
     promptConfig?: {
@@ -1137,7 +1136,7 @@ export const initializeAIAssistant = async (
         'Provide clear, educational responses to help students learn. ' +
         'Be encouraging, patient, and focus on building understanding.';
 
-    return await initializeAIAssistantFallback(roomId, DEFAULT_AI_MODEL, defaultPrompt, userId, finalPromptConfig);
+    return await initializeAIAssistantFallback(roomId, OAI_MODEL, defaultPrompt, userId, finalPromptConfig);
 };
 
 /**
@@ -1176,7 +1175,7 @@ const initializeAIAssistantFallback = async (
         .from('rooms')
         .update({
             ai_assistant_enabled: true,
-            ai_assistant_model: DEFAULT_AI_MODEL,
+            ai_assistant_model: OAI_MODEL,
             ai_assistant_prompt: systemPrompt,
             updated_at: new Date().toISOString()
         })
@@ -1189,7 +1188,7 @@ const initializeAIAssistantFallback = async (
     }
 
     await persistExtendedAIConfig(roomId, {
-        model_name: DEFAULT_AI_MODEL,
+        model_name: OAI_MODEL,
         system_prompt: systemPrompt,
         prompt_config: promptConfig ?? null,
         temperature: 0.7,

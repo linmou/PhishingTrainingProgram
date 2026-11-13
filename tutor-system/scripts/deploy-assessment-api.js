@@ -8,7 +8,7 @@ const ts = require('typescript');
 const dotenv = require('dotenv');
 
 const root = path.resolve(__dirname, '..');
-const requiredSecrets = ['OAI_API_KEY', 'OAI_BASE_URL'];
+const requiredSecrets = ['OAI_API_KEY', 'OAI_BASE_URL', 'OAI_MODEL'];
 const sha256 = value => createHash('sha256').update(value).digest('hex');
 
 async function main() {

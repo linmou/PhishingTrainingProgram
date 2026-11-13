@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+import { OAI_MODEL } from '../aiModels';
 /** Purpose: verify visible Qwen provider failures and strict structured-decision parsing. */
 
 jest.mock('../simplifiedAIContext', () => ({
@@ -100,7 +100,7 @@ describe('AI Service provider failure behavior', () => {
         expect(result.success).toBe(true);
         expect(result.suggestion).toBe('What makes the sender address look suspicious to you?');
         expect(result.appliedConfig).toMatchObject({
-            model_name: 'qwen3.8-flash',
+            model_name: OAI_MODEL,
             system_prompt: 'Use room-level tutor guidance.'
         });
     });

@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+import { OAI_MODEL } from '../aiModels';
 /** Tests aiService.ts and simplifiedAIContext.ts: one room snapshot owns suggestion inputs; history packaging preserves each branch's contract. */
 
 import { generateTutorSuggestion, TutorSuggestionService } from '../aiService';
@@ -14,7 +14,7 @@ jest.mock('../checklistService', () => ({ ChecklistService: { getChecklistByRoom
 jest.mock('../transferAssessmentService', () => ({ transferAssessmentService: { readReview: jest.fn() } }));
 
 const room = {
-  id: 'room-request', ai_assistant_enabled: true, ai_assistant_model: 'qwen3.8-flash',
+  id: 'room-request', ai_assistant_enabled: true, ai_assistant_model: OAI_MODEL,
   ai_assistant_prompt: 'Room prompt snapshot', guard_mode: false,
   guard_mode_changed_at: '2026-11-01T00:00:00Z', practice_type: 'phishing',
   title: 'Scenario title snapshot', description: 'Scenario description snapshot',
@@ -22,7 +22,7 @@ const room = {
   created_at: '2026-11-01T00:00:00Z', updated_at: '2026-11-02T00:00:00Z'
 };
 const config: AIAssistantConfig = {
-  id: 'config-request', room_id: room.id, model_name: 'qwen3.8-flash',
+  id: 'config-request', room_id: room.id, model_name: OAI_MODEL,
   system_prompt: 'Packaging prompt', prompt_config: null, temperature: 0.3,
   max_tokens: 600, is_active: true, created_at: room.created_at, updated_at: room.updated_at
 };

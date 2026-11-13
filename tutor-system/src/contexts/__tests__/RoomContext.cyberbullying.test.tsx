@@ -20,7 +20,7 @@ jest.mock('../../services/supabase', () => ({
 }));
 jest.mock('../../services/aiService', () => ({
   generateTutorSuggestion: jest.fn(), getAIConfig: jest.fn(),
-  recordAISuggestionFeedback: jest.fn(), DEFAULT_AI_MODEL: 'qwen3.8-flash',
+  recordAISuggestionFeedback: jest.fn(), OAI_MODEL: 'qwen3.8-flash',
 }));
 jest.mock('../../services/checklistService', () => ({
   ChecklistService: { analyzeStudentMessages: jest.fn(), getActiveTransferChecklistForRoom: jest.fn(), getChecklistForStudent: jest.fn() },

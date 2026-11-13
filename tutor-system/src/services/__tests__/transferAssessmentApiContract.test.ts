@@ -236,8 +236,8 @@ describe('assessment API contract', () => {
     expect(source).toContain("resolveTransferAnswer } from '../../../src/services/transferAssessmentOrchestrator.ts'");
     expect(source).toContain("deps.env('OAI_API_KEY')");
     expect(source).toContain("deps.env('OAI_BASE_URL')");
-    expect(source).not.toContain("deps.env('OAI_MODEL')");
-    expect(source).toContain("const PROVIDER_MODEL = 'qwen3.5-flash'");
+    expect(source).toContain("deps.env('OAI_MODEL')");
+    expect(source).not.toContain("const PROVIDER_MODEL");
     expect(source).toContain('p_expected_attempt_count');
     expect(source).toContain("committed.code === 'CONCURRENT_MODIFICATION'");
     expect(source).toContain("deps.env('OAI_API_KEY')");
