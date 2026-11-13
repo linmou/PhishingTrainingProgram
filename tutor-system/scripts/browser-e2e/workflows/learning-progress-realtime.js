@@ -3,13 +3,16 @@
 'use strict';
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const { openRoom, query, waitForMatch, requestId, screenshot, writeJson, managementQuery, TIMEOUT } = require('../browser-e2e-support');
+const { openRoom, query, waitForMatch, requestId, screenshot, writeJson, managementQuery, captureResponses, TIMEOUT } = require('../browser-e2e-support');
 
 module.exports = async function learningProgressRealtime(ctx) {
   const { tutorPage, studentPage, client, appUrl } = ctx;
   const evidence = { status: 'running', started_at: new Date().toISOString(), rooms: [], checks: [], calls: [],
     latency_basis: 'Elapsed from successful mutation response; browser polling included; limit 2000ms.' };
   const persist = () => writeJson(path.join(ctx.evidenceDir, 'learning-progress-realtime.json'), evidence);
+  const capture = response => /\/rest\/v1\/(sessions|session_checklists|checklist_items)\?|\/functions\/v1\/assessment-api/.test(response.url());
+  const stopTutor = await captureResponses(tutorPage, capture);
+  const stopLearner = await captureResponses(studentPage, capture);
   const panel = page => page.locator('.checklist-panel');
   const card = (page, target) => page.locator('.checklist-item').filter({ hasText: target });
   async function api(actor, operation, payload) {
@@ -196,6 +199,15 @@ module.exports = async function learningProgressRealtime(ctx) {
     evidence.status = 'fail'; evidence.error = { message: error.message, stack: error.stack }; throw error;
   } finally {
     await studentPage.context().setOffline(false);
+    evidence.final_database = await Promise.all(evidence.rooms.map(async room => ({
+      room_id: room.id,
+      sessions: await query(client, 'sessions', 'id,student_id,tutor_id,status', 'room_id', room.id),
+      checklists: await query(client, 'session_checklists', 'id,student_id,is_active,progress_policy_version', 'room_id', room.id),
+    })));
+    evidence.browser_requests = { tutor: await stopTutor(), learner: await stopLearner() };
+    evidence.local_draft = await tutorPage.evaluate(roomIds => Object.fromEntries(
+      Object.entries(localStorage).filter(([key]) => roomIds.some(id => key.includes(id)))
+    ), evidence.rooms.map(room => room.id));
     evidence.completed_at = new Date().toISOString(); persist();
   }
   return evidence;

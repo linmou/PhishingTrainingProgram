@@ -1,6 +1,6 @@
 # Learning target auto-refresh — issue #75
 
-Status: **evidence visibility repair implemented; frontend, Edge and amended fresh-baseline SQL tests passed; hosted acceptance pending**. Current continuation below supersedes historical blockers. This record does not certify a release.
+Status: **staging SQL and Edge applied; first two-viewer acceptance failed at target setup; diagnosis active**. Current continuation below supersedes historical blockers. This record does not certify a release.
 
 - Issue: https://github.com/linmou/PhishingTrainingProgram/issues/75
 - Draft PR: https://github.com/linmou/PhishingTrainingProgram/pull/76
@@ -173,3 +173,28 @@ notification/guard semantics, frontend mapping/failure propagation and local
 validation. The strict phase gate accepted round 1 (`pr76_evidence`, `review` to
 `staging`). Audit JSON is locally ignored under `audits/`. The reviewers explicitly
 bounded untested concurrency interleavings and did not certify hosted delivery.
+
+### Staging application and first acceptance — 2026-11-12
+
+Candidate `9a4da2e077542f7ce292817beceaf495773e749d` passed all required CI in run
+`43341064957`. Under its owned staging lease, Supabase MCP applied the exact
+amended SQL successfully. Catalog readback shows seven publication members
+(four additions plus the original three), the evidence trigger, denied RPC
+execution for anon/authenticated, and allowed execution for service_role.
+Assessment-api then deployed as **v83**, bundle
+`cb53eee4fe5ecfc4f252ac6e08d9fa9bdf69ac7c398f7443f46beffba1fc1514`, transitive source
+manifest `4eab5fa629fa0f2327321c44b54447cf8aae27f33323064ec119119aa01b68ce`.
+Application observed by 2026-11-13 00:59:48 UTC. ai-api was not changed.
+
+The first `learning-progress-realtime` run failed after the tutor entered targets:
+the learner remained at the waiting-for-targets view for 90 seconds. This occurs
+before priority/evidence/reconnect checks; none of those are certified. Failed
+screenshots/report remain in
+`tmp/browser_demo_runs/staging-template-20261113005948-20e3693e/`. Its one created
+room and related data were cleaned successfully, and the parent lease was then
+released for diagnostic candidate preparation. Staging remains on SQL + v83;
+production is untouched by PR76. Added request and final-state capture to the
+workflow to distinguish failed draft promotion from event/read delivery on the
+next run. Harness syntax and 33 unit tests pass. Release owner remains Codex in
+`pr-76-local`; next action is diagnose and repair this setup failure, then complete
+all selected staging checks before merge.
