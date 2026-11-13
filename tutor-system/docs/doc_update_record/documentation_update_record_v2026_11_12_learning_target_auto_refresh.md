@@ -7,7 +7,7 @@ Status: **PR76 merged and production verified**. Final release evidence below su
 
 - Issue: https://github.com/linmou/PhishingTrainingProgram/issues/75
 - Merged PR: https://github.com/linmou/PhishingTrainingProgram/pull/76
-- Reviewed implementation commit: `b4e5dcb` (runtime artifact hashes in the candidate manifest).
+- Final reviewed implementation commit: `37fc743` (runtime artifact hashes in the candidate manifest).
 - Batch: `learning-target-auto-refresh-2026-11-12`.
 - Release and repair owner: **Codex**, `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/pr-76-local`.
 - Base: `878ed465823959517bb68398b05ee08b90958b24`; topic: `linmou/learning-target-auto-refresh`; integration target: `no_sign_up`.
