@@ -2,3 +2,5 @@ raw/
 preparation.json
 preparation-v*.json
 !preparation-v12.json
+evidence-*.json
+!evidence-index.json

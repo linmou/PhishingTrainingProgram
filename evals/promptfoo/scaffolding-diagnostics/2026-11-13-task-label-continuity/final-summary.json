@@ -1,0 +1,3213 @@
+{
+  "intent": "Deterministic final machine-grade summary; independent semantic disagreements remain separate and do not overwrite raw judgments.",
+  "created_at": "2026-11-13T11:12:36.943Z",
+  "started_at": "2026-11-13T11:12:35.928Z",
+  "command": [
+    "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/tutor-stage-scaffolding/evals/promptfoo/scaffolding-diagnostics/2026-11-13-task-label-continuity/summarize-final.cjs"
+  ],
+  "cwd": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/tutor-stage-scaffolding",
+  "script_sha256": "98e5fc363f84c32947bf8f983b198e51889ea1558cbc775fbc1aa78a4179ced3",
+  "frozen_fingerprint": "8900d7eb5dba07a2ff6950263c017582ad49fc46420d305b7f042e8785225e53",
+  "workspace_drift_after_execution": [
+    {
+      "path": "evals/promptfoo/scaffolding-diagnostics/2026-11-13-task-label-continuity/harness.test.cjs",
+      "executed_sha256": "15c788e30a884b738ea19decae787ed96f7fbcab209c2131b595353611073840",
+      "current_sha256": "3a7b4c4962358a5eba2e05ff79f4594a6b9af4122147f820539c06b70f3e1fb6"
+    },
+    {
+      "path": "tutor-system/src/services/ecologicalTutorCall.ts",
+      "executed_sha256": "7ce389c7fb8918475ed757e724e9a9f659db0f503cce7c66bd505e023ee813b1",
+      "current_sha256": "147ab5fd26279e1d29275264a62a4d590f060af546f05da245ce9014b2dbaf8a"
+    },
+    {
+      "path": "tutor-system/src/services/prompts/activeTutorAgentPrompt.ts",
+      "executed_sha256": "00fa654917f52b5b3d61209524014e9293a6968b4b985d7a601bb0d16c3cb4d9",
+      "current_sha256": "fa9955bdfa533b0a62ed97052d7e2c6e67e3a1d390d77dab2f3d80e8fe1748c1"
+    },
+    {
+      "path": "tutor-system/src/services/prompts/responsePolicy.ts",
+      "executed_sha256": "d08250b78093c643facf533df47a09fd849e32e373b1cc64e30e40499aec6fc9",
+      "current_sha256": "e3864b1d17f2036869a85602edc262ce23317eca5f8411191193b7e944a40db4"
+    }
+  ],
+  "coverage": {
+    "planned": 267,
+    "saved": 266,
+    "valid": 262,
+    "target_status": {
+      "valid": 262,
+      "format_or_transport_error": 3,
+      "provider_error": 1,
+      "blocked_by_prior_turn": 1
+    },
+    "judgments": {
+      "planned": 801,
+      "saved": 798,
+      "valid_target_judge_errors": 1,
+      "original_valid_target_judge_errors": 2,
+      "repaired_entries": 1,
+      "propagated_target_errors": 12,
+      "missing": 3
+    }
+  },
+  "partitions": {
+    "production": {
+      "all": {
+        "expected": 27,
+        "target_status": {
+          "valid": 27
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 27,
+            "pass": 20,
+            "fail": 7,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.7407407407407407,
+            "pass_rate_evaluable": 0.7407407407407407
+          },
+          "responsive_progression": {
+            "expected": 27,
+            "pass": 19,
+            "fail": 8,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.7037037037037037,
+            "pass_rate_evaluable": 0.7037037037037037
+          },
+          "component_disclosure": {
+            "expected": 27,
+            "pass": 17,
+            "fail": 10,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.6296296296296297,
+            "pass_rate_evaluable": 0.6296296296296297
+          }
+        },
+        "all_three": {
+          "pass": 12,
+          "fail": 15,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 14,
+            "first_pass_second_fail": 6,
+            "first_fail_second_pass": 5,
+            "both_fail": 2,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 14,
+            "first_pass_second_fail": 5,
+            "first_fail_second_pass": 3,
+            "both_fail": 5,
+            "unevaluable": 0
+          }
+        }
+      },
+      "fixed": {
+        "expected": 27,
+        "target_status": {
+          "valid": 27
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 27,
+            "pass": 20,
+            "fail": 7,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.7407407407407407,
+            "pass_rate_evaluable": 0.7407407407407407
+          },
+          "responsive_progression": {
+            "expected": 27,
+            "pass": 19,
+            "fail": 8,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.7037037037037037,
+            "pass_rate_evaluable": 0.7037037037037037
+          },
+          "component_disclosure": {
+            "expected": 27,
+            "pass": 17,
+            "fail": 10,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.6296296296296297,
+            "pass_rate_evaluable": 0.6296296296296297
+          }
+        },
+        "all_three": {
+          "pass": 12,
+          "fail": 15,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 14,
+            "first_pass_second_fail": 6,
+            "first_fail_second_pass": 5,
+            "both_fail": 2,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 14,
+            "first_pass_second_fail": 5,
+            "first_fail_second_pass": 3,
+            "both_fail": 5,
+            "unevaluable": 0
+          }
+        }
+      },
+      "recognition": {
+        "expected": 15,
+        "target_status": {
+          "valid": 15
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 15,
+            "pass": 8,
+            "fail": 7,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.5333333333333333,
+            "pass_rate_evaluable": 0.5333333333333333
+          },
+          "responsive_progression": {
+            "expected": 15,
+            "pass": 13,
+            "fail": 2,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.8666666666666667,
+            "pass_rate_evaluable": 0.8666666666666667
+          },
+          "component_disclosure": {
+            "expected": 15,
+            "pass": 8,
+            "fail": 7,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.5333333333333333,
+            "pass_rate_evaluable": 0.5333333333333333
+          }
+        },
+        "all_three": {
+          "pass": 6,
+          "fail": 9,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 8,
+            "first_pass_second_fail": 0,
+            "first_fail_second_pass": 5,
+            "both_fail": 2,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 8,
+            "first_pass_second_fail": 5,
+            "first_fail_second_pass": 0,
+            "both_fail": 2,
+            "unevaluable": 0
+          }
+        }
+      },
+      "action": {
+        "expected": 12,
+        "target_status": {
+          "valid": 12
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 12,
+            "pass": 12,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 1,
+            "pass_rate_evaluable": 1
+          },
+          "responsive_progression": {
+            "expected": 12,
+            "pass": 6,
+            "fail": 6,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.5,
+            "pass_rate_evaluable": 0.5
+          },
+          "component_disclosure": {
+            "expected": 12,
+            "pass": 9,
+            "fail": 3,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.75,
+            "pass_rate_evaluable": 0.75
+          }
+        },
+        "all_three": {
+          "pass": 6,
+          "fail": 6,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 6,
+            "first_pass_second_fail": 6,
+            "first_fail_second_pass": 0,
+            "both_fail": 0,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 6,
+            "first_pass_second_fail": 0,
+            "first_fail_second_pass": 3,
+            "both_fail": 3,
+            "unevaluable": 0
+          }
+        }
+      },
+      "synthetic_development": {
+        "expected": 27,
+        "target_status": {
+          "valid": 27
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 27,
+            "pass": 20,
+            "fail": 7,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.7407407407407407,
+            "pass_rate_evaluable": 0.7407407407407407
+          },
+          "responsive_progression": {
+            "expected": 27,
+            "pass": 19,
+            "fail": 8,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.7037037037037037,
+            "pass_rate_evaluable": 0.7037037037037037
+          },
+          "component_disclosure": {
+            "expected": 27,
+            "pass": 17,
+            "fail": 10,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.6296296296296297,
+            "pass_rate_evaluable": 0.6296296296296297
+          }
+        },
+        "all_three": {
+          "pass": 12,
+          "fail": 15,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 14,
+            "first_pass_second_fail": 6,
+            "first_fail_second_pass": 5,
+            "both_fail": 2,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 14,
+            "first_pass_second_fail": 5,
+            "first_fail_second_pass": 3,
+            "both_fail": 5,
+            "unevaluable": 0
+          }
+        }
+      }
+    },
+    "current": {
+      "all": {
+        "expected": 60,
+        "target_status": {
+          "valid": 57,
+          "format_or_transport_error": 3
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 60,
+            "pass": 54,
+            "fail": 3,
+            "error": 3,
+            "missing": 0,
+            "pass_rate_planned": 0.9,
+            "pass_rate_evaluable": 0.9473684210526315
+          },
+          "responsive_progression": {
+            "expected": 60,
+            "pass": 44,
+            "fail": 13,
+            "error": 3,
+            "missing": 0,
+            "pass_rate_planned": 0.7333333333333333,
+            "pass_rate_evaluable": 0.7719298245614035
+          },
+          "component_disclosure": {
+            "expected": 60,
+            "pass": 47,
+            "fail": 9,
+            "error": 4,
+            "missing": 0,
+            "pass_rate_planned": 0.7833333333333333,
+            "pass_rate_evaluable": 0.8392857142857143
+          }
+        },
+        "all_three": {
+          "pass": 37,
+          "fail": 19,
+          "unevaluable": 4
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 44,
+            "first_pass_second_fail": 10,
+            "first_fail_second_pass": 0,
+            "both_fail": 3,
+            "unevaluable": 3
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 37,
+            "first_pass_second_fail": 6,
+            "first_fail_second_pass": 10,
+            "both_fail": 3,
+            "unevaluable": 4
+          }
+        }
+      },
+      "fixed": {
+        "expected": 36,
+        "target_status": {
+          "valid": 33,
+          "format_or_transport_error": 3
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 36,
+            "pass": 30,
+            "fail": 3,
+            "error": 3,
+            "missing": 0,
+            "pass_rate_planned": 0.8333333333333334,
+            "pass_rate_evaluable": 0.9090909090909091
+          },
+          "responsive_progression": {
+            "expected": 36,
+            "pass": 26,
+            "fail": 7,
+            "error": 3,
+            "missing": 0,
+            "pass_rate_planned": 0.7222222222222222,
+            "pass_rate_evaluable": 0.7878787878787878
+          },
+          "component_disclosure": {
+            "expected": 36,
+            "pass": 25,
+            "fail": 8,
+            "error": 3,
+            "missing": 0,
+            "pass_rate_planned": 0.6944444444444444,
+            "pass_rate_evaluable": 0.7575757575757576
+          }
+        },
+        "all_three": {
+          "pass": 21,
+          "fail": 12,
+          "unevaluable": 3
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 26,
+            "first_pass_second_fail": 4,
+            "first_fail_second_pass": 0,
+            "both_fail": 3,
+            "unevaluable": 3
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 21,
+            "first_pass_second_fail": 5,
+            "first_fail_second_pass": 4,
+            "both_fail": 3,
+            "unevaluable": 3
+          }
+        }
+      },
+      "trajectory": {
+        "expected": 24,
+        "target_status": {
+          "valid": 24
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 24,
+            "pass": 24,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 1,
+            "pass_rate_evaluable": 1
+          },
+          "responsive_progression": {
+            "expected": 24,
+            "pass": 18,
+            "fail": 6,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.75,
+            "pass_rate_evaluable": 0.75
+          },
+          "component_disclosure": {
+            "expected": 24,
+            "pass": 22,
+            "fail": 1,
+            "error": 1,
+            "missing": 0,
+            "pass_rate_planned": 0.9166666666666666,
+            "pass_rate_evaluable": 0.9565217391304348
+          }
+        },
+        "all_three": {
+          "pass": 16,
+          "fail": 7,
+          "unevaluable": 1
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 18,
+            "first_pass_second_fail": 6,
+            "first_fail_second_pass": 0,
+            "both_fail": 0,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 16,
+            "first_pass_second_fail": 1,
+            "first_fail_second_pass": 6,
+            "both_fail": 0,
+            "unevaluable": 1
+          }
+        }
+      },
+      "recognition": {
+        "expected": 24,
+        "target_status": {
+          "valid": 24
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 24,
+            "pass": 21,
+            "fail": 3,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.875,
+            "pass_rate_evaluable": 0.875
+          },
+          "responsive_progression": {
+            "expected": 24,
+            "pass": 21,
+            "fail": 3,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.875,
+            "pass_rate_evaluable": 0.875
+          },
+          "component_disclosure": {
+            "expected": 24,
+            "pass": 17,
+            "fail": 7,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.7083333333333334,
+            "pass_rate_evaluable": 0.7083333333333334
+          }
+        },
+        "all_three": {
+          "pass": 15,
+          "fail": 9,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 21,
+            "first_pass_second_fail": 0,
+            "first_fail_second_pass": 0,
+            "both_fail": 3,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 15,
+            "first_pass_second_fail": 6,
+            "first_fail_second_pass": 2,
+            "both_fail": 1,
+            "unevaluable": 0
+          }
+        }
+      },
+      "action": {
+        "expected": 27,
+        "target_status": {
+          "valid": 24,
+          "format_or_transport_error": 3
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 27,
+            "pass": 24,
+            "fail": 0,
+            "error": 3,
+            "missing": 0,
+            "pass_rate_planned": 0.8888888888888888,
+            "pass_rate_evaluable": 1
+          },
+          "responsive_progression": {
+            "expected": 27,
+            "pass": 14,
+            "fail": 10,
+            "error": 3,
+            "missing": 0,
+            "pass_rate_planned": 0.5185185185185185,
+            "pass_rate_evaluable": 0.5833333333333334
+          },
+          "component_disclosure": {
+            "expected": 27,
+            "pass": 22,
+            "fail": 2,
+            "error": 3,
+            "missing": 0,
+            "pass_rate_planned": 0.8148148148148148,
+            "pass_rate_evaluable": 0.9166666666666666
+          }
+        },
+        "all_three": {
+          "pass": 14,
+          "fail": 10,
+          "unevaluable": 3
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 14,
+            "first_pass_second_fail": 10,
+            "first_fail_second_pass": 0,
+            "both_fail": 0,
+            "unevaluable": 3
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 14,
+            "first_pass_second_fail": 0,
+            "first_fail_second_pass": 8,
+            "both_fail": 2,
+            "unevaluable": 3
+          }
+        }
+      },
+      "next": {
+        "expected": 9,
+        "target_status": {
+          "valid": 9
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 9,
+            "pass": 9,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 1,
+            "pass_rate_evaluable": 1
+          },
+          "responsive_progression": {
+            "expected": 9,
+            "pass": 9,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 1,
+            "pass_rate_evaluable": 1
+          },
+          "component_disclosure": {
+            "expected": 9,
+            "pass": 8,
+            "fail": 0,
+            "error": 1,
+            "missing": 0,
+            "pass_rate_planned": 0.8888888888888888,
+            "pass_rate_evaluable": 1
+          }
+        },
+        "all_three": {
+          "pass": 8,
+          "fail": 0,
+          "unevaluable": 1
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 9,
+            "first_pass_second_fail": 0,
+            "first_fail_second_pass": 0,
+            "both_fail": 0,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 8,
+            "first_pass_second_fail": 0,
+            "first_fail_second_pass": 0,
+            "both_fail": 0,
+            "unevaluable": 1
+          }
+        }
+      },
+      "ecological_record": {
+        "expected": 3,
+        "target_status": {
+          "valid": 3
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 3,
+            "pass": 0,
+            "fail": 3,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0,
+            "pass_rate_evaluable": 0
+          },
+          "responsive_progression": {
+            "expected": 3,
+            "pass": 0,
+            "fail": 3,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0,
+            "pass_rate_evaluable": 0
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 2,
+            "fail": 1,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.6666666666666666,
+            "pass_rate_evaluable": 0.6666666666666666
+          }
+        },
+        "all_three": {
+          "pass": 0,
+          "fail": 3,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 0,
+            "first_pass_second_fail": 0,
+            "first_fail_second_pass": 0,
+            "both_fail": 3,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 0,
+            "first_pass_second_fail": 0,
+            "first_fail_second_pass": 2,
+            "both_fail": 1,
+            "unevaluable": 0
+          }
+        }
+      },
+      "synthetic_development": {
+        "expected": 57,
+        "target_status": {
+          "valid": 54,
+          "format_or_transport_error": 3
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 57,
+            "pass": 54,
+            "fail": 0,
+            "error": 3,
+            "missing": 0,
+            "pass_rate_planned": 0.9473684210526315,
+            "pass_rate_evaluable": 1
+          },
+          "responsive_progression": {
+            "expected": 57,
+            "pass": 44,
+            "fail": 10,
+            "error": 3,
+            "missing": 0,
+            "pass_rate_planned": 0.7719298245614035,
+            "pass_rate_evaluable": 0.8148148148148148
+          },
+          "component_disclosure": {
+            "expected": 57,
+            "pass": 45,
+            "fail": 8,
+            "error": 4,
+            "missing": 0,
+            "pass_rate_planned": 0.7894736842105263,
+            "pass_rate_evaluable": 0.8490566037735849
+          }
+        },
+        "all_three": {
+          "pass": 37,
+          "fail": 16,
+          "unevaluable": 4
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 44,
+            "first_pass_second_fail": 10,
+            "first_fail_second_pass": 0,
+            "both_fail": 0,
+            "unevaluable": 3
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 37,
+            "first_pass_second_fail": 6,
+            "first_fail_second_pass": 8,
+            "both_fail": 2,
+            "unevaluable": 4
+          }
+        }
+      }
+    },
+    "labels": {
+      "all": {
+        "expected": 60,
+        "target_status": {
+          "valid": 58,
+          "provider_error": 1,
+          "blocked_by_prior_turn": 1
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 60,
+            "pass": 55,
+            "fail": 3,
+            "error": 1,
+            "missing": 1,
+            "pass_rate_planned": 0.9166666666666666,
+            "pass_rate_evaluable": 0.9482758620689655
+          },
+          "responsive_progression": {
+            "expected": 60,
+            "pass": 39,
+            "fail": 19,
+            "error": 1,
+            "missing": 1,
+            "pass_rate_planned": 0.65,
+            "pass_rate_evaluable": 0.6724137931034483
+          },
+          "component_disclosure": {
+            "expected": 60,
+            "pass": 47,
+            "fail": 11,
+            "error": 1,
+            "missing": 1,
+            "pass_rate_planned": 0.7833333333333333,
+            "pass_rate_evaluable": 0.8103448275862069
+          }
+        },
+        "all_three": {
+          "pass": 33,
+          "fail": 25,
+          "unevaluable": 2
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 39,
+            "first_pass_second_fail": 16,
+            "first_fail_second_pass": 0,
+            "both_fail": 3,
+            "unevaluable": 2
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 33,
+            "first_pass_second_fail": 6,
+            "first_fail_second_pass": 14,
+            "both_fail": 5,
+            "unevaluable": 2
+          }
+        }
+      },
+      "fixed": {
+        "expected": 36,
+        "target_status": {
+          "valid": 36
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 36,
+            "pass": 33,
+            "fail": 3,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.9166666666666666,
+            "pass_rate_evaluable": 0.9166666666666666
+          },
+          "responsive_progression": {
+            "expected": 36,
+            "pass": 26,
+            "fail": 10,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.7222222222222222,
+            "pass_rate_evaluable": 0.7222222222222222
+          },
+          "component_disclosure": {
+            "expected": 36,
+            "pass": 27,
+            "fail": 9,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.75,
+            "pass_rate_evaluable": 0.75
+          }
+        },
+        "all_three": {
+          "pass": 22,
+          "fail": 14,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 26,
+            "first_pass_second_fail": 7,
+            "first_fail_second_pass": 0,
+            "both_fail": 3,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 22,
+            "first_pass_second_fail": 4,
+            "first_fail_second_pass": 5,
+            "both_fail": 5,
+            "unevaluable": 0
+          }
+        }
+      },
+      "trajectory": {
+        "expected": 24,
+        "target_status": {
+          "valid": 22,
+          "provider_error": 1,
+          "blocked_by_prior_turn": 1
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 24,
+            "pass": 22,
+            "fail": 0,
+            "error": 1,
+            "missing": 1,
+            "pass_rate_planned": 0.9166666666666666,
+            "pass_rate_evaluable": 1
+          },
+          "responsive_progression": {
+            "expected": 24,
+            "pass": 13,
+            "fail": 9,
+            "error": 1,
+            "missing": 1,
+            "pass_rate_planned": 0.5416666666666666,
+            "pass_rate_evaluable": 0.5909090909090909
+          },
+          "component_disclosure": {
+            "expected": 24,
+            "pass": 20,
+            "fail": 2,
+            "error": 1,
+            "missing": 1,
+            "pass_rate_planned": 0.8333333333333334,
+            "pass_rate_evaluable": 0.9090909090909091
+          }
+        },
+        "all_three": {
+          "pass": 11,
+          "fail": 11,
+          "unevaluable": 2
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 13,
+            "first_pass_second_fail": 9,
+            "first_fail_second_pass": 0,
+            "both_fail": 0,
+            "unevaluable": 2
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 11,
+            "first_pass_second_fail": 2,
+            "first_fail_second_pass": 9,
+            "both_fail": 0,
+            "unevaluable": 2
+          }
+        }
+      },
+      "recognition": {
+        "expected": 24,
+        "target_status": {
+          "valid": 24
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 24,
+            "pass": 21,
+            "fail": 3,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.875,
+            "pass_rate_evaluable": 0.875
+          },
+          "responsive_progression": {
+            "expected": 24,
+            "pass": 20,
+            "fail": 4,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.8333333333333334,
+            "pass_rate_evaluable": 0.8333333333333334
+          },
+          "component_disclosure": {
+            "expected": 24,
+            "pass": 16,
+            "fail": 8,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.6666666666666666,
+            "pass_rate_evaluable": 0.6666666666666666
+          }
+        },
+        "all_three": {
+          "pass": 15,
+          "fail": 9,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 20,
+            "first_pass_second_fail": 1,
+            "first_fail_second_pass": 0,
+            "both_fail": 3,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 15,
+            "first_pass_second_fail": 5,
+            "first_fail_second_pass": 1,
+            "both_fail": 3,
+            "unevaluable": 0
+          }
+        }
+      },
+      "action": {
+        "expected": 27,
+        "target_status": {
+          "valid": 26,
+          "provider_error": 1
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 27,
+            "pass": 26,
+            "fail": 0,
+            "error": 1,
+            "missing": 0,
+            "pass_rate_planned": 0.9629629629629629,
+            "pass_rate_evaluable": 1
+          },
+          "responsive_progression": {
+            "expected": 27,
+            "pass": 14,
+            "fail": 12,
+            "error": 1,
+            "missing": 0,
+            "pass_rate_planned": 0.5185185185185185,
+            "pass_rate_evaluable": 0.5384615384615384
+          },
+          "component_disclosure": {
+            "expected": 27,
+            "pass": 24,
+            "fail": 2,
+            "error": 1,
+            "missing": 0,
+            "pass_rate_planned": 0.8888888888888888,
+            "pass_rate_evaluable": 0.9230769230769231
+          }
+        },
+        "all_three": {
+          "pass": 14,
+          "fail": 12,
+          "unevaluable": 1
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 14,
+            "first_pass_second_fail": 12,
+            "first_fail_second_pass": 0,
+            "both_fail": 0,
+            "unevaluable": 1
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 14,
+            "first_pass_second_fail": 0,
+            "first_fail_second_pass": 10,
+            "both_fail": 2,
+            "unevaluable": 1
+          }
+        }
+      },
+      "next": {
+        "expected": 9,
+        "target_status": {
+          "valid": 8,
+          "blocked_by_prior_turn": 1
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 9,
+            "pass": 8,
+            "fail": 0,
+            "error": 0,
+            "missing": 1,
+            "pass_rate_planned": 0.8888888888888888,
+            "pass_rate_evaluable": 1
+          },
+          "responsive_progression": {
+            "expected": 9,
+            "pass": 5,
+            "fail": 3,
+            "error": 0,
+            "missing": 1,
+            "pass_rate_planned": 0.5555555555555556,
+            "pass_rate_evaluable": 0.625
+          },
+          "component_disclosure": {
+            "expected": 9,
+            "pass": 7,
+            "fail": 1,
+            "error": 0,
+            "missing": 1,
+            "pass_rate_planned": 0.7777777777777778,
+            "pass_rate_evaluable": 0.875
+          }
+        },
+        "all_three": {
+          "pass": 4,
+          "fail": 4,
+          "unevaluable": 1
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 5,
+            "first_pass_second_fail": 3,
+            "first_fail_second_pass": 0,
+            "both_fail": 0,
+            "unevaluable": 1
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 4,
+            "first_pass_second_fail": 1,
+            "first_fail_second_pass": 3,
+            "both_fail": 0,
+            "unevaluable": 1
+          }
+        }
+      },
+      "ecological_record": {
+        "expected": 3,
+        "target_status": {
+          "valid": 3
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 3,
+            "pass": 0,
+            "fail": 3,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0,
+            "pass_rate_evaluable": 0
+          },
+          "responsive_progression": {
+            "expected": 3,
+            "pass": 0,
+            "fail": 3,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0,
+            "pass_rate_evaluable": 0
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 0,
+            "fail": 3,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0,
+            "pass_rate_evaluable": 0
+          }
+        },
+        "all_three": {
+          "pass": 0,
+          "fail": 3,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 0,
+            "first_pass_second_fail": 0,
+            "first_fail_second_pass": 0,
+            "both_fail": 3,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 0,
+            "first_pass_second_fail": 0,
+            "first_fail_second_pass": 0,
+            "both_fail": 3,
+            "unevaluable": 0
+          }
+        }
+      },
+      "synthetic_development": {
+        "expected": 57,
+        "target_status": {
+          "valid": 55,
+          "provider_error": 1,
+          "blocked_by_prior_turn": 1
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 57,
+            "pass": 55,
+            "fail": 0,
+            "error": 1,
+            "missing": 1,
+            "pass_rate_planned": 0.9649122807017544,
+            "pass_rate_evaluable": 1
+          },
+          "responsive_progression": {
+            "expected": 57,
+            "pass": 39,
+            "fail": 16,
+            "error": 1,
+            "missing": 1,
+            "pass_rate_planned": 0.6842105263157895,
+            "pass_rate_evaluable": 0.7090909090909091
+          },
+          "component_disclosure": {
+            "expected": 57,
+            "pass": 47,
+            "fail": 8,
+            "error": 1,
+            "missing": 1,
+            "pass_rate_planned": 0.8245614035087719,
+            "pass_rate_evaluable": 0.8545454545454545
+          }
+        },
+        "all_three": {
+          "pass": 33,
+          "fail": 22,
+          "unevaluable": 2
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 39,
+            "first_pass_second_fail": 16,
+            "first_fail_second_pass": 0,
+            "both_fail": 0,
+            "unevaluable": 2
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 33,
+            "first_pass_second_fail": 6,
+            "first_fail_second_pass": 14,
+            "both_fail": 2,
+            "unevaluable": 2
+          }
+        }
+      }
+    },
+    "sequence": {
+      "all": {
+        "expected": 60,
+        "target_status": {
+          "valid": 60
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 60,
+            "pass": 57,
+            "fail": 3,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.95,
+            "pass_rate_evaluable": 0.95
+          },
+          "responsive_progression": {
+            "expected": 60,
+            "pass": 50,
+            "fail": 10,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.8333333333333334,
+            "pass_rate_evaluable": 0.8333333333333334
+          },
+          "component_disclosure": {
+            "expected": 60,
+            "pass": 48,
+            "fail": 12,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.8,
+            "pass_rate_evaluable": 0.8
+          }
+        },
+        "all_three": {
+          "pass": 42,
+          "fail": 18,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 50,
+            "first_pass_second_fail": 7,
+            "first_fail_second_pass": 0,
+            "both_fail": 3,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 42,
+            "first_pass_second_fail": 8,
+            "first_fail_second_pass": 6,
+            "both_fail": 4,
+            "unevaluable": 0
+          }
+        }
+      },
+      "fixed": {
+        "expected": 36,
+        "target_status": {
+          "valid": 36
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 36,
+            "pass": 33,
+            "fail": 3,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.9166666666666666,
+            "pass_rate_evaluable": 0.9166666666666666
+          },
+          "responsive_progression": {
+            "expected": 36,
+            "pass": 29,
+            "fail": 7,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.8055555555555556,
+            "pass_rate_evaluable": 0.8055555555555556
+          },
+          "component_disclosure": {
+            "expected": 36,
+            "pass": 26,
+            "fail": 10,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.7222222222222222,
+            "pass_rate_evaluable": 0.7222222222222222
+          }
+        },
+        "all_three": {
+          "pass": 23,
+          "fail": 13,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 29,
+            "first_pass_second_fail": 4,
+            "first_fail_second_pass": 0,
+            "both_fail": 3,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 23,
+            "first_pass_second_fail": 6,
+            "first_fail_second_pass": 3,
+            "both_fail": 4,
+            "unevaluable": 0
+          }
+        }
+      },
+      "trajectory": {
+        "expected": 24,
+        "target_status": {
+          "valid": 24
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 24,
+            "pass": 24,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 1,
+            "pass_rate_evaluable": 1
+          },
+          "responsive_progression": {
+            "expected": 24,
+            "pass": 21,
+            "fail": 3,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.875,
+            "pass_rate_evaluable": 0.875
+          },
+          "component_disclosure": {
+            "expected": 24,
+            "pass": 22,
+            "fail": 2,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.9166666666666666,
+            "pass_rate_evaluable": 0.9166666666666666
+          }
+        },
+        "all_three": {
+          "pass": 19,
+          "fail": 5,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 21,
+            "first_pass_second_fail": 3,
+            "first_fail_second_pass": 0,
+            "both_fail": 0,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 19,
+            "first_pass_second_fail": 2,
+            "first_fail_second_pass": 3,
+            "both_fail": 0,
+            "unevaluable": 0
+          }
+        }
+      },
+      "recognition": {
+        "expected": 24,
+        "target_status": {
+          "valid": 24
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 24,
+            "pass": 21,
+            "fail": 3,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.875,
+            "pass_rate_evaluable": 0.875
+          },
+          "responsive_progression": {
+            "expected": 24,
+            "pass": 20,
+            "fail": 4,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.8333333333333334,
+            "pass_rate_evaluable": 0.8333333333333334
+          },
+          "component_disclosure": {
+            "expected": 24,
+            "pass": 16,
+            "fail": 8,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.6666666666666666,
+            "pass_rate_evaluable": 0.6666666666666666
+          }
+        },
+        "all_three": {
+          "pass": 15,
+          "fail": 9,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 20,
+            "first_pass_second_fail": 1,
+            "first_fail_second_pass": 0,
+            "both_fail": 3,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 15,
+            "first_pass_second_fail": 5,
+            "first_fail_second_pass": 1,
+            "both_fail": 3,
+            "unevaluable": 0
+          }
+        }
+      },
+      "action": {
+        "expected": 27,
+        "target_status": {
+          "valid": 27
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 27,
+            "pass": 27,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 1,
+            "pass_rate_evaluable": 1
+          },
+          "responsive_progression": {
+            "expected": 27,
+            "pass": 23,
+            "fail": 4,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.8518518518518519,
+            "pass_rate_evaluable": 0.8518518518518519
+          },
+          "component_disclosure": {
+            "expected": 27,
+            "pass": 25,
+            "fail": 2,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.9259259259259259,
+            "pass_rate_evaluable": 0.9259259259259259
+          }
+        },
+        "all_three": {
+          "pass": 22,
+          "fail": 5,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 23,
+            "first_pass_second_fail": 4,
+            "first_fail_second_pass": 0,
+            "both_fail": 0,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 22,
+            "first_pass_second_fail": 1,
+            "first_fail_second_pass": 3,
+            "both_fail": 1,
+            "unevaluable": 0
+          }
+        }
+      },
+      "next": {
+        "expected": 9,
+        "target_status": {
+          "valid": 9
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 9,
+            "pass": 9,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 1,
+            "pass_rate_evaluable": 1
+          },
+          "responsive_progression": {
+            "expected": 9,
+            "pass": 7,
+            "fail": 2,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.7777777777777778,
+            "pass_rate_evaluable": 0.7777777777777778
+          },
+          "component_disclosure": {
+            "expected": 9,
+            "pass": 7,
+            "fail": 2,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.7777777777777778,
+            "pass_rate_evaluable": 0.7777777777777778
+          }
+        },
+        "all_three": {
+          "pass": 5,
+          "fail": 4,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 7,
+            "first_pass_second_fail": 2,
+            "first_fail_second_pass": 0,
+            "both_fail": 0,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 5,
+            "first_pass_second_fail": 2,
+            "first_fail_second_pass": 2,
+            "both_fail": 0,
+            "unevaluable": 0
+          }
+        }
+      },
+      "ecological_record": {
+        "expected": 3,
+        "target_status": {
+          "valid": 3
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 3,
+            "pass": 0,
+            "fail": 3,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0,
+            "pass_rate_evaluable": 0
+          },
+          "responsive_progression": {
+            "expected": 3,
+            "pass": 0,
+            "fail": 3,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0,
+            "pass_rate_evaluable": 0
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 1,
+            "fail": 2,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.3333333333333333,
+            "pass_rate_evaluable": 0.3333333333333333
+          }
+        },
+        "all_three": {
+          "pass": 0,
+          "fail": 3,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 0,
+            "first_pass_second_fail": 0,
+            "first_fail_second_pass": 0,
+            "both_fail": 3,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 0,
+            "first_pass_second_fail": 0,
+            "first_fail_second_pass": 1,
+            "both_fail": 2,
+            "unevaluable": 0
+          }
+        }
+      },
+      "synthetic_development": {
+        "expected": 57,
+        "target_status": {
+          "valid": 57
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 57,
+            "pass": 57,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 1,
+            "pass_rate_evaluable": 1
+          },
+          "responsive_progression": {
+            "expected": 57,
+            "pass": 50,
+            "fail": 7,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.8771929824561403,
+            "pass_rate_evaluable": 0.8771929824561403
+          },
+          "component_disclosure": {
+            "expected": 57,
+            "pass": 47,
+            "fail": 10,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.8245614035087719,
+            "pass_rate_evaluable": 0.8245614035087719
+          }
+        },
+        "all_three": {
+          "pass": 42,
+          "fail": 15,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 50,
+            "first_pass_second_fail": 7,
+            "first_fail_second_pass": 0,
+            "both_fail": 0,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 42,
+            "first_pass_second_fail": 8,
+            "first_fail_second_pass": 5,
+            "both_fail": 2,
+            "unevaluable": 0
+          }
+        }
+      }
+    },
+    "completion_cleanup": {
+      "all": {
+        "expected": 60,
+        "target_status": {
+          "valid": 60
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 60,
+            "pass": 54,
+            "fail": 6,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.9,
+            "pass_rate_evaluable": 0.9
+          },
+          "responsive_progression": {
+            "expected": 60,
+            "pass": 52,
+            "fail": 8,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.8666666666666667,
+            "pass_rate_evaluable": 0.8666666666666667
+          },
+          "component_disclosure": {
+            "expected": 60,
+            "pass": 45,
+            "fail": 15,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.75,
+            "pass_rate_evaluable": 0.75
+          }
+        },
+        "all_three": {
+          "pass": 42,
+          "fail": 18,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 52,
+            "first_pass_second_fail": 2,
+            "first_fail_second_pass": 0,
+            "both_fail": 6,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 42,
+            "first_pass_second_fail": 10,
+            "first_fail_second_pass": 3,
+            "both_fail": 5,
+            "unevaluable": 0
+          }
+        }
+      },
+      "fixed": {
+        "expected": 36,
+        "target_status": {
+          "valid": 36
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 36,
+            "pass": 30,
+            "fail": 6,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.8333333333333334,
+            "pass_rate_evaluable": 0.8333333333333334
+          },
+          "responsive_progression": {
+            "expected": 36,
+            "pass": 30,
+            "fail": 6,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.8333333333333334,
+            "pass_rate_evaluable": 0.8333333333333334
+          },
+          "component_disclosure": {
+            "expected": 36,
+            "pass": 24,
+            "fail": 12,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.6666666666666666,
+            "pass_rate_evaluable": 0.6666666666666666
+          }
+        },
+        "all_three": {
+          "pass": 22,
+          "fail": 14,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 30,
+            "first_pass_second_fail": 0,
+            "first_fail_second_pass": 0,
+            "both_fail": 6,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 22,
+            "first_pass_second_fail": 8,
+            "first_fail_second_pass": 2,
+            "both_fail": 4,
+            "unevaluable": 0
+          }
+        }
+      },
+      "trajectory": {
+        "expected": 24,
+        "target_status": {
+          "valid": 24
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 24,
+            "pass": 24,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 1,
+            "pass_rate_evaluable": 1
+          },
+          "responsive_progression": {
+            "expected": 24,
+            "pass": 22,
+            "fail": 2,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.9166666666666666,
+            "pass_rate_evaluable": 0.9166666666666666
+          },
+          "component_disclosure": {
+            "expected": 24,
+            "pass": 21,
+            "fail": 3,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.875,
+            "pass_rate_evaluable": 0.875
+          }
+        },
+        "all_three": {
+          "pass": 20,
+          "fail": 4,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 22,
+            "first_pass_second_fail": 2,
+            "first_fail_second_pass": 0,
+            "both_fail": 0,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 20,
+            "first_pass_second_fail": 2,
+            "first_fail_second_pass": 1,
+            "both_fail": 1,
+            "unevaluable": 0
+          }
+        }
+      },
+      "recognition": {
+        "expected": 24,
+        "target_status": {
+          "valid": 24
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 24,
+            "pass": 18,
+            "fail": 6,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.75,
+            "pass_rate_evaluable": 0.75
+          },
+          "responsive_progression": {
+            "expected": 24,
+            "pass": 18,
+            "fail": 6,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.75,
+            "pass_rate_evaluable": 0.75
+          },
+          "component_disclosure": {
+            "expected": 24,
+            "pass": 16,
+            "fail": 8,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.6666666666666666,
+            "pass_rate_evaluable": 0.6666666666666666
+          }
+        },
+        "all_three": {
+          "pass": 14,
+          "fail": 10,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 18,
+            "first_pass_second_fail": 0,
+            "first_fail_second_pass": 0,
+            "both_fail": 6,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 14,
+            "first_pass_second_fail": 4,
+            "first_fail_second_pass": 2,
+            "both_fail": 4,
+            "unevaluable": 0
+          }
+        }
+      },
+      "action": {
+        "expected": 27,
+        "target_status": {
+          "valid": 27
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 27,
+            "pass": 27,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 1,
+            "pass_rate_evaluable": 1
+          },
+          "responsive_progression": {
+            "expected": 27,
+            "pass": 26,
+            "fail": 1,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.9629629629629629,
+            "pass_rate_evaluable": 0.9629629629629629
+          },
+          "component_disclosure": {
+            "expected": 27,
+            "pass": 22,
+            "fail": 5,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.8148148148148148,
+            "pass_rate_evaluable": 0.8148148148148148
+          }
+        },
+        "all_three": {
+          "pass": 22,
+          "fail": 5,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 26,
+            "first_pass_second_fail": 1,
+            "first_fail_second_pass": 0,
+            "both_fail": 0,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 22,
+            "first_pass_second_fail": 4,
+            "first_fail_second_pass": 0,
+            "both_fail": 1,
+            "unevaluable": 0
+          }
+        }
+      },
+      "next": {
+        "expected": 9,
+        "target_status": {
+          "valid": 9
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 9,
+            "pass": 9,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 1,
+            "pass_rate_evaluable": 1
+          },
+          "responsive_progression": {
+            "expected": 9,
+            "pass": 8,
+            "fail": 1,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.8888888888888888,
+            "pass_rate_evaluable": 0.8888888888888888
+          },
+          "component_disclosure": {
+            "expected": 9,
+            "pass": 7,
+            "fail": 2,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.7777777777777778,
+            "pass_rate_evaluable": 0.7777777777777778
+          }
+        },
+        "all_three": {
+          "pass": 6,
+          "fail": 3,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 8,
+            "first_pass_second_fail": 1,
+            "first_fail_second_pass": 0,
+            "both_fail": 0,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 6,
+            "first_pass_second_fail": 2,
+            "first_fail_second_pass": 1,
+            "both_fail": 0,
+            "unevaluable": 0
+          }
+        }
+      },
+      "ecological_record": {
+        "expected": 3,
+        "target_status": {
+          "valid": 3
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 3,
+            "pass": 0,
+            "fail": 3,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0,
+            "pass_rate_evaluable": 0
+          },
+          "responsive_progression": {
+            "expected": 3,
+            "pass": 0,
+            "fail": 3,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0,
+            "pass_rate_evaluable": 0
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 1,
+            "fail": 2,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.3333333333333333,
+            "pass_rate_evaluable": 0.3333333333333333
+          }
+        },
+        "all_three": {
+          "pass": 0,
+          "fail": 3,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 0,
+            "first_pass_second_fail": 0,
+            "first_fail_second_pass": 0,
+            "both_fail": 3,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 0,
+            "first_pass_second_fail": 0,
+            "first_fail_second_pass": 1,
+            "both_fail": 2,
+            "unevaluable": 0
+          }
+        }
+      },
+      "synthetic_development": {
+        "expected": 57,
+        "target_status": {
+          "valid": 57
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 57,
+            "pass": 54,
+            "fail": 3,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.9473684210526315,
+            "pass_rate_evaluable": 0.9473684210526315
+          },
+          "responsive_progression": {
+            "expected": 57,
+            "pass": 52,
+            "fail": 5,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.9122807017543859,
+            "pass_rate_evaluable": 0.9122807017543859
+          },
+          "component_disclosure": {
+            "expected": 57,
+            "pass": 44,
+            "fail": 13,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.7719298245614035,
+            "pass_rate_evaluable": 0.7719298245614035
+          }
+        },
+        "all_three": {
+          "pass": 42,
+          "fail": 15,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 52,
+            "first_pass_second_fail": 2,
+            "first_fail_second_pass": 0,
+            "both_fail": 3,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 42,
+            "first_pass_second_fail": 10,
+            "first_fail_second_pass": 2,
+            "both_fail": 3,
+            "unevaluable": 0
+          }
+        }
+      }
+    }
+  },
+  "original_partitions_before_transport_repair": {
+    "sequence": {
+      "all": {
+        "expected": 60,
+        "target_status": {
+          "valid": 60
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 60,
+            "pass": 57,
+            "fail": 3,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.95,
+            "pass_rate_evaluable": 0.95
+          },
+          "responsive_progression": {
+            "expected": 60,
+            "pass": 50,
+            "fail": 9,
+            "error": 1,
+            "missing": 0,
+            "pass_rate_planned": 0.8333333333333334,
+            "pass_rate_evaluable": 0.847457627118644
+          },
+          "component_disclosure": {
+            "expected": 60,
+            "pass": 48,
+            "fail": 12,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.8,
+            "pass_rate_evaluable": 0.8
+          }
+        },
+        "all_three": {
+          "pass": 42,
+          "fail": 17,
+          "unevaluable": 1
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 50,
+            "first_pass_second_fail": 6,
+            "first_fail_second_pass": 0,
+            "both_fail": 3,
+            "unevaluable": 1
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 42,
+            "first_pass_second_fail": 8,
+            "first_fail_second_pass": 5,
+            "both_fail": 4,
+            "unevaluable": 1
+          }
+        }
+      },
+      "fixed": {
+        "expected": 36,
+        "target_status": {
+          "valid": 36
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 36,
+            "pass": 33,
+            "fail": 3,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.9166666666666666,
+            "pass_rate_evaluable": 0.9166666666666666
+          },
+          "responsive_progression": {
+            "expected": 36,
+            "pass": 29,
+            "fail": 7,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.8055555555555556,
+            "pass_rate_evaluable": 0.8055555555555556
+          },
+          "component_disclosure": {
+            "expected": 36,
+            "pass": 26,
+            "fail": 10,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.7222222222222222,
+            "pass_rate_evaluable": 0.7222222222222222
+          }
+        },
+        "all_three": {
+          "pass": 23,
+          "fail": 13,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 29,
+            "first_pass_second_fail": 4,
+            "first_fail_second_pass": 0,
+            "both_fail": 3,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 23,
+            "first_pass_second_fail": 6,
+            "first_fail_second_pass": 3,
+            "both_fail": 4,
+            "unevaluable": 0
+          }
+        }
+      },
+      "trajectory": {
+        "expected": 24,
+        "target_status": {
+          "valid": 24
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 24,
+            "pass": 24,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 1,
+            "pass_rate_evaluable": 1
+          },
+          "responsive_progression": {
+            "expected": 24,
+            "pass": 21,
+            "fail": 2,
+            "error": 1,
+            "missing": 0,
+            "pass_rate_planned": 0.875,
+            "pass_rate_evaluable": 0.9130434782608695
+          },
+          "component_disclosure": {
+            "expected": 24,
+            "pass": 22,
+            "fail": 2,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.9166666666666666,
+            "pass_rate_evaluable": 0.9166666666666666
+          }
+        },
+        "all_three": {
+          "pass": 19,
+          "fail": 4,
+          "unevaluable": 1
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 21,
+            "first_pass_second_fail": 2,
+            "first_fail_second_pass": 0,
+            "both_fail": 0,
+            "unevaluable": 1
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 19,
+            "first_pass_second_fail": 2,
+            "first_fail_second_pass": 2,
+            "both_fail": 0,
+            "unevaluable": 1
+          }
+        }
+      },
+      "recognition": {
+        "expected": 24,
+        "target_status": {
+          "valid": 24
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 24,
+            "pass": 21,
+            "fail": 3,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.875,
+            "pass_rate_evaluable": 0.875
+          },
+          "responsive_progression": {
+            "expected": 24,
+            "pass": 20,
+            "fail": 4,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.8333333333333334,
+            "pass_rate_evaluable": 0.8333333333333334
+          },
+          "component_disclosure": {
+            "expected": 24,
+            "pass": 16,
+            "fail": 8,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.6666666666666666,
+            "pass_rate_evaluable": 0.6666666666666666
+          }
+        },
+        "all_three": {
+          "pass": 15,
+          "fail": 9,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 20,
+            "first_pass_second_fail": 1,
+            "first_fail_second_pass": 0,
+            "both_fail": 3,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 15,
+            "first_pass_second_fail": 5,
+            "first_fail_second_pass": 1,
+            "both_fail": 3,
+            "unevaluable": 0
+          }
+        }
+      },
+      "action": {
+        "expected": 27,
+        "target_status": {
+          "valid": 27
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 27,
+            "pass": 27,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 1,
+            "pass_rate_evaluable": 1
+          },
+          "responsive_progression": {
+            "expected": 27,
+            "pass": 23,
+            "fail": 3,
+            "error": 1,
+            "missing": 0,
+            "pass_rate_planned": 0.8518518518518519,
+            "pass_rate_evaluable": 0.8846153846153846
+          },
+          "component_disclosure": {
+            "expected": 27,
+            "pass": 25,
+            "fail": 2,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.9259259259259259,
+            "pass_rate_evaluable": 0.9259259259259259
+          }
+        },
+        "all_three": {
+          "pass": 22,
+          "fail": 4,
+          "unevaluable": 1
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 23,
+            "first_pass_second_fail": 3,
+            "first_fail_second_pass": 0,
+            "both_fail": 0,
+            "unevaluable": 1
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 22,
+            "first_pass_second_fail": 1,
+            "first_fail_second_pass": 2,
+            "both_fail": 1,
+            "unevaluable": 1
+          }
+        }
+      },
+      "next": {
+        "expected": 9,
+        "target_status": {
+          "valid": 9
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 9,
+            "pass": 9,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 1,
+            "pass_rate_evaluable": 1
+          },
+          "responsive_progression": {
+            "expected": 9,
+            "pass": 7,
+            "fail": 2,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.7777777777777778,
+            "pass_rate_evaluable": 0.7777777777777778
+          },
+          "component_disclosure": {
+            "expected": 9,
+            "pass": 7,
+            "fail": 2,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.7777777777777778,
+            "pass_rate_evaluable": 0.7777777777777778
+          }
+        },
+        "all_three": {
+          "pass": 5,
+          "fail": 4,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 7,
+            "first_pass_second_fail": 2,
+            "first_fail_second_pass": 0,
+            "both_fail": 0,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 5,
+            "first_pass_second_fail": 2,
+            "first_fail_second_pass": 2,
+            "both_fail": 0,
+            "unevaluable": 0
+          }
+        }
+      },
+      "ecological_record": {
+        "expected": 3,
+        "target_status": {
+          "valid": 3
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 3,
+            "pass": 0,
+            "fail": 3,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0,
+            "pass_rate_evaluable": 0
+          },
+          "responsive_progression": {
+            "expected": 3,
+            "pass": 0,
+            "fail": 3,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0,
+            "pass_rate_evaluable": 0
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 1,
+            "fail": 2,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.3333333333333333,
+            "pass_rate_evaluable": 0.3333333333333333
+          }
+        },
+        "all_three": {
+          "pass": 0,
+          "fail": 3,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 0,
+            "first_pass_second_fail": 0,
+            "first_fail_second_pass": 0,
+            "both_fail": 3,
+            "unevaluable": 0
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 0,
+            "first_pass_second_fail": 0,
+            "first_fail_second_pass": 1,
+            "both_fail": 2,
+            "unevaluable": 0
+          }
+        }
+      },
+      "synthetic_development": {
+        "expected": 57,
+        "target_status": {
+          "valid": 57
+        },
+        "metrics": {
+          "recognition_before_action": {
+            "expected": 57,
+            "pass": 57,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 1,
+            "pass_rate_evaluable": 1
+          },
+          "responsive_progression": {
+            "expected": 57,
+            "pass": 50,
+            "fail": 6,
+            "error": 1,
+            "missing": 0,
+            "pass_rate_planned": 0.8771929824561403,
+            "pass_rate_evaluable": 0.8928571428571429
+          },
+          "component_disclosure": {
+            "expected": 57,
+            "pass": 47,
+            "fail": 10,
+            "error": 0,
+            "missing": 0,
+            "pass_rate_planned": 0.8245614035087719,
+            "pass_rate_evaluable": 0.8245614035087719
+          }
+        },
+        "all_three": {
+          "pass": 42,
+          "fail": 14,
+          "unevaluable": 1
+        },
+        "pairwise": {
+          "recognition_before_action__responsive_progression": {
+            "both_pass": 50,
+            "first_pass_second_fail": 6,
+            "first_fail_second_pass": 0,
+            "both_fail": 0,
+            "unevaluable": 1
+          },
+          "responsive_progression__component_disclosure": {
+            "both_pass": 42,
+            "first_pass_second_fail": 8,
+            "first_fail_second_pass": 4,
+            "both_fail": 2,
+            "unevaluable": 1
+          }
+        }
+      }
+    }
+  },
+  "fixed_transitions": {
+    "current__to__labels": {
+      "recognition_before_action": {
+        "expected": 36,
+        "both_pass": 30,
+        "baseline_only": 0,
+        "candidate_only": 0,
+        "both_fail": 3,
+        "unevaluable": 3,
+        "pass_to_fail": [],
+        "fail_to_pass": []
+      },
+      "responsive_progression": {
+        "expected": 36,
+        "both_pass": 22,
+        "baseline_only": 4,
+        "candidate_only": 1,
+        "both_fail": 6,
+        "unevaluable": 3,
+        "pass_to_fail": [
+          "component_5_bare_agreement__labels__r3",
+          "room_completion_completed__labels__r1",
+          "room_completion_completed__labels__r2",
+          "room_completion_completed__labels__r3"
+        ],
+        "fail_to_pass": [
+          "component_3_recognition_done__labels__r3"
+        ]
+      },
+      "component_disclosure": {
+        "expected": 36,
+        "both_pass": 22,
+        "baseline_only": 3,
+        "candidate_only": 2,
+        "both_fail": 6,
+        "unevaluable": 3,
+        "pass_to_fail": [
+          "component_4_recognition_done__labels__r1",
+          "room_unanswered_original__labels__r1",
+          "room_unanswered_original__labels__r3"
+        ],
+        "fail_to_pass": [
+          "component_3_recognition_done__labels__r3",
+          "component_5_bare_agreement__labels__r3"
+        ]
+      }
+    },
+    "current__to__sequence": {
+      "recognition_before_action": {
+        "expected": 36,
+        "both_pass": 30,
+        "baseline_only": 0,
+        "candidate_only": 0,
+        "both_fail": 3,
+        "unevaluable": 3,
+        "pass_to_fail": [],
+        "fail_to_pass": []
+      },
+      "responsive_progression": {
+        "expected": 36,
+        "both_pass": 24,
+        "baseline_only": 2,
+        "candidate_only": 2,
+        "both_fail": 5,
+        "unevaluable": 3,
+        "pass_to_fail": [
+          "component_5_bare_agreement__sequence__r3",
+          "room_completion_completed__sequence__r2"
+        ],
+        "fail_to_pass": [
+          "component_3_recognition_done__sequence__r3",
+          "component_4_recognition_done__sequence__r1"
+        ]
+      },
+      "component_disclosure": {
+        "expected": 36,
+        "both_pass": 20,
+        "baseline_only": 5,
+        "candidate_only": 3,
+        "both_fail": 5,
+        "unevaluable": 3,
+        "pass_to_fail": [
+          "component_4_no_attempt__sequence__r3",
+          "component_4_recognition_done__sequence__r3",
+          "room_unanswered_original__sequence__r1",
+          "room_unanswered_original__sequence__r3",
+          "room_completion_unfinished__sequence__r3"
+        ],
+        "fail_to_pass": [
+          "component_3_recognition_done__sequence__r3",
+          "component_4_recognition_done__sequence__r2",
+          "room_unanswered_original__sequence__r2"
+        ]
+      }
+    },
+    "current__to__completion_cleanup": {
+      "recognition_before_action": {
+        "expected": 36,
+        "both_pass": 27,
+        "baseline_only": 3,
+        "candidate_only": 0,
+        "both_fail": 3,
+        "unevaluable": 3,
+        "pass_to_fail": [
+          "component_5_bare_agreement__completion_cleanup__r1",
+          "component_5_bare_agreement__completion_cleanup__r2",
+          "component_5_bare_agreement__completion_cleanup__r3"
+        ],
+        "fail_to_pass": []
+      },
+      "responsive_progression": {
+        "expected": 36,
+        "both_pass": 23,
+        "baseline_only": 3,
+        "candidate_only": 4,
+        "both_fail": 3,
+        "unevaluable": 3,
+        "pass_to_fail": [
+          "component_5_bare_agreement__completion_cleanup__r1",
+          "component_5_bare_agreement__completion_cleanup__r2",
+          "component_5_bare_agreement__completion_cleanup__r3"
+        ],
+        "fail_to_pass": [
+          "component_3_recognition_done__completion_cleanup__r3",
+          "component_4_recognition_done__completion_cleanup__r1",
+          "component_4_recognition_done__completion_cleanup__r2",
+          "component_4_recognition_done__completion_cleanup__r3"
+        ]
+      },
+      "component_disclosure": {
+        "expected": 36,
+        "both_pass": 18,
+        "baseline_only": 7,
+        "candidate_only": 3,
+        "both_fail": 5,
+        "unevaluable": 3,
+        "pass_to_fail": [
+          "component_4_no_attempt__completion_cleanup__r3",
+          "component_4_recognition_done__completion_cleanup__r1",
+          "component_4_recognition_done__completion_cleanup__r3",
+          "room_unanswered_original__completion_cleanup__r1",
+          "room_unanswered_original__completion_cleanup__r3",
+          "room_completion_unfinished__completion_cleanup__r2",
+          "room_completion_completed__completion_cleanup__r3"
+        ],
+        "fail_to_pass": [
+          "component_3_recognition_done__completion_cleanup__r3",
+          "component_5_bare_agreement__completion_cleanup__r1",
+          "room_unanswered_original__completion_cleanup__r2"
+        ]
+      }
+    },
+    "sequence__to__completion_cleanup": {
+      "recognition_before_action": {
+        "expected": 36,
+        "both_pass": 30,
+        "baseline_only": 3,
+        "candidate_only": 0,
+        "both_fail": 3,
+        "unevaluable": 0,
+        "pass_to_fail": [
+          "component_5_bare_agreement__completion_cleanup__r1",
+          "component_5_bare_agreement__completion_cleanup__r2",
+          "component_5_bare_agreement__completion_cleanup__r3"
+        ],
+        "fail_to_pass": []
+      },
+      "responsive_progression": {
+        "expected": 36,
+        "both_pass": 27,
+        "baseline_only": 2,
+        "candidate_only": 3,
+        "both_fail": 4,
+        "unevaluable": 0,
+        "pass_to_fail": [
+          "component_5_bare_agreement__completion_cleanup__r1",
+          "component_5_bare_agreement__completion_cleanup__r2"
+        ],
+        "fail_to_pass": [
+          "component_4_recognition_done__completion_cleanup__r2",
+          "component_4_recognition_done__completion_cleanup__r3",
+          "room_completion_completed__completion_cleanup__r2"
+        ]
+      },
+      "component_disclosure": {
+        "expected": 36,
+        "both_pass": 22,
+        "baseline_only": 4,
+        "candidate_only": 2,
+        "both_fail": 8,
+        "unevaluable": 0,
+        "pass_to_fail": [
+          "component_4_recognition_done__completion_cleanup__r1",
+          "component_4_recognition_done__completion_cleanup__r2",
+          "room_completion_unfinished__completion_cleanup__r2",
+          "room_completion_completed__completion_cleanup__r3"
+        ],
+        "fail_to_pass": [
+          "component_5_bare_agreement__completion_cleanup__r1",
+          "room_completion_unfinished__completion_cleanup__r3"
+        ]
+      }
+    }
+  },
+  "matched_historical_27": {
+    "production": {
+      "expected": 27,
+      "target_status": {
+        "valid": 27
+      },
+      "metrics": {
+        "recognition_before_action": {
+          "expected": 27,
+          "pass": 20,
+          "fail": 7,
+          "error": 0,
+          "missing": 0,
+          "pass_rate_planned": 0.7407407407407407,
+          "pass_rate_evaluable": 0.7407407407407407
+        },
+        "responsive_progression": {
+          "expected": 27,
+          "pass": 19,
+          "fail": 8,
+          "error": 0,
+          "missing": 0,
+          "pass_rate_planned": 0.7037037037037037,
+          "pass_rate_evaluable": 0.7037037037037037
+        },
+        "component_disclosure": {
+          "expected": 27,
+          "pass": 17,
+          "fail": 10,
+          "error": 0,
+          "missing": 0,
+          "pass_rate_planned": 0.6296296296296297,
+          "pass_rate_evaluable": 0.6296296296296297
+        }
+      },
+      "all_three": {
+        "pass": 12,
+        "fail": 15,
+        "unevaluable": 0
+      },
+      "pairwise": {
+        "recognition_before_action__responsive_progression": {
+          "both_pass": 14,
+          "first_pass_second_fail": 6,
+          "first_fail_second_pass": 5,
+          "both_fail": 2,
+          "unevaluable": 0
+        },
+        "responsive_progression__component_disclosure": {
+          "both_pass": 14,
+          "first_pass_second_fail": 5,
+          "first_fail_second_pass": 3,
+          "both_fail": 5,
+          "unevaluable": 0
+        }
+      }
+    },
+    "current": {
+      "expected": 27,
+      "target_status": {
+        "valid": 24,
+        "format_or_transport_error": 3
+      },
+      "metrics": {
+        "recognition_before_action": {
+          "expected": 27,
+          "pass": 24,
+          "fail": 0,
+          "error": 3,
+          "missing": 0,
+          "pass_rate_planned": 0.8888888888888888,
+          "pass_rate_evaluable": 1
+        },
+        "responsive_progression": {
+          "expected": 27,
+          "pass": 20,
+          "fail": 4,
+          "error": 3,
+          "missing": 0,
+          "pass_rate_planned": 0.7407407407407407,
+          "pass_rate_evaluable": 0.8333333333333334
+        },
+        "component_disclosure": {
+          "expected": 27,
+          "pass": 17,
+          "fail": 7,
+          "error": 3,
+          "missing": 0,
+          "pass_rate_planned": 0.6296296296296297,
+          "pass_rate_evaluable": 0.7083333333333334
+        }
+      },
+      "all_three": {
+        "pass": 15,
+        "fail": 9,
+        "unevaluable": 3
+      },
+      "pairwise": {
+        "recognition_before_action__responsive_progression": {
+          "both_pass": 20,
+          "first_pass_second_fail": 4,
+          "first_fail_second_pass": 0,
+          "both_fail": 0,
+          "unevaluable": 3
+        },
+        "responsive_progression__component_disclosure": {
+          "both_pass": 15,
+          "first_pass_second_fail": 5,
+          "first_fail_second_pass": 2,
+          "both_fail": 2,
+          "unevaluable": 3
+        }
+      }
+    },
+    "labels": {
+      "expected": 27,
+      "target_status": {
+        "valid": 27
+      },
+      "metrics": {
+        "recognition_before_action": {
+          "expected": 27,
+          "pass": 27,
+          "fail": 0,
+          "error": 0,
+          "missing": 0,
+          "pass_rate_planned": 1,
+          "pass_rate_evaluable": 1
+        },
+        "responsive_progression": {
+          "expected": 27,
+          "pass": 23,
+          "fail": 4,
+          "error": 0,
+          "missing": 0,
+          "pass_rate_planned": 0.8518518518518519,
+          "pass_rate_evaluable": 0.8518518518518519
+        },
+        "component_disclosure": {
+          "expected": 27,
+          "pass": 21,
+          "fail": 6,
+          "error": 0,
+          "missing": 0,
+          "pass_rate_planned": 0.7777777777777778,
+          "pass_rate_evaluable": 0.7777777777777778
+        }
+      },
+      "all_three": {
+        "pass": 19,
+        "fail": 8,
+        "unevaluable": 0
+      },
+      "pairwise": {
+        "recognition_before_action__responsive_progression": {
+          "both_pass": 23,
+          "first_pass_second_fail": 4,
+          "first_fail_second_pass": 0,
+          "both_fail": 0,
+          "unevaluable": 0
+        },
+        "responsive_progression__component_disclosure": {
+          "both_pass": 19,
+          "first_pass_second_fail": 4,
+          "first_fail_second_pass": 2,
+          "both_fail": 2,
+          "unevaluable": 0
+        }
+      }
+    },
+    "sequence": {
+      "expected": 27,
+      "target_status": {
+        "valid": 27
+      },
+      "metrics": {
+        "recognition_before_action": {
+          "expected": 27,
+          "pass": 27,
+          "fail": 0,
+          "error": 0,
+          "missing": 0,
+          "pass_rate_planned": 1,
+          "pass_rate_evaluable": 1
+        },
+        "responsive_progression": {
+          "expected": 27,
+          "pass": 24,
+          "fail": 3,
+          "error": 0,
+          "missing": 0,
+          "pass_rate_planned": 0.8888888888888888,
+          "pass_rate_evaluable": 0.8888888888888888
+        },
+        "component_disclosure": {
+          "expected": 27,
+          "pass": 20,
+          "fail": 7,
+          "error": 0,
+          "missing": 0,
+          "pass_rate_planned": 0.7407407407407407,
+          "pass_rate_evaluable": 0.7407407407407407
+        }
+      },
+      "all_three": {
+        "pass": 19,
+        "fail": 8,
+        "unevaluable": 0
+      },
+      "pairwise": {
+        "recognition_before_action__responsive_progression": {
+          "both_pass": 24,
+          "first_pass_second_fail": 3,
+          "first_fail_second_pass": 0,
+          "both_fail": 0,
+          "unevaluable": 0
+        },
+        "responsive_progression__component_disclosure": {
+          "both_pass": 19,
+          "first_pass_second_fail": 5,
+          "first_fail_second_pass": 1,
+          "both_fail": 2,
+          "unevaluable": 0
+        }
+      }
+    },
+    "completion_cleanup": {
+      "expected": 27,
+      "target_status": {
+        "valid": 27
+      },
+      "metrics": {
+        "recognition_before_action": {
+          "expected": 27,
+          "pass": 24,
+          "fail": 3,
+          "error": 0,
+          "missing": 0,
+          "pass_rate_planned": 0.8888888888888888,
+          "pass_rate_evaluable": 0.8888888888888888
+        },
+        "responsive_progression": {
+          "expected": 27,
+          "pass": 24,
+          "fail": 3,
+          "error": 0,
+          "missing": 0,
+          "pass_rate_planned": 0.8888888888888888,
+          "pass_rate_evaluable": 0.8888888888888888
+        },
+        "component_disclosure": {
+          "expected": 27,
+          "pass": 19,
+          "fail": 8,
+          "error": 0,
+          "missing": 0,
+          "pass_rate_planned": 0.7037037037037037,
+          "pass_rate_evaluable": 0.7037037037037037
+        }
+      },
+      "all_three": {
+        "pass": 18,
+        "fail": 9,
+        "unevaluable": 0
+      },
+      "pairwise": {
+        "recognition_before_action__responsive_progression": {
+          "both_pass": 24,
+          "first_pass_second_fail": 0,
+          "first_fail_second_pass": 0,
+          "both_fail": 3,
+          "unevaluable": 0
+        },
+        "responsive_progression__component_disclosure": {
+          "both_pass": 18,
+          "first_pass_second_fail": 6,
+          "first_fail_second_pass": 1,
+          "both_fail": 2,
+          "unevaluable": 0
+        }
+      }
+    }
+  },
+  "completion_pairs_machine": {
+    "current": [
+      {
+        "repetition": 1,
+        "members": [
+          "room_completion_unfinished__current__r1",
+          "room_completion_completed__current__r1"
+        ],
+        "status": "pass"
+      },
+      {
+        "repetition": 2,
+        "members": [
+          "room_completion_unfinished__current__r2",
+          "room_completion_completed__current__r2"
+        ],
+        "status": "pass"
+      },
+      {
+        "repetition": 3,
+        "members": [
+          "room_completion_unfinished__current__r3",
+          "room_completion_completed__current__r3"
+        ],
+        "status": "pass"
+      }
+    ],
+    "labels": [
+      {
+        "repetition": 1,
+        "members": [
+          "room_completion_unfinished__labels__r1",
+          "room_completion_completed__labels__r1"
+        ],
+        "status": "fail"
+      },
+      {
+        "repetition": 2,
+        "members": [
+          "room_completion_unfinished__labels__r2",
+          "room_completion_completed__labels__r2"
+        ],
+        "status": "fail"
+      },
+      {
+        "repetition": 3,
+        "members": [
+          "room_completion_unfinished__labels__r3",
+          "room_completion_completed__labels__r3"
+        ],
+        "status": "fail"
+      }
+    ],
+    "sequence": [
+      {
+        "repetition": 1,
+        "members": [
+          "room_completion_unfinished__sequence__r1",
+          "room_completion_completed__sequence__r1"
+        ],
+        "status": "pass"
+      },
+      {
+        "repetition": 2,
+        "members": [
+          "room_completion_unfinished__sequence__r2",
+          "room_completion_completed__sequence__r2"
+        ],
+        "status": "fail"
+      },
+      {
+        "repetition": 3,
+        "members": [
+          "room_completion_unfinished__sequence__r3",
+          "room_completion_completed__sequence__r3"
+        ],
+        "status": "fail"
+      }
+    ],
+    "completion_cleanup": [
+      {
+        "repetition": 1,
+        "members": [
+          "room_completion_unfinished__completion_cleanup__r1",
+          "room_completion_completed__completion_cleanup__r1"
+        ],
+        "status": "pass"
+      },
+      {
+        "repetition": 2,
+        "members": [
+          "room_completion_unfinished__completion_cleanup__r2",
+          "room_completion_completed__completion_cleanup__r2"
+        ],
+        "status": "fail"
+      },
+      {
+        "repetition": 3,
+        "members": [
+          "room_completion_unfinished__completion_cleanup__r3",
+          "room_completion_completed__completion_cleanup__r3"
+        ],
+        "status": "fail"
+      }
+    ]
+  },
+  "execution_time": {
+    "allowance_minutes": 60,
+    "active_union_minutes": 55.88256666666667,
+    "process_sum_minutes": 88.03516666666667,
+    "accounting": "Union of overlapping active intervals; process sum is retained to expose concurrency rather than count overlap as extra elapsed time."
+  },
+  "detailed_evidence": {
+    "path": "raw/final-summary-1794568356944.json",
+    "sha256": "01d9d9325c91905597b1fdb2489ed0553b4ce902c30714640bc0d509ed225fb9"
+  },
+  "calibration": {
+    "path": "raw/calibration-summary-1794566471580.json",
+    "sha256": "174124d4953ccf50be474b035a7a4b8470ee091bf1af2d11287aaca47bf0a5f8",
+    "total": 39,
+    "agreed": 39,
+    "errors": 0,
+    "reference_note": "Original boundary calibration was6/7; independently versioned one-label correction reconciled7/7 with unchanged requests, plus32retained thinking calibration checks."
+  }
+}

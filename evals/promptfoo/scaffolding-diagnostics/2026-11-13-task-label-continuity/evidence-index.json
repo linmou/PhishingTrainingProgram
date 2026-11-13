@@ -1,0 +1,9 @@
+{
+  "intent": "Index complete locally retained raw evidence without tracking operational bulk.",
+  "path": "evidence-1794568573859.json",
+  "sha256": "c77dcb94e6f96d4683392f91b7a987d578845e27c54f2249852174545591c96a",
+  "file_count": 1543,
+  "bytes": 181643591,
+  "manifest_sha256": "681ed3bc28ce2884d0d069a11f0994aa3341ce128c9b85ba5c45ac12b56073f3",
+  "verification": "All 1543 listed raw files independently rehashed after writers closed."
+}

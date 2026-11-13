@@ -6,14 +6,14 @@ Record the controlled comparison, evidence and limitations needed to assess whet
 
 ## Metadata
 
-- Log status: running; candidate generation completed with retained failures; corrected-reference calibration reconciled; V11 candidate grading pending
+- Log status: incomplete bounded evaluation; all model processes closed; coverage errors, one judge error and semantic-audit disagreements remain; no candidate accepted
 - Created: 2026-11-13T09:55:06Z
-- Updated: 2026-11-13T11:03:55Z
+- Updated: 2026-11-13T11:16:29Z
 - Author or agent: `/root/task_label_execution`; log maintained by `/root/task_label_execution/experiment_log` using experiment-log-writer 1.1
 - Repository: PhishingTrainingProgram
 - Initial source commit: `297a1b389e99f2843d5cb51e46ef402ae3ae5f50`
 - Working directory: `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/tutor-stage-scaffolding`
-- Results address: `evals/promptfoo/scaffolding-diagnostics/2026-11-13-task-label-continuity/raw/` (target/execution evidence and calibration summaries; final compact index pending)
+- Results address: `evals/promptfoo/scaffolding-diagnostics/2026-11-13-task-label-continuity/final-summary.json`; detailed immutable record `raw/final-summary-1794568356944.json`
 
 ## Research Questions
 
@@ -218,6 +218,28 @@ rtk proxy node evals/promptfoo/scaffolding-diagnostics/2026-11-13-task-label-con
 - Representative evidence: the corresponding movie recognition, `room_unanswered_original` and `journey_3` completion-cleanup records under `raw/targets/` retain each complete input/output pair.
 - Evidence path: [candidate recipe](candidate-completion-cleanup.json), V12 snapshot and generation execution metadata.
 
+### Result 10: Final focused comparison, incomplete acceptance evidence
+
+- Informs: RQ1/H1/H2 and RQ2/H3.
+- Run status: all model processes closed. **267 targets planned, 266 saved, 262 valid**; **798/801 judgment entries saved**. No candidate is accepted.
+- Input: V12 fingerprint `8900d7eb5dba07a2ff6950263c017582ad49fc46420d305b7f042e8785225e53`, with verified reuse of unchanged earlier target requests and source hashes. Current workspace drift is separately reported, not treated as the executed prompt.
+- Configuration: Qwen3.8-flash tutor with thinking disabled and 600-token cap; uniform thinking-enabled judge with 8,000-token cap; three repetitions; retained headings and original task payloads in all experimental arms. Final scoring uses the same versioned rubric/reference protocol across arms.
+- Output: [final-summary.json](final-summary.json); detailed record `raw/final-summary-1794568356944.json`, SHA-256 `01d9d9325c91905597b1fdb2489ed0553b4ce902c30714640bc0d509ed225fb9`. Full inputs, outputs, judge evidence and failed attempts remain under `raw/`.
+- Metric definition: machine-judged passes divided by planned applicable outputs, retaining invalid/missing outcomes in denominators. These counts retain original machine verdicts; independent semantic disagreements are separate.
+
+| Arm | Ordering | Progression | Disclosure | All three on the same output |
+| --- | ---: | ---: | ---: | ---: |
+| Current branch | 54/60 | 44/60 | 47/60 | 37/60 |
+| Task labels only | 55/60 | 39/60 | 47/60 | 33/60 |
+| Labels plus explicit sequence | 57/60 | 50/60 | 48/60 | 42/60 |
+| Completion-rule cleanup | 54/60 | 52/60 | 45/60 | 42/60 |
+
+- Coverage/errors: three current-arm format errors, one labels-arm provider block and one unproduced dependent turn remain. They propagate to 12 target-error judgment entries and three missing entries. One valid-target judge error remains after bounded repair. The 27 historical production-reference outputs are reported separately in the summary; they are not directly compared against a 60-output denominator.
+- Repair outcome: an identical-request overlay repaired `journey_5__sequence__r1__t3` progression to **fail**, retaining its original timeout. `journey_3__current__r3__t4` disclosure still timed out after the frozen limits.
+- Independent semantic finding: five machine passes on the completed-point boundary remain disputed/false under Root/auditor review. Manually reviewed completion-pair success is **0/3 for every candidate**. The saved machine grades are not overwritten. Every candidate also failed the original unresolved room in all three repetitions. Cleanup introduced ordering failures on all three bare-agreement repetitions.
+- Interpretation: H1 is not supported: label changes alone do not solve unfinished-point progression. Sequence and cleanup show improved machine-rated point selection, but completion boundaries, original-room failures, disclosure regression and unresolved errors prevent accepting H2/H3 as reliable behavior improvements. Cleanup's progression gain coexists with ordering/disclosure losses; its same-output all-three count does not improve beyond sequence.
+- Evidence path: final machine summary and [cleanup output review](independent-output-review-completion-cleanup.json), [manual room review](independent-manual-room-review.json), plus per-case records. This is exposed focused development evidence; no population-wide or release-acceptance claim follows.
+
 ## Iterations
 
 ### Iteration 1: 2026-11-13T09:57:03.180Z
@@ -412,6 +434,34 @@ rtk proxy node evals/promptfoo/scaffolding-diagnostics/2026-11-13-task-label-con
 rtk proxy node evals/promptfoo/scaffolding-diagnostics/2026-11-13-task-label-continuity/execute.cjs generate completion_cleanup --num-workers 16
 ```
 
+### Iteration 9: Final grading and bounded repair, recorded 2026-11-13T11:13:22Z
+
+- Hypotheses: H1, H2 and H3.
+- Source revision: original target execution remains pinned to `297a1b389e99f2843d5cb51e46ef402ae3ae5f50` plus frozen source snapshots; preparation artifacts were later committed as `fb5ca91c090aa92a8f7487cf86d5c19ffbcde291`. The frozen-request verification distinguishes later workspace edits.
+- Files/configs changed: uniform-thinking regrades in `raw/judgments-v9/`; one immutable judge-error overlay in `raw/judge-repair-v1/`; deterministic final summary and verification records. No failed target or valid unfavorable judge result was resampled.
+- Commands: Commands 17–19, plus the bounded repair recorded below.
+- Results: Result 10.
+- Decision: **inconclusive for full acceptance**. Bounded work concluded with evidence against a label-only fix, empirical gains/weaknesses in stronger candidates, unresolved target/coverage/judge failures and semantic disagreement. Auto-exp status remains `incomplete`.
+- Revision note: additional calls were stopped within the selected budget because remaining allowance could not cover the complete frozen transport retry policy. Stopping does not confer acceptance.
+
+### Commands 17–19: Complete comparable grading
+
+All commands ran from `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/tutor-stage-scaffolding`, using the main-checkout `tutor-system/.env` and frozen Qwen request settings. All returned exit 0; Result 10 retains result-level errors.
+
+| Command | Start UTC | End UTC | Execution evidence |
+| --- | --- | --- | --- |
+| 17 — original candidate grading | 2026-11-13T10:35:24.143Z | 2026-11-13T11:00:19.051Z | `raw/execution/1794566124143/` |
+| 18 — completion-cleanup grading | 2026-11-13T10:42:15.360Z | 2026-11-13T10:59:13.247Z | `raw/execution/1794566535360/` |
+| 19 — reference regrading | 2026-11-13T10:46:25.837Z | 2026-11-13T11:11:16.601Z | `raw/execution/1794566785837/` |
+
+```bash
+rtk proxy node evals/promptfoo/scaffolding-diagnostics/2026-11-13-task-label-continuity/execute.cjs run candidates --num-workers 32
+rtk proxy node evals/promptfoo/scaffolding-diagnostics/2026-11-13-task-label-continuity/execute.cjs run completion_cleanup --num-workers 20
+rtk proxy node evals/promptfoo/scaffolding-diagnostics/2026-11-13-task-label-continuity/execute.cjs run references --num-workers 14
+```
+
+Bounded repair ran from 2026-11-13T11:06:28.347Z to 2026-11-13T11:07:31.566Z. `raw/judge-repair-summary-1794568051568.json` preserves its exact Node executable/arguments, environment reference, source drift and successful repair outcome. It selected only the known error and yielded `pass:false`; it did not resample a valid failure. The caller did not supply a separately retained process exit code for this direct helper, so no exit code is invented here.
+
 ## Corrections And Deviations
 
 ### Parallel budget accounting clarification — 2026-11-13T10:49:49Z
@@ -526,6 +576,28 @@ rtk proxy node evals/promptfoo/scaffolding-diagnostics/2026-11-13-task-label-con
 
 ## Analysis Notes
 
+### Final audit and raw evidence inventory — 2026-11-13T11:16:29Z
+
+[independent-final-review.json](independent-final-review.json) verified all 266 target hashes, 798 effective-grade status/source hashes, original/effective partitions, pairwise and all-three counts, fixed-case transitions, matched historical cases, completion-pair machine counts, immutable repair provenance and the active-interval union. Its clear aggregation/provenance review retains the verdict **no candidate accepted**. Known machine false passes, behavior failures, operational missingness and absent unseen holdouts still limit semantic acceptance. The review preserves manual disagreement rather than overwriting machine grades.
+
+The authoritative raw inventory is [evidence-1794568573859.json](evidence-1794568573859.json): **1,543 files**, **181,643,591 bytes**, manifest SHA-256 **`681ed3bc28ce2884d0d069a11f0994aa3341ce128c9b85ba5c45ac12b56073f3`**. Local raw location: `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/tutor-stage-scaffolding/evals/promptfoo/scaffolding-diagnostics/2026-11-13-task-label-continuity/raw/`. Run family: `2026-11-13-task-label-continuity`, final frozen candidate set V12. Generation/calibration/grading commands and exact executions are recorded above and in `raw/execution/`; the manifest indexes every retained raw artifact. It was generated by the runner's inventory operation after raw writers closed, without an execution wrapper adding further raw files. The executor reports no remaining raw writers; subsequent contract validation is read-only. This is local retention with content hashes, not a claim of external archival durability.
+
+The final report/evidence commit remains Root's packaging step. The log does not invent that future commit's self-reference. Its scientific status remains incomplete for acceptance despite the completed bounded execution and independent aggregation review.
+
+### Final evidence, budget and verification — 2026-11-13T11:13:22Z
+
+The final active-interval union is **55.8825667/60 minutes**; the process-segment sum is 88.0351667 minutes. About 4.1174 active minutes remain, less than the 6.0333 minutes required to permit the full frozen transport policy for another judge repair. All model processes are closed. The remaining valid-target judge timeout is preserved as unresolved; no hidden shortened retry or fallback evaluator was used.
+
+Final structural verification from 2026-11-13T11:12:17.551Z to 11:12:18.013Z passed **8/8 tests**, exit 0. The subsequent CheckJs command ended at 11:12:18.588Z with **exit 2 and eight transitive diagnostics** in the frozen experiment runner/provider, and zero direct diagnostics in the three new helpers. This is not an overall type-check pass. Exact commands, stdout and timestamps are in [raw/postprocessing-verification-1794568338588.json](raw/postprocessing-verification-1794568338588.json).
+
+Root owns the final domain report and acceptance verdict. This log preserves observed execution, errors and hypotheses. Final raw inventory metadata and the report/evidence commit are pending packaging; the preparation commit remains verified above.
+
+### Preparation commit and bounded repair checkpoint — 2026-11-13T11:06:49Z
+
+Verified preparation/candidate/spec/log commit: `fb5ca91c090aa92a8f7487cf86d5c19ffbcde291` (`auto-exp: test task labels and per-point completion rules`). Root reports 32 scoped files in this commit; runtime changes and concurrent test/manual-trial edits remain unstaged. This is the later iteration commit, not the source revision used to generate the earlier results. Final report/helpers/evidence packaging are pending a separate commit.
+
+One bounded repair round has started for the sole known progression judge error at `journey_5__sequence__r1__t3`. The executor reports that independent review verified identical request/settings and the immutable-overlay helper SHA-256 `25613962a6561bbcd19102e6cc5e62b845b2a3e84aa022e3ce72b91eac742ab9`. Original errors are retained; no repaired outcome is claimed yet. Reference grading is at 83/87, with the other grade processes closed. Final raw/compact reconciliation remains pending.
+
 ### Execution and workspace checkpoint — 2026-11-13T11:03:14.804Z
 
 The executor reports that original-candidate and cleanup grading processes closed with exit 0; final result-level reconciliation is still pending. Reference grading is at 77/87. A progression judgment for `journey_5__sequence__r1__t3` timed out after two 180-second transport attempts spanning 2026-11-13T10:49:17.372Z–10:55:19.380Z. Root authorized one bounded identical-request/settings repair round, preserving the original error and writing any repair as an overlay; the repair has not completed at this checkpoint. Exit 0 for the grade processes does not erase this judgment error.
@@ -585,6 +657,14 @@ All 32 calibration labels, target cases, target candidate hashes and rubric text
 Planned next execution, after independent protocol review: rerun all 32 checks using Command 4's exact `execute.cjs calibrate --num-workers 8` command, with results saved under `raw/calibration-v3/`. This correction does not record that rerun as executed or claim a repaired calibration result.
 
 ## Next Research Directions
+
+### Direction 2: What completion evidence prevents both premature advance and redundant retesting?
+
+- Motivating evidence: all candidates fail the manually reviewed completion-pair boundary, and the original-room observation gap persists despite stronger sequencing instructions.
+- Factor to change: explicitly represent or elicit the learner's demonstrated completion for the active observation/behavior task, after resolving the exact evidence requirement with the specification owner.
+- Factors to hold constant: original headings/content, scoped cases, target model/settings and the preserved baseline; keep task completion distinct from point completion.
+- Evaluation: independently authored boundary data, full current-point history, completed-versus-unfinished pairs and same-output progression/disclosure/ordering review. Verify the grader on the disputed completed-point cases before new target comparison.
+- Priority: high; it discriminates incomplete state/evidence interpretation from mere task-label wording.
 
 ### Direction 1: Does explicit point/component evidence tracking correct the four calibration failures?
 
