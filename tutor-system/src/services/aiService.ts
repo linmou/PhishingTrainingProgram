@@ -923,7 +923,7 @@ export const generateTutorSuggestion = async (
         console.log('📋 Using AI config with system prompt:', aiConfig.system_prompt?.substring(0, 100) + '...');
         
         // 5. Get conversation history (includes pre-populated discussion for ecology)
-        const conversationHistory = await buildAIContextFromExistingData(roomId,options?.expectedAssessmentResultIds,options?.focusStudentId,roomData);
+        const conversationHistory = await buildAIContextFromExistingData(roomId,options?.expectedAssessmentResultIds,options?.focusStudentId,roomData,true);
         console.log(`📚 Conversation history length: ${conversationHistory.length} messages`);
 
         const scenarioContext = formatRoomScenarioContext(

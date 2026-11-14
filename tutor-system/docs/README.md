@@ -2,7 +2,8 @@
 Document the current tutor-system architecture and development workflows, including database migrations, SPA routing, learning progress export, and room data export behavior.
 
 ## Metadata
-- Updated: 2026-11-13
+- Updated: 2026-11-14
+- Full tutor response history local experiment baseline: `e3e8697`.
 - Component-scaffolding specification baseline: `2172ab6`.
 - Task-label continuity preparation baseline: `297a1b3`.
 - Contextual completion and learner-progress baseline: `9bcae2d`.
@@ -44,6 +45,7 @@ This directory contains comprehensive architectural and implementation documenta
 - **[Component-scaffolding experiment](../../evals/promptfoo/scaffolding-diagnostics/2026-11-13-component-scaffolding/)** - Focused recognition/action opportunities, versioned rubric changes, fixed real-template inputs and separately reported diagnostic results
 - **[Task-label continuity preparation](./doc_update_record/documentation_update_record_v2026_11_13_task_label_continuity.md)** - Retained point headings, observation/behavior task labels, and focused completion-before-progression evaluation
 - **[Contextual completion and learner progress](./doc_update_record/documentation_update_record_v2026_11_13_contextual_completion.md)** - General completion criteria, cross-scenario semantic checks, and learner-specific progress in tutor requests
+- **[Full tutor response history](./doc_update_record/documentation_update_record_v2026_11_14_full_tutor_response_history.md)** - Local replay of structured tutor output, preservation of reviewed wording, and removal of the reason word cap
 - **[Tutor response contract](./ai-behaviors/tutor-response-contract.md)** - Legacy tutor decoding, assessment-only teacher review, exact question payload, and private-key rules
 - **[Transfer status response contract](./ai-behaviors/transfer-status-response-contract.md)** - Item-level evidence, direct coverage, transfer, and open classification limits
 - **[Learning-progress analyzer dialogue contract](./transfer-status-analysis.md)** - Product input, speaker attribution, per-target calls and progress application
