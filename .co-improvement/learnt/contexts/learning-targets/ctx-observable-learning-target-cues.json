@@ -1,0 +1,28 @@
+{
+  "id": "CTX-OBSERVABLE-LEARNING-TARGET-CUES",
+  "statement": "The project owner requires each learning target’s “What to notice” to identify a concrete observable cue in the raw post, not an absence or unsupported negative such as “There is no proof.” In the Nintendo Switch template, the owner considers KP5 redundant with KP4 and requests its removal; retain KP1–KP4. The cue rule also applies under the canonical “Observation task” label. Author final task labels directly in the source catalog and pass target text unchanged into prompts; do not rewrite target expressions at request time.",
+  "intent_keywords": [
+    "distinct learning targets",
+    "grounded teaching",
+    "avoid duplication"
+  ],
+  "context_keywords": [
+    "learning targets",
+    "What to notice",
+    "raw post",
+    "Nintendo Switch"
+  ],
+  "scope": {
+    "include": [
+      "Reviewing and writing scenario learning targets",
+      "Nintendo Switch target selection"
+    ],
+    "exclude": [
+      "Prohibiting protective negative instructions in What to do, such as do not click",
+      "Automatically removing points in other templates without their individual review"
+    ]
+  },
+  "lifecycle": {
+    "sunset_condition": "The project owner explicitly revises this guidance."
+  }
+}

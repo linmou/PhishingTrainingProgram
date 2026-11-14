@@ -323,14 +323,10 @@ export function buildEcologicalChatCompletionMessages(
   const withBasePolicy = roomPrompt.includes(ACTIVE_TUTOR_AGENT_PROMPT)
     ? roomPrompt
     : `${roomPrompt}\n\n${ACTIVE_TUTOR_AGENT_PROMPT}`;
-  // Format the entire tutor system message, including saved-room progress targets.
-  const taskPrompt = withBasePolicy
-    .split('What to notice:').join('Observation task:')
-    .split('What to do:').join('Behavior task:');
   return [
     {
       role: 'system',
-      content: `${taskPrompt}\n\n${ASSESSMENT_DIALOGUE_POLICY}\n\n${NOTICE_THEN_ACTION_POLICY}\n\n${KNOWLEDGE_POINT_COMPLETION_POLICY}\n\n${LEARNER_COMPLETION_EVIDENCE_POLICY}\n\n${TASK_MEANING_SELECTION_POLICY}`
+      content: `${withBasePolicy}\n\n${ASSESSMENT_DIALOGUE_POLICY}\n\n${NOTICE_THEN_ACTION_POLICY}\n\n${KNOWLEDGE_POINT_COMPLETION_POLICY}\n\n${LEARNER_COMPLETION_EVIDENCE_POLICY}\n\n${TASK_MEANING_SELECTION_POLICY}`
     },
     {
       role: 'user',

@@ -1,13 +1,13 @@
 /**
  * File: src/services/detectionTemplates.ts
- * Purpose: verify teaching inventories and exact agreement with the saved-template migration.
+ * Purpose: verify reviewed teaching inventories against their archived document baseline.
  */
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { SCENARIO_TEMPLATES } from '../detectionTemplates';
 
 describe('Detection Templates', () => {
-  it('keeps all six migration inventories identical to the frontend targets', () => {
+  it('preserves document content and order with canonical labels and the approved Nintendo KP5 removal', () => {
     const migration = readFileSync(resolve(__dirname,
       '../../../supabase/archived_migrations/20261112000000_document_learning_targets.sql'), 'utf8');
     const entries: { scenario: keyof typeof SCENARIO_TEMPLATES; points: string[] }[] =
@@ -16,19 +16,26 @@ describe('Detection Templates', () => {
       Object.keys(SCENARIO_TEMPLATES).filter(name => name !== 'General Scam Indicators').sort()
     );
     entries.forEach(entry => {
-      expect(entry.points).toEqual(SCENARIO_TEMPLATES[entry.scenario].detection_areas);
+      const approvedPoints = entry.scenario === 'Nintendo Switch Deal ($19.99)'
+        ? entry.points.slice(0, 4)
+        : entry.points;
+      // The archived migration is historical evidence, not a runtime formatting step.
+      const expectedPoints = approvedPoints.map(point => point
+        .replace(/What to notice:/g, 'Observation task:')
+        .replace(/What to do:/g, 'Behavior task:'));
+      expect(expectedPoints).toEqual(SCENARIO_TEMPLATES[entry.scenario].detection_areas);
     });
   });
 
   it.each([
-    ['Nintendo Switch Deal ($19.99)', 5],
+    ['Nintendo Switch Deal ($19.99)', 4],
     ['iTunes Gift Card Survey ($500)', 5],
     ['Account Security Alert', 5],
     ['Location Sharing Risks', 4],
     ['Movie Meetup Social Engineering', 4],
     ['Contact Information Exposure', 5],
     ['General Scam Indicators', 5]
-  ] as const)('provides the document-sized inventory for %s', (name, count) => {
+  ] as const)('provides the approved inventory for %s', (name, count) => {
     const scenario = SCENARIO_TEMPLATES[name];
     expect(scenario.detection_areas).toHaveLength(count);
     expect(scenario.verification_steps).toEqual([]);
