@@ -52,11 +52,11 @@ Acceptance: validate consumer paths and framework entrypoints, correct dependenc
 
 ## Proposed issue 5 — Resolve behavioral analyzer import omissions
 
-Priority: P2 tooling. Identical unresolved-relative-import inventory in baseline and candidate; affected source files unchanged. Many imports use explicit .ts extensions.
+Priority: P2 analyzer compatibility. Confirmed with the project TypeScript 4.9.5 compiler API: all 23 reported import targets exist, and all 23 resolve to the exact target when the explicit .ts suffix is omitted in a diagnostic probe. The analyzer calls ts.resolveModuleName with project options, which returns undefined for these explicit-.ts specifiers. Source comments explicitly retain .ts extensions for Deno and suppress the TypeScript 4.9 incompatibility with @ts-ignore. This is an existing shared-source/toolchain compatibility gap, not missing files or a regression introduced by the repair. No source imports were rewritten by the probe.
 
 Impact: incomplete static coverage, not proof that application imports fail at runtime.
 
-Acceptance: reproduce resolution through the project's TypeScript configuration, determine whether the adapter or source configuration is responsible, fix the responsible layer, and rerun to complete coverage or retain explicit bounded omissions. Do not rewrite working imports only to hide a tool limitation.
+Acceptance: make the behavioral adapter support the documented shared Deno/CRA import convention with explicit provenance and resolution tests, or adopt a separately validated shared-source toolchain configuration. Re-run graph coverage. Do not rewrite Deno-required source imports merely to hide analyzer omissions. This probe establishes target existence and the resolution mismatch, not complete runtime correctness.
 
 ## Proposed issue 6 — Triage historical secret-scanner candidates
 
@@ -72,4 +72,4 @@ Baseline settings code/tests contain 16 duplication candidates. Production promp
 
 ## PR gate
 
-No PR is authorized by a source-review pass alone. Monitor coverage remains incomplete until verified otherwise. Keep the PR closed; legacy issue proposals are not automatic waivers. Owner: root agent on fix/assessment-toggle-persistence. Full live conversation verification remains open.
+Monitor coverage remains incomplete. User subsequently explicitly authorized PR publication after baseline attribution; disclose these limitations in the PR. This is not a monitor pass or a merge-gate waiver. Owner: root agent on fix/assessment-toggle-persistence. Full live conversation verification remains open.

@@ -80,3 +80,11 @@ PR gate remains CLOSED unless final coverage is complete and both skills pass; d
 Ran identical-scope monitor on unchanged baseline and candidate. madge cycle JSON is identical; depcheck JSON is identical after path normalization; behavioral unresolved-import inventory is identical. Dependency audit reports the same 119 vulnerable package entries/severity counts and names, with unchanged manifests. Compiler output matches baseline exactly. No Gitleaks match references repair commits.
 
 One introduced test clone was confirmed (baseline 16 clones / 271 duplicated lines versus initial candidate 17 / 277). Extracted renderAssessmentSettings helper; latest /tmp/ptp-assessment-smells-refactor returns exactly 16 clones / 271 lines, matching baseline. Focused tests pass 18/18 after refactoring. Scoped lint remains clean. Legacy issue proposals are in docs/reviews/assessment-toggle-legacy-issue-proposals.md; no issues published and no PR opened. Incomplete monitor coverage is still not waived.
+
+## PR publication authorization (2026-11-14)
+
+User explicitly authorized publishing the PR after baseline attribution established that all remaining findings predate the change. This supersedes the earlier absolute no-PR instruction for this candidate only. It does not classify monitor coverage as complete or authorize accepting legacy defects for merge. PR must disclose incomplete coverage, legacy proposals, and unverified live conversation/deployment. Independent review converged on all four source/reporting criteria after fixture deduplication.
+
+Additional read-only import probe: TypeScript 4.9.5, 23 unresolved targets exist, all 23 resolve to the exact file after diagnostic-only removal of .ts suffix; shared source comments explain Deno's explicit-extension requirement. No imports changed.
+
+Fetched target branch before publication. origin/no_sign_up has two newer prompt-revert commits (8149bae, e56294d); local checks refer to this candidate, not a claimed verification of the integrated target. GitHub checks and review remain pending.
