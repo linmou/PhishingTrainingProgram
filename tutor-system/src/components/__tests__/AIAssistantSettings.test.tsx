@@ -104,8 +104,8 @@ describe('AIAssistantSettings', () => {
 
         await waitFor(() => {
             expect(toggleAIAssistant).toHaveBeenCalledWith(true, expect.any(Object));
-            expect(setTransferLearningEnabled).not.toHaveBeenCalled();
         });
+        expect(setTransferLearningEnabled).not.toHaveBeenCalled();
     });
 
     it('preserves an existing room choice to leave in-room assessment off', () => {
@@ -226,6 +226,8 @@ describe('AIAssistantSettings', () => {
             expect(
                 screen.getByPlaceholderText('Red flags to watch for (optional - will use template if empty)')
             ).toHaveValue('Suspicious links\n\nSender spoofing');
+        });
+        await waitFor(() => {
             expect(
                 screen.getByPlaceholderText('Steps students should take to verify content (optional)')
             ).toHaveValue('Check sender\nHover over links');

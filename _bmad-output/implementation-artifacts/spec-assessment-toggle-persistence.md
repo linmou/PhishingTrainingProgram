@@ -2,7 +2,7 @@
 title: Preserve the tutor assessment choice
 created: 2026-11-14
 type: bugfix
-status: done
+status: in-review
 baseline_commit: 3becd9b
 context: []
 ---
@@ -64,3 +64,13 @@ Run the focused AIAssistantSettings Jest suite, then TypeScript compilation. Liv
   [AIAssistantSettings.tsx:391](../../tutor-system/src/components/AIAssistantSettings.tsx#L391)
 - Verify background refresh, persistence, room switching, and saved-off behavior.
   [AIAssistantSettings.test.tsx:128](../../tutor-system/src/components/__tests__/AIAssistantSettings.test.tsx#L128)
+
+## Required pre-PR review loop (2026-11-14)
+
+User requires code-smell-monitor and review-with-multi-debate to pass before any PR. Owner: root agent, branch fix/assessment-toggle-persistence. Source review pass is distinct from monitor coverage pass.
+
+Initial monitor /tmp/ptp-assessment-smells/summary.json reports incomplete coverage. Fixed both scoped test lint errors, including an inherited multiple-assertion waitFor. All 18 focused tests pass again (/tmp/ptp-assessment-test-final.log). Rerun with identical source scope and install policy is /tmp/ptp-assessment-smells-final; added Gitleaks to PATH for missing secret-scan coverage.
+
+Known monitor blockers: TypeScript errors (byte-identical baseline), package dependency cycles, depcheck exit 255, behavioral adapter unresolved imports/partial coverage, and dependency audit findings. These are not resolved by the settings fix. No broad dependency or architectural repair is included without investigation. Knip's only scoped candidate is this executed test file, not confirmed dead code. jscpd exits clean under its configured threshold; raw evidence nevertheless reports 17 clones (277 duplicated lines). This is not absence of duplication.
+
+PR gate remains CLOSED unless final coverage is complete and both skills pass; do not treat an incomplete report or source-review consensus as permission to open a PR. Full live conversation journey and deployment remain unverified. Resume by diagnosing monitor coverage failures and separating inherited package findings from introduced defects; preserve exact scope/results. Audits are locally excluded under audits/.
