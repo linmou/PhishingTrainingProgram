@@ -84,7 +84,7 @@ describe('AIAssistantSettings', () => {
         expect(screen.getByDisplayValue('Custom / General')).toBeInTheDocument();
     });
 
-    it('defaults in-room assessment on when enabling AI in a new room', async () => {
+    it('preserves disabled assessment when enabling AI in an existing room', async () => {
         const toggleAIAssistant = jest.fn().mockResolvedValue(undefined);
         const setTransferLearningEnabled = jest.fn().mockResolvedValue(undefined);
         (useAuth as jest.Mock).mockReturnValue({ user: { id: 'tutor-1', current_role: 'tutor' } });
@@ -98,14 +98,14 @@ describe('AIAssistantSettings', () => {
 
         render(<AIAssistantSettings onClose={jest.fn()} />);
 
-        expect(screen.getByLabelText('Enable In-Room Assessment')).toBeChecked();
+        expect(screen.getByLabelText('Enable In-Room Assessment')).not.toBeChecked();
         fireEvent.click(screen.getByLabelText('Enable AI Assistant'));
         fireEvent.click(screen.getByText('Save Settings'));
 
         await waitFor(() => {
             expect(toggleAIAssistant).toHaveBeenCalledWith(true, expect.any(Object));
-            expect(setTransferLearningEnabled).toHaveBeenCalledWith(true);
         });
+        expect(setTransferLearningEnabled).not.toHaveBeenCalled();
     });
 
     it('preserves an existing room choice to leave in-room assessment off', () => {
@@ -121,6 +121,47 @@ describe('AIAssistantSettings', () => {
         render(<AIAssistantSettings onClose={jest.fn()} />);
 
         expect(screen.getByLabelText('Enable In-Room Assessment')).not.toBeChecked();
+    });
+
+    const renderAssessmentSettings = (enabled: boolean) => {
+        const context = {
+            currentRoom: { id: 'room-1', ai_assistant_enabled: true, transfer_learning_enabled: enabled },
+            aiConfig: buildCasualPeerAIConfig('Movie Meetup Social Engineering'),
+            toggleAIAssistant: jest.fn().mockResolvedValue(undefined),
+            setTransferLearningEnabled: jest.fn().mockResolvedValue(undefined),
+            loadingAI: false
+        };
+        (useAuth as jest.Mock).mockReturnValue({ user: { id: 'tutor-1', current_role: 'tutor' } });
+        (useRoom as jest.Mock).mockReturnValue(context);
+        return { context, view: render(<AIAssistantSettings onClose={jest.fn()} />) };
+    };
+
+    it('keeps assessment unchecked across conversation and AI configuration updates before saving', async () => {
+        const { context: roomContext, view } = renderAssessmentSettings(true);
+        fireEvent.click(screen.getByLabelText('Enable In-Room Assessment'));
+        (useRoom as jest.Mock).mockReturnValue({
+            ...roomContext,
+            currentRoom: { ...roomContext.currentRoom },
+            aiConfig: { ...roomContext.aiConfig }
+        });
+        view.rerender(<AIAssistantSettings onClose={jest.fn()} />);
+        expect(screen.getByLabelText('Enable In-Room Assessment')).not.toBeChecked();
+        fireEvent.click(screen.getByText('Save Settings'));
+        await waitFor(() => expect(roomContext.setTransferLearningEnabled).toHaveBeenCalledWith(false));
+    });
+
+    it('follows remote assessment changes until edited and hydrates a different room', () => {
+        const { context, view } = renderAssessmentSettings(false);
+        expect(screen.getByLabelText('Enable In-Room Assessment')).not.toBeChecked();
+        (useRoom as jest.Mock).mockReturnValue({ ...context,
+            currentRoom: { ...context.currentRoom, transfer_learning_enabled: true } });
+        view.rerender(<AIAssistantSettings onClose={jest.fn()} />);
+        expect(screen.getByLabelText('Enable In-Room Assessment')).toBeChecked();
+        fireEvent.click(screen.getByLabelText('Enable In-Room Assessment'));
+        (useRoom as jest.Mock).mockReturnValue({ ...context,
+            currentRoom: { ...context.currentRoom, id: 'room-2', transfer_learning_enabled: true } });
+        view.rerender(<AIAssistantSettings onClose={jest.fn()} />);
+        expect(screen.getByLabelText('Enable In-Room Assessment')).toBeChecked();
     });
 
     it('hydrates modular controls from aiConfig prompt_config instead of default values', async () => {
@@ -183,6 +224,8 @@ describe('AIAssistantSettings', () => {
             expect(
                 screen.getByPlaceholderText('Red flags to watch for (optional - will use template if empty)')
             ).toHaveValue('Suspicious links\n\nSender spoofing');
+        });
+        await waitFor(() => {
             expect(
                 screen.getByPlaceholderText('Steps students should take to verify content (optional)')
             ).toHaveValue('Check sender\nHover over links');
