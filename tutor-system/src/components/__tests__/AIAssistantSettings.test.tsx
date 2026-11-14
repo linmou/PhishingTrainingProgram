@@ -123,17 +123,21 @@ describe('AIAssistantSettings', () => {
         expect(screen.getByLabelText('Enable In-Room Assessment')).not.toBeChecked();
     });
 
-    it('keeps assessment unchecked across conversation and AI configuration updates before saving', async () => {
-        const toggleAIAssistant = jest.fn().mockResolvedValue(undefined);
-        const setTransferLearningEnabled = jest.fn().mockResolvedValue(undefined);
-        const roomContext = {
-            currentRoom: { id: 'room-1', ai_assistant_enabled: true, transfer_learning_enabled: true },
+    const renderAssessmentSettings = (enabled: boolean) => {
+        const context = {
+            currentRoom: { id: 'room-1', ai_assistant_enabled: true, transfer_learning_enabled: enabled },
             aiConfig: buildCasualPeerAIConfig('Movie Meetup Social Engineering'),
-            toggleAIAssistant, setTransferLearningEnabled, loadingAI: false
+            toggleAIAssistant: jest.fn().mockResolvedValue(undefined),
+            setTransferLearningEnabled: jest.fn().mockResolvedValue(undefined),
+            loadingAI: false
         };
         (useAuth as jest.Mock).mockReturnValue({ user: { id: 'tutor-1', current_role: 'tutor' } });
-        (useRoom as jest.Mock).mockReturnValue(roomContext);
-        const view = render(<AIAssistantSettings onClose={jest.fn()} />);
+        (useRoom as jest.Mock).mockReturnValue(context);
+        return { context, view: render(<AIAssistantSettings onClose={jest.fn()} />) };
+    };
+
+    it('keeps assessment unchecked across conversation and AI configuration updates before saving', async () => {
+        const { context: roomContext, view } = renderAssessmentSettings(true);
         fireEvent.click(screen.getByLabelText('Enable In-Room Assessment'));
         (useRoom as jest.Mock).mockReturnValue({
             ...roomContext,
@@ -143,17 +147,11 @@ describe('AIAssistantSettings', () => {
         view.rerender(<AIAssistantSettings onClose={jest.fn()} />);
         expect(screen.getByLabelText('Enable In-Room Assessment')).not.toBeChecked();
         fireEvent.click(screen.getByText('Save Settings'));
-        await waitFor(() => expect(setTransferLearningEnabled).toHaveBeenCalledWith(false));
+        await waitFor(() => expect(roomContext.setTransferLearningEnabled).toHaveBeenCalledWith(false));
     });
 
     it('follows remote assessment changes until edited and hydrates a different room', () => {
-        const context = {
-            currentRoom: { id: 'room-1', ai_assistant_enabled: true, transfer_learning_enabled: false },
-            aiConfig: null, toggleAIAssistant: jest.fn(), setTransferLearningEnabled: jest.fn(), loadingAI: false
-        };
-        (useAuth as jest.Mock).mockReturnValue({ user: { id: 'tutor-1', current_role: 'tutor' } });
-        (useRoom as jest.Mock).mockReturnValue(context);
-        const view = render(<AIAssistantSettings onClose={jest.fn()} />);
+        const { context, view } = renderAssessmentSettings(false);
         expect(screen.getByLabelText('Enable In-Room Assessment')).not.toBeChecked();
         (useRoom as jest.Mock).mockReturnValue({ ...context,
             currentRoom: { ...context.currentRoom, transfer_learning_enabled: true } });
