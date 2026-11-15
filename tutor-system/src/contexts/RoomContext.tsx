@@ -800,13 +800,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!currentRoom || !user || user.id !== currentRoom.tutor_id) {
             throw new Error('Only the room tutor can configure in-room assessment');
         }
-        const { data, error } = await supabase.from('rooms')
-            .update({ in_room_assessment_enabled: enabled })
-            .eq('id', currentRoom.id)
-            .eq('tutor_id', user.id)
-            .select('*')
-            .single();
-        if (error) throw error;
+        const data = await transferAssessmentService.configureAssessment(currentRoom.id, enabled);
 
         if (enabled) {
             const { data: activeSessions, error: sessionError } = await supabase

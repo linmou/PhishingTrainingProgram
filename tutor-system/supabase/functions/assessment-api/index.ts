@@ -16,7 +16,7 @@ import { applyLearningEvent, isValidTransferProgress } from '../../../src/servic
 import type { LearningEventKind, TransferProgress } from '../../../src/services/learningProgressTransitions.ts';
 
 const OPERATIONS = new Set([
-  'initialize_checklist', 'join_room', 'edit_learning_progress', 'read_learning_evidence', 'post_message', 'analyze_message',
+  'configure_assessment', 'initialize_checklist', 'join_room', 'edit_learning_progress', 'read_learning_evidence', 'post_message', 'analyze_message',
   'prepare_turn', 'send_reviewed', 'read_review', 'process_message', 'clear_chat_history',
 ]);
 const OPTION_IDS = new Set(['A', 'B', 'C', 'D']);
@@ -621,7 +621,7 @@ export function createAssessmentApiHandler(deps: AssessmentApiDependencies) {
       return fail(String(error).includes('AUTHORIZATION_NOT_CONFIGURED')
         ? 'AUTHORIZATION_NOT_CONFIGURED' : 'UNAUTHORIZED');
     }
-    if (body.operation !== 'clear_chat_history') {
+    if (!['clear_chat_history', 'configure_assessment'].includes(body.operation)) {
       try {
         if (!await deps.featureEnabled()) return fail('ASSESSMENT_FEATURE_DISABLED');
       } catch {
@@ -705,6 +705,15 @@ export function createAssessmentApiHandler(deps: AssessmentApiDependencies) {
             p_action: requiredString(body.action, 'ITEM_VALIDATION_FAILED'),
             p_item_id: requiredString(body.item_id, 'ITEM_VALIDATION_FAILED'),
             p_payload: asRecord(body.updates),
+          });
+          break;
+        case 'configure_assessment':
+          assertTeacher(principal);
+          if (typeof body.enabled !== 'boolean') throw new Error('INVALID_REQUEST');
+          data = await rpc(deps, 'set_in_room_assessment_enabled_v1', {
+            p_room_id: assertRoom(principal, body.room_id),
+            p_enabled: body.enabled,
+            p_actor_id: principal.application_user_id,
           });
           break;
         case 'post_message': {

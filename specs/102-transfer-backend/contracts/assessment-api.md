@@ -165,3 +165,5 @@ Published results inherit ordinary room-message read visibility and exports. Cur
 ## Room assessment switch (issue #100)
 
 `rooms.in_room_assessment_enabled` gates `prepare_turn` and `send_reviewed` only. Disabled operations return `IN_ROOM_ASSESSMENT_DISABLED` (409, non-retryable). `post_message`, `analyze_message`, progress reads and existing answer processing are independent of this switch. Existing rooms inherit `transfer_learning_enabled`; new rooms default true.
+
+`configure_assessment` accepts `{room_id, enabled}` with a boolean value. The Edge boundary verifies the existing tutor principal and room scope, then calls service-only `set_in_room_assessment_enabled_v1`. The RPC verifies ownership and tutor role. Anonymous/authenticated direct room writes retain access to existing columns but cannot insert or update the dedicated switch or call the trusted setter. This preserves the existing self-asserted application identity model; it does not introduce authentication or claim to solve its documented identity limitations. Configuration remains available when the global assessment rollout flag is off.

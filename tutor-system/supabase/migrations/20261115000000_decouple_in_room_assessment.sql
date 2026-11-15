@@ -1,6 +1,7 @@
 -- Issue #100: preserve existing choices; new rooms default assessment on.
 ALTER TABLE public.rooms ADD COLUMN in_room_assessment_enabled boolean NOT NULL DEFAULT true;
-UPDATE public.rooms SET in_room_assessment_enabled = coalesce(transfer_learning_enabled, false);
+UPDATE public.rooms SET in_room_assessment_enabled = false
+WHERE transfer_learning_enabled IS DISTINCT FROM true;
 COMMENT ON COLUMN public.rooms.in_room_assessment_enabled IS 'Controls only preparation and delivery of new in-room assessments; never learning-target tracing.';
 
 CREATE OR REPLACE FUNCTION public.enforce_practice_identity()
@@ -212,3 +213,64 @@ END;
 $function$
 ;
 
+
+-- Keep the new server gate behind the existing trusted tutor boundary. Table-level
+-- privileges override column grants, so retain ordinary writes through explicit
+-- grants for every existing room column while excluding the assessment switch.
+REVOKE INSERT, UPDATE ON public.rooms FROM PUBLIC, anon, authenticated;
+DO $$
+DECLARE writable_columns text;
+BEGIN
+  SELECT string_agg(quote_ident(attname), ', ' ORDER BY attnum) INTO writable_columns
+  FROM pg_attribute WHERE attrelid='public.rooms'::regclass AND attnum>0
+    AND NOT attisdropped AND attname<>'in_room_assessment_enabled';
+  EXECUTE format('GRANT INSERT (%s), UPDATE (%s) ON public.rooms TO anon, authenticated',
+    writable_columns, writable_columns);
+END $$;
+
+CREATE OR REPLACE FUNCTION public.set_in_room_assessment_enabled_v1(
+  p_room_id uuid, p_enabled boolean, p_actor_id uuid
+) RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path TO public, private
+AS $$
+DECLARE updated public.rooms%ROWTYPE;
+BEGIN
+  IF current_user NOT IN ('postgres','service_role') THEN RAISE EXCEPTION 'FORBIDDEN'; END IF;
+  IF p_enabled IS NULL THEN RAISE EXCEPTION 'INVALID_REQUEST'; END IF;
+  UPDATE public.rooms SET in_room_assessment_enabled=p_enabled
+  WHERE id=p_room_id AND tutor_id=p_actor_id AND EXISTS (
+    SELECT 1 FROM public.users WHERE id=p_actor_id AND "current_role"='tutor'
+  ) RETURNING * INTO updated;
+  IF NOT FOUND THEN RAISE EXCEPTION 'FORBIDDEN'; END IF;
+  RETURN jsonb_build_object('room',to_jsonb(updated));
+END $$;
+REVOKE ALL ON FUNCTION public.set_in_room_assessment_enabled_v1(uuid,boolean,uuid) FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.set_in_room_assessment_enabled_v1(uuid,boolean,uuid) TO service_role;
+
+-- The inspected production baseline retains two old tracing/setup predicates
+-- already absent on staging. Remove only those predicates, preserving each
+-- project's other checklist/history behavior, ownership, OIDs and grants.
+DO $$
+DECLARE fn record; definition text; expected_hashes text[];
+BEGIN
+  FOR fn IN SELECT oid,proname FROM pg_proc WHERE oid IN (
+    'public.initialize_transfer_checklist_v1(uuid,uuid,jsonb,uuid)'::regprocedure,
+    'public.get_transfer_message_analysis_context_v1(uuid,uuid,uuid)'::regprocedure
+  ) LOOP
+    definition:=pg_get_functiondef(fn.oid);
+    IF fn.proname='initialize_transfer_checklist_v1' THEN
+      expected_hashes:=ARRAY['e4f8b8eff23f074554f3a87e155c7306','a5109cfc94b1d3635db0303c72133503'];
+      IF md5(definition)<>ALL(expected_hashes) THEN RAISE EXCEPTION 'CHECKLIST_INITIALIZATION_BASELINE_CHANGED'; END IF;
+      definition:=replace(definition,
+        'WHERE id = p_room_id AND tutor_id = p_actor_id AND transfer_learning_enabled',
+        'WHERE id = p_room_id AND tutor_id = p_actor_id');
+    ELSE
+      expected_hashes:=ARRAY['84a532b11f2d5b09e6ce755e3814fe9d','3f81ae509e5c3c734af9e769e4d52015'];
+      IF md5(definition)<>ALL(expected_hashes) THEN RAISE EXCEPTION 'MESSAGE_ANALYSIS_BASELINE_CHANGED'; END IF;
+      definition:=replace(definition,
+        'WHERE id = p_room_id AND (transfer_learning_enabled OR practice_type=''cyberbullying'')',
+        'WHERE id = p_room_id');
+    END IF;
+    EXECUTE definition;
+  END LOOP;
+END $$;

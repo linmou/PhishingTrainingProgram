@@ -89,3 +89,48 @@ BEGIN
   END;
 END $$;
 ROLLBACK;
+
+BEGIN;
+DO $$
+DECLARE r public.rooms%ROWTYPE; changed jsonb; impostor uuid:=gen_random_uuid();
+BEGIN
+  SELECT rooms.* INTO STRICT r FROM public.rooms JOIN public.users u ON u.id=rooms.tutor_id
+    WHERE practice_type='phishing' AND u."current_role"='tutor' LIMIT 1;
+  changed:=public.set_in_room_assessment_enabled_v1(r.id,false,r.tutor_id);
+  IF (changed->'room'->>'in_room_assessment_enabled')::boolean IS DISTINCT FROM false THEN
+    RAISE EXCEPTION 'Owner configuration did not persist';
+  END IF;
+  IF (SELECT transfer_learning_enabled FROM public.rooms WHERE id=r.id) IS DISTINCT FROM r.transfer_learning_enabled THEN
+    RAISE EXCEPTION 'Configuration mutated the legacy flag';
+  END IF;
+  INSERT INTO public.users(id,"current_role") VALUES(impostor,'tutor');
+  BEGIN
+    PERFORM public.set_in_room_assessment_enabled_v1(r.id,true,impostor);
+    RAISE EXCEPTION 'Another tutor configured the room';
+  EXCEPTION WHEN OTHERS THEN IF SQLERRM<>'FORBIDDEN' THEN RAISE; END IF; END;
+  PERFORM set_config('request.headers',jsonb_build_object('x-practice-contract',
+    (SELECT required_contract FROM private.practice_write_gate WHERE singleton))::text,true);
+  PERFORM set_config('app.issue100_room',r.id::text,true);
+  PERFORM set_config('app.issue100_tutor',r.tutor_id::text,true);
+END $$;
+SET LOCAL ROLE anon;
+DO $$
+DECLARE created uuid;
+BEGIN
+  UPDATE public.rooms SET title=title WHERE id=current_setting('app.issue100_room')::uuid;
+  INSERT INTO public.rooms(title,tutor_id) VALUES('Local issue100 ordinary room insert',current_setting('app.issue100_tutor')::uuid) RETURNING id INTO created;
+  IF NOT (SELECT in_room_assessment_enabled FROM public.rooms WHERE id=created) THEN RAISE EXCEPTION 'Anonymous room insert lost the assessment default'; END IF;
+  BEGIN
+    UPDATE public.rooms SET in_room_assessment_enabled=true WHERE id=current_setting('app.issue100_room')::uuid;
+    RAISE EXCEPTION 'anon modified protected assessment column';
+  EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  BEGIN
+    INSERT INTO public.rooms(title,tutor_id,in_room_assessment_enabled) VALUES('Forbidden switch insert',current_setting('app.issue100_tutor')::uuid,false);
+    RAISE EXCEPTION 'anon inserted protected assessment column';
+  EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  BEGIN
+    PERFORM public.set_in_room_assessment_enabled_v1(current_setting('app.issue100_room')::uuid,true,current_setting('app.issue100_tutor')::uuid);
+    RAISE EXCEPTION 'anon invoked trusted configuration RPC';
+  EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+END $$;
+ROLLBACK;

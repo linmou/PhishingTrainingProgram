@@ -602,6 +602,10 @@ export interface Database {
             [_ in never]: never
         }
         Functions: {
+            set_in_room_assessment_enabled_v1: {
+                Args: { p_room_id: string; p_enabled: boolean; p_actor_id: string }
+                Returns: Json
+            }
             initialize_checklist_from_template: {
                 Args: {
                     p_room_id: string

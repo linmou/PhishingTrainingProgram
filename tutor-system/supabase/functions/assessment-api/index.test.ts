@@ -1540,3 +1540,28 @@ Deno.test('disabled room preparation returns an explicit non-retryable conflict 
   assertEquals(body.error.retryable, false);
   assertEquals(providerCalls, 0);
 });
+
+Deno.test('assessment configuration uses the verified tutor identity and remains available when rollout is disabled', async () => {
+  const calls: Array<{name:string;args:Record<string,unknown>}> = [];
+  const deps = dependencies({ featureEnabled: async () => false, rpc: async (name,args) => {
+    calls.push({name,args}); return {data:{room:{id:'room-1',in_room_assessment_enabled:false}},error:null};
+  }});
+  const response = await createAssessmentApiHandler(deps)(request('configure_assessment', {
+    room_id:'room-1',enabled:false,actor_id:'forged-user',
+  }));
+  assertEquals(response.status,200);
+  assertEquals(calls,[{name:'set_in_room_assessment_enabled_v1',args:{p_room_id:'room-1',p_enabled:false,p_actor_id:'teacher-1'}}]);
+});
+
+Deno.test('assessment configuration rejects learners, foreign rooms, and non-boolean settings before persistence', async () => {
+  for (const variant of ['learner','foreign-room','invalid-value']) {
+    let writes=0;
+    const deps=dependencies({rpc:async()=>{writes+=1;return {data:{},error:null}}});
+    if(variant==='learner') deps.verifier={verify:async()=>({principal_id:'student',application_user_id:'student-1',allowed_room_ids:['room-1'],can_review_assessment:false})};
+    const response=await createAssessmentApiHandler(deps)(request('configure_assessment',{
+      room_id:variant==='foreign-room'?'other-room':'room-1',enabled:variant==='invalid-value'?'false':false,
+    }));
+    assertEquals(response.status,variant==='invalid-value'?400:403);
+    assertEquals(writes,0);
+  }
+});
