@@ -163,7 +163,7 @@ test('stores a learner comment before analysis and leaves it available when anal
   (ChecklistService.analyzeStudentMessages as jest.Mock).mockRejectedValue(new Error('provider unavailable'));
   await mount();
   await act(async () => {
-    await expect(room.sendMessage('A new comment')).rejects.toThrow('Message saved, but learning progress analysis failed: provider unavailable');
+    await room.sendMessage('A new comment');
   });
   expect(post).toHaveBeenCalledTimes(1);
   expect(room.messages.some(message => message.id === 'new-comment')).toBe(true);

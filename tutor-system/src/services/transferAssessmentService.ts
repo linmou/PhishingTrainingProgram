@@ -353,6 +353,10 @@ export class TransferAssessmentService {
     return this.request('read_review', { room_id: roomId, assessment_id: assessmentId });
   }
 
+  readAssessmentHistory(roomId: string, assessmentId: string): Promise<Pick<TutorAssessmentReview, 'history_readiness'>> {
+    return this.request('read_history_readiness', { room_id: roomId, assessment_id: assessmentId });
+  }
+
   async readLearningEvidence(roomId: string, checklistId: string): Promise<LearningEvidenceRow[]> {
     const rows = await this.request<LearningEvidenceRow[]>('read_learning_evidence', {
       room_id: roomId,

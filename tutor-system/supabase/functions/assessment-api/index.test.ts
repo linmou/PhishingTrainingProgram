@@ -420,7 +420,8 @@ Deno.test('accepted retry replay after cancellation keeps its grade and marks it
   assertEquals(payload.data.terminal_failure_feedback, null);
 });
 
-Deno.test('private review reads require a tutor and the authorized room', async () => {
+Deno.test('private review and keyless history reads require a tutor and the authorized room', async () => {
+  for (const operation of ['read_review', 'read_history_readiness']) {
   for (const canReview of [false, true]) {
     let calls = 0;
     const handler = createAssessmentApiHandler(dependencies({
@@ -428,9 +429,10 @@ Deno.test('private review reads require a tutor and the authorized room', async 
         allowed_room_ids: ['room-1'], can_review_assessment: canReview }) },
       rpc: async () => { calls += 1; return { data: {}, error: null }; },
     }));
-    const result = await handler(request('read_review', { room_id: canReview ? 'other-room' : 'room-1', assessment_id: 'assessment-1' }));
+    const result = await handler(request(operation, { room_id: canReview ? 'other-room' : 'room-1', assessment_id: 'assessment-1' }));
     assert(result.status >= 400);
     assertEquals(calls, 0);
+  }
   }
 });
 
@@ -1529,4 +1531,22 @@ Deno.test('retries a stale CAS snapshot and returns the committed authoritative 
   assertEquals(payload.data.answer_outcome, 'passed');
   assertEquals(contextReads, 2);
   assertEquals(commits, 2);
+});
+
+Deno.test('disabled assessments deny private review but retain keyless history readiness', async () => {
+  const handler = createAssessmentApiHandler(dependencies({
+    featureEnabled: async () => false,
+    rpc: async () => ({ data: { assessment: { correct_option_ids: ['B'], learner_safe_explanation: 'private' },
+      transfer_basis: { secret: true }, history_readiness: { ready: true, result_message_ids: ['result-1'],
+        pending_answer_message_ids: [], unavailable_assessment_ids: [], handled_answer_message_ids: ['answer-1'],
+        correct_option_ids: ['B'] } }, error: null }),
+  }));
+  const privateResponse = await handler(request('read_review', { room_id: 'room-1', assessment_id: 'assessment-1' }));
+  assertEquals((await privateResponse.json()).error.code, 'ASSESSMENT_FEATURE_DISABLED');
+  const safeResponse = await handler(request('read_history_readiness', { room_id: 'room-1', assessment_id: 'assessment-1' }));
+  const payload = await safeResponse.json();
+  assertEquals(payload.data, { history_readiness: { ready: true, result_message_ids: ['result-1'],
+    pending_answer_message_ids: [], unavailable_assessment_ids: [], handled_answer_message_ids: ['answer-1'] } });
+  assertEquals(JSON.stringify(payload).includes('correct_option_ids'), false);
+  assertEquals(JSON.stringify(payload).includes('transfer_basis'), false);
 });

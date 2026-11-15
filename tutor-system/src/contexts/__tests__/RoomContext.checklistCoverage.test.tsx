@@ -65,9 +65,10 @@ describe('ordinary learner checklist coverage', () => {
   });
 
   async function mount() {
-    render(<RoomProvider><Probe onChange={value => { api = value; }} /></RoomProvider>);
+    const view = render(<RoomProvider><Probe onChange={value => { api = value; }} /></RoomProvider>);
     await waitFor(() => expect(api).toBeDefined());
     await act(async () => { await api.joinRoom(room.id); });
+    return view;
   }
 
   it.each([false, true])('uses trusted storage and judging with assessments enabled=%s', async enabled => {
@@ -86,13 +87,66 @@ describe('ordinary learner checklist coverage', () => {
     expect(ChecklistService.analyzeStudentMessages).not.toHaveBeenCalled();
   });
 
-  it('surfaces judge failure and preserves the saved message without a fallback', async () => {
+  it('reports a separate tracking warning while completing the successful send', async () => {
     await mount();
     (ChecklistService.analyzeStudentMessages as jest.Mock).mockRejectedValueOnce(new Error('provider failed'));
     await act(async () => {
-      await expect(api.sendMessage('Hello')).rejects.toThrow('Message saved, but learning progress analysis failed: provider failed');
+      await api.sendMessage('Hello');
     });
     expect(api.messages.some(message => message.id === 'stored-1')).toBe(true);
     expect(transferAssessmentService.postMessage).toHaveBeenCalledTimes(1);
+    expect(api.learningProgressError).toMatch(/message was saved.*progress could not be updated/i);
   });
+  it('ignores an old-room analysis failure after navigation', async () => {
+    let rejectAnalysis!: (error: Error) => void;
+    (ChecklistService.analyzeStudentMessages as jest.Mock).mockImplementationOnce(() => new Promise((_resolve, reject) => { rejectAnalysis = reject; }));
+    await mount();
+    let pending!: Promise<void>;
+    await act(async () => { pending = api.sendMessage('Hello'); });
+    await waitFor(() => expect(rejectAnalysis).toBeDefined());
+    roomRecord = { ...room, id: 'room-2' };
+    await act(async () => { await api.joinRoom('room-2'); });
+    await act(async () => { rejectAnalysis(new Error('late failure')); await pending; });
+    expect(api.currentRoom?.id).toBe('room-2');
+    expect(api.learningProgressError).toBeNull();
+  });
+
+  it('does not replace a newer successful send status with an older analysis failure', async () => {
+    let rejectAnalysis!: (error: Error) => void;
+    (ChecklistService.analyzeStudentMessages as jest.Mock).mockImplementationOnce(() => new Promise((_resolve, reject) => { rejectAnalysis = reject; }));
+    await mount();
+    let pending!: Promise<void>;
+    await act(async () => { pending = api.sendMessage('First'); });
+    await waitFor(() => expect(rejectAnalysis).toBeDefined());
+    await act(async () => { await api.sendMessage('Second'); });
+    await act(async () => { rejectAnalysis(new Error('old failure')); await pending; });
+    expect(api.learningProgressError).toBeNull();
+  });
+
+  it('ignores an old learner analysis failure after the viewer identity changes', async () => {
+    let rejectAnalysis!: (error: Error) => void;
+    (ChecklistService.analyzeStudentMessages as jest.Mock).mockImplementationOnce(() => new Promise((_resolve, reject) => { rejectAnalysis = reject; }));
+    const view = await mount();
+    let pending!: Promise<void>;
+    await act(async () => { pending = api.sendMessage('Hello'); });
+    await waitFor(() => expect(rejectAnalysis).toBeDefined());
+    (useAuth as jest.Mock).mockReturnValue({ user: { id: 'other-student', current_role: 'student' } });
+    view.rerender(<RoomProvider><Probe onChange={value => { api = value; }} /></RoomProvider>);
+    await act(async () => { rejectAnalysis(new Error('old viewer failure')); await pending; });
+    expect(api.learningProgressError).toBeNull();
+  });
+
+  it('ignores a learner analysis failure after the same user changes role', async () => {
+    let rejectAnalysis!: (error: Error) => void;
+    (ChecklistService.analyzeStudentMessages as jest.Mock).mockImplementationOnce(() => new Promise((_resolve, reject) => { rejectAnalysis = reject; }));
+    const view = await mount();
+    let pending!: Promise<void>;
+    await act(async () => { pending = api.sendMessage('Hello'); });
+    await waitFor(() => expect(rejectAnalysis).toBeDefined());
+    (useAuth as jest.Mock).mockReturnValue({ user: { id: 'student-1', current_role: 'tutor' } });
+    view.rerender(<RoomProvider><Probe onChange={value => { api = value; }} /></RoomProvider>);
+    await act(async () => { rejectAnalysis(new Error('old role failure')); await pending; });
+    expect(api.learningProgressError).toBeNull();
+  });
+
 });

@@ -52,6 +52,7 @@ export const useRoom = () => {
 export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [aiConfig, setAiConfig] = useState<AIAssistantConfig | null>(null);
     const [loadingAI, setLoadingAI] = useState(false);
+    const [learningProgressError, setLearningProgressError] = useState<string | null>(null);
     const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
     const [aiDecision, setAiDecision] = useState<TutorActionDecision | null>(null);
     const [cyberbullyingDraft, setCyberbullyingDraft] = useState<CyberbullyingSuggestion | null>(null);
@@ -86,6 +87,12 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         currentRoom, setCurrentRoom, messages, setMessages, participants, loading,
         activeRoomId, joinRealtimeIds, addDisplayNameToMessage, createRoom, joinRoom, leaveRoom,
     } = useRoomMembership(user, setAIInteractions, setAiConfig);
+    const progressWarningScope = JSON.stringify([currentRoom?.id, user?.id, user?.current_role]);
+    const progressWarningRequest = useRef({ scope: progressWarningScope, sequence: 0 });
+    if (progressWarningRequest.current.scope !== progressWarningScope) {
+        progressWarningRequest.current = { scope: progressWarningScope, sequence: progressWarningRequest.current.sequence + 1 };
+    }
+    useEffect(() => { setLearningProgressError(null); }, [progressWarningScope]);
     const { messageFeedbackStats, getMessageFeedbackStats: handleGetMessageFeedbackStats,
         refreshMessageFeedbackStats, resetFeedback } = useMessageFeedback(currentRoom?.id, user?.id, messages);
 
@@ -178,6 +185,9 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // Every learner message uses the trusted boundary, regardless of assessment settings.
         if (user.current_role === 'student') {
+            const warningRequest = { scope: progressWarningScope, sequence: progressWarningRequest.current.sequence + 1 };
+            progressWarningRequest.current = warningRequest;
+            setLearningProgressError(null);
             const answerOptions = options;
             const result = await transferAssessmentService.postMessage({
                 roomId: currentRoom.id,
@@ -198,8 +208,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const analyzeEvidence = async () => {
                     try {
                         await ChecklistService.analyzeStudentMessages(currentRoom.id, user.id, storedMessage.id, user.id);
-                    } catch (analysisError) {
-                        throw new Error(`Message saved, but learning progress analysis failed: ${analysisError instanceof Error ? analysisError.message : String(analysisError)}`);
+                    } catch {
+                        if (progressWarningRequest.current === warningRequest) {
+                            setLearningProgressError('Your message was saved, but learning progress could not be updated. Ask your tutor to check the learning targets.');
+                        }
                     }
                 };
                 if (answerOptions?.assessmentId) {
@@ -538,7 +550,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     (message as Partial<RoomMessageView>).publicQuestion
                 ).find(question => question?.studentId === checklistOwnerId)?.id;
                 if (readinessAssessmentId) {
-                    const review = await transferAssessmentService.readReview(currentRoom.id, readinessAssessmentId);
+                    const review = await transferAssessmentService.readAssessmentHistory(currentRoom.id, readinessAssessmentId);
                     const readiness = review.history_readiness;
                     if (!readiness || readiness.ready !== true || !Array.isArray(readiness.result_message_ids) ||
                         !Array.isArray(readiness.pending_answer_message_ids) || readiness.pending_answer_message_ids.length ||
@@ -1112,6 +1124,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         stopTyping,
         aiConfig,
         loadingAI,
+        learningProgressError,
         downloadChatHistory,
         clearChatHistory,
         aiSuggestion,
