@@ -36,6 +36,7 @@ interface ChecklistPanelProps {
   progressLocked?: boolean;
   readOnly?: boolean;
   onSetupStateChange?: (waiting: boolean) => void;
+  onTransferPolicyChange?: (enabled: boolean) => void;
 }
 
 interface ChecklistItemComponentProps {
@@ -361,7 +362,8 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
   onToggleVisibility,
   progressLocked = false,
   readOnly = false,
-  onSetupStateChange
+  onSetupStateChange,
+  onTransferPolicyChange
 }) => {
   const auth = useOptionalAuth();
   const isReadOnly = readOnly || auth?.user?.current_role === 'student';
@@ -403,6 +405,11 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
     if (!isVisible || loading || !evidenceItem) setEvidenceSelection(null);
   }, [isVisible, loading, evidenceItem]);
   const transferPolicy = checklist?.progress_policy_version === 'transfer_v1';
+  React.useEffect(() => {
+    if (!loading && !error) onTransferPolicyChange?.(Boolean(
+      checklist?.room_id === roomId && checklist.is_active && transferPolicy
+    ));
+  }, [roomId, checklist, transferPolicy, loading, error, onTransferPolicyChange]);
   const setupRequired = transferEnabled && (!checklist ||
     checklist.detection_areas.length + checklist.verification_steps.length === 0);
   const progressControlsLocked = progressLocked || sharedTargets || isReadOnly;

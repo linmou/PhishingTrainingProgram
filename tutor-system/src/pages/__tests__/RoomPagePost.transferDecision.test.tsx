@@ -30,8 +30,10 @@ import type { TransferAssessmentDraft } from '../../types/assessment';
 
 jest.mock('../../contexts/AuthContext');
 jest.mock('../../contexts/RoomContext');
-jest.mock('../../components/ChecklistPanel', () => function MockChecklistPanel() {
-  return <div data-testid="checklist-panel" />;
+jest.mock('../../components/ChecklistPanel', () => function MockChecklistPanel(props: { transferEnabled?: boolean; onTransferPolicyChange?: (enabled: boolean) => void }) {
+  return <div data-testid="checklist-panel" data-transfer-enabled={String(props.transferEnabled)}>
+    <button onClick={() => props.onTransferPolicyChange?.(true)}>Report active transfer targets</button>
+  </div>;
 });
 jest.mock('../../components/AIAssistantSettings', () => function MockAIAssistantSettings() {
   return <div data-testid="ai-settings-modal" />;
@@ -238,6 +240,17 @@ describe('RoomPagePost structured decision consumption', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Chat History (TXT)' }));
 
     expect(downloadChatHistory).toHaveBeenCalledWith('txt');
+  });
+
+  it('offers transfer setup when assessment is enabled in a backfilled room', () => {
+    mount({ currentRoom: { ...transferRoom, tutor_id: 'tutor-1', transfer_learning_enabled: false, in_room_assessment_enabled: true } });
+    expect(screen.getByTestId('checklist-panel')).toHaveAttribute('data-transfer-enabled', 'true');
+  });
+
+  it('keeps transfer target controls available with both room flags off once transfer targets are loaded', () => {
+    mount({ currentRoom: { ...transferRoom, tutor_id: 'tutor-1', transfer_learning_enabled: false, in_room_assessment_enabled: false } });
+    fireEvent.click(screen.getByRole('button', { name: 'Report active transfer targets' }));
+    expect(screen.getByTestId('checklist-panel')).toHaveAttribute('data-transfer-enabled', 'true');
   });
 
   it.each(['student', 'observer'] as const)(

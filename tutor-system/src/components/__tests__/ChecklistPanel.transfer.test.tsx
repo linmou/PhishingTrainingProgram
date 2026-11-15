@@ -464,6 +464,19 @@ describe('ChecklistPanel transfer presentation', () => {
     fireEvent.click(itemText.closest('.checklist-item-header') as HTMLElement);
   };
 
+  it('keeps target setup in transfer mode after loading an empty transfer checklist with assessment off', async () => {
+    checklistApi.getActiveTransferChecklistForRoom.mockResolvedValue(buildChecklist({
+      detection_areas: [], verification_steps: [], total_items: 0,
+    }));
+    const Harness = () => {
+      const [transferMode, setTransferMode] = React.useState(false);
+      return <ChecklistPanel roomId={TRANSFER_ROOM_ID} isVisible onToggleVisibility={jest.fn()}
+        transferEnabled={transferMode} studentId={LEARNER_A_ID} onTransferPolicyChange={setTransferMode} />;
+    };
+    render(<Harness />);
+    expect(await screen.findByRole('button', { name: 'Generate Learning Targets' })).toBeInTheDocument();
+  });
+
   it('shows the tutor a status control on the assessment checklist', async () => {
     checklistApi.getActiveTransferChecklistForRoom.mockResolvedValue(transferChecklist);
 

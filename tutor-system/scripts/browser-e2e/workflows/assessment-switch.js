@@ -3,6 +3,7 @@
 'use strict';
 const assert = require('node:assert/strict');
 const path = require('node:path');
+const { waitForTemplateSettings } = require('./room-assessment-setup');
 const { openRoom, insert, query, waitForMatch, sendStudentMessage, captureResponses,
   managementQuery, requestId, screenshot, writeJson, TIMEOUT } = require('../browser-e2e-support');
 
@@ -11,26 +12,43 @@ module.exports = async function assessmentSwitch(ctx) {
   const room = await ctx.existingRoom('assessment-delivery');
   await insert(client, 'sessions', { room_id: room.id, tutor_id: ctx.tutor.id, student_id: ctx.student.id, status: 'active' });
   const area = 'Open the official app independently instead of following the link in an urgent account warning.';
-  const initialized = await client.rpc('initialize_transfer_checklist_v1', {
-    p_room_id: room.id, p_student_id: ctx.student.id, p_actor_id: ctx.tutor.id,
-    p_items: [{ area_text: area, item_type: 'verification_step', priority: 'critical' }]
-  });
-  assert.equal(initialized.error, null);
-  const checklistId = initialized.data.checklist_id;
-  const item = (await query(client, 'checklist_items', 'id,area_text,status', 'checklist_id', checklistId))[0];
-  const before = (await query(client, 'rooms', 'transfer_learning_enabled,in_room_assessment_enabled', 'id', room.id))[0];
+  let checklistId;
+  let item;
+  const before = (await query(client, 'rooms', 'transfer_learning_enabled,in_room_assessment_enabled,ai_assistant_enabled,ai_assistant_model,ai_assistant_prompt', 'id', room.id))[0];
+  const config = (await query(client, 'ai_assistant_configs', 'id,model_name,system_prompt,prompt_config,temperature,max_tokens,is_active', 'room_id', room.id)).find(c => c.is_active);
+  assert(config?.prompt_config, 'Fixture has no active AI configuration');
   try {
+    const setup = await client.from('rooms').update({ transfer_learning_enabled: false, in_room_assessment_enabled: false }).eq('id', room.id);
+    assert.equal(setup.error, null);
     await openRoom(tutorPage, appUrl, room.id);
     await tutorPage.locator('button[title="AI Assistant Settings"]').click();
+    await waitForTemplateSettings(tutorPage, config.prompt_config);
+    await tutorPage.getByLabel('Enable In-Room Assessment').check();
+    await tutorPage.getByRole('button', { name: 'Save Settings' }).click();
+    await waitForMatch(() => query(client, 'rooms', 'in_room_assessment_enabled', 'id', room.id),
+      rows => rows[0]?.in_room_assessment_enabled === true, 'assessment enabled for backfilled room');
+    await tutorPage.locator('button[title="Learning Progress Checklist"]').click();
+    await tutorPage.getByRole('button', { name: 'Enter Manually' }).click();
+    await tutorPage.getByRole('textbox', { name: 'Verification Steps' }).fill(area);
+    await tutorPage.locator('.manual-checklist-form button[type="submit"]').click();
+    const checklists = await waitForMatch(() => query(client, 'session_checklists', 'id,progress_policy_version,is_active', 'room_id', room.id),
+      rows => rows.some(c => c.progress_policy_version === 'transfer_v1' && c.is_active), 'transfer setup in a formerly disabled room');
+    checklistId = checklists.find(c => c.progress_policy_version === 'transfer_v1' && c.is_active).id;
+    item = (await query(client, 'checklist_items', 'id,area_text,status', 'checklist_id', checklistId))[0];
+    assert(item, 'Transfer target was not created');
+    await tutorPage.locator('.checklist-close').click();
+    await tutorPage.locator('button[title="AI Assistant Settings"]').click();
+    await waitForTemplateSettings(tutorPage, config.prompt_config);
     await tutorPage.getByLabel('Enable In-Room Assessment').uncheck();
     await tutorPage.getByRole('button', { name: 'Save Settings' }).click();
     await waitForMatch(() => query(client, 'rooms', 'in_room_assessment_enabled', 'id', room.id),
       rows => rows[0]?.in_room_assessment_enabled === false, 'assessment disabled');
     await tutorPage.locator('button[title="AI Assistant Settings"]').click();
+    await waitForTemplateSettings(tutorPage, config.prompt_config);
     assert.equal(await tutorPage.getByLabel('Enable In-Room Assessment').isChecked(), false);
     await tutorPage.getByRole('button', { name: 'Save Settings' }).click();
     const saved = (await query(client, 'rooms', 'transfer_learning_enabled,in_room_assessment_enabled', 'id', room.id))[0];
-    assert.equal(saved.transfer_learning_enabled, before.transfer_learning_enabled);
+    assert.equal(saved.transfer_learning_enabled, false);
     assert.equal(saved.in_room_assessment_enabled, false);
     await openRoom(studentPage, appUrl, room.id);
     const stop = await captureResponses(studentPage, r => r.url().includes('/functions/v1/assessment-api'));
@@ -74,7 +92,10 @@ module.exports = async function assessmentSwitch(ctx) {
     }
     return { room_id:room.id, checklist_id:checklistId, markers, rejected, screenshots:shots };
   } finally {
-    const restored = await client.from('rooms').update({ in_room_assessment_enabled:before.in_room_assessment_enabled }).eq('id',room.id);
+    const { id: configId, ...configValues } = config;
+    const restoredConfig = await client.from('ai_assistant_configs').update(configValues).eq('id', configId);
+    assert.equal(restoredConfig.error, null, 'Failed to restore fixture AI configuration');
+    const restored = await client.from('rooms').update(before).eq('id',room.id);
     assert.equal(restored.error, null, 'Failed to restore fixture assessment switch');
   }
 };
