@@ -14,6 +14,7 @@ const { acquireFixtureLock } = require('./browser-e2e/fixture-lock');
 const { acquireProjectLock } = require('../../scripts/staging-coordination');
 
 const workflows = {
+  'canonical-template-lifecycle': require('./browser-e2e/workflows/canonical-template-lifecycle'),
   'assessment-switch': require('./browser-e2e/workflows/assessment-switch'),
   'learning-progress-realtime': require('./browser-e2e/workflows/learning-progress-realtime'),
   'cyberbullying': require('./browser-e2e/workflows/cyberbullying'),
@@ -35,7 +36,7 @@ const workflows = {
 };
 
 function selectWorkflows(argv) {
-  if (argv.length === 0) return Object.keys(workflows).filter(name => !['assessment-switch', 'assessment-security', 'assessment-privacy', 'assessment-configuration', 'assessment-replay', 'exit-assessment'].includes(name));
+  if (argv.length === 0) return Object.keys(workflows).filter(name => !['canonical-template-lifecycle', 'assessment-switch', 'assessment-security', 'assessment-privacy', 'assessment-configuration', 'assessment-replay', 'exit-assessment'].includes(name));
   if (argv.length !== 1 || !argv[0].startsWith('--workflow=')) {
     throw new Error(`Use --workflow=<name>; available: ${Object.keys(workflows).join(', ')}`);
   }
