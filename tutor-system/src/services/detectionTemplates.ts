@@ -1,7 +1,7 @@
 /**
  * Learning targets adapted from General Learning Goals.docx; task labels are canonical.
  * Source SHA-256: fd0a0f49106e1b37795886dc39f974c3e99758e0007df5c2b0ba5d730dd6655b
- * Target selection follows owner review; Nintendo retains document points 1–4.
+ * Target wording and selection follow owner review; Nintendo retains all five points.
  */
 
 export const SCENARIO_TEMPLATES = {
@@ -9,8 +9,9 @@ export const SCENARIO_TEMPLATES = {
     detection_areas: [
       "Knowledge Point 1: Check if the deal is too good to be true. (Easiest)\nObservation task: A Nintendo Switch usually costs hundreds of dollars, but this post offers one for only $19.99.\nBehavior task: Stop and ask yourself: \"Why is this so cheap?\" If a deal seems too good to be true, be careful.",
       "Knowledge Point 2: Watch out for messages that rush you.\nObservation task: Words like \"HURRY UP\" and \"WILL NOT LAST\" try to make you act quickly.\nBehavior task: Take your time. Don't let a post rush you into clicking a link or buying something.",
-      "Knowledge Point 3: Check who shared the deal.\nObservation task: The post comes from someone named Lucy Simms, not an official Nintendo account.\nBehavior task: Look at the person's profile. Check when the account was created, what else they have posted, and whether they are connected to Nintendo.",
-      "Knowledge Point 4: Learn to spot suspicious links. (Harder)\nObservation task: The link uses \"goo.gl,\" which hides the real website. It does not show Nintendo's official website address.\nBehavior task: Don't click shortened or unfamiliar links. Look for Nintendo's official website address instead. A lock symbol or HTTPS alone does not prove a website is safe."
+      "Knowledge Point 3: Check who shared the deal.\nObservation task: The post is not from an official Nintendo account but someone named Lucy Simms\nBehavior task: Look at the person's profile. Check when the account was created, what else they have posted, and whether they are connected to Nintendo.",
+      "Knowledge Point 4: Learn to spot suspicious links. (Harder)\nObservation task: The link uses \"goo.gl,\" which hides the real website. It does not show Nintendo's official website address.\nBehavior task: Don't click shortened or unfamiliar links. Look for Nintendo's official website address instead. A lock symbol or HTTPS alone does not prove a website is safe.",
+      "Knowledge Point 5: Check the deal with the real company. (Most advanced)\nObservation task: There is no proof that Nintendo is really offering this deal.\nBehavior task: Visit Nintendo's official website or social media pages yourself. Check whether the deal is listed there. You can also ask a trusted adult to help."
     ],
     verification_steps: [] as string[],
     type: 'scam'

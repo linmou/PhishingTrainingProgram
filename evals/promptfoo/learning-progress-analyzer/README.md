@@ -35,3 +35,16 @@ Added coverage is 40 logical cases, three repetitions, 120 records. Two exact-in
 For any next refinement, freeze with `--coverage full`: all 73 original cases, all 40 additions, and five separate propagated sequence steps. Three fixed-input repetitions support classification; propagated sequences retain operational checks outside ensembles. This produces 354 logical records from 348 calls. Changes to a component require comparable full evidence; unchanged components and completed judgments can be reused with pinned provenance.
 
 The learning-progress analyzer is shared across tutor prompt candidates, so its result is shared evidence. Earlier analyzer outputs belong to different frozen prompts and are reported separately. The [completed added-case record](current-added-run-record.md) reports79/120 event/state checks passing and failed classification gates, with full evidence identities. Raw input/output artifacts remain under ignored `output/`; only code, source cases, methodology and audit records are tracked.
+
+
+### Current catalog tracing cases
+
+`current-target-cases.json` substitutes exact current full learning targets into ten retained learner-response contexts and adds eight synthetic positive controls. Historical suites remain unchanged. Labels are agent-authored provisional expectations, not historical model decisions; cases already used for prompt development are marked as exposed and are not independent holdouts.
+
+Run the actual local handler with a maximum of 32 concurrent case workers (default 32):
+
+```sh
+node evals/promptfoo/learning-progress-analyzer/current-target-eval.cjs --concurrency 32 --env-file /absolute/path/to/tutor-system/.env
+```
+
+The env file must supply `OAI_API_KEY`, `OAI_BASE_URL`, and `OAI_MODEL`. Provider calls are live; database calls are simulated. Current-target cases sharing a real response are grouped into a full inventory and run through the actual three-trial majority-vote handler. Concurrency controls response groups; each group issues three concurrent provider calls. Output JSON freezes all source dependencies, case inputs, expected events and actual handler results; credentials are excluded. A mismatched or invalid judgment returns a nonzero exit status. Use Node 22+ with built-in fetch. The old dated suites and their recorded results are retained as historical evidence.

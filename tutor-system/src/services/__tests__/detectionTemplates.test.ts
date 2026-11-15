@@ -7,7 +7,7 @@ import { resolve } from 'path';
 import { SCENARIO_TEMPLATES } from '../detectionTemplates';
 
 describe('Detection Templates', () => {
-  it('preserves document content and order with canonical labels and the approved Nintendo KP5 removal', () => {
+  it('preserves document content and order with canonical labels and approved Nintendo wording', () => {
     const migration = readFileSync(resolve(__dirname,
       '../../../supabase/archived_migrations/20261112000000_document_learning_targets.sql'), 'utf8');
     const entries: { scenario: keyof typeof SCENARIO_TEMPLATES; points: string[] }[] =
@@ -17,7 +17,10 @@ describe('Detection Templates', () => {
     );
     entries.forEach(entry => {
       const approvedPoints = entry.scenario === 'Nintendo Switch Deal ($19.99)'
-        ? entry.points.slice(0, 4)
+        ? entry.points.map(point => point.replace(
+          'The post comes from someone named Lucy Simms, not an official Nintendo account.',
+          'The post is not from an official Nintendo account but someone named Lucy Simms'
+        ))
         : entry.points;
       // The archived migration is historical evidence, not a runtime formatting step.
       const expectedPoints = approvedPoints.map(point => point
@@ -28,7 +31,7 @@ describe('Detection Templates', () => {
   });
 
   it.each([
-    ['Nintendo Switch Deal ($19.99)', 4],
+    ['Nintendo Switch Deal ($19.99)', 5],
     ['iTunes Gift Card Survey ($500)', 5],
     ['Account Security Alert', 5],
     ['Location Sharing Risks', 4],
