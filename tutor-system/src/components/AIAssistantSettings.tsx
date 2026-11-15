@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRoom } from '../contexts/RoomContext';
 import { useAuth } from '../contexts/AuthContext';
 import { AI_MODELS, AIModelName, OAI_MODEL } from '../services/aiService';
@@ -45,6 +45,8 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
 
     const [isEnabled, setIsEnabled] = useState(false);
     const [transferEnabled, setTransferEnabled] = useState(true);
+    const assessmentEditRoom = useRef<string | null>(null);
+    const assessmentRoom = useRef<string | null>(null);
     const [selectedModel, setSelectedModel] = useState<AIModelName>(OAI_MODEL);
     const [systemPrompt, setSystemPrompt] = useState('');
     const [temperature, setTemperature] = useState(0.7);
@@ -142,7 +144,14 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
 
         if (currentRoom) {
             setIsEnabled(currentRoom.ai_assistant_enabled);
-            setTransferEnabled(currentRoom.transfer_learning_enabled === true || !currentRoom.ai_assistant_enabled);
+            if (assessmentRoom.current !== currentRoom.id) {
+                assessmentRoom.current = currentRoom.id;
+                assessmentEditRoom.current = null;
+            }
+            // Background room/config updates must not overwrite an explicit unsaved choice.
+            if (assessmentEditRoom.current !== currentRoom.id) {
+                setTransferEnabled(currentRoom.transfer_learning_enabled === true);
+            }
         }
 
         if (aiConfig) {
@@ -377,7 +386,10 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
                             <input
                                 type="checkbox"
                                 checked={transferEnabled}
-                                onChange={(event) => setTransferEnabled(event.target.checked)}
+                                onChange={(event) => {
+                                    assessmentEditRoom.current = currentRoom?.id ?? null;
+                                    setTransferEnabled(event.target.checked);
+                                }}
                                 disabled={isSaving || loadingAI}
                             />
                             <span className="ai-toggle-text">Enable In-Room Assessment</span>
