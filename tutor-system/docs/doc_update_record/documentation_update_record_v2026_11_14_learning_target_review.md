@@ -47,3 +47,14 @@ Local checks: 56 handler tests, 6 prompt/majority tests and 18 eval-tooling test
 Limitations: labels are provisional agent-authored judgments; historical responses are exposed development regressions, including examples included in the prompt. New targets were substituted into older conversations, and room setup/history parity and reconstructed prior progress require further validation. The counterfactual experiment and the actual handler have different error handling and must not be represented as interchangeable acceptance evidence. No accuracy improvement or full lifecycle acceptance is claimed. Raw learner response evidence stays in local ignored output, not in the PR.
 
 Release remains open: no live mutations or fixtures created, no staging lease acquired, no staging/production deployment or acceptance. Before release, prepare saved-template SQL and versioned cyberbullying catalog changes from the final reviewed source; preserve old target versions, progress and evidence. Verify combined grading/eligibility/lifecycle journeys, real provider behavior, target initialization and cleanup in staging and production under the repository gates. The current snapshot is draft review material, not deployable release approval. Roll back by restoring the prior committed Edge and frontend artifacts, preserving existing learner data; frontend source and saved catalogs must be aligned before promotion.
+
+## PR integration check
+
+Merged current `origin/no_sign_up` (`51404cd`) into the review branch at `0a60648`. Preserved upstream removal of tutor completion-policy additions; retained verbatim target transport tests. Integrated checks: 28 frontend tests, 56 Edge handler tests, 18 eval-tooling tests passed (102 total). The pre-integration build overlapped merge conflict markers and failed; it is invalid evidence for the resolved head. A fresh post-resolution build is running; no build pass is claimed yet. Hosted state unchanged; draft PR only.
+
+Candidate SHA-256 hashes:
+
+- `tutor-system/supabase/functions/assessment-api/index.ts`: `ca1efb516d7b6d9c25f965fd0f006a8b20a53ac829281d98927bffad971cf735`
+- `tutor-system/src/services/learningAnalysisPrompt.ts`: `844867220e69efebea7010824fc931d05f7987ebaf29c591985aae2c18838e98`
+- `tutor-system/src/services/detectionTemplates.ts`: `19946e5f09ddcf9c749a6286f57fb87b3a3b4f1611073ac28c9eae4dcaa08e7d`
+- `tutor-system/src/services/ecologicalTutorCall.ts`: `5b5b70c56037bdd76adb0dd20ca2d177bb8e4583ca4a4a7d0d5e81d05a802f3d`
