@@ -38,7 +38,7 @@ Live MCP function preconditions match on staging and production: `enforce_practi
 ## Client, Edge and harness evidence
 
 - Original flag-condition reproduction: the new trusted-posting test fails with zero `postMessage` calls when the old condition is restored; it passes with the fix.
-- Current focused client/settings/room tests: 84 passed across 5 suites. Additional Quick Adjust/failure tests: 4 passed; export/coverage fixtures: 16 passed; tutor progress/Guard service tests: 8 passed. Full regression results and GitHub checks will supersede these counts.
+- Full deterministic regression on the integrated candidate: 157 suites passed, 5 skipped; 1,642 tests passed, 93 skipped; one snapshot passed (`OAI_MODEL=ci-test-model CI=true npm run test:regression -- --runInBand --silent`). Focused tests also cover assessment-off posting, late checklist appearance, untouched settings, preserved draft edits and ordinary tutor generation.
 - Current Deno handler suite: 57 passed with `deno test --allow-env --allow-net --allow-run --allow-read --no-check supabase/functions/assessment-api/index.test.ts`, including disabled-room error handling. Its adapter type check also passes.
 - `npm ci --ignore-scripts --no-audit --no-fund`: succeeded after the default-branch update; no manifest/lockfile edits.
 - `npm run build`: succeeded using the committed dependency lock.
