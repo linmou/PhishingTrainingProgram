@@ -70,6 +70,7 @@ const RoomPagePost: React.FC = () => {
         stopTyping,
         aiConfig,
         loadingAI,
+        learningProgressError,
         downloadChatHistory,
         clearChatHistory,
         aiSuggestion,
@@ -138,10 +139,6 @@ const RoomPagePost: React.FC = () => {
     // Local status for the transfer turn: preparing, or the named reason a preparation was refused.
     const [transferTurnStatus, setTransferTurnStatus] = useState<{ status: string; message: string } | null>(null);
     const [waitingForTargets, setWaitingForTargets] = useState(false);
-    const [transferPolicyRoom, setTransferPolicyRoom] = useState<string | null>(null);
-    const handleTransferPolicyChange = useCallback((enabled: boolean) => {
-        setTransferPolicyRoom(enabled && roomId ? roomId : null);
-    }, [roomId]);
     const [newMessageCount, setNewMessageCount] = useState(0);
     const [userHasScrolledUp, setUserHasScrolledUp] = useState(false);
     const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -1081,6 +1078,7 @@ const RoomPagePost: React.FC = () => {
                 {/* Comment Input with AI Button */}
                 {canSendMessages ? (
                     <div className="comment-composer">
+                        {learningProgressError && <p role="alert">{learningProgressError}</p>}
                         {currentRoom.practice_type !== 'cyberbullying' && <StudentAIToneControl />}
                         <div className="comment-input-with-ai">
                             <CommentInput
@@ -1225,9 +1223,6 @@ const RoomPagePost: React.FC = () => {
             {roomId && canViewLearningProgress && (
                 <ChecklistPanel
                     roomId={roomId}
-                    transferEnabled={currentRoom.transfer_learning_enabled === true ||
-                        currentRoom.in_room_assessment_enabled === true || transferPolicyRoom === roomId}
-                    onTransferPolicyChange={handleTransferPolicyChange}
                     sharedTargets={currentRoom.practice_type === 'cyberbullying'}
                     studentId={user?.current_role === 'student' ? user.id : transferStudentId}
                     readOnly={user?.current_role === 'student'}

@@ -129,7 +129,7 @@ describe('assessment API contract', () => {
   it('keeps the explicit operation allowlist and versioned envelopes', () => {
     expect(ASSESSMENT_API_OPERATIONS).toEqual([
       'configure_assessment', 'initialize_checklist', 'join_room', 'edit_learning_progress', 'read_learning_evidence', 'post_message', 'analyze_message',
-      'prepare_turn', 'send_reviewed', 'read_review', 'process_message', 'clear_chat_history',
+      'prepare_turn', 'send_reviewed', 'read_review', 'read_history_readiness', 'process_message', 'clear_chat_history',
     ]);
     expect(new Set(ASSESSMENT_API_OPERATIONS).size).toBe(ASSESSMENT_API_OPERATIONS.length);
     ASSESSMENT_API_OPERATIONS.forEach((operation) => expect(isAssessmentApiOperation(operation)).toBe(true));

@@ -11,6 +11,7 @@ export const ASSESSMENT_API_OPERATIONS = [
   'prepare_turn',
   'send_reviewed',
   'read_review',
+  'read_history_readiness',
   'process_message',
   'clear_chat_history',
 ] as const;

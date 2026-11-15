@@ -272,3 +272,27 @@ it.each(['room', 'account'])('clears unsaved manual text across a true %s identi
   fireEvent.click(screen.getByRole('button', { name: 'Enter Manually', exact: true }));
   expect(screen.getByRole('textbox', { name: 'Detection Areas' })).toHaveValue('');
 });
+
+it.each([false, true])('initializes learner-owned targets with assessments enabled=%s', async enabled => {
+  const { result } = renderHook(() => useChecklist('room', { enabled, studentId: 'learner' }), { wrapper: wrapper('tutor') });
+  await flush();
+  await act(async () => result.current.handleManualSubmit(['Verify the sender'], []));
+  expect(api.initializeTransferChecklistForStudent).toHaveBeenCalledWith('room', 'learner', [
+    { area_text: 'Verify the sender', item_type: 'detection_area', priority: 'important' },
+  ]);
+  expect(result.current.checklist?.student_id).toBe('learner');
+});
+
+it('keeps learner progress and subscriptions stable when assessments toggle', async () => {
+  persisted.set('room', saved('room'));
+  const { result, rerender } = renderHook(({ enabled }) => useChecklist('room', { enabled, studentId: 'learner' }),
+    { wrapper: wrapper('tutor'), initialProps: { enabled: false } });
+  await flush();
+  const checklist = result.current.checklist;
+  const channelCount = channels.length;
+  rerender({ enabled: true }); await flush();
+  rerender({ enabled: false }); await flush();
+  expect(result.current.checklist).toBe(checklist);
+  expect(channels).toHaveLength(channelCount);
+  expect(api.initializeTransferChecklistForStudent).not.toHaveBeenCalled();
+});

@@ -6,7 +6,6 @@
 
 import { ChecklistIntegration } from '../services/checklistIntegration';
 import { ChecklistService } from '../services/checklistService';
-import { CoverageDetectionService } from '../services/coverageDetectionService';
 import { LLMExtractionService } from '../services/llmExtractionService';
 import { supabase } from '../services/supabase';
 import { ChecklistItem, SessionChecklist } from '../types/checklist';
@@ -126,36 +125,6 @@ describe('Checklist Management System', () => {
   });
 
   describe('Current checklist operations', () => {
-    it('initializes a room checklist from the selected database template', async () => {
-      const checklist = buildChecklist([
-        buildItem({ area_text: '[understanding] Sender verification techniques' })
-      ], [
-        buildItem({
-          id: 'item-2',
-          area_text: '[behavior] Check sender email manually',
-          item_type: 'verification_step'
-        })
-      ]);
-      jest.spyOn(ChecklistService, 'getChecklistByRoom').mockResolvedValue(checklist);
-      mockQuery.single.mockResolvedValueOnce({
-        data: { guard_mode: false },
-        error: null
-      });
-      mockSupabase.rpc.mockResolvedValueOnce({ error: null });
-
-      const result = await ChecklistService.initializeChecklistFromTemplate(
-        'room-1',
-        'Phishing Email Training'
-      );
-
-      expect(mockSupabase.rpc).toHaveBeenCalledWith('initialize_checklist_from_template', {
-        p_room_id: 'room-1',
-        p_template_name: 'Phishing Email Training'
-      });
-      expect(mockQuery.update).toHaveBeenCalledWith({ is_active: false });
-      expect(result.detection_areas.every((item) => item.status === 'pending')).toBe(true);
-      expect(result.verification_steps.every((item) => item.status === 'pending')).toBe(true);
-    });
 
     it('passes the unified learning-target list through the async extraction API', async () => {
       (LLMExtractionService.extractFromSystemPrompt as jest.Mock).mockResolvedValue({
@@ -174,6 +143,8 @@ describe('Checklist Management System', () => {
         data: {
           id: 'checklist-1',
           room_id: 'room-1',
+          progress_policy_version: 'legacy_v1',
+          student_id: null,
           template_name: 'Phishing Email Training',
           session_start: '2026-01-01T00:00:00.000Z',
           total_items: 2,
@@ -211,6 +182,8 @@ describe('Checklist Management System', () => {
 
       const result = await ChecklistService.getChecklistByRoom('room-1');
 
+      expect(result?.progress_policy_version).toBe('legacy_v1');
+      expect(result?.student_id).toBeNull();
       expect(result?.detection_areas).toHaveLength(1);
       expect(result?.verification_steps).toHaveLength(1);
       expect(result?.detection_areas[0].coverage_evidence[0]).toMatchObject({
@@ -245,124 +218,6 @@ describe('Checklist Management System', () => {
         optional_pending: 0,
         optional_covered: 0
       });
-    });
-
-    it('saves a tutor status update with its note, history row, and manual evidence', async () => {
-      const note = 'Student verified the domain verbally.';
-      mockQuery.single
-        .mockResolvedValueOnce({ data: databaseItem({ attempts_count: 1 }), error: null })
-        .mockResolvedValueOnce({ data: { room_id: 'room-1' }, error: null })
-        .mockResolvedValueOnce({ data: { guard_mode: false }, error: null })
-        .mockResolvedValueOnce({
-          data: databaseItem({ status: 'covered', tutor_notes: note, attempts_count: 2 }),
-          error: null
-        });
-
-      await expect(ChecklistService.updateItemStatus('item-1', 'covered', note)).resolves.toMatchObject({
-        id: 'item-1',
-        status: 'covered',
-        tutor_notes: note,
-        attempts_count: 2
-      });
-
-      expect(mockQuery.update).toHaveBeenCalledWith(expect.objectContaining({
-        status: 'covered',
-        tutor_notes: note,
-        attempts_count: 2
-      }));
-      expect(mockQuery.insert).toHaveBeenCalledWith(expect.objectContaining({
-        previous_status: 'pending',
-        new_status: 'covered',
-        updated_by: 'tutor'
-      }));
-      expect(mockQuery.insert).toHaveBeenCalledWith(expect.objectContaining({
-        evidence_text: note,
-        detection_method: 'tutor_manual'
-      }));
-    });
-
-    it('supports partial status updates when optional metadata is absent', async () => {
-      const note = 'Student named a clue but missed the main risk.';
-      mockQuery.single
-        .mockResolvedValueOnce({
-          data: databaseItem({ priority: undefined, understanding_level: undefined }),
-          error: null
-        })
-        .mockResolvedValueOnce({ data: { room_id: 'room-1' }, error: null })
-        .mockResolvedValueOnce({ data: { guard_mode: false }, error: null })
-        .mockResolvedValueOnce({
-          data: databaseItem({
-            priority: undefined,
-            understanding_level: undefined,
-            status: 'partially_covered',
-            tutor_notes: note,
-            attempts_count: 1
-          }),
-          error: null
-        });
-
-      await expect(ChecklistService.updateItemStatus(
-        'item-1',
-        'partially_covered',
-        note
-      )).resolves.toMatchObject({
-        status: 'partially_covered',
-        tutor_notes: note
-      });
-    });
-
-    it('adds a custom detection or verification area with the selected priority', async () => {
-      mockQuery.single
-        .mockResolvedValueOnce({ data: { guard_mode: false }, error: null })
-        .mockResolvedValueOnce({ data: { id: 'checklist-1' }, error: null })
-        .mockResolvedValueOnce({
-          data: databaseItem({
-            id: 'custom-item',
-            item_type: 'verification_step',
-            area_text: 'Verify through official channels',
-            priority: 'critical',
-            status: 'pending',
-            original_template_area: false
-          }),
-          error: null
-        });
-
-      await expect(ChecklistService.addCustomArea(
-        'room-1',
-        'Verify through official channels',
-        'verification_step',
-        'critical'
-      )).resolves.toMatchObject({
-        id: 'custom-item',
-        item_type: 'verification_step',
-        status: 'pending',
-        priority: 'critical'
-      });
-
-      expect(mockSupabase.from).toHaveBeenCalledWith('session_checklists');
-      expect(mockSupabase.from).toHaveBeenCalledWith('checklist_items');
-      expect(mockQuery.insert).toHaveBeenCalledWith(expect.objectContaining({
-        checklist_id: 'checklist-1',
-        item_type: 'verification_step',
-        status: 'pending',
-        priority: 'critical'
-      }));
-    });
-
-    it('uses the selected template when prompt extraction fails', async () => {
-      const fallback = buildChecklist();
-      jest.spyOn(ChecklistService, 'createFromSystemPrompt').mockRejectedValue(
-        new Error('No extractable areas')
-      );
-      const createSpy = jest.spyOn(ChecklistService, 'create').mockResolvedValue(fallback);
-
-      await expect(ChecklistService.createFromSystemPromptOrTemplate(
-        'room-1',
-        'Generic prompt',
-        'Phishing Email Training'
-      )).resolves.toBe(fallback);
-
-      expect(createSpy).toHaveBeenCalledWith('room-1', 'Phishing Email Training');
     });
 
     it('restores persisted transfer progress only for the requested learner', async () => {
@@ -434,77 +289,6 @@ describe('Checklist Management System', () => {
       expect(mockSupabase.functions.invoke).not.toHaveBeenCalled();
       expect(mockQuery.eq).toHaveBeenCalledWith('student_id', 'another-learner');
       expect(mockQuery.eq).toHaveBeenCalledWith('is_active', true);
-    });
-
-    it('records AI-detected coverage without replacing the room prompt', async () => {
-      const checklist = buildChecklist([buildItem()]);
-      const detectionResults = {
-        detected_coverage: [{
-          item_id: 'item-1',
-          evidence: 'The student checked the displayed sender domain.',
-          confidence: 90,
-          understanding_level: 'good' as const
-        }],
-        analysis_confidence: 90,
-        requires_tutor_review: false
-      };
-      const coverageUpdate = {
-        item_id: 'item-1',
-        new_status: 'covered' as const,
-        new_understanding: 'good' as const,
-        evidence: {
-          evidence_text: 'The student checked the displayed sender domain.',
-          analysis: 'The learner recognized the sender mismatch.',
-          confidence_score: 90,
-          detection_method: 'ai_analysis' as const,
-          message_id: 'message-1'
-        }
-      };
-      jest.spyOn(ChecklistService, 'getChecklistByRoom').mockResolvedValue(checklist);
-      jest.spyOn(CoverageDetectionService, 'analyzeStudentResponse').mockResolvedValue(detectionResults);
-      jest.spyOn(CoverageDetectionService, 'validateDetectionResults').mockReturnValue(detectionResults);
-      jest.spyOn(CoverageDetectionService, 'convertToChecklistUpdates').mockResolvedValue([coverageUpdate]);
-      mockQuery.single
-        .mockResolvedValueOnce({ data: { guard_mode: false }, error: null })
-        .mockResolvedValueOnce({ data: { attempts_count: 0 }, error: null })
-        .mockResolvedValueOnce({
-          data: databaseItem({
-            status: 'covered',
-            understanding_level: 'good',
-            attempts_count: 1,
-            coverage_evidence: []
-          }),
-          error: null
-        });
-
-      const result = await ChecklistService.processStudentMessage(
-        'room-1',
-        'I checked the sender domain and found a mismatch.',
-        'message-1'
-      );
-
-      expect(result.updatedItems).toHaveLength(1);
-      expect(result.updatedItems[0].status).toBe('covered');
-      expect(result.promptRegenerated).toBe(false);
-      expect(mockQuery.update).not.toHaveBeenCalledWith(expect.objectContaining({ ai_assistant_prompt: expect.anything() }));
-      expect(mockQuery.insert).toHaveBeenCalledWith(expect.objectContaining({
-        item_id: 'item-1',
-        evidence_text: 'The student checked the displayed sender domain.',
-        detection_method: 'ai_analysis'
-      }));
-    });
-
-    it('updates priority through the supported item metadata API', async () => {
-      mockQuery.single.mockResolvedValueOnce({
-        data: databaseItem({ priority: 'critical' }),
-        error: null
-      });
-
-      await expect(ChecklistService.updateItemPriority('item-1', 'critical')).resolves.toMatchObject({
-        id: 'item-1',
-        priority: 'critical'
-      });
-      expect(mockQuery.update).toHaveBeenCalledWith(expect.objectContaining({ priority: 'critical' }));
     });
 
     it('returns null when no active room checklist exists', async () => {

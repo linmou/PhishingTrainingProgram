@@ -117,3 +117,39 @@ it.each(['room', 'learner', 'checklist owner', 'checklist identity', 'hidden', '
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   }
 );
+
+it('exports historical records even when current learner targets coexist', async () => {
+  const historical = { ...checklist, id: 'historical', student_id: null, progress_policy_version: 'legacy_v1',
+    template_name: 'Historical original', completion_percentage: 50,
+    detection_areas: [{ ...checklist.detection_areas[0], status: 'covered' as const }] };
+  // Simulate an accepted local manual edit before aggregate columns refresh.
+  checklist = { ...checklist, detection_areas: checklist.detection_areas.map(value => ({ ...value, status: 'covered' as const })),
+    verification_steps: checklist.verification_steps.map(value => ({ ...value, status: 'covered' as const })) };
+  (useChecklist as jest.Mock).mockImplementation(() => ({
+    checklist, priorChecklist: historical, loading: false, error: null, progress: null,
+    updateItem: jest.fn(), refreshChecklist: jest.fn(), showGenerationModal: null, showManualInput: false,
+  }));
+  const createUrl = jest.fn().mockReturnValue('blob:historical');
+  Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: createUrl });
+  Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: jest.fn() });
+  const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+  render(view());
+  fireEvent.click(screen.getByRole('button', { name: 'Export Historical Progress' }));
+  const blob = createUrl.mock.calls[0][0] as Blob;
+  const text = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.onerror = reject; reader.readAsText(blob);
+  });
+  expect(JSON.parse(text)).toEqual(expect.objectContaining({
+    template_name: 'Historical original', progress_policy_version: 'legacy_v1', student_id: null,
+    summary: expect.objectContaining({ completion_percentage: 50 }),
+  }));
+  fireEvent.click(screen.getByRole('button', { name: 'Export Report' }));
+  const currentText = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.onerror = reject;
+    reader.readAsText(createUrl.mock.calls[1][0] as Blob);
+  });
+  expect(JSON.parse(currentText)).toEqual(expect.objectContaining({
+    template_name: 'Phishing', summary: expect.objectContaining({ completion_percentage: 100, covered_items: 2 }),
+  }));
+  click.mockRestore();
+});
