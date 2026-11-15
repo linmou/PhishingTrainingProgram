@@ -120,7 +120,7 @@ export function selectMajorityLearningEvents(trials: Array<{ events: any[] }>) {
       votes.set(key, vote);
     }
   }
-  return [...votes.values()].filter(vote => vote.count >= 2).map(vote => vote.event);
+  return Array.from(votes.values()).filter(vote => vote.count >= 2).map(vote => vote.event);
 }
 
 export function buildCombinedLearningAnalysisMessages(input: LearningAnalysisInput, repair?: { previous_response: unknown }) {
