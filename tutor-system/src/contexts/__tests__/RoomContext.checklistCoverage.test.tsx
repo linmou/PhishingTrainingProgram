@@ -5,8 +5,10 @@ import { act, render, waitFor } from '@testing-library/react';
 import { RoomProvider, useRoom } from '../RoomContext';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../../services/supabase';
+import { transferAssessmentService } from '../../services/transferAssessmentService';
 import { ChecklistService } from '../../services/checklistService';
 
+jest.mock('../../services/transferAssessmentService', () => ({ ...jest.requireActual('../../services/transferAssessmentService'), transferAssessmentService: { postMessage: jest.fn(), analyzeMessage: jest.fn().mockResolvedValue({}) } }));
 jest.mock('../AuthContext', () => ({ useAuth: jest.fn() }));
 jest.mock('../../services/supabase', () => ({
   supabase: { channel: jest.fn(), from: jest.fn() },
@@ -70,6 +72,16 @@ describe('ordinary learner checklist coverage', () => {
     expect(ChecklistService.processStudentMessage).toHaveBeenCalledWith(
       room.id, 'I would open the official app.', 'stored-1', expect.any(Array));
     expect(api.messages.some(message => message.id === 'stored-1')).toBe(true);
+  });
+
+  it('uses trusted posting and analysis with assessment disabled and an active transfer checklist', async () => {
+    (ChecklistService.getChecklistForStudent as jest.Mock).mockResolvedValue({ id: 'checklist-1', progress_policy_version: 'transfer_v1', is_active: true });
+    (transferAssessmentService.postMessage as jest.Mock).mockResolvedValue({ message: insertResult.data });
+    await mount();
+    await act(async () => { await api.sendMessage('I would open the official app.'); });
+    expect(transferAssessmentService.postMessage).toHaveBeenCalled();
+    expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(room.id, 'student-1', 'stored-1', 'student-1');
+    expect(ChecklistService.processStudentMessage).not.toHaveBeenCalled();
   });
 
   it('does not analyze an insert that failed', async () => {

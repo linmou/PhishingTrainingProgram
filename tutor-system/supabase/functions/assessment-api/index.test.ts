@@ -1525,3 +1525,18 @@ Deno.test('retries a stale CAS snapshot and returns the committed authoritative 
   assertEquals(contextReads, 2);
   assertEquals(commits, 2);
 });
+
+Deno.test('disabled room preparation returns an explicit non-retryable conflict before provider calls', async () => {
+  const deps = dependencies();
+  let providerCalls = 0;
+  deps.rpc = async () => ({ data: null, error: { message: 'IN_ROOM_ASSESSMENT_DISABLED' } });
+  deps.fetch = async () => { providerCalls += 1; throw new Error('unexpected provider'); };
+  const response = await createAssessmentApiHandler(deps)(request('prepare_turn', {
+    room_id: 'room-1', checklist_id: 'checklist-1', focus_student_message_id: 'focus-1',
+  }));
+  const body = await response.json();
+  assertEquals(response.status, 409);
+  assertEquals(body.error.code, 'IN_ROOM_ASSESSMENT_DISABLED');
+  assertEquals(body.error.retryable, false);
+  assertEquals(providerCalls, 0);
+});

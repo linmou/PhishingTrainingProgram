@@ -74,6 +74,7 @@ const ROOM: Room = {
   title: 'Phishing 101',
   created_at: '2024-01-01T00:00:00.000Z',
   transfer_learning_enabled: false,
+  in_room_assessment_enabled: false,
   ai_assistant_enabled: true,
   guard_mode: false,
 };

@@ -161,3 +161,7 @@ Tutor `read_review` additionally returns trusted `student_id` and `history_readi
 Generation requires ready=true and every required saved result in fetched dialogue, including after transfer learning is disabled. Handled-answer IDs distinguish unscored dialogue from a pending grade. Another learner's unfinished answer is omitted from this focused request instead of blocking it. Existing private review fields and processing bookkeeping remain outside the tutor prompt. Individual result deletion stays protected; `clear_chat_history` is the owner-authorized whole-room clearing path and preserves the existing backup flow.
 
 Published results inherit ordinary room-message read visibility and exports. Current research-deployment message policies permit direct anonymous reads; this change does not establish stronger reader identity than the existing room transport. Backend assessment mutation/review role checks and immutable result provenance remain enforced.
+
+## Room assessment switch (issue #100)
+
+`rooms.in_room_assessment_enabled` gates `prepare_turn` and `send_reviewed` only. Disabled operations return `IN_ROOM_ASSESSMENT_DISABLED` (409, non-retryable). `post_message`, `analyze_message`, progress reads and existing answer processing are independent of this switch. Existing rooms inherit `transfer_learning_enabled`; new rooms default true.

@@ -138,10 +138,11 @@ As a room participant, I need progress and exports scoped to my role and learner
 - **FR-014**: Learner-facing views and exports MUST exclude the answer key, transfer basis, rationale, raw model output, and teacher-only interaction information.
 - **FR-015**: Teacher-only exports MAY include authorized review information but MUST preserve the public/private boundary and MUST NOT become a second source of progress authority.
 - **FR-016**: Invalid combinations, missing identity links, malformed public questions, and unauthorized information MUST produce an explicit error or unavailable state, never a silent fallback.
-- **FR-017**: Existing tutoring and Guard behavior for legacy rooms, including Multi-agent draft review, staged message playback, and learner response gating, MUST continue to work. Transfer behavior MUST remain unavailable when the trusted capability is disabled.
+- **FR-017**: Existing tutoring and Guard behavior for legacy rooms, including Multi-agent draft review, staged message playback, and learner response gating, MUST continue to work. Assessment preparation and delivery MUST remain unavailable when the trusted assessment capability is disabled. Active transfer learning-target tracing and progress views remain available independently of the room assessment switch.
 - **FR-018**: Learner, message, checklist, and parent associations MUST remain correct through catch-up, reconnect, review edits, reconfirmation, delivery conflict, mode mismatch, reload, retry, and duplicate-tab activity.
 - **FR-019**: The question stem MUST appear once and each structured option MUST appear once in learner and preview views. The room MUST NOT alter question text to hide or remove a duplicated option list.
 - **FR-020**: Every transfer question MUST start expanded and provide an accessible way for each participant to collapse or expand it. That choice MUST affect only that participant's view and MUST NOT change shared room state, answer selections, attempts, or results.
+- **FR-021** (issue #100): Learning-target tracing MUST remain active for an active learner-owned `transfer_v1` checklist independently of assessment settings. `rooms.in_room_assessment_enabled` MUST control only new assessment preparation/delivery and default true for new rooms. Disabled preparation/delivery MUST return `IN_ROOM_ASSESSMENT_DISABLED`. Trusted posting, analysis, tutor progress context, progress views, and existing answer lifecycles MUST remain available. Saving AI settings without changing the checkbox MUST write neither flag.
 
 ### Key Entities
 

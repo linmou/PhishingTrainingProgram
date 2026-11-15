@@ -40,7 +40,7 @@ const getScenarioFromPromptConfig = (
 };
 
 const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) => {
-    const { currentRoom, aiConfig, toggleAIAssistant, setTransferLearningEnabled, loadingAI } = useRoom();
+    const { currentRoom, aiConfig, toggleAIAssistant, setInRoomAssessmentEnabled, loadingAI } = useRoom();
     const { user } = useAuth();
 
     const [isEnabled, setIsEnabled] = useState(false);
@@ -150,7 +150,7 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
             }
             // Background room/config updates must not overwrite an explicit unsaved choice.
             if (assessmentEditRoom.current !== currentRoom.id) {
-                setTransferEnabled(currentRoom.transfer_learning_enabled === true);
+                setTransferEnabled(currentRoom.in_room_assessment_enabled === true);
             }
         }
 
@@ -320,8 +320,8 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
                 max_tokens: maxTokens
             });
 
-            if (currentRoom && transferEnabled !== (currentRoom.transfer_learning_enabled === true)) {
-                await setTransferLearningEnabled(transferEnabled);
+            if (currentRoom && assessmentEditRoom.current === currentRoom.id) {
+                await setInRoomAssessmentEnabled(transferEnabled);
             }
 
             onClose();

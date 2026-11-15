@@ -95,6 +95,7 @@ const ERROR_STATUS: Record<string, { status: number; retryable: boolean }> = {
   AI_OUTPUT_INVALID: { status: 502, retryable: false },
   TARGET_SETUP_REQUIRED: { status: 409, retryable: false },
   ANALYSIS_INCOMPLETE: { status: 503, retryable: true },
+  IN_ROOM_ASSESSMENT_DISABLED: { status: 409, retryable: false },
   ASSESSMENT_NOT_ELIGIBLE: { status: 409, retryable: false },
   PERSISTENCE_FAILED: { status: 500, retryable: true },
 };

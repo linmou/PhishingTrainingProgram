@@ -1,0 +1,52 @@
+# Issue #100: separate assessment delivery from learning tracing
+
+Status: local validation; hosted release pending PR CI/review and staging acceptance.
+Release owner: root Codex agent on `linmou/decouple-enable-in-room-assessment-from-learning`.
+Batch: issue100-assessment-switch-20261115. Production trigger: integrated candidate passes the repository's CI, independent review, staging and merge gates. Production acceptance remains open.
+
+## Requirements and implementation
+
+Updated the component 102 backend requirement/API contract, component 103 UI requirements, QA/browser guides, and `_bmad-output/implementation-artifacts/spec-decouple-in-room-assessment.md`. The maintainer explicitly selected preservation of existing room assessment settings. New phishing rooms default on; the cyberbullying practice restriction remains in effect.
+
+`rooms.in_room_assessment_enabled` controls only new assessment preparation and delivery. Active transfer checklists determine trusted learner posting, per-message/catch-up analysis and progress visibility independently. The checkbox writes only the dedicated setting after explicit interaction; unsaved choices survive background updates. Ordinary tutor generation retains transfer progress context. Existing delivered answers retain their trusted lifecycle.
+
+The migration preserves existing function identities, signatures, security-definer settings and grants. Disabled preparation/delivery returns `IN_ROOM_ASSESSMENT_DISABLED` (409, non-retryable); no permission expansion is intended. SQL precedes the dependent Edge error mapping and frontend. Older clients continue tracing on the legacy flag until the client release, so rollout verification must use the exact candidate frontend.
+
+The worktree was fast-forwarded from `ecee681` to default-branch `43068d0` before release preparation. Earlier implementation conflicts were resolved against the current tracing, exit-assessment and realtime flows. The current deployed staging Edge source and all 10 imported files match that base; the only candidate Edge change is the new error mapping. This avoids deploying obsolete Edge sources from the initial worktree.
+
+## Fresh baseline and local SQL evidence
+
+Private reproducibility package: `/Users/admin/.transfer-assessment-pg17/runs/assessment-switch-20261115/`.
+
+The maintainer clarified that copied `PGPASSWORD` is local-only. An early attempt incorrectly combined it with hosted defaults and failed authentication; that does not establish bad Supabase credentials. The unavailable fixed PostgreSQL executable path was resolved to `/Users/admin/Applications/Postgres.app/Contents/Versions/17/bin`. No further hosted password attempts were made.
+
+To continue without hosted PostgreSQL credentials, the owner used existing Supabase Management API authorization for a fresh read-only logical export, after MCP live schema inspection. `export.cjs` preserves live role/membership, database/settings, enums, sequences, table definitions/data, constraints, indexes, functions/owners, triggers, RLS/policies and effective grants. MCP supplied view/default-privilege and external-auth grants in `supplement.sql`, `view-grants.sql`, and `external-grants.sql`. The catalog and data exports are fresh and kept privately; no prior dump was reused. The logical snapshot was actually restored and compared, rather than treating MCP inspection alone as a restorable backup.
+
+Staging baseline: `ciubrzggdqesgvfkpolj`; PostgreSQL 17.11 Linux. Local validation: PostgreSQL 17.12, existing isolated socket/port 55433, source-equivalent `postgres` executor. Roles matched relevant SUPERUSER/BYPASSRLS/INHERIT/login/creation flags; memberships were reconciled from the source export. Database owner, UTF8/en_US.UTF-8 locale, effective ACLs and `app.settings.jwt_exp` were applied explicitly. macOS/Linux collation and minor-version differences do not affect this migration's boolean backfill, function replacement, UUID scope checks or permission tests; no locale/index changes occur. The required pgcrypto 1.3 and uuid-ossp 1.1 dependencies are available. Hosted-only vault/statistics extensions are not used by the changed objects or assertions.
+
+`catalog-diff.json` reports zero differences for exported tables, functions/owners, constraints, indexes, triggers, policies and effective table/function grants. View/default grants and external schema grants were applied before the final disposable scenario. There are no room column ACLs to reproduce. The full room/user and other application table data was restored (25 tables, 69 functions, 1,078 rows at export); sensitive rows are outside Git.
+
+- Baseline database: `issue100_staging_baseline_20261115`.
+- Red: `psql -U postgres ... -f tutor-system/supabase/tests/in_room_assessment_switch.sql` exited 3 on the missing `in_room_assessment_enabled` column (`red.log`).
+- Green: exact candidate applied in one transaction as `postgres`; the same assertions passed, including backfill, defaults, unchanged legacy setting, disabled prepare/delivery, enabled invalid-scope behavior, service-role access and actual anon/authenticated permission denial (`apply.log`, `green.log`).
+- Final source-equivalent clone: `scripts/database/disposable-database.js --template issue100_staging_baseline_20261115` reapplied and compared database ACL/settings, applied exact candidate and assertions successfully, then cleaned its owned database (`disposable-green.log`, lease `/Users/admin/.transfer-assessment-pg17/runs/scenario-5LZAUc/lease.json`).
+- Portable verified baseline: `verified-baseline.dump`, SHA-256 `5adf725386b8de41f2bf1cceaabb6ad38c3444bec2588cdd54694d148ec2e5de`.
+- Candidate migration: `20261115000000_decouple_in_room_assessment.sql`, SHA-256 `9bc2811284c5dd319893a76e1445dd75a598db653274eabb09b53098fa031dbe`.
+
+Live MCP function preconditions match on staging and production: `enforce_practice_identity` a54f07d7c9ac58c261dfecd9ff0c4025; `prepare_transfer_assessment_context_v1` 5d84d2fb95624b532dbf5b91812cb1fc; `send_reviewed_transfer_assessment_v1` 7d276792abcdd01cc53d8d3c95c473b7. Recheck before each hosted application.
+
+## Client, Edge and harness evidence
+
+- Original flag-condition reproduction: the new trusted-posting test fails with zero `postMessage` calls when the old condition is restored; it passes with the fix.
+- Current focused client/settings/room tests: 84 passed across 5 suites. Additional Quick Adjust/failure tests: 4 passed; export/coverage fixtures: 16 passed; tutor progress/Guard service tests: 8 passed. Full regression results and GitHub checks will supersede these counts.
+- Current Deno handler suite: 57 passed with `deno test --allow-env --allow-net --allow-run --allow-read --no-check supabase/functions/assessment-api/index.test.ts`, including disabled-room error handling. Its adapter type check also passes.
+- `npm ci --ignore-scripts --no-audit --no-fund`: succeeded after the default-branch update; no manifest/lockfile edits.
+- `npm run build`: succeeded using the committed dependency lock.
+- `npm run test:e2e:unit`: 33 passed, no hosted access.
+- `git diff --check`: passed.
+
+## Acceptance scope and pending delivery
+
+Because eligibility and interacting SQL/Edge/client paths change, staging and production need the assessment-off journey plus the existing assessment-on delivery/answer lifecycle. The opt-in `assessment-switch` browser workflow saves off and saves untouched, checks unchanged legacy flag, persists learner evidence and analysis markers, observes visible target progress, generates ordinary tutoring without preparation, and verifies explicit prepare/delivery rejection. It restores the fixture setting and the runner cleans generated rows. Record screenshots, function/provider evidence and cleanup outcomes for each environment.
+
+Next: commit/open PR, check actual CI and independent review, acquire the cross-machine staging lease, recheck baseline, apply exact SQL via Supabase MCP, deploy the matching Edge candidate, then run the affected live journeys with the candidate frontend. Production requires the merge-before-production gate, a fresh production baseline/precondition comparison, exact-artifact promotion and matching checks. Archive SQL only after both projects pass. No hosted SQL/Edge or fixture changes have been made for this candidate yet.

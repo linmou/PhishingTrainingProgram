@@ -31,10 +31,10 @@ describe('AIAssistantSettings', () => {
         const aiConfig = { ...seed.ai_config_template, temperature: 0.3, max_tokens: 100 };
         const toggleAIAssistant = jest.fn().mockResolvedValue(undefined);
         const roomContext = {
-            currentRoom: { id: 'room-1', ai_assistant_enabled: true, transfer_learning_enabled: true },
+            currentRoom: { id: 'room-1', ai_assistant_enabled: true, in_room_assessment_enabled: true },
             aiConfig,
             toggleAIAssistant,
-            setTransferLearningEnabled: jest.fn(),
+            setInRoomAssessmentEnabled: jest.fn(),
             loadingAI: false
         };
         (useAuth as jest.Mock).mockReturnValue({ user: { id: 'tutor-1', current_role: 'tutor' } });
@@ -64,8 +64,8 @@ describe('AIAssistantSettings', () => {
         const aiConfig = buildCasualPeerAIConfig('Movie Meetup Social Engineering');
         const toggleAIAssistant = jest.fn().mockResolvedValue(undefined);
         const roomContext = {
-            currentRoom: { id: 'room-1', ai_assistant_enabled: true, transfer_learning_enabled: true },
-            aiConfig, toggleAIAssistant, setTransferLearningEnabled: jest.fn(), loadingAI: false
+            currentRoom: { id: 'room-1', ai_assistant_enabled: true, in_room_assessment_enabled: true },
+            aiConfig, toggleAIAssistant, setInRoomAssessmentEnabled: jest.fn(), loadingAI: false
         };
         (useAuth as jest.Mock).mockReturnValue({ user: { id: 'tutor-1', current_role: 'tutor' } });
         (useRoom as jest.Mock).mockReturnValue(roomContext);
@@ -86,13 +86,13 @@ describe('AIAssistantSettings', () => {
 
     it('preserves disabled assessment when enabling AI in an existing room', async () => {
         const toggleAIAssistant = jest.fn().mockResolvedValue(undefined);
-        const setTransferLearningEnabled = jest.fn().mockResolvedValue(undefined);
+        const setInRoomAssessmentEnabled = jest.fn().mockResolvedValue(undefined);
         (useAuth as jest.Mock).mockReturnValue({ user: { id: 'tutor-1', current_role: 'tutor' } });
         (useRoom as jest.Mock).mockReturnValue({
-            currentRoom: { id: 'room-1', ai_assistant_enabled: false, transfer_learning_enabled: false },
+            currentRoom: { id: 'room-1', ai_assistant_enabled: false, in_room_assessment_enabled: false },
             aiConfig: null,
             toggleAIAssistant,
-            setTransferLearningEnabled,
+            setInRoomAssessmentEnabled,
             loadingAI: false
         });
 
@@ -105,16 +105,16 @@ describe('AIAssistantSettings', () => {
         await waitFor(() => {
             expect(toggleAIAssistant).toHaveBeenCalledWith(true, expect.any(Object));
         });
-        expect(setTransferLearningEnabled).not.toHaveBeenCalled();
+        expect(setInRoomAssessmentEnabled).not.toHaveBeenCalled();
     });
 
     it('preserves an existing room choice to leave in-room assessment off', () => {
         (useAuth as jest.Mock).mockReturnValue({ user: { id: 'tutor-1', current_role: 'tutor' } });
         (useRoom as jest.Mock).mockReturnValue({
-            currentRoom: { id: 'room-1', ai_assistant_enabled: true, transfer_learning_enabled: false },
+            currentRoom: { id: 'room-1', ai_assistant_enabled: true, in_room_assessment_enabled: false },
             aiConfig: null,
             toggleAIAssistant: jest.fn(),
-            setTransferLearningEnabled: jest.fn(),
+            setInRoomAssessmentEnabled: jest.fn(),
             loadingAI: false
         });
 
@@ -125,10 +125,10 @@ describe('AIAssistantSettings', () => {
 
     const renderAssessmentSettings = (enabled: boolean) => {
         const context = {
-            currentRoom: { id: 'room-1', ai_assistant_enabled: true, transfer_learning_enabled: enabled },
+            currentRoom: { id: 'room-1', ai_assistant_enabled: true, in_room_assessment_enabled: enabled },
             aiConfig: buildCasualPeerAIConfig('Movie Meetup Social Engineering'),
             toggleAIAssistant: jest.fn().mockResolvedValue(undefined),
-            setTransferLearningEnabled: jest.fn().mockResolvedValue(undefined),
+            setInRoomAssessmentEnabled: jest.fn().mockResolvedValue(undefined),
             loadingAI: false
         };
         (useAuth as jest.Mock).mockReturnValue({ user: { id: 'tutor-1', current_role: 'tutor' } });
@@ -147,19 +147,19 @@ describe('AIAssistantSettings', () => {
         view.rerender(<AIAssistantSettings onClose={jest.fn()} />);
         expect(screen.getByLabelText('Enable In-Room Assessment')).not.toBeChecked();
         fireEvent.click(screen.getByText('Save Settings'));
-        await waitFor(() => expect(roomContext.setTransferLearningEnabled).toHaveBeenCalledWith(false));
+        await waitFor(() => expect(roomContext.setInRoomAssessmentEnabled).toHaveBeenCalledWith(false));
     });
 
     it('follows remote assessment changes until edited and hydrates a different room', () => {
         const { context, view } = renderAssessmentSettings(false);
         expect(screen.getByLabelText('Enable In-Room Assessment')).not.toBeChecked();
         (useRoom as jest.Mock).mockReturnValue({ ...context,
-            currentRoom: { ...context.currentRoom, transfer_learning_enabled: true } });
+            currentRoom: { ...context.currentRoom, in_room_assessment_enabled: true } });
         view.rerender(<AIAssistantSettings onClose={jest.fn()} />);
         expect(screen.getByLabelText('Enable In-Room Assessment')).toBeChecked();
         fireEvent.click(screen.getByLabelText('Enable In-Room Assessment'));
         (useRoom as jest.Mock).mockReturnValue({ ...context,
-            currentRoom: { ...context.currentRoom, id: 'room-2', transfer_learning_enabled: true } });
+            currentRoom: { ...context.currentRoom, id: 'room-2', in_room_assessment_enabled: true } });
         view.rerender(<AIAssistantSettings onClose={jest.fn()} />);
         expect(screen.getByLabelText('Enable In-Room Assessment')).toBeChecked();
     });
