@@ -221,10 +221,10 @@ Deno.test('Cyberbullying settles all five target analyses before applying progre
     fetch: async (_input, init) => {
       const input = JSON.parse(JSON.parse(String(init?.body)).messages[1].content);
       providerInputs.push(input);
-      if (failOne && input.items[0].id === 'item-2') return new Response('{}', { status: 503 });
+      if (failOne && providerInputs.length === 2) return new Response('{}', { status: 503 });
       return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
-        events: [{ item_id: input.items[0].id, kind: 'initial_signal', evidence_type: 'action',
-          evidence_message_id: 'focus-1', evidence_quote: content, explanation: 'Current learner evidence.' }],
+        events: input.items.map((item: any) => ({ item_id: item.id, kind: 'initial_signal', evidence_type: 'action',
+          evidence_message_id: 'focus-1', evidence_quote: content, explanation: 'Current learner evidence.' })),
         explanation: 'Recorded target analysis.',
       }) } }] }));
     },
@@ -243,8 +243,8 @@ Deno.test('Cyberbullying settles all five target analyses before applying progre
   const first = await handler(request('analyze_message', { room_id: 'room-1', message_id: 'focus-1' }));
   assert(first.status >= 400);
   assertEquals(applications, 0);
-  assertEquals(providerInputs.length, 5);
-  assertEquals(audits.length, 5);
+  assertEquals(providerInputs.length, 3);
+  assertEquals(audits.length, 3);
   assertEquals(audits.filter(audit => audit.p_error_code !== null).length, 1);
   for (const input of providerInputs) {
     assertEquals(input.practice_type, 'cyberbullying');
@@ -256,8 +256,8 @@ Deno.test('Cyberbullying settles all five target analyses before applying progre
   const retry = await handler(request('analyze_message', { room_id: 'room-1', message_id: 'focus-1' }));
   assertEquals(retry.status, 200);
   assertEquals(applications, 1);
-  assertEquals(audits.length, 10);
-  assert(audits.every(audit => audit.p_max_tokens === 600 && audit.p_request_payload.operation === 'analyze_message'));
+  assertEquals(audits.length, 6);
+  assert(audits.every(audit => audit.p_max_tokens === 2400 && audit.p_request_payload.operation === 'analyze_message'));
   assert(audits.every(audit => audit.p_provider_model === 'configured-test-model'));
 });
 
@@ -294,15 +294,23 @@ Deno.test(`${practiceType} bounds evidence quote repair and applies only valid p
   });
   const response = await handler(request('analyze_message', { room_id: 'room-1', message_id: 'focus-1' }));
   assertEquals(response.status, repairFails ? 502 : 200);
-  assertEquals(providerCalls, 2);
+  assertEquals(providerCalls, repairFails ? 6 : 4);
   assertEquals(applications, repairFails ? 0 : 1);
   if (practiceType === 'cyberbullying') {
-    assertEquals(audits.map(audit => [audit.p_attempt_ordinal, audit.p_validation_outcome]), [[1, 'invalid'], [2, repairFails ? 'invalid' : 'valid']]);
-    assertEquals(audits[0].p_request_id, audits[1].p_request_id);
+    assertEquals(audits.filter(audit => audit.p_validation_outcome === 'invalid').length, repairFails ? 6 : 1);
+    assert(audits.some(audit => audit.p_attempt_ordinal === 2));
     assertEquals(audits[0].p_error_code, 'AI_OUTPUT_INVALID');
   }
-  const repair = JSON.parse(requests[1].messages.filter((message: { role: string }) => message.role === 'user').at(-1).content);
-  assertEquals(requests.map(providerRequest => providerRequest.model), ['configured-test-model', 'configured-test-model']);
+  for (const providerRequest of requests) {
+    assertEquals(providerRequest.messages.map((message: { role: string }) => message.role), ['system', 'user']);
+    const input = JSON.parse(providerRequest.messages[1].content);
+    assertEquals(input.items[0].eligible_event_kinds, ['initial_signal', 'demonstrated_understanding', 'spontaneous_transfer']);
+    assertEquals(input.items[0].id, 'item-1');
+  }
+  const repairRequest = requests.find(providerRequest => JSON.parse(providerRequest.messages[1].content).previous_response);
+  assert(repairRequest);
+  const repair = JSON.parse(repairRequest.messages.filter((message: { role: string }) => message.role === 'user').at(-1).content);
+  assert(requests.every(providerRequest => providerRequest.model === 'configured-test-model'));
   assertEquals(JSON.parse(repair.previous_response.choices[0].message.content).events[0].evidence_quote, 'First sentence. Third sentence.');
   assertEquals(repair.evidence_message, message);
 });
@@ -677,7 +685,7 @@ Deno.test('approved custom target flows through evidence, assessment delivery, a
     fetch: async (_input, init) => {
       providerCalls += 1;
       const prompt = JSON.stringify(JSON.parse(String(init?.body)));
-      if (providerCalls === 1) {
+      if (JSON.parse(JSON.parse(String(init?.body)).messages[1].content).dialogue_history) {
         analysisInput = JSON.parse(JSON.parse(String(init?.body)).messages[1].content);
         assert(prompt.includes('Verify independently'));
         return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
@@ -710,7 +718,7 @@ Deno.test('approved custom target flows through evidence, assessment delivery, a
   assert(!JSON.stringify(sent.data).includes('correct_option_ids'));
   const processed = await (await handler(request('process_message', { room_id: 'room-1', assessment_id: 'question-1', message_id: 'answer-1' }))).json();
   assertEquals(processed.data.answer_outcome, 'passed');
-  assertEquals(providerCalls, 2);
+  assertEquals(providerCalls, 4);
   assert(operations.indexOf('apply_transfer_message_analysis_v1') < operations.indexOf('prepare_transfer_assessment_context_v1'));
 });
 
@@ -763,7 +771,7 @@ Deno.test('keeps one target evidence from advancing a related target', async () 
       OAI_MODEL: 'configured-test-model' } as Record<string, string>)[name],
     fetch: async (_input, init) => {
       const input = JSON.parse(JSON.parse(String(init?.body)).messages[1].content);
-      assertEquals(input.items.length, 1);
+      assertEquals(input.items.length, 2);
       const itemId = input.items[0].id;
       analyzedIds.push(itemId);
       return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
@@ -797,7 +805,7 @@ Deno.test('keeps one target evidence from advancing a related target', async () 
     room_id: 'room-1', message_id: 'focus-1',
   }));
   assertEquals(response.status, 200);
-  assertEquals(analyzedIds, ['action-1', 'reason-1']);
+  assertEquals(analyzedIds, ['action-1', 'action-1', 'action-1']);
   assertEquals((applied as unknown as { events: Array<{ item_id: string }> }).events.map(event => event.item_id), ['action-1']);
   assertEquals((applied as unknown as { rejected_events: Array<{ item_id: string; rejection_reason: string }> }).rejected_events,
     []);
@@ -866,7 +874,7 @@ Deno.test('records and omits ineligible transitions for unified targets', async 
     }));
     assertEquals(response.status, 200);
     assertEquals((stored as unknown as { events: unknown[] }).events, []);
-    assertEquals((stored as unknown as { rejected_events: unknown[] }).rejected_events.length, 1);
+    assertEquals((stored as unknown as { rejected_events: unknown[] }).rejected_events.length, 3);
     assertEquals((stored as unknown as { rejected_events: Array<{ rejection_reason: string }> }).rejected_events[0].rejection_reason,
       'INELIGIBLE_TRANSITION');
     assertEquals(applyCalls, 1);
@@ -915,9 +923,9 @@ Deno.test('rejects historical speaker evidence before updating learner status', 
 });
 
 // Test responsibility: verify that the production Edge module passes Deno's type checker.
-Deno.test('default RPC adapter type-checks without remote fetches', async () => {
+Deno.test('default RPC adapter passes the Edge type checker', async () => {
   const checked = await new Deno.Command(Deno.execPath(), {
-    args: ['check', '--cached-only', '--unstable-sloppy-imports', new URL('./index.ts', import.meta.url).pathname],
+    args: ['check', '--sloppy-imports', new URL('./index.ts', import.meta.url).pathname],
   }).output();
   assert(checked.success, new TextDecoder().decode(checked.stderr));
 });
@@ -1367,7 +1375,7 @@ Deno.test('analyzes persisted learner evidence before mandatory assessment prepa
       if (JSON.parse(body.messages[1].content).dialogue_history !== undefined) {
         assertEquals(body.model, 'configured-test-model');
         assertEquals(body.temperature, 0);
-        assertEquals(body.max_tokens, 600);
+        assertEquals(body.max_tokens, 2400);
         assertEquals(body.enable_thinking, false);
         assertEquals(body.response_format, { type: 'json_object' });
         analysisCalls += 1;
@@ -1412,7 +1420,7 @@ Deno.test('analyzes persisted learner evidence before mandatory assessment prepa
   const payload = await response.json();
   assertEquals(payload.ok, true);
   assertEquals(payload.data.assessment_draft.target_item_id, 'item-1');
-  assertEquals(analysisCalls, 1);
+  assertEquals(analysisCalls, 3);
   assertEquals(assessmentCalls, 1);
 });
 

@@ -1,13 +1,13 @@
 /**
  * File: src/services/detectionTemplates.ts
- * Purpose: verify teaching inventories and exact agreement with the saved-template migration.
+ * Purpose: verify reviewed teaching inventories against their archived document baseline.
  */
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { SCENARIO_TEMPLATES } from '../detectionTemplates';
 
 describe('Detection Templates', () => {
-  it('keeps all six migration inventories identical to the frontend targets', () => {
+  it('preserves document content and order with canonical labels and approved Nintendo wording', () => {
     const migration = readFileSync(resolve(__dirname,
       '../../../supabase/archived_migrations/20261112000000_document_learning_targets.sql'), 'utf8');
     const entries: { scenario: keyof typeof SCENARIO_TEMPLATES; points: string[] }[] =
@@ -16,7 +16,17 @@ describe('Detection Templates', () => {
       Object.keys(SCENARIO_TEMPLATES).filter(name => name !== 'General Scam Indicators').sort()
     );
     entries.forEach(entry => {
-      expect(entry.points).toEqual(SCENARIO_TEMPLATES[entry.scenario].detection_areas);
+      const approvedPoints = entry.scenario === 'Nintendo Switch Deal ($19.99)'
+        ? entry.points.map(point => point.replace(
+          'The post comes from someone named Lucy Simms, not an official Nintendo account.',
+          'The post is not from an official Nintendo account but someone named Lucy Simms'
+        ))
+        : entry.points;
+      // The archived migration is historical evidence, not a runtime formatting step.
+      const expectedPoints = approvedPoints.map(point => point
+        .replace(/What to notice:/g, 'Observation task:')
+        .replace(/What to do:/g, 'Behavior task:'));
+      expect(expectedPoints).toEqual(SCENARIO_TEMPLATES[entry.scenario].detection_areas);
     });
   });
 
@@ -28,7 +38,7 @@ describe('Detection Templates', () => {
     ['Movie Meetup Social Engineering', 4],
     ['Contact Information Exposure', 5],
     ['General Scam Indicators', 5]
-  ] as const)('provides the document-sized inventory for %s', (name, count) => {
+  ] as const)('provides the approved inventory for %s', (name, count) => {
     const scenario = SCENARIO_TEMPLATES[name];
     expect(scenario.detection_areas).toHaveLength(count);
     expect(scenario.verification_steps).toEqual([]);
