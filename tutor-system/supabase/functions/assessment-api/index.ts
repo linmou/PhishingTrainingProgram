@@ -679,7 +679,9 @@ export function createAssessmentApiHandler(deps: AssessmentApiDependencies) {
       return fail(String(error).includes('AUTHORIZATION_NOT_CONFIGURED')
         ? 'AUTHORIZATION_NOT_CONFIGURED' : 'UNAUTHORIZED');
     }
-    if (body.operation !== 'clear_chat_history') {
+    // The global assessment switch controls creation only. Existing answers,
+    // learning targets, evidence and manual edits remain operational.
+    if (body.operation === 'prepare_turn' || body.operation === 'send_reviewed') {
       try {
         if (!await deps.featureEnabled()) return fail('ASSESSMENT_FEATURE_DISABLED');
       } catch {

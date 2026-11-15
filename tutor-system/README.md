@@ -298,3 +298,9 @@ If migrating from Firebase:
 ## 📄 License
 
 This project is licensed under the MIT License.
+
+### Learner-owned learning progress
+
+New learning targets belong to an identified learner and are judged by the trusted assessment API regardless of the room or global assessment switch. Those switches control new transfer assessments; existing answers, evidence reads and authorized manual edits remain available. Tutors can save targets locally before a learner joins; the draft syncs when its learner owner is known.
+
+Historical room-wide checklists are preserved as read/export-only records. Opening an old room does not run a browser judge or convert its records. Explicit new learner setup creates separate progress and skips historical message replay. The Learning Progress panel offers a separate historical export when old and current records coexist. Server failures are surfaced without switching to a browser judge.

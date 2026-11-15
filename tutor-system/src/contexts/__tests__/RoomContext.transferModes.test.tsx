@@ -15,7 +15,7 @@ import { useAuth } from '../AuthContext';
 import { supabase } from '../../services/supabase';
 import { generateTutorSuggestion, getAIConfig } from '../../services/aiService';
 import { ChecklistService } from '../../services/checklistService';
-import { transferAssessmentService } from '../../services/transferAssessmentService';
+import { AssessmentApiRequestError, transferAssessmentService } from '../../services/transferAssessmentService';
 import * as guardModeService from '../../services/guardModeService';
 import {
   CHECKLIST_ITEM_ID,
@@ -184,6 +184,20 @@ describe('RoomContext transfer turn modes', () => {
 
     expect(room!.messages.some(message => message.id === 'tutor-message-1')).toBe(true);
     expect(postMessage).not.toHaveBeenCalled();
+  });
+
+  it('keeps ordinary AI suggestions available when global assessments are disabled', async () => {
+    await mountRoom();
+    jest.spyOn(transferAssessmentService, 'prepareAssessment').mockRejectedValue(new AssessmentApiRequestError({
+      code: 'ASSESSMENT_FEATURE_DISABLED', message: 'Disabled', retryable: false,
+    }));
+    (generateTutorSuggestion as jest.Mock).mockResolvedValue({
+      success: true, suggestion: 'Use the official site.',
+      decision: { guard_mode: false, instruction: 'tutoring', suggested_response: 'Use the official site.' },
+      contextMessages: [],
+    });
+    await act(async () => { await room!.generateAIResponse(); });
+    expect(generateTutorSuggestion).toHaveBeenCalled();
   });
 
   it('returns a named setup error when assessment is enabled without a checklist', async () => {

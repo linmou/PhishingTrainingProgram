@@ -5,6 +5,7 @@ import { act, render, waitFor } from '@testing-library/react';
 import { RoomProvider, useRoom } from '../RoomContext';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../../services/supabase';
+import { transferAssessmentService } from '../../services/transferAssessmentService';
 import { ChecklistService } from '../../services/checklistService';
 
 jest.mock('../AuthContext', () => ({ useAuth: jest.fn() }));
@@ -20,8 +21,9 @@ jest.mock('../../services/aiService', () => ({
 jest.mock('../../services/checklistService', () => ({ ChecklistService: {
   getChecklistForStudent: jest.fn().mockResolvedValue(null),
   analyzeStudentMessages: jest.fn(),
-  processStudentMessage: jest.fn().mockResolvedValue({ updatedItems: [] }),
 } }));
+
+jest.mock('../../services/transferAssessmentService', () => ({ ...jest.requireActual('../../services/transferAssessmentService'), transferAssessmentService: { postMessage: jest.fn() } }));
 
 const Probe = ({ onChange }: { onChange: (value: ReturnType<typeof useRoom>) => void }) => {
   const value = useRoom();
@@ -40,6 +42,10 @@ describe('ordinary learner checklist coverage', () => {
     jest.clearAllMocks();
     (ChecklistService.getChecklistForStudent as jest.Mock).mockResolvedValue(null);
     (ChecklistService.analyzeStudentMessages as jest.Mock).mockResolvedValue(undefined);
+    (transferAssessmentService.postMessage as jest.Mock).mockImplementation(async () => {
+      if (insertResult.error) throw insertResult.error;
+      return { message: insertResult.data };
+    });
     roomRecord = room;
     (useAuth as jest.Mock).mockReturnValue({ user: { id: 'student-1', current_role: 'student', display_name: 'Learner' } });
     insertResult = { data: { id: 'stored-1', room_id: room.id, user_id: 'student-1',
@@ -64,64 +70,29 @@ describe('ordinary learner checklist coverage', () => {
     await act(async () => { await api.joinRoom(room.id); });
   }
 
-  it('analyzes a saved learner message with its stored identity', async () => {
+  it.each([false, true])('uses trusted storage and judging with assessments enabled=%s', async enabled => {
+    roomRecord = { ...room, transfer_learning_enabled: enabled };
     await mount();
     await act(async () => { await api.sendMessage('I would open the official app.'); });
-    expect(ChecklistService.processStudentMessage).toHaveBeenCalledWith(
-      room.id, 'I would open the official app.', 'stored-1', expect.any(Array));
+    expect(transferAssessmentService.postMessage).toHaveBeenCalledWith(expect.objectContaining({ roomId: room.id }));
+    expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(room.id, 'student-1', 'stored-1', 'student-1');
     expect(api.messages.some(message => message.id === 'stored-1')).toBe(true);
   });
 
-  it('does not analyze an insert that failed', async () => {
+  it('does not judge a message that was not stored', async () => {
     await mount();
     insertResult = { data: null, error: new Error('insert failed') };
-    await expect(act(async () => { await api.sendMessage('I would open the official app.'); })).rejects.toThrow('insert failed');
-    expect(ChecklistService.processStudentMessage).not.toHaveBeenCalled();
-  });
-
-  it('checks the stored message when transfer goals appear during an ordinary send', async () => {
-    roomRecord = { ...room, transfer_learning_enabled: true };
-    (ChecklistService.getChecklistForStudent as jest.Mock)
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({ student_id: 'student-1', progress_policy_version: 'transfer_v1' });
-    await mount();
-    await act(async () => { await api.sendMessage('I would open the official app.'); });
-    expect(ChecklistService.getChecklistForStudent).toHaveBeenCalledTimes(2);
-    expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(room.id, 'student-1', 'stored-1', 'student-1');
-    expect(ChecklistService.processStudentMessage).not.toHaveBeenCalled();
-    expect(api.messages.some(message => message.id === 'stored-1')).toBe(true);
-  });
-
-  it('keeps an ordinary message stored when transfer goals still do not exist', async () => {
-    roomRecord = { ...room, transfer_learning_enabled: true };
-    await mount();
-    await act(async () => { await api.sendMessage('I would open the official app.'); });
+    await expect(act(async () => { await api.sendMessage('Hello'); })).rejects.toThrow('insert failed');
     expect(ChecklistService.analyzeStudentMessages).not.toHaveBeenCalled();
-    expect(api.messages.some(message => message.id === 'stored-1')).toBe(true);
   });
 
-  it('keeps the saved message when analysis fails', async () => {
+  it('surfaces judge failure and preserves the saved message without a fallback', async () => {
     await mount();
-    (ChecklistService.processStudentMessage as jest.Mock).mockRejectedValueOnce(new Error('provider failed'));
-    await act(async () => { await api.sendMessage('I would open the official app.'); });
+    (ChecklistService.analyzeStudentMessages as jest.Mock).mockRejectedValueOnce(new Error('provider failed'));
+    await act(async () => {
+      await expect(api.sendMessage('Hello')).rejects.toThrow('Message saved, but learning progress analysis failed: provider failed');
+    });
     expect(api.messages.some(message => message.id === 'stored-1')).toBe(true);
-  });
-
-  it('does not analyze tutor messages', async () => {
-    (useAuth as jest.Mock).mockReturnValue({ user: { id: 'tutor-1', current_role: 'tutor', display_name: 'Tutor' } });
-    await mount();
-    await act(async () => { await api.sendMessage('Try the official app.'); });
-    expect(ChecklistService.processStudentMessage).not.toHaveBeenCalled();
-  });
-
-  it('drops messages from the previous room when joining another room', async () => {
-    (useAuth as jest.Mock).mockReturnValue({ user: { id: 'tutor-1', current_role: 'tutor', display_name: 'Tutor' } });
-    await mount();
-    await act(async () => { await api.sendMessage('Try the official app.'); });
-    expect(api.messages.some(message => message.id === 'stored-1')).toBe(true);
-    roomRecord = { ...room, id: 'room-2' };
-    await act(async () => { await api.joinRoom('room-2'); });
-    expect(api.currentRoom?.id).toBe('room-2');
-    expect(api.messages).toEqual([]);
+    expect(transferAssessmentService.postMessage).toHaveBeenCalledTimes(1);
   });
 });

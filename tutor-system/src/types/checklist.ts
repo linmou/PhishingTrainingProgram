@@ -205,17 +205,6 @@ export interface ChecklistUpdateResponse {
   error?: string;
 }
 
-export interface CoverageDetectionResult {
-  detected_coverage: {
-    item_id: string;
-    evidence: string;
-    confidence: number;
-    understanding_level: ChecklistItem['understanding_level'];
-  }[];
-  analysis_confidence: number;
-  requires_tutor_review: boolean;
-}
-
 // For multi-student tracking
 export interface StudentChecklistProgress {
   student_id: string;
