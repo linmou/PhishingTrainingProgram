@@ -103,8 +103,8 @@ module.exports = async function roomAssessmentSetup(ctx) {
   await tutorPage.getByLabel('Enable In-Room Assessment').uncheck();
   await tutorPage.getByRole('button', { name: 'Save Settings' }).click();
   await waitForMatch(
-    () => query(client, 'rooms', 'transfer_learning_enabled', 'id', room.id),
-    rows => rows[0]?.transfer_learning_enabled === false, 'ordinary-room target setup'
+    () => query(client, 'rooms', 'in_room_assessment_enabled', 'id', room.id),
+    rows => rows[0]?.in_room_assessment_enabled === false, 'ordinary-room target setup'
   );
   await tutorPage.locator('button[title="Learning Progress Checklist"]').click();
   await tutorPage.getByRole('button', { name: 'Generate Learning Targets', exact: true }).click();
@@ -143,8 +143,8 @@ module.exports = async function roomAssessmentSetup(ctx) {
   await tutorPage.getByLabel('Enable In-Room Assessment').check();
   await tutorPage.getByRole('button', { name: 'Save Settings' }).click();
   await waitForMatch(
-    () => query(client, 'rooms', 'transfer_learning_enabled', 'id', room.id),
-    rows => rows[0]?.transfer_learning_enabled === true, 'assessment setting on existing room'
+    () => query(client, 'rooms', 'in_room_assessment_enabled', 'id', room.id),
+    rows => rows[0]?.in_room_assessment_enabled === true, 'assessment setting on existing room'
   );
   await waitForMatch(
     () => query(client, 'session_checklists', 'id,student_id,progress_policy_version,is_active', 'room_id', room.id),

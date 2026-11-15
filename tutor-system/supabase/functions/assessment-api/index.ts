@@ -16,7 +16,7 @@ import { applyLearningEvent, isValidTransferProgress } from '../../../src/servic
 import type { LearningEventKind, TransferProgress } from '../../../src/services/learningProgressTransitions.ts';
 
 const OPERATIONS = new Set([
-  'initialize_checklist', 'join_room', 'edit_learning_progress', 'read_learning_evidence', 'post_message', 'analyze_message',
+  'configure_assessment', 'initialize_checklist', 'join_room', 'edit_learning_progress', 'read_learning_evidence', 'post_message', 'analyze_message',
   'prepare_turn', 'send_reviewed', 'read_review', 'read_history_readiness', 'process_message', 'clear_chat_history',
 ]);
 const OPTION_IDS = new Set(['A', 'B', 'C', 'D']);
@@ -95,6 +95,7 @@ const ERROR_STATUS: Record<string, { status: number; retryable: boolean }> = {
   AI_OUTPUT_INVALID: { status: 502, retryable: false },
   TARGET_SETUP_REQUIRED: { status: 409, retryable: false },
   ANALYSIS_INCOMPLETE: { status: 503, retryable: true },
+  IN_ROOM_ASSESSMENT_DISABLED: { status: 409, retryable: false },
   ASSESSMENT_NOT_ELIGIBLE: { status: 409, retryable: false },
   PERSISTENCE_FAILED: { status: 500, retryable: true },
 };
@@ -715,6 +716,15 @@ export function createAssessmentApiHandler(deps: AssessmentApiDependencies) {
             p_action: requiredString(body.action, 'ITEM_VALIDATION_FAILED'),
             p_item_id: requiredString(body.item_id, 'ITEM_VALIDATION_FAILED'),
             p_payload: asRecord(body.updates),
+          });
+          break;
+        case 'configure_assessment':
+          assertTeacher(principal);
+          if (typeof body.enabled !== 'boolean') throw new Error('INVALID_REQUEST');
+          data = await rpc(deps, 'set_in_room_assessment_enabled_v1', {
+            p_room_id: assertRoom(principal, body.room_id),
+            p_enabled: body.enabled,
+            p_actor_id: principal.application_user_id,
           });
           break;
         case 'post_message': {

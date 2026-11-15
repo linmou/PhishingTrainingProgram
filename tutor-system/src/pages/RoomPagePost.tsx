@@ -1223,7 +1223,6 @@ const RoomPagePost: React.FC = () => {
             {roomId && canViewLearningProgress && (
                 <ChecklistPanel
                     roomId={roomId}
-                    transferEnabled={currentRoom.transfer_learning_enabled === true}
                     sharedTargets={currentRoom.practice_type === 'cyberbullying'}
                     studentId={user?.current_role === 'student' ? user.id : transferStudentId}
                     readOnly={user?.current_role === 'student'}

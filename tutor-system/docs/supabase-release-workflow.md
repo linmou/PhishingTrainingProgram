@@ -43,6 +43,8 @@ For concurrent coding agents, run deterministic tests in parallel but explicitly
 
 After combining PRs, verify the **combined** SQL/Edge/frontend artifacts and affected journeys, since individually passing PR tests do not prove compatibility. Keep at most one pending migration in `tutor-system/supabase/migrations/` and one candidate in the shared staging deployment queue. Order and revalidate interdependent migrations before any promotion.
 
+Combining PRs into one production batch is optional. PRs may instead be released in dependency order, completing integration, source verification and production acceptance for each increment before promoting its dependent change. A downstream candidate already on staging does not require that every included PR ship in one batch, and its tests do not automatically verify an earlier isolated increment. Preserve already-applied SQL evidence; verify the appropriate component state rather than blindly reapplying a migration or reverting shared staging data.
+
 ## Verification Scope
 
 Select checks from observable behavior, consumer contracts and affected dependencies, rather than lines changed or feature count. Record the selection and why it covers the change in the task/release record. When several rows apply, take their combined scope. If the affected scope is uncertain, broaden verification.
@@ -57,6 +59,8 @@ Select checks from observable behavior, consumer contracts and affected dependen
 | Interacting changes or shared orchestration | Combined integration checks and complete affected staging journeys across changed components | Combined affected journeys; run the broader workflow suite if shared behavior cannot be isolated |
 
 Use controlled provider responses for routine branching, retries, gates and lifecycle regressions. Use real-provider checks when provider requests, prompts, decoding or model behavior change, and for lifecycle journeys that depend on the provider. Add relevant semantic evaluation cases when learner judgments or tutoring behavior change; transport/schema tests alone cannot validate those judgments. Display-copy changes with unchanged behavior may use focused UI checks. Full-inventory real-model E2E is required when target scheduling or cooperation across targets changes; it is not the default for unrelated edits. Select existing commands/workflows in [browser-e2e-testing.md](browser-e2e-testing.md#select-the-release-checks).
+
+Staging release acceptance checks deterministic application behavior: permissions, configuration, request/response contracts, persisted event binding, state transitions, scheduling, grading and cleanup. Record model outputs as observations; one model's semantic judgment differing from an expected learning label is not a release gate. AI quality evaluation is a separate activity with its own explicitly selected scope. For the #96/#100/#101 delivery, the user explicitly excluded AI behavior as a blocker and cancelled the auto-exp work; no analyzer refinement, benchmark or holdout run is required for this release. This decision does not waive failures in deterministic contracts or the existing code-review and integration gates.
 
 Reuse successful evidence for unchanged artifacts and dependencies within the batch. Before promotion, recheck deployed source, configuration and relevant database preconditions. Any relevant change invalidates the corresponding evidence and requires rerunning those checks. Do not repeat broad unchanged suites solely because another independent feature was added.
 

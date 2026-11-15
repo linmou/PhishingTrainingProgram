@@ -521,10 +521,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 };
                 transferChecklist = await checklistService.getActiveTransferChecklistForRoom?.(currentRoom.id) || null;
             } catch (transferError) {
-                if (currentRoom.transfer_learning_enabled) throw transferError;
-                console.warn('Transfer preparation unavailable; keeping legacy AI generation:', transferError);
+                if (currentRoom.in_room_assessment_enabled === true) throw transferError;
+                console.warn('Learning progress unavailable for tutor generation:', transferError);
             }
-            if (currentRoom.transfer_learning_enabled) {
+            if (currentRoom.in_room_assessment_enabled === true || (transferChecklist &&
+                transferChecklist.detection_areas.length + transferChecklist.verification_steps.length > 0)) {
                 if (!transferChecklist ||
                     transferChecklist.detection_areas.length + transferChecklist.verification_steps.length === 0) {
                     throw createTransferPreparationError(
@@ -564,7 +565,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     expectedAssessmentResultIds = readiness.result_message_ids;
                 }
                 await ChecklistService.analyzeStudentMessages(currentRoom.id, checklistOwnerMessage.user_id, parentMessageId, user.id);
-                const prepared = await transferAssessmentService.prepareAssessment({
+                const prepared = currentRoom.in_room_assessment_enabled !== true ? null : await transferAssessmentService.prepareAssessment({
                     roomId: currentRoom.id,
                     focusStudentMessageId: parentMessageId,
                   checklistId: transferChecklist.id,
@@ -655,7 +656,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             await generateCyberbullyingResponse(true);
             return;
         }
-        if (currentRoom.transfer_learning_enabled) {
+        if (currentRoom.in_room_assessment_enabled === true) {
             await generateAIResponse(undefined, currentSuggestionContext.parentMessageId, parameterOverrides);
             return;
         }
@@ -771,17 +772,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCurrentRoom(normalizeRoom(updatedRoom));
     };
 
-    const setTransferLearningEnabled = async (enabled: boolean): Promise<void> => {
+    const setInRoomAssessmentEnabled = async (enabled: boolean): Promise<void> => {
         if (!currentRoom || !user || user.id !== currentRoom.tutor_id) {
-            throw new Error('Only the room tutor can configure transfer learning');
+            throw new Error('Only the room tutor can configure in-room assessment');
         }
-        const { data, error } = await supabase.from('rooms')
-            .update({ transfer_learning_enabled: enabled })
-            .eq('id', currentRoom.id)
-            .eq('tutor_id', user.id)
-            .select('*')
-            .single();
-        if (error) throw error;
+        const data = await transferAssessmentService.configureAssessment(currentRoom.id, enabled);
 
         setCurrentRoom(normalizeRoom(data));
     };
@@ -1115,7 +1110,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         leaveRoom,
         sendMessage,
         setGuardMode,
-        setTransferLearningEnabled,
+        setInRoomAssessmentEnabled,
         generateAIResponse,
         regenerateAIResponse,
         toggleAIAssistant,

@@ -75,6 +75,7 @@ export interface Room {
     is_active: boolean;
     ai_assistant_enabled: boolean;
     transfer_learning_enabled?: boolean;
+    in_room_assessment_enabled?: boolean;
     ai_assistant_model: string | null;
     ai_assistant_prompt: string | null;
     pre_populated_dialogue?: PrePopulatedMessage[] | null; // Added for dialogue customization
@@ -285,7 +286,7 @@ export interface RoomContextType {
     leaveRoom: () => Promise<void>;
     sendMessage: (content: string, options?: { replyToMessageId?: string; assessmentId?: string; selectedOptionIds?: AssessmentOptionId[] }) => Promise<void>;
     setGuardMode: (mode: TutorResponseMode) => Promise<void>;
-    setTransferLearningEnabled: (enabled: boolean) => Promise<void>;
+    setInRoomAssessmentEnabled: (enabled: boolean) => Promise<void>;
     generateAIResponse: (prompt?: string) => Promise<void>;
     regenerateAIResponse: (parameterOverrides: any) => Promise<void>;
     toggleAIAssistant: (enabled: boolean, config?: Partial<AIAssistantConfig>) => Promise<void>;

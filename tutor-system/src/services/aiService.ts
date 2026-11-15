@@ -899,7 +899,8 @@ export const generateTutorSuggestion = async (
         aiConfig = SystemPromptProcessor.processOverrides(aiConfig, parameterOverrides);
 
         try {
-            const checklist = await ChecklistService.getChecklistByRoom(roomId);
+            const checklist = await ChecklistService.getActiveTransferChecklistForRoom(roomId)
+                || await ChecklistService.getChecklistByRoom(roomId);
             if (checklist) {
                 const items = [...checklist.detection_areas, ...checklist.verification_steps];
                 const progress = items.map(item => `- ${item.area_text}: ${item.status}`).join('\n');

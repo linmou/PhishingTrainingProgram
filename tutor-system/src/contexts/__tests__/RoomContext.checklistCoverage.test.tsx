@@ -72,7 +72,7 @@ describe('ordinary learner checklist coverage', () => {
   }
 
   it.each([false, true])('uses trusted storage and judging with assessments enabled=%s', async enabled => {
-    roomRecord = { ...room, transfer_learning_enabled: enabled };
+    roomRecord = { ...room, transfer_learning_enabled: enabled, in_room_assessment_enabled: enabled };
     await mount();
     await act(async () => { await api.sendMessage('I would open the official app.'); });
     expect(transferAssessmentService.postMessage).toHaveBeenCalledWith(expect.objectContaining({ roomId: room.id }));
