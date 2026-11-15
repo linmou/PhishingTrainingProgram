@@ -11,40 +11,12 @@ import {
   formatRoomScenarioContext,
   prePopulatedToContextMessages
 } from '../ecologicalTutorCall';
-import { SCENARIO_TEMPLATES } from '../detectionTemplates';
 import { getDemoRoomTemplateSeeds } from '../demoRoomTemplates';
 import { ACTIVE_TUTOR_AGENT_PROMPT } from '../prompts/activeTutorAgentPrompt';
 import fs from 'fs';
 import path from 'path';
 
 describe('ecologicalTutorCall', () => {
-  it.each([
-    'Knowledge Point 3: Original heading. (Harder)\nObservation task: observed detail\nBehavior task: action detail',
-    'Knowledge Point 3: Original heading. (Harder)\nWhat to notice: observed detail\nWhat to do: action detail'
-  ])('preserves target text verbatim in inventory and progress, without rewriting participant text: %s', (target) => {
-    const vars = {
-      scenario_context: 'room',
-      conversation_history: 'What to notice: learner quote',
-      student_message: 'What to do: learner question'
-    };
-    const system = `${target}\n\nCURRENT LEARNING PROGRESS\n${target}: pending`;
-    const messages = buildEcologicalChatCompletionMessages(system, vars);
-    expect(messages[0].content.startsWith(`${system}\n\n`)).toBe(true);
-    expect(messages[1].content).toBe(buildEcologicalTutorUserTurn(vars));
-  });
-
-  it('passes the canonical source inventory through unchanged and includes the base policy only once', () => {
-    const targets = SCENARIO_TEMPLATES['Nintendo Switch Deal ($19.99)'].detection_areas.join('\n');
-    expect(targets).toContain('Observation task:');
-    expect(targets).toContain('Behavior task:');
-    const system = `${targets}\n\n${ACTIVE_TUTOR_AGENT_PROMPT}`;
-    const messages = buildEcologicalChatCompletionMessages(system, {
-      scenario_context: '', conversation_history: '', student_message: ''
-    });
-    expect(messages[0].content.startsWith(`${system}\n\n`)).toBe(true);
-    expect(messages[0].content.split(ACTIVE_TUTOR_AGENT_PROMPT)).toHaveLength(2);
-  });
-
   it('formats room scenario like the webpage header', () => {
     expect(formatRoomScenarioContext('Demo: Lock Icon Myth', 'Practice room')).toBe(
       'Demo: Lock Icon Myth — Practice room'

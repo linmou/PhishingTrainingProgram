@@ -41,7 +41,7 @@ The learning-progress analyzer is shared across tutor prompt candidates, so its 
 
 `current-target-cases.json` substitutes exact current full learning targets into ten retained learner-response contexts and adds eight synthetic positive controls. Historical suites remain unchanged. Labels are agent-authored provisional expectations, not historical model decisions; cases already used for prompt development are marked as exposed and are not independent holdouts.
 
-Run the actual local handler with a maximum of 32 concurrent case workers (default 32):
+Run the actual local handler with configurable concurrency (default 32; any positive integer):
 
 ```sh
 node evals/promptfoo/learning-progress-analyzer/current-target-eval.cjs --concurrency 32 --env-file /absolute/path/to/tutor-system/.env
