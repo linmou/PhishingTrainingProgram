@@ -166,7 +166,11 @@ describe('v3 transfer request contract', () => {
     );
     expect(source).toContain('buildTransferTutorRequestContextV3');
     expect(source).toContain('buildTransferAssessmentRequest');
-    expect(source).toContain('TRANSFER_ANALYSIS_SYSTEM_PROMPT');
+    expect(source).toContain('buildCombinedLearningAnalysisMessages');
+    const analysisSource = fs.readFileSync(
+      path.resolve(process.cwd(), 'src/services/learningAnalysisPrompt.ts'), 'utf8'
+    );
+    expect(analysisSource).toContain('TRANSFER_ANALYSIS_SYSTEM_PROMPT');
     expect(source).toContain('learner_safe_explanation must be concise');
     expect(source).toContain('max_tokens: PROVIDER_MAX_TOKENS');
   });

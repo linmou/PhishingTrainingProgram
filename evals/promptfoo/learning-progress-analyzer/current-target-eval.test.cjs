@@ -1,0 +1,11 @@
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const {snapshot,parseConcurrency}=require('./current-target-eval.cjs');
+const root=path.resolve(__dirname,'../../..'),app=path.join(root,'tutor-system');
+const ts=require(path.join(app,'node_modules/typescript'));
+function catalog(){const module={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync(path.join(app,'src/services/detectionTemplates.ts'),'utf8'),{compilerOptions:{module:1}}).outputText,{module,exports:module.exports});return module.exports;}
+const suite=JSON.parse(fs.readFileSync(path.join(__dirname,'current-target-cases.json'),'utf8'));
+test('every case uses an exact current catalog target, including the restored Nintendo inventory',()=>{const c=catalog();const targets=new Set([...Object.values(c.SCENARIO_TEMPLATES).flatMap(s=>s.detection_areas),...c.CYBERBULLYING_LEARNING_TARGETS.map(t=>t.description)]);assert.equal(c.SCENARIO_TEMPLATES['Nintendo Switch Deal ($19.99)'].detection_areas.length,5);for(const x of suite.cases){assert(targets.has(x.input.items[0].area_text),x.id);assert.equal(x.input.dialogue_history.at(-1).content,x.input.message.content);assert.equal(x.input.items.length,1);}});
+test('current suite keeps exposure labels and positive/no-event/partial controls',()=>{assert(suite.label_review.includes('human review pending'));assert.equal(new Set(suite.cases.map(c=>c.id)).size,suite.cases.length);for(const kind of [null,'initial_signal','demonstrated_understanding'])assert(suite.cases.some(c=>c.expected.kind===kind));assert(suite.cases.every(c=>!c.partition.includes('holdout')));});
+test('snapshot freezes the actual shared prompt builder and handler',()=>{const files=snapshot().files;assert(files.some(f=>f.name==='src/services/learningAnalysisPrompt.ts'));assert(files.some(f=>f.name==='supabase/functions/assessment-api/index.ts'));});
+
+test('concurrency accepts values above 32 without an arbitrary ceiling',()=>{for(const n of ['1','32','33','128'])assert.equal(parseConcurrency(n),Number(n));for(const n of ['0','-1','1.5','NaN','Infinity'])assert.throws(()=>parseConcurrency(n),/positive integer/);});
