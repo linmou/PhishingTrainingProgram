@@ -1,32 +1,29 @@
 /**
- * File: src/services/detectionTemplates.ts
- * Purpose: verify reviewed teaching inventories against their archived document baseline.
+ * File: src/services/__tests__/detectionTemplates.test.ts
+ * Purpose: prevent exact source/database template seed drift in CI.
  */
-import { readFileSync } from 'fs';
+import { readFileSync, readdirSync, existsSync } from 'fs';
 import { resolve } from 'path';
 import { SCENARIO_TEMPLATES } from '../detectionTemplates';
 
 describe('Detection Templates', () => {
-  it('preserves document content and order with canonical labels and approved Nintendo wording', () => {
-    const migration = readFileSync(resolve(__dirname,
-      '../../../supabase/archived_migrations/20261112000000_document_learning_targets.sql'), 'utf8');
+  it('exactly matches the latest database template seed without normalization', () => {
+    const supabase = resolve(__dirname, '../../../supabase');
+    const seeds = ['migrations', 'archived_migrations'].flatMap(directory => {
+      const folder = resolve(supabase, directory);
+      return existsSync(folder) ? readdirSync(folder).filter(name => name.endsWith('.sql'))
+        .map(name => ({ name, path: resolve(folder, name) })) : [];
+    }).sort((a, b) => b.name.localeCompare(a.name));
+    const migration = seeds.map(seed => readFileSync(seed.path, 'utf8'))
+      .find(sql => sql.includes('$catalog$'));
+    expect(migration).toBeDefined();
     const entries: { scenario: keyof typeof SCENARIO_TEMPLATES; points: string[] }[] =
-      JSON.parse(migration.split('$catalog$')[1]);
+      JSON.parse(migration!.split('$catalog$')[1]);
     expect(entries.map(entry => entry.scenario).sort()).toEqual(
       Object.keys(SCENARIO_TEMPLATES).filter(name => name !== 'General Scam Indicators').sort()
     );
     entries.forEach(entry => {
-      const approvedPoints = entry.scenario === 'Nintendo Switch Deal ($19.99)'
-        ? entry.points.map(point => point.replace(
-          'The post comes from someone named Lucy Simms, not an official Nintendo account.',
-          'The post is not from an official Nintendo account but someone named Lucy Simms'
-        ))
-        : entry.points;
-      // The archived migration is historical evidence, not a runtime formatting step.
-      const expectedPoints = approvedPoints.map(point => point
-        .replace(/What to notice:/g, 'Observation task:')
-        .replace(/What to do:/g, 'Behavior task:'));
-      expect(expectedPoints).toEqual(SCENARIO_TEMPLATES[entry.scenario].detection_areas);
+      expect(entry.points).toEqual(SCENARIO_TEMPLATES[entry.scenario].detection_areas);
     });
   });
 

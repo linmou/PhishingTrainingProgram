@@ -72,6 +72,8 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Browser runner harness (local HTML only; no hosted access)
         run: npm run test:e2e:unit
+      - name: Exact source and database template seed parity
+        run: npm run test:regression -- --runInBand --runTestsByPath src/services/__tests__/detectionTemplates.test.ts
       - name: Deterministic Jest regression
         run: npm run test:regression -- --runInBand
 
