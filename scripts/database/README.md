@@ -18,6 +18,18 @@ If `PGPASSWORD` is exported, it takes precedence. Otherwise, the helpers load th
 
 Role export can be rejected by hosted database permissions. Such a failure blocks role-parity validation until the necessary metadata is obtained through read-only catalog access. The schema-filtered application dump excludes dependencies in other schemas. Check [the release workflow](../../tutor-system/docs/supabase-release-workflow.md) before treating local migration tests as predictive of online application.
 
+## Prepare this machine
+
+Install PostgreSQL 17 locally (Homebrew or Postgres.app), then run:
+
+```sh
+sh scripts/database/setup_validation_cluster.sh
+```
+
+The helper initializes the documented isolated cluster as `local_bootstrap` only when absent, starts it only when stopped, and verifies a Unix-socket connection. New clusters reject TCP authentication and listen only on the private socket. It never creates or restores an application database, changes an existing cluster's roles, or contacts Supabase. Run it again to reuse the same cluster. Set `PG_VALIDATION_BIN_DIR`, `PG_VALIDATION_ROOT` or `PG_VALIDATION_PORT` to override installation and cluster locations. Keep the root private and use a path without single quotes for PostgreSQL command-line socket options.
+
+The exporter also discovers PostgreSQL 17 in standard Homebrew and Postgres.app installation paths; `PGCLIENT_BIN_DIR` overrides discovery. Store the hosted database credentials in this checkout's ignored root `.env` (mode `0600`), not in committed scripts. Migration verification runs on this machine; another computer is not a runtime dependency.
+
 ## Concurrent Agent Exports (No Docker)
 
 For concurrent migration work **do not call fixed-path exporters directly**. From the repository root:

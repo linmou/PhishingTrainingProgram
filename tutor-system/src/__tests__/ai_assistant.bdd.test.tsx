@@ -258,6 +258,8 @@ defineFeature(feature, (test) => {
     if (action === 'modified') fireEvent.change(input, { target: { value: finalText } });
     fireEvent.click(screen.getByTitle('Send comment'));
     await waitFor(() => expect(reviewedRows).toHaveLength(priorReviewedCount + 1));
+    // A persistence mock resolves before React commits the cleared suggestion.
+    await waitFor(() => expect(screen.queryByRole('button', { name: /Reject/ })).not.toBeInTheDocument());
   };
 
   const openDownload = async () => {

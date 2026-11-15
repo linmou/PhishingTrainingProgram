@@ -295,6 +295,7 @@ export interface RoomContextType {
     stopTyping: () => void;
     aiConfig: AIAssistantConfig | null;
     loadingAI: boolean;
+    learningProgressError?: string | null;
     downloadChatHistory: (format?: 'txt' | 'json') => void;
     aiSuggestion: string | null;
     aiDecision: TutorActionDecision | null;

@@ -179,14 +179,8 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     (ChecklistService.getChecklistForStudent as jest.Mock).mockResolvedValue(transferChecklist);
 
     jest.spyOn(transferAssessmentService, 'analyzeMessage').mockResolvedValue({ applied: [] });
-    jest.spyOn(transferAssessmentService, 'readReview').mockResolvedValue({
+    jest.spyOn(transferAssessmentService, 'readAssessmentHistory').mockResolvedValue({
       history_readiness:{ready:true,result_message_ids:['saved-result'],pending_answer_message_ids:[],unavailable_assessment_ids:[]},
-      item_label: 'Verify payment requests',
-      assessment: preparedCandidate.assessment,
-      resolution: 'passed',
-      lifecycle: 'passed',
-      attempt_count: 1,
-      feedback_required: true,
     });
     prepareAssessment = jest.spyOn(transferAssessmentService, 'prepareAssessment').mockResolvedValue(preparedTurnResult);
     sendReviewed = jest.spyOn(transferAssessmentService, 'sendReviewed').mockResolvedValue(reviewedDelivery);
@@ -229,7 +223,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     expect(room!.transferDraft!.itemId).toBe(CHECKLIST_ITEM_ID);
     expect(room!.transferDraft!.itemLabel).toBe('Verify payment requests');
     expect(generateTutorSuggestion).not.toHaveBeenCalled();
-    expect(transferAssessmentService.readReview).not.toHaveBeenCalled();
+    expect(transferAssessmentService.readAssessmentHistory).not.toHaveBeenCalled();
   });
 
   it('routes an explicit no-assessment result to the ordinary tutor', async () => {
@@ -260,7 +254,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
   ])('focuses ordinary conversation after persisted $resolution state and $attemptCount attempts', async ({
     answer, resolution, lifecycle, attemptCount, feedbackRequired,
   }) => {
-    (transferAssessmentService.readReview as jest.Mock).mockResolvedValue({
+    (transferAssessmentService.readAssessmentHistory as jest.Mock).mockResolvedValue({
       history_readiness:{ready:true,result_message_ids:['saved-result'],pending_answer_message_ids:[],unavailable_assessment_ids:[]},
       item_label: 'Verify payment requests', assessment: preparedCandidate.assessment,
       resolution, lifecycle, attempt_count: attemptCount, feedback_required: feedbackRequired,
@@ -314,7 +308,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
   ])(
     'refuses tutor feedback without a verified lifecycle %j', async (lifecycle) => {
       mockTables([learnerAMessageRow, deliveredQuestionRow, deliveredAnswerRow]);
-      (transferAssessmentService.readReview as jest.Mock).mockResolvedValue({
+      (transferAssessmentService.readAssessmentHistory as jest.Mock).mockResolvedValue({
         item_label: 'Verify payment requests', assessment: preparedCandidate.assessment, ...lifecycle,
       });
       await mountRoom();

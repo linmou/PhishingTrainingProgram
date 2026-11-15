@@ -5,16 +5,6 @@
 
 import { ChecklistService } from './checklistService';
 import * as aiService from './aiService';
-import { CoverageDetectionService } from './coverageDetectionService';
-
-/**
- * Service contracts for type safety and extensibility
- */
-export interface IRoomFeaturesService {
-  checklist: typeof ChecklistService;
-  ai: typeof aiService;
-  coverage: typeof CoverageDetectionService;
-}
 
 /**
  * Main Room Features Service
@@ -33,17 +23,5 @@ export class RoomFeaturesService {
    */
   static readonly ai = aiService;
 
-  /**
-   * Coverage detection functionality
-   * Handles content analysis, evidence detection, and coverage tracking
-   */
-  static readonly coverage = CoverageDetectionService;
 
 }
-
-// Export for backward compatibility and direct access  
-export { ChecklistService, CoverageDetectionService };
-export { aiService };
-
-// Default export
-export default RoomFeaturesService;

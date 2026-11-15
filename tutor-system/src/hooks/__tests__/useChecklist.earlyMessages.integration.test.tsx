@@ -8,7 +8,6 @@ import { ChecklistService } from '../../services/checklistService';
 
 jest.mock('../../services/supabase', () => ({ supabase: { from: jest.fn(), functions: { invoke: jest.fn() } } }));
 jest.mock('../../services/aiService', () => ({ getAIConfig: jest.fn() }));
-jest.mock('../../services/coverageDetectionService', () => ({ CoverageDetectionService: {} }));
 jest.mock('../../services/checklistIntegration', () => ({ generateChecklistFromSystemPrompt: jest.fn() }));
 jest.mock('../../services/checklistGenerationContext', () => ({ assessChecklistGenerationContext: jest.fn() }));
 jest.mock('../../contexts/AuthContext', () => {

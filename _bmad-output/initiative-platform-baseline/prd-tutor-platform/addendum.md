@@ -199,6 +199,7 @@ All resolved on 2026-10-22. Each decision is built into the PRD requirement name
 - OQ-12: no consent process for the pilot (PRD §10.2).
 - OQ-13: the template catalog was cleaned in commit `c13af72` (FR-18).
 - OQ-14: all new learning targets are learner-owned and judged on the server; no new room-wide learning targets; old rooms are left as they are; manual edits stay (FR-18, FR-31, FR-53, PRD §9).
+- Issue #96 implementation rule (2026-11-14, release acceptance pending): assessment toggles do not create, convert or reassign targets. Historical room-wide records remain read/export-only; entering those rooms does not restart judging. Explicit new learner-owned setup creates a separate checklist; earlier historical messages are not replayed against it. Tracking and manual edits remain available when room/global assessments are disabled. G-24 remains open until the recorded staging and production acceptance passes; G-37 identity/permission gaps are not closed by this routing cleanup. See `tutor-system/docs/doc_update_record/documentation_update_record_v2026_11_14_issue96.md`.
 - OQ-15: no accessibility target (PRD §10.2).
 
 ## F. Pilot limitations under P6

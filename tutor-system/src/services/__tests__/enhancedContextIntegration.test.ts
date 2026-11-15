@@ -9,7 +9,7 @@ import { supabase } from '../supabase';
 
 jest.mock('../supabase', () => ({ supabase: { from: jest.fn() } }));
 jest.mock('../transferAssessmentService', () => ({
-  transferAssessmentService: { readReview: jest.fn() },
+  transferAssessmentService: { readAssessmentHistory: jest.fn() },
 }));
 
 const room = {

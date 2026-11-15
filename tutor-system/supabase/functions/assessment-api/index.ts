@@ -17,7 +17,7 @@ import type { LearningEventKind, TransferProgress } from '../../../src/services/
 
 const OPERATIONS = new Set([
   'initialize_checklist', 'join_room', 'edit_learning_progress', 'read_learning_evidence', 'post_message', 'analyze_message',
-  'prepare_turn', 'send_reviewed', 'read_review', 'process_message', 'clear_chat_history',
+  'prepare_turn', 'send_reviewed', 'read_review', 'read_history_readiness', 'process_message', 'clear_chat_history',
 ]);
 const OPTION_IDS = new Set(['A', 'B', 'C', 'D']);
 const PROVIDER_MAX_TOKENS = 1200;
@@ -620,7 +620,9 @@ export function createAssessmentApiHandler(deps: AssessmentApiDependencies) {
       return fail(String(error).includes('AUTHORIZATION_NOT_CONFIGURED')
         ? 'AUTHORIZATION_NOT_CONFIGURED' : 'UNAUTHORIZED');
     }
-    if (body.operation !== 'clear_chat_history') {
+    // New assessment creation and private answer-key inspection stay gated.
+    // Existing grading, keyless history readiness and learning tracking remain operational.
+    if (body.operation === 'prepare_turn' || body.operation === 'send_reviewed' || body.operation === 'read_review') {
       try {
         if (!await deps.featureEnabled()) return fail('ASSESSMENT_FEATURE_DISABLED');
       } catch {
@@ -638,7 +640,8 @@ export function createAssessmentApiHandler(deps: AssessmentApiDependencies) {
             p_actor_id: principal.application_user_id,
           });
           break;
-        case 'read_review': {
+        case 'read_review':
+        case 'read_history_readiness': {
           assertTeacher(principal);
           const args={
             p_room_id: assertRoom(principal, body.room_id),
@@ -657,7 +660,15 @@ export function createAssessmentApiHandler(deps: AssessmentApiDependencies) {
             }
             review=asRecord(await rpc(deps,'get_transfer_assessment_review_v1',args));
           }
-          data=review;
+          const history = asRecord(review.history_readiness);
+          const ids = (value: unknown) => Array.isArray(value) ? value.filter(id => typeof id === 'string') : [];
+          data = body.operation === 'read_review' ? review : { history_readiness: {
+            ready: history.ready === true,
+            result_message_ids: ids(history.result_message_ids),
+            pending_answer_message_ids: ids(history.pending_answer_message_ids),
+            unavailable_assessment_ids: ids(history.unavailable_assessment_ids),
+            handled_answer_message_ids: ids(history.handled_answer_message_ids),
+          } };
           break;
         }
         case 'clear_chat_history':

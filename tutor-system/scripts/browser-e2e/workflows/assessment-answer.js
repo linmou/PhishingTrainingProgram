@@ -18,6 +18,11 @@ async function draftRetryFeedback(ctx, roomId, label) {
   const stop = await captureResponses(ctx.tutorPage, response =>
     response.url().includes('/functions/v1/ai-api') || response.url().includes('/functions/v1/assessment-api'));
   let calls;
+  const browserErrors = [];
+  const onConsole = message => { if (message.type() === 'error' && !/status of 406/.test(message.text())) browserErrors.push(message.text()); };
+  const onPageError = error => browserErrors.push(String(error));
+  ctx.tutorPage.on('console', onConsole);
+  ctx.tutorPage.on('pageerror', onPageError);
   try {
     await ctx.tutorPage.locator('button.ai-generate-btn').click();
     await Promise.race([
@@ -30,6 +35,9 @@ async function draftRetryFeedback(ctx, roomId, label) {
     await ctx.tutorPage.locator('.ai-suggestion-box .ai-suggestion-regenerate').click();
     await ctx.tutorPage.locator('.ai-suggestion-box .ai-suggestion-regenerate:not([disabled])').waitFor({ timeout: TIMEOUT });
   } finally {
+    ctx.tutorPage.off('console', onConsole);
+    ctx.tutorPage.off('pageerror', onPageError);
+    writeJson(path.join(ctx.evidenceDir, `assessment-answer-${label}-retry-browser-errors.json`), browserErrors);
     calls = await stop();
     writeJson(path.join(ctx.evidenceDir, `assessment-answer-${label}-retry-drafts.json`), calls);
   }

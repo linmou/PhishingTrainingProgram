@@ -8,6 +8,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 import RoomPagePost from '../pages/RoomPagePost';
 import { RoomProvider } from '../contexts/RoomContext';
+import { transferAssessmentService } from '../services/transferAssessmentService';
 import { MESSAGE_RECOVERY_INTERVAL_MS } from '../contexts/roomMessageSync';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -56,7 +57,9 @@ jest.mock('../services/aiService', () => ({
 jest.mock('../services/transferAssessmentService', () => ({
   ...jest.requireActual('../services/transferAssessmentService'),
   transferAssessmentService: {
-    joinRoom: jest.fn().mockResolvedValue({ room_role: 'student' })
+    joinRoom: jest.fn().mockResolvedValue({ room_role: 'student' }),
+    postMessage: jest.fn(),
+    analyzeMessage: jest.fn().mockResolvedValue({ already_processed: true })
   }
 }));
 
@@ -148,6 +151,7 @@ const makeQuery = (table: string) => {
     }),
     single: jest.fn(async () => ({ data: table === 'rooms' ? mockRoom : null, error: null })),
     maybeSingle: jest.fn(async () => ({ data: null, error: null })),
+    range: jest.fn(async () => ({ data: [], error: null })),
     limit: jest.fn(() => query),
     abortSignal: jest.fn(() => query),
     insert: jest.fn((data: Record<string, any>) => {
@@ -310,6 +314,12 @@ beforeEach(() => {
   roomClients = {};
   realtimeListeners = [];
   currentActor = 'tutor';
+  (transferAssessmentService.postMessage as jest.Mock).mockImplementation(async ({ content }) => {
+    if (mockMessageInsertError) throw mockMessageInsertError;
+    const message = makeMessage(`message-${mockMessages.length + 1}`, content, users.student);
+    mockMessages.push(message);
+    return { message };
+  });
   Element.prototype.scrollIntoView = jest.fn();
   mockSupabase.from.mockImplementation((table: string) => makeQuery(table));
   mockSupabase.channel.mockImplementation(registerRealtimeChannel);

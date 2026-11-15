@@ -67,7 +67,7 @@ function dependencies(overrides: Partial<AssessmentApiDependencies> = {}): Asses
 Deno.test('evidence read derives actor from verifier and forwards only scoped identifiers', async () => {
   const calls: unknown[] = [];
   const rows = [{ id: 'evidence-1', item_id: 'item-1', evidence_text: 'Recorded evidence' }];
-  const handler = createAssessmentApiHandler(dependencies({ rpc: async (name, args) => {
+  const handler = createAssessmentApiHandler(dependencies({ featureEnabled: async () => false, rpc: async (name, args) => {
     calls.push([name, args]);
     return { data: rows, error: null };
   } }));
@@ -396,6 +396,7 @@ for (const scenario of ['ambiguity_then_pass','guard_then_clear','ordered_retry_
 
 Deno.test('accepted retry replay after cancellation keeps its grade and marks it duplicate', async () => {
   const handler = createAssessmentApiHandler(dependencies({
+    featureEnabled: async () => false,
     resolveAnswer: () => { throw new Error('must not grade a replay'); },
     rpc: async name => {
       assertEquals(name, 'get_transfer_assessment_processing_context_v1');
@@ -419,7 +420,8 @@ Deno.test('accepted retry replay after cancellation keeps its grade and marks it
   assertEquals(payload.data.terminal_failure_feedback, null);
 });
 
-Deno.test('private review reads require a tutor and the authorized room', async () => {
+Deno.test('private review and keyless history reads require a tutor and the authorized room', async () => {
+  for (const operation of ['read_review', 'read_history_readiness']) {
   for (const canReview of [false, true]) {
     let calls = 0;
     const handler = createAssessmentApiHandler(dependencies({
@@ -427,9 +429,10 @@ Deno.test('private review reads require a tutor and the authorized room', async 
         allowed_room_ids: ['room-1'], can_review_assessment: canReview }) },
       rpc: async () => { calls += 1; return { data: {}, error: null }; },
     }));
-    const result = await handler(request('read_review', { room_id: canReview ? 'other-room' : 'room-1', assessment_id: 'assessment-1' }));
+    const result = await handler(request(operation, { room_id: canReview ? 'other-room' : 'room-1', assessment_id: 'assessment-1' }));
     assert(result.status >= 400);
     assertEquals(calls, 0);
+  }
   }
 });
 
@@ -520,6 +523,7 @@ Deno.test('room entry reports visit recording failure', async () => {
 Deno.test('tutor status judgment is submitted under the verified actor identity', async () => {
   const calls: Array<{ name: string; args: Record<string, unknown> }> = [];
   const handler = createAssessmentApiHandler(dependencies({
+    featureEnabled: async () => false,
     rpc: async (name, args) => {
       calls.push({ name, args });
       return { data: { item_id: 'item-1', status: 'needs_review' }, error: null };
@@ -945,18 +949,28 @@ Deno.test('fails closed before data access when no principal verifier is wired',
   assertEquals(calls, 0);
 });
 
-// Covers index.ts: disabled configuration must prevent assessment side effects.
-Deno.test('disabled feature makes no assessment storage call', async () => {
-  let calls = 0;
+Deno.test('disabled assessments still permit ordinary messages without reading the flag', async () => {
+  const calls: string[] = [];
   const handler = createAssessmentApiHandler(dependencies({
-    featureEnabled: async () => false,
-    rpc: async () => { calls += 1; return { data: {}, error: null }; },
+    featureEnabled: async () => { throw new Error('must not read assessment flag'); },
+    rpc: async (name) => { calls.push(name); return { data: {}, error: null }; },
   }));
   const response = await handler(request('post_message', { room_id: 'room-1', content: 'Hello' }));
-  const payload = await response.json();
-  assertEquals(response.status, 503);
-  assertEquals(payload.error.code, 'ASSESSMENT_FEATURE_DISABLED');
-  assertEquals(calls, 0);
+  assertEquals(response.status, 200);
+  assertEquals(calls, ['join_room_v1', 'post_assessment_message_v2']);
+});
+
+Deno.test('disabled assessments block new preparation and delivery before storage', async () => {
+  for (const operation of ['prepare_turn', 'send_reviewed']) {
+    let calls = 0;
+    const handler = createAssessmentApiHandler(dependencies({
+      featureEnabled: async () => false,
+      rpc: async () => { calls += 1; return { data: {}, error: null }; },
+    }));
+    const response = await handler(request(operation, { room_id: 'room-1' }));
+    assertEquals((await response.json()).error.code, 'ASSESSMENT_FEATURE_DISABLED');
+    assertEquals(calls, 0);
+  }
 });
 
 Deno.test('owner clear remains available with assessment feature disabled and passes only verified identity',async ()=>{
@@ -970,27 +984,20 @@ Deno.test('owner clear remains available with assessment feature disabled and pa
 });
 
 // Covers index.ts: the same warm handler must observe administrator flag changes.
-Deno.test('reads current feature configuration for every assessment request', async () => {
+Deno.test('reads current feature configuration for each new assessment request', async () => {
   let enabled = true;
   let reads = 0;
-  let writes = 0;
   const handler = createAssessmentApiHandler(dependencies({
     featureEnabled: async () => { reads += 1; return enabled; },
-    rpc: async (name) => {
-      if (name === 'post_assessment_message_v2') writes += 1;
-      return { data: {}, error: null };
-    },
   }));
-  const post = () => request('post_message', { room_id: 'room-1', content: 'Hello' });
-  assertEquals((await handler(post())).status, 200);
+  // Missing scope fields fail validation after the current feature gate.
+  const prepare = () => request('prepare_turn', { room_id: 'room-1' });
+  assertEquals((await (await handler(prepare())).json()).error.code === 'ASSESSMENT_FEATURE_DISABLED', false);
   enabled = false;
-  const disabled = await handler(post());
-  assertEquals((await disabled.json()).error.code, 'ASSESSMENT_FEATURE_DISABLED');
-  assertEquals(writes, 1);
+  assertEquals((await (await handler(prepare())).json()).error.code, 'ASSESSMENT_FEATURE_DISABLED');
   enabled = true;
-  assertEquals((await handler(post())).status, 200);
+  assertEquals((await (await handler(prepare())).json()).error.code === 'ASSESSMENT_FEATURE_DISABLED', false);
   assertEquals(reads, 3);
-  assertEquals(writes, 2);
 });
 
 // Covers index.ts: unavailable configuration must fail closed without exposing private errors.
@@ -1000,7 +1007,7 @@ Deno.test('configuration read failure returns retryable error without assessment
     featureEnabled: async () => { throw new Error('private database diagnostic'); },
     rpc: async () => { writes += 1; return { data: {}, error: null }; },
   }));
-  const result = await handler(request('post_message', { room_id: 'room-1', content: 'Hello' }));
+  const result = await handler(request('prepare_turn', { room_id: 'room-1', focus_student_message_id: 'focus-1', checklist_id: 'checklist-1' }));
   assertEquals(result.status, 503);
   const payload = await result.json();
   assertEquals(payload.error.code, 'ASSESSMENT_CONFIGURATION_UNAVAILABLE');
@@ -1524,4 +1531,22 @@ Deno.test('retries a stale CAS snapshot and returns the committed authoritative 
   assertEquals(payload.data.answer_outcome, 'passed');
   assertEquals(contextReads, 2);
   assertEquals(commits, 2);
+});
+
+Deno.test('disabled assessments deny private review but retain keyless history readiness', async () => {
+  const handler = createAssessmentApiHandler(dependencies({
+    featureEnabled: async () => false,
+    rpc: async () => ({ data: { assessment: { correct_option_ids: ['B'], learner_safe_explanation: 'private' },
+      transfer_basis: { secret: true }, history_readiness: { ready: true, result_message_ids: ['result-1'],
+        pending_answer_message_ids: [], unavailable_assessment_ids: [], handled_answer_message_ids: ['answer-1'],
+        correct_option_ids: ['B'] } }, error: null }),
+  }));
+  const privateResponse = await handler(request('read_review', { room_id: 'room-1', assessment_id: 'assessment-1' }));
+  assertEquals((await privateResponse.json()).error.code, 'ASSESSMENT_FEATURE_DISABLED');
+  const safeResponse = await handler(request('read_history_readiness', { room_id: 'room-1', assessment_id: 'assessment-1' }));
+  const payload = await safeResponse.json();
+  assertEquals(payload.data, { history_readiness: { ready: true, result_message_ids: ['result-1'],
+    pending_answer_message_ids: [], unavailable_assessment_ids: [], handled_answer_message_ids: ['answer-1'] } });
+  assertEquals(JSON.stringify(payload).includes('correct_option_ids'), false);
+  assertEquals(JSON.stringify(payload).includes('transfer_basis'), false);
 });

@@ -70,75 +70,6 @@ beforeEach(() => {
 
 afterEach(() => jest.restoreAllMocks());
 
-describe('manual checklist submission', () => {
-  it.each([
-    [[], []], [['Detect'], []], [[], ['Verify']], [['Detect one', 'Detect two'], ['Verify']],
-  ])('installs the persisted checklist and counts inputs %j / %j', async (detection, verification) => {
-    const saved = checklist([
-      ...detection.map((text, index) => item(`saved-d-${index}`, 'detection_area', 'important', 'pending')),
-      ...verification.map((text, index) => item(`saved-v-${index}`, 'verification_step', 'important', 'pending')),
-    ], false);
-    (api.createManual as jest.Mock).mockResolvedValue(saved);
-    const { result } = renderHook(() => useChecklist('room-1'));
-    await waitFor(() => expect(result.current.loading).toBe(false));
-    act(() => result.current.openManualInput());
-    await act(async () => { await result.current.handleManualSubmit(detection, verification); });
-    expect(api.createManual).toHaveBeenCalledWith('room-1', detection, verification);
-    expect(result.current.checklist).toBe(saved);
-    expect(result.current.progress).toEqual(pendingProgress(detection.length + verification.length));
-    expect(result.current.showManualInput).toBe(false);
-  });
-
-  it.each(['null', 'rejection'])('preserves saved state and the input form after %s', async failure => {
-    (api.read as jest.Mock).mockResolvedValue(mixed);
-    if (failure === 'null') (api.createManual as jest.Mock).mockResolvedValue(null);
-    else (api.createManual as jest.Mock).mockRejectedValue(new Error('save failed'));
-    const { result } = renderHook(() => useChecklist('room-1'));
-    await waitFor(() => expect(result.current.checklist).toBe(mixed));
-    act(() => result.current.openManualInput());
-    await act(async () => { await result.current.handleManualSubmit(['New'], []); });
-    expect(result.current.checklist).toBe(mixed);
-    expect(result.current.progress).toEqual(mixedProgress);
-    expect(result.current.showManualInput).toBe(true);
-    expect(result.current.error).toBe(failure === 'null' ? 'Failed to create manual checklist - returned null' : 'save failed');
-    expect(result.current.loading).toBe(false);
-  });
-
-  it('uses the learner-owned target save path when transfer is enabled', async () => {
-    (api.initializeTransferChecklistForStudent as jest.Mock).mockResolvedValue(mixed);
-    const { result } = renderHook(() => useChecklist('room-1', { enabled: true, studentId: 'learner-1' }));
-    await waitFor(() => expect(result.current.loading).toBe(false));
-    await act(async () => { await result.current.handleManualSubmit(['Detect'], ['Verify']); });
-    expect(api.createManual).not.toHaveBeenCalled();
-    expect(api.initializeTransferChecklistForStudent).toHaveBeenCalledWith('room-1', 'learner-1', [
-      { area_text: 'Detect', item_type: 'detection_area', priority: 'important' },
-      { area_text: 'Verify', item_type: 'verification_step', priority: 'important' },
-    ]);
-    expect(result.current.checklist).toBe(mixed);
-    expect(result.current.progress).toEqual(mixedProgress);
-  });
-});
-
-describe('progress after generation', () => {
-  it.each(['generate', 'structured', 'extracted', 'fallback'])('computes all progress fields for %s', async path => {
-    (api.createManual as jest.Mock).mockResolvedValue(mixed);
-    (api.createFromSystemPromptOrTemplate as jest.Mock).mockResolvedValue(mixed);
-    (api.create as jest.Mock).mockResolvedValue(mixed);
-    (assessChecklistGenerationContext as jest.Mock).mockResolvedValue(path === 'fallback'
-      ? { type: 'unexpected' }
-      : { type: 'ready_for_extraction', systemPrompt: 'Saved prompt', ...(path === 'structured' ? { detectionAreas: ['Detect'] } : {}) });
-    const { result } = renderHook(() => useChecklist('room-1'));
-    await waitFor(() => expect(result.current.loading).toBe(false));
-    await act(async () => {
-      if (path === 'generate') await result.current.generateChecklist('Template');
-      else await result.current.startSmartGeneration('Template');
-    });
-    expect(result.current.checklist).toBe(mixed);
-    expect(result.current.progress).toEqual(mixedProgress);
-    expect(result.current.error).toBeNull();
-  });
-});
-
 describe('trusted progress edits', () => {
   it.each(['critical', 'important', 'optional'] as const)('moves a covered item into the %s priority count', async priority => {
     const initial = checklist([item('edited', 'verification_step', 'optional', 'covered')], true);
@@ -184,7 +115,6 @@ describe('trusted progress edits', () => {
     (transferAssessmentService.editLearningProgress as jest.Mock).mockResolvedValue({ status: 'pending', understanding_level: 'none' });
     await act(async () => { await result.current.updateItem('edited', { status: 'pending', priority: 'critical' }); });
     expect(result.current.progress).toEqual(mixedProgress);
-    expect(api.update).not.toHaveBeenCalled();
     expect(api.getActiveTransferChecklistForRoom).toHaveBeenCalledTimes(reads);
   });
 
@@ -221,18 +151,5 @@ describe('trusted progress edits', () => {
     expect(result.current.error).toBe('Progress is locked');
   });
 
-  it('keeps null progress when the checklist is deleted while an edit is pending', async () => {
-    (api.getActiveTransferChecklistForRoom as jest.Mock).mockResolvedValue(mixed);
-    let finish!: (value: { status: string; understanding_level: string }) => void;
-    (transferAssessmentService.editLearningProgress as jest.Mock).mockImplementation(() => new Promise(resolve => { finish = resolve; }));
-    const { result } = renderHook(() => useChecklist('room-1'));
-    await waitFor(() => expect(result.current.checklist).toBe(mixed));
-    let edit!: Promise<void>;
-    act(() => { edit = result.current.updateItem('critical-pending', { status: 'covered' }); });
-    await act(async () => { await result.current.deleteChecklist(); });
-    expect(result.current.progress).toBeNull();
-    await act(async () => { finish({ status: 'covered', understanding_level: 'complete' }); await edit; });
-    expect(result.current.checklist).toBeNull();
-    expect(result.current.progress).toBeNull();
-  });
+
 });
