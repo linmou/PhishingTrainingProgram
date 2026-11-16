@@ -221,7 +221,7 @@ describe('suggestion learning-progress ownership', () => {
     expect(ChecklistService.getChecklistByRoom).not.toHaveBeenCalled();
     expect(invoke.mock.calls[0][1].body.messages[0].content).not.toContain('learner-2');
     expect(invoke.mock.calls[0][1].body.messages[0].content).not.toContain('legacy-owner');
-    expect(invoke.mock.calls[0][1].body.messages[0].content).not.toContain('CURRENT LEARNING PROGRESS');
+    expect(invoke.mock.calls[0][1].body.messages[0].content).not.toContain('\n\nCURRENT LEARNING PROGRESS\n');
   });
 });
 

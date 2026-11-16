@@ -18,7 +18,6 @@ import {
 } from '../demoRoomTemplates';
 import fs from 'fs';
 import path from 'path';
-import { RESPONSE_POLICY } from '../prompts/responsePolicy';
 import { ROLE_PARAMETERS } from '../prompts/pedagogy/parameters/roleParameters';
 import { SCENARIO_TEMPLATES, ScenarioTemplate, requireScenarioTemplate } from '../detectionTemplates';
 import phase0Prompt from '../prompts/phase0AccountSecurityAlertPrompt.json';
@@ -154,7 +153,7 @@ describe('demoRoomTemplates', () => {
 
     expect(config.enabled).toBe(true);
     expect(config.preset).toBe('casual_peer');
-    expect(config.system_prompt).toContain(RESPONSE_POLICY);
+    expect(config.system_prompt).not.toContain('TUTOR POLICY');
     expect(config.system_prompt).toContain(ROLE_PARAMETERS.role.low);
     expect(config.system_prompt).toMatch(/third-person|A person who/i);
     expect(config.prompt_config.detection_areas.length).toBeGreaterThan(0);

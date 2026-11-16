@@ -4,9 +4,13 @@ import { SCENARIO_TEMPLATES } from '../detectionTemplates';
 import { ROLE_PARAMETERS } from '../prompts/pedagogy/parameters/roleParameters';
 import { COMMUNICATION_STYLES } from '../prompts/pedagogy/parameters/communicationStyles';
 import { COGNITIVE_PARAMETERS } from '../prompts/pedagogy/parameters/cognitiveParameters';
+import { ACTIVATE_STYLE_PARAMETER } from '../prompts/index';
+
+// These examples compare style compositions; they run again when style parameters are reactivated.
+const styleIt = ACTIVATE_STYLE_PARAMETER ? it : it.skip;
 
 describe('Prompt Comparison - Real Usage Examples', () => {
-    it('should generate significantly different prompts for casual peer vs supportive adult', () => {
+    styleIt('should generate significantly different prompts for casual peer vs supportive adult', () => {
         const casualPeerPrompt = generateSystemPrompt({
             ...PRESET_CONFIGS.casual_peer,
             detection_areas: SCENARIO_TEMPLATES['Nintendo Switch Deal ($19.99)'].detection_areas.slice(0, 3),
@@ -34,7 +38,7 @@ describe('Prompt Comparison - Real Usage Examples', () => {
         expect(supportiveAdultPrompt).toContain(COGNITIVE_PARAMETERS.concept_density[PRESET_CONFIGS.supportive_adult.cognitive_parameters.concept_density]);
     });
 
-    it('should show practical example with Nintendo Switch scenario', () => {
+    styleIt('should show practical example with Nintendo Switch scenario', () => {
         const nintendoScenario = SCENARIO_TEMPLATES['Nintendo Switch Deal ($19.99)'];
         
         const practicalPrompt = generateSystemPrompt({
@@ -69,7 +73,7 @@ describe('Prompt Comparison - Real Usage Examples', () => {
         expect(practicalPrompt).toContain(COGNITIVE_PARAMETERS.perspective_taking.high);
     });
 
-    it('should demonstrate privacy protection scenario with trusted adult role', () => {
+    styleIt('should demonstrate privacy protection scenario with trusted adult role', () => {
         const privacyScenario = SCENARIO_TEMPLATES['Location Sharing Risks'];
         
         const privacyPrompt = generateSystemPrompt({
@@ -104,7 +108,7 @@ describe('Prompt Comparison - Real Usage Examples', () => {
         expect(privacyPrompt).toContain(COGNITIVE_PARAMETERS.consequence_highlighting.high);
     });
 
-    it('should show length and complexity differences between configurations', () => {
+    styleIt('should show length and complexity differences between configurations', () => {
         const minimalConfig = {
             role: { role: 'high' as const },
             communication_style: {

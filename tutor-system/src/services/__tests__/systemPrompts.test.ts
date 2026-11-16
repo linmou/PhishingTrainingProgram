@@ -6,7 +6,8 @@ import { generateSystemPrompt, PRESET_CONFIGS } from '../systemPrompts';
 import { applyPresetConfiguration } from '../aiService';
 import { SCENARIO_TEMPLATES } from '../detectionTemplates';
 import { ROLE_PARAMETERS } from '../prompts/pedagogy/parameters/roleParameters';
-import { RESPONSE_POLICY } from '../prompts/responsePolicy';
+import { ACTIVE_TUTOR_AGENT_PROMPT } from '../prompts/activeTutorAgentPrompt';
+import { buildEcologicalChatCompletionMessages } from '../ecologicalTutorCall';
 
 describe('System Prompts', () => {
     describe('generateSystemPrompt', () => {
@@ -36,17 +37,17 @@ describe('System Prompts', () => {
 
             const prompt = generateSystemPrompt(config);
 
-            expect(prompt).toContain('knowledgeable tutor in a phishing-training session');
+            expect(prompt).not.toContain('TUTOR POLICY');
             expect(prompt).toContain('## Your Role: Peer Learner');
             expect(prompt).toContain('knowledgeable peer coach');
             expect(prompt).toContain('Test detection area');
             expect(prompt).toContain('Test verification step');
-            expect(prompt).toContain('Keep it short: use no more than 3 sentences and 50 words');
+            expect(ACTIVE_TUTOR_AGENT_PROMPT).toContain('The response is at most three sentences and 50 words.');
         });
 
         /**
-         * File: src/services/prompts/responsePolicy.ts and peer roleParameters.ts
-         * Purpose: verify composition of the shared policy, configured inventory and selected role.
+         * File: src/services/prompts/index.ts, activeTutorAgentPrompt.ts and peer roleParameters.ts
+         * Purpose: the room prompt holds role and inventory; each request adds the tutor policy exactly once.
          */
         it('should compose the shared policy with the configured inventory and peer role', () => {
             const prompt = generateSystemPrompt({
@@ -57,7 +58,8 @@ describe('System Prompts', () => {
 
             expect(prompt).toContain('Visible source clue: sender name is misspelled');
             expect(prompt).toContain('Safety-critical check: review recent login activity');
-            expect(prompt.split(RESPONSE_POLICY)).toHaveLength(2);
+            const system = buildEcologicalChatCompletionMessages(prompt, { scenario_context: '', conversation_history: '', student_message: '' })[0].content;
+            expect(system.split(ACTIVE_TUTOR_AGENT_PROMPT)).toHaveLength(2);
             expect(prompt).toContain(ROLE_PARAMETERS.role.low);
             expect(prompt).not.toContain(ROLE_PARAMETERS.role.high);
         });

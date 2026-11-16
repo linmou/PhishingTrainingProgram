@@ -1,0 +1,176 @@
+{
+  "fingerprint": "07a693effe5d1cebea2eabd71e99e8f59a67973500e21a8766ca9451f88604ea",
+  "checks": {
+    "baseline_room_equals_saved_shell": false,
+    "candidate_room_equals_saved_shell": false,
+    "baseline_matches_class_a_candidate": {
+      "ctx:gift_card_contextual_judgment_real": true,
+      "ctx:library_contextual_judgment": true,
+      "ctx:library_agreement_only": true,
+      "ctx:phone_risk_verdict_after_action_question": true,
+      "ctx:event_one_answer_covers_overlapping_points": true,
+      "ctx:phone_ack_after_completed_task": true,
+      "ctx:phone_contradiction_after_completed_task": true,
+      "ctx:short_link_concise_observation_only": true,
+      "ctx:library_all_tasks_completed": true,
+      "tl:component_0_recognition_confusion": true,
+      "tl:component_3_recognition_done": true,
+      "tl:component_4_no_attempt": true,
+      "tl:component_4_recognition_done": true,
+      "tl:component_5_recognition_confusion": true,
+      "tl:component_5_action_confusion": true,
+      "tl:component_5_bare_agreement": true,
+      "tl:component_5_action_attempt": true,
+      "tl:component_5_later_contradiction": true,
+      "tl:room_unanswered_original": true,
+      "tl:room_completion_unfinished": true,
+      "tl:room_completion_completed": true,
+      "tl:journey_3": true,
+      "tl:journey_5": true
+    }
+  },
+  "units": 23,
+  "targets": 216,
+  "judgments": 648,
+  "calibration": 55,
+  "system_hashes": {
+    "ctx:gift_card_contextual_judgment_real": {
+      "baseline": "e4f89679627f",
+      "candidate": "7e230e42d399",
+      "baseline_chars": 25243,
+      "candidate_chars": 26081
+    },
+    "ctx:library_contextual_judgment": {
+      "baseline": "f32d7b31164e",
+      "candidate": "62e549d30163",
+      "baseline_chars": 24087,
+      "candidate_chars": 24925
+    },
+    "ctx:library_agreement_only": {
+      "baseline": "f32d7b31164e",
+      "candidate": "62e549d30163",
+      "baseline_chars": 24087,
+      "candidate_chars": 24925
+    },
+    "ctx:phone_risk_verdict_after_action_question": {
+      "baseline": "70de0375e8be",
+      "candidate": "aadd2c8f8708",
+      "baseline_chars": 24098,
+      "candidate_chars": 24936
+    },
+    "ctx:event_one_answer_covers_overlapping_points": {
+      "baseline": "8caa652122c7",
+      "candidate": "ca4be0ebe2b5",
+      "baseline_chars": 24407,
+      "candidate_chars": 25245
+    },
+    "ctx:phone_ack_after_completed_task": {
+      "baseline": "70de0375e8be",
+      "candidate": "aadd2c8f8708",
+      "baseline_chars": 24098,
+      "candidate_chars": 24936
+    },
+    "ctx:phone_contradiction_after_completed_task": {
+      "baseline": "70de0375e8be",
+      "candidate": "aadd2c8f8708",
+      "baseline_chars": 24098,
+      "candidate_chars": 24936
+    },
+    "ctx:short_link_concise_observation_only": {
+      "baseline": "2512c85ded95",
+      "candidate": "b646d481d0b2",
+      "baseline_chars": 24150,
+      "candidate_chars": 24988
+    },
+    "ctx:library_all_tasks_completed": {
+      "baseline": "f32d7b31164e",
+      "candidate": "62e549d30163",
+      "baseline_chars": 24087,
+      "candidate_chars": 24925
+    },
+    "tl:component_0_recognition_confusion": {
+      "baseline": "ee88f2842d6b",
+      "candidate": "aee6f4878625",
+      "baseline_chars": 25414,
+      "candidate_chars": 26252
+    },
+    "tl:component_3_recognition_done": {
+      "baseline": "4b981e619aab",
+      "candidate": "bd83a14dda58",
+      "baseline_chars": 24939,
+      "candidate_chars": 25777
+    },
+    "tl:component_4_no_attempt": {
+      "baseline": "302d08700c34",
+      "candidate": "da10908d1a4f",
+      "baseline_chars": 24967,
+      "candidate_chars": 25805
+    },
+    "tl:component_4_recognition_done": {
+      "baseline": "302d08700c34",
+      "candidate": "da10908d1a4f",
+      "baseline_chars": 24967,
+      "candidate_chars": 25805
+    },
+    "tl:component_5_recognition_confusion": {
+      "baseline": "70d6a8e76a69",
+      "candidate": "b08b53f7809a",
+      "baseline_chars": 25196,
+      "candidate_chars": 26034
+    },
+    "tl:component_5_action_confusion": {
+      "baseline": "70d6a8e76a69",
+      "candidate": "b08b53f7809a",
+      "baseline_chars": 25196,
+      "candidate_chars": 26034
+    },
+    "tl:component_5_bare_agreement": {
+      "baseline": "70d6a8e76a69",
+      "candidate": "b08b53f7809a",
+      "baseline_chars": 25196,
+      "candidate_chars": 26034
+    },
+    "tl:component_5_action_attempt": {
+      "baseline": "70d6a8e76a69",
+      "candidate": "b08b53f7809a",
+      "baseline_chars": 25196,
+      "candidate_chars": 26034
+    },
+    "tl:component_5_later_contradiction": {
+      "baseline": "70d6a8e76a69",
+      "candidate": "b08b53f7809a",
+      "baseline_chars": 25196,
+      "candidate_chars": 26034
+    },
+    "tl:room_unanswered_original": {
+      "baseline": "2ce4b0a31a25",
+      "candidate": "8b226b00d961",
+      "baseline_chars": 26327,
+      "candidate_chars": 27165
+    },
+    "tl:room_completion_unfinished": {
+      "baseline": "2ce4b0a31a25",
+      "candidate": "8b226b00d961",
+      "baseline_chars": 26327,
+      "candidate_chars": 27165
+    },
+    "tl:room_completion_completed": {
+      "baseline": "2ce4b0a31a25",
+      "candidate": "8b226b00d961",
+      "baseline_chars": 26327,
+      "candidate_chars": 27165
+    },
+    "tl:journey_3": {
+      "baseline": "4b981e619aab",
+      "candidate": "bd83a14dda58",
+      "baseline_chars": 24939,
+      "candidate_chars": 25777
+    },
+    "tl:journey_5": {
+      "baseline": "70d6a8e76a69",
+      "candidate": "b08b53f7809a",
+      "baseline_chars": 25196,
+      "candidate_chars": 26034
+    }
+  }
+}
