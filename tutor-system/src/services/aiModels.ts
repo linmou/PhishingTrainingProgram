@@ -1,5 +1,9 @@
-/** Frontend model metadata. The build exposes only OAI_MODEL, never provider credentials. */
-export const OAI_MODEL = process.env.REACT_APP_OAI_MODEL?.trim() || process.env.OAI_MODEL?.trim() || '';
+/**
+ * Frontend model metadata. scripts/react-scripts.js bridges OAI_MODEL to REACT_APP_OAI_MODEL.
+ * Read only REACT_APP_* names here: referencing any other process.env key makes the CRA build
+ * inline the whole environment object, exposing every REACT_APP_* value in the public bundle.
+ */
+export const OAI_MODEL = process.env.REACT_APP_OAI_MODEL?.trim() || '';
 
 export type AIModelName = string;
 

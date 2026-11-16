@@ -21,10 +21,10 @@ describe('environment-configured AI model', () => {
       expect(models.AI_MODELS[models.OAI_MODEL].name).toBe('alternate-provider-model');
     });
   });
-  it('supports Node scripts using the canonical model variable', () => {
+  it('ignores the non-public OAI_MODEL name so builds never inline the environment', () => {
     delete process.env.REACT_APP_OAI_MODEL;
     process.env.OAI_MODEL = 'node-configured-model';
-    jest.isolateModules(() => expect(require('../aiModels').OAI_MODEL).toBe('node-configured-model'));
+    jest.isolateModules(() => expect(require('../aiModels').OAI_MODEL).toBe(''));
   });
   it.each([undefined, '', '   '])('has no hard-coded fallback for %p', value => {
     if (value === undefined) delete process.env.REACT_APP_OAI_MODEL;
