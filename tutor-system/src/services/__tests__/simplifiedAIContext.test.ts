@@ -9,7 +9,7 @@ import { assessmentResultMessage, deliveredAnswerRow, deliveredQuestionRow } fro
 import {transferAssessmentService} from '../transferAssessmentService';
 
 jest.mock('../supabase', () => ({ supabase: { from: jest.fn() } }));
-jest.mock('../transferAssessmentService',()=>({transferAssessmentService:{readReview:jest.fn().mockResolvedValue({history_readiness:{
+jest.mock('../transferAssessmentService',()=>({transferAssessmentService:{readAssessmentHistory:jest.fn().mockResolvedValue({history_readiness:{
   ready:true,result_message_ids:[],handled_answer_message_ids:[],pending_answer_message_ids:[],unavailable_assessment_ids:[],
 }})}}));
 
@@ -67,7 +67,7 @@ function messages(count: number): Message[] {
 describe('buildAIContextFromExistingData', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (transferAssessmentService.readReview as jest.Mock).mockResolvedValue({history_readiness:{
+    (transferAssessmentService.readAssessmentHistory as jest.Mock).mockResolvedValue({history_readiness:{
       ready:true,result_message_ids:[],handled_answer_message_ids:[],pending_answer_message_ids:[],unavailable_assessment_ids:[],
     }});
   });
@@ -272,10 +272,10 @@ describe('buildAIContextFromExistingData', () => {
 
   it('reads private readiness in disabled transfer rooms and hides unfinished exit responses',async ()=>{
     mockRoom({...room,transfer_learning_enabled:false});mockPage([deliveredQuestionRow,deliveredAnswerRow] as Message[]);mockPage([]);
-    (transferAssessmentService.readReview as jest.Mock).mockResolvedValueOnce({history_readiness:{ready:true,result_message_ids:[],
+    (transferAssessmentService.readAssessmentHistory as jest.Mock).mockResolvedValueOnce({history_readiness:{ready:true,result_message_ids:[],
       handled_answer_message_ids:[deliveredAnswerRow.id],pending_answer_message_ids:[],unavailable_assessment_ids:[]}});
     const context=await buildAIContextFromExistingData('room',[],deliveredAnswerRow.user_id);
-    expect(transferAssessmentService.readReview).toHaveBeenCalledWith('room',deliveredAnswerRow.assessment_id);
+    expect(transferAssessmentService.readAssessmentHistory).toHaveBeenCalledWith('room',deliveredAnswerRow.assessment_id);
     expect(context).toHaveLength(1);
   });
 
@@ -304,14 +304,14 @@ describe('buildAIContextFromExistingData', () => {
     mockRoom({...room,transfer_learning_enabled:false});
     mockPage([{...deliveredQuestionRow,assessment_options:null}, {...deliveredAnswerRow,assessment_id:null}] as Message[]);mockPage([]);
     await expect(buildAIContextFromExistingData('room',[],deliveredAnswerRow.user_id)).rejects.toThrow('Assessment question options are incomplete');
-    expect(transferAssessmentService.readReview).toHaveBeenCalledWith('room',deliveredQuestionRow.assessment_id);
+    expect(transferAssessmentService.readAssessmentHistory).toHaveBeenCalledWith('room',deliveredQuestionRow.assessment_id);
   });
 
   it('fetches the exact result messages committed by trusted read recovery after history was read',async ()=>{
     const result=assessmentResultMessage('passed',1,deliveredAnswerRow.id);
     mockRoom();mockPage([deliveredQuestionRow,deliveredAnswerRow] as Message[]);mockPage([]);
     const catchup=mockPage([result] as Message[]);
-    (transferAssessmentService.readReview as jest.Mock).mockResolvedValueOnce({history_readiness:{ready:true,result_message_ids:[result.id],
+    (transferAssessmentService.readAssessmentHistory as jest.Mock).mockResolvedValueOnce({history_readiness:{ready:true,result_message_ids:[result.id],
       pending_answer_message_ids:[],unavailable_assessment_ids:[]}});
     const context=await buildAIContextFromExistingData('room',[],deliveredAnswerRow.user_id);
     expect(catchup.in).toHaveBeenCalledWith('id',[result.id]);

@@ -191,3 +191,7 @@ Workflow screenshots use full-page JPEG at quality 75 to bound evidence size dur
 Preserve `evals/promptfoo/results/`: LLM-judge results include rubric evidence beyond pass/fail. `scripts/transfer-assessment-release.config.json` is a frozen historical blocked snapshot; its runner no longer generates releases. See the [Wave 105 retirement audit](transfer-assessment-wave105-audit.md).
 
 Earlier staging findings are recorded in [staging runtime evidence](doc_update_record/documentation_update_record_v2026_09_29_staging_runtime_draft.md) and the [AI-only browser rerun](doc_update_record/documentation_update_record_v2026_09_29_ai_only_rerun.md). The 2026-09-30 workflow run verified tutor progress context and learner assessment results after reload.
+
+## Assessment switch regression (#100)
+
+Run the opt-in `--workflow=assessment-switch` against the selected project and candidate app. It saves assessment off through the tutor dialog, saves again untouched, verifies the legacy flag is preserved, sends ordinary learner evidence, checks per-message analysis markers and visible target progress, generates ordinary tutoring without `prepare_turn`, and checks explicit preparation/delivery rejection. It restores the fixture assessment setting before the runner cleans its generated rows. Run an assessment-on delivery/answer journey alongside this check.

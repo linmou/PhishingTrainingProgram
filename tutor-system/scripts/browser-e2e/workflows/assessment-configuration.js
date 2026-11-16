@@ -7,8 +7,9 @@ const path = require('node:path');
 const { createClient } = require('@supabase/supabase-js');
 const { assertStaging } = require('./assessment-security');
 const { assessmentRoom, deliverFixedAssessment } = require('./assessment-fixture');
+const { openExitAssessment, reloadWithExitPrompt } = require('./assessment-browser-checks');
 const { assertSavedResult } = require('./assessment-result-checks');
-const { query, openRoom, waitForMatch, managementQuery, requestId, writeJson, TIMEOUT } = require('../browser-e2e-support');
+const { query, openRoom, waitForMatch, managementQuery, requestId, writeJson, captureResponses, TIMEOUT } = require('../browser-e2e-support');
 const FLAG = 'TRANSFER_ASSESSMENT_ENABLED';
 
 async function readFlag(client) {
@@ -83,8 +84,10 @@ module.exports = async function assessmentConfiguration(ctx) {
     evidence.room_id = fixture.room.id; evidence.assessment_id = delivered.assessment_id;
     evidence.question_message_id = delivered.question_message_id; persist();
     await openRoom(ctx.studentPage, ctx.appUrl, fixture.room.id);
-    const question = ctx.studentPage.getByTestId(`public-assessment-${delivered.assessment_id}`);
-    await question.waitFor({ timeout: TIMEOUT });
+    // Open questions stay hidden during ordinary chat and appear at the exit prompt.
+    await ctx.studentPage.locator('textarea.comment-input-field').click();
+    await reloadWithExitPrompt(ctx.studentPage);
+    const question = await openExitAssessment(ctx.studentPage, delivered.assessment_id);
     await question.locator('input[value="B"]').check();
     await question.getByRole('button', { name: 'Submit answer' }).click();
     const messages = await waitForMatch(() => query(ctx.client, 'messages', '*', 'room_id', fixture.room.id),
@@ -113,8 +116,7 @@ module.exports = async function assessmentConfiguration(ctx) {
         evidence.original_enabled = original;
         const flag = await http(`/rest/v1/feature_flags?name=eq.${FLAG}&select=enabled`, 'GET');
         assert.equal(flag.status, 200); assert.deepEqual(flag.body, [{ enabled: false }]);
-        for (const operation of ['initialize_checklist', 'join_room', 'edit_learning_progress', 'post_message',
-          'analyze_message', 'prepare_turn', 'send_reviewed', 'read_review', 'process_message']) {
+        for (const operation of ['prepare_turn', 'send_reviewed', 'read_review']) {
           const response = await api(operation, { room_id: fixture.room.id, assessment_id: delivered.assessment_id });
           assert.equal(response.status, 503);
           assert.equal(response.body?.error?.code, 'ASSESSMENT_FEATURE_DISABLED');
@@ -125,6 +127,56 @@ module.exports = async function assessmentConfiguration(ctx) {
         assert(history.body.some(row => row.id === delivered.question_message_id));
         assert(history.body.some(row => row.id === result.id && row.content === result.content));
         evidence.history_readable_while_disabled = true;
+        const readiness = await api('read_history_readiness', { room_id: fixture.room.id, assessment_id: delivered.assessment_id });
+        assert.equal(readiness.status, 200);
+        assert.equal(readiness.body?.data?.history_readiness?.ready, true);
+        assert.deepEqual(Object.keys(readiness.body.data), ['history_readiness']);
+        assert(!JSON.stringify(readiness.body.data).includes('correct_option_ids'), 'Keyless readiness exposed private keys');
+        evidence.keyless_readiness_while_disabled = true;
+
+        const trackingRoom = await ctx.existingRoom('checklist-management');
+        const learnerApi = (operation, fields) => http('/functions/v1/assessment-api', 'POST', {
+          operation, request_id: requestId(), room_id: trackingRoom.id, ...fields,
+        }, ctx.config.anonKey, ctx.student.id);
+        const joined = await learnerApi('join_room', {});
+        assert.equal(joined.status, 200);
+        const initialized = await api('initialize_checklist', { room_id: trackingRoom.id, student_id: ctx.student.id,
+          items: [{ area_text: 'Verify an account warning through the official app', item_type: 'detection_area', priority: 'important' }] });
+        assert.equal(initialized.status, 200);
+        const checklistId = initialized.body?.data?.checklist_id;
+        assert(checklistId, 'Disabled-mode setup returned no learner checklist');
+        const items = await query(ctx.client, 'checklist_items', 'id,status', 'checklist_id', checklistId);
+        assert.equal(items.length, 1);
+        const edited = await api('edit_learning_progress', { room_id: trackingRoom.id,
+          action: 'set_status', item_id: items[0].id, updates: { status: 'partially_covered' } });
+        assert.equal(edited.status, 200);
+        assert.equal((await query(ctx.client, 'checklist_items', 'status', 'id', items[0].id))[0]?.status, 'partially_covered');
+        const posted = await learnerApi('post_message', { content: 'I will ignore the warning link and open the official app myself to verify the account alert.' });
+        assert.equal(posted.status, 200);
+        const messageId = posted.body?.data?.message?.id;
+        assert(messageId, 'Disabled-mode learner message was not saved');
+        const analyzed = await learnerApi('analyze_message', { message_id: messageId });
+        assert.equal(analyzed.status, 200);
+        assert.equal(analyzed.body?.ok, true);
+        const learningEvidence = await api('read_learning_evidence', { room_id: trackingRoom.id, checklist_id: checklistId });
+        assert.equal(learningEvidence.status, 200);
+        evidence.disabled_learning = { room_id: trackingRoom.id, checklist_id: checklistId, message_id: messageId,
+          setup_status: initialized.status, edit_status: edited.status, analysis_status: analyzed.status,
+          evidence_status: learningEvidence.status };
+        await openRoom(ctx.tutorPage, ctx.appUrl, trackingRoom.id);
+        const stopTutoring = await captureResponses(ctx.tutorPage, response => response.url().includes('/functions/v1/ai-api'));
+        let tutoringCalls;
+        try {
+          await ctx.tutorPage.locator('button.ai-generate-btn').click();
+          await ctx.tutorPage.waitForFunction(() => {
+            const value = document.querySelector('.ai-suggestion-box .ai-suggestion-content p')?.textContent?.trim();
+            return value && value !== 'Generating new response...';
+          }, null, { timeout: TIMEOUT });
+        } finally { tutoringCalls = await stopTutoring(); }
+        assert(tutoringCalls.some(call => call.url.includes('/ai-api') && call.status === 200),
+          'Ordinary tutoring did not reach the provider while assessments were disabled');
+        evidence.disabled_tutoring = { provider_calls: tutoringCalls.filter(call => call.url.includes('/ai-api')).length };
+        await ctx.detachRooms();
         evidence.disabled = await snapshot();
         assert.deepEqual(evidence.disabled, evidence.before);
       });

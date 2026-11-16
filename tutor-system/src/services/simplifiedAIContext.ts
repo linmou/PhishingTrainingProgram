@@ -92,7 +92,7 @@ export async function buildAIContextFromExistingData(roomId: string, expectedAss
         let handledAnswerIds: string[]=[];
         if (latestQuestion?.assessment_id) {
             // This common boundary applies to initial, focused and regenerated calls, including disabled transfer rooms.
-            const review=await transferAssessmentService.readReview(roomId,latestQuestion.assessment_id);
+            const review=await transferAssessmentService.readAssessmentHistory(roomId,latestQuestion.assessment_id);
             const readiness=review?.history_readiness;
             if (!readiness || !readiness.ready || !Array.isArray(readiness.result_message_ids) ||
                 !Array.isArray(readiness.pending_answer_message_ids) || readiness.pending_answer_message_ids.length ||

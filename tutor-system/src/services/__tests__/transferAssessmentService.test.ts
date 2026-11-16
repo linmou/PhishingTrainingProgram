@@ -29,6 +29,14 @@ describe('transfer assessment DTO projections', () => {
     await expect(service.readLearningEvidence('room-1', 'checklist-1')).rejects.toThrow('network unavailable');
   });
 
+  it('uses keyless history readiness for ordinary tutoring context', async () => {
+    const history_readiness = { ready: true, result_message_ids: ['result-1'] };
+    const invoke = jest.fn().mockResolvedValue({ data: { ok: true, data: { history_readiness } }, error: null });
+    const service = new TransferAssessmentService({ api: { invoke }, requestId: () => 'request-1' });
+    await expect(service.readAssessmentHistory('room-1', 'assessment-1')).resolves.toEqual({ history_readiness });
+    expect(invoke).toHaveBeenCalledWith({ operation: 'read_history_readiness', request_id: 'request-1', room_id: 'room-1', assessment_id: 'assessment-1' }, undefined);
+  });
+
   it('records page visits with the same supplied key and leaves pre-navigation joins unkeyed', async () => {
     const invoke = jest.fn().mockResolvedValue({ data: { ok: true, data: { room_role: 'student' } }, error: null });
     const service = new TransferAssessmentService({ api: { invoke }, requestId: () => 'request-1' });

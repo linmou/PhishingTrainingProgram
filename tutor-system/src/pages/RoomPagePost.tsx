@@ -70,6 +70,7 @@ const RoomPagePost: React.FC = () => {
         stopTyping,
         aiConfig,
         loadingAI,
+        learningProgressError,
         downloadChatHistory,
         clearChatHistory,
         aiSuggestion,
@@ -649,7 +650,7 @@ const RoomPagePost: React.FC = () => {
     const canViewLearningProgress = Boolean(currentRoom && currentRoom.id === roomId && !roomObserver && (
         (user?.current_role === 'tutor' && user.id === currentRoom.tutor_id) || user?.current_role === 'student'
     ));
-    const learnerLookupScope = JSON.stringify([roomId, currentRoom?.id, currentRoom?.transfer_learning_enabled, user?.id, user?.current_role, roomObserver]);
+    const learnerLookupScope = JSON.stringify([roomId, currentRoom?.id, user?.id, user?.current_role, roomObserver]);
     const activeLearnerLookup = useRef(learnerLookupScope);
     activeLearnerLookup.current = learnerLookupScope;
     const fallbackLearner = useRef(firstPersistedStudentId);
@@ -669,7 +670,7 @@ const RoomPagePost: React.FC = () => {
         };
     }, [learnerLookupScope]);
     const loadLearner = useCallback(async () => {
-        if (!currentRoom?.transfer_learning_enabled || user?.current_role !== 'tutor' || !canViewLearningProgress) return;
+        if (!currentRoom?.id || user?.current_role !== 'tutor' || !canViewLearningProgress) return;
         const running = membershipRead.current;
         if (running?.scope === learnerLookupScope) {
             running.pending = true;
@@ -701,10 +702,10 @@ const RoomPagePost: React.FC = () => {
         })();
         try { await request.promise; }
         finally { if (current()) membershipRead.current = null; }
-    }, [currentRoom?.id, currentRoom?.transfer_learning_enabled, user?.current_role,
+    }, [currentRoom?.id, user?.current_role,
         canViewLearningProgress, learnerLookupScope]);
     const membershipError = useRealtimeInvalidation(learnerLookupScope,
-        currentRoom?.transfer_learning_enabled && user?.current_role === 'tutor' && canViewLearningProgress
+        currentRoom?.id && user?.current_role === 'tutor' && canViewLearningProgress
             ? [{ table: 'sessions', filter: `room_id=eq.${currentRoom.id}` }] : [], loadLearner);
     useEffect(() => { void loadLearner(); }, [loadLearner, firstPersistedStudentId]);
 
@@ -1077,6 +1078,7 @@ const RoomPagePost: React.FC = () => {
                 {/* Comment Input with AI Button */}
                 {canSendMessages ? (
                     <div className="comment-composer">
+                        {learningProgressError && <p role="alert">{learningProgressError}</p>}
                         {currentRoom.practice_type !== 'cyberbullying' && <StudentAIToneControl />}
                         <div className="comment-input-with-ai">
                             <CommentInput
@@ -1221,7 +1223,6 @@ const RoomPagePost: React.FC = () => {
             {roomId && canViewLearningProgress && (
                 <ChecklistPanel
                     roomId={roomId}
-                    transferEnabled={currentRoom.transfer_learning_enabled === true}
                     sharedTargets={currentRoom.practice_type === 'cyberbullying'}
                     studentId={user?.current_role === 'student' ? user.id : transferStudentId}
                     readOnly={user?.current_role === 'student'}

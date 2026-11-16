@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect, useRef, useCallb
 import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, AIAssistantConfigSnapshot, AIInteraction, StudentAIChoice, TutorActionDecision, TutorResponseMode, TransferAssessmentDraft } from '../types';
 import type { AssessmentOptionId } from '../types/assessment';
 import type { CyberbullyingCharacter, CyberbullyingSuggestion } from '../types';
-import type { LearningTargetInput } from '../types/checklist';
 import { supabase } from '../services/supabase';
 import { useAuth } from './AuthContext';
 import {
@@ -20,7 +19,7 @@ import {
 } from '../services/supabase';
 import { sendReviewedTutorResponse, setRoomGuardMode } from '../services/guardModeService';
 import { ChecklistService } from '../services/checklistService';
-import { transferAssessmentService } from '../services/transferAssessmentService';
+import { AssessmentApiRequestError, transferAssessmentService } from '../services/transferAssessmentService';
 import {
   answerLifecycleFromProcessed,
   assertDeliverableReview,
@@ -53,6 +52,7 @@ export const useRoom = () => {
 export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [aiConfig, setAiConfig] = useState<AIAssistantConfig | null>(null);
     const [loadingAI, setLoadingAI] = useState(false);
+    const [learningProgressError, setLearningProgressError] = useState<string | null>(null);
     const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
     const [aiDecision, setAiDecision] = useState<TutorActionDecision | null>(null);
     const [cyberbullyingDraft, setCyberbullyingDraft] = useState<CyberbullyingSuggestion | null>(null);
@@ -87,6 +87,12 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         currentRoom, setCurrentRoom, messages, setMessages, participants, loading,
         activeRoomId, joinRealtimeIds, addDisplayNameToMessage, createRoom, joinRoom, leaveRoom,
     } = useRoomMembership(user, setAIInteractions, setAiConfig);
+    const progressWarningScope = JSON.stringify([currentRoom?.id, user?.id, user?.current_role]);
+    const progressWarningRequest = useRef({ scope: progressWarningScope, sequence: 0 });
+    if (progressWarningRequest.current.scope !== progressWarningScope) {
+        progressWarningRequest.current = { scope: progressWarningScope, sequence: progressWarningRequest.current.sequence + 1 };
+    }
+    useEffect(() => { setLearningProgressError(null); }, [progressWarningScope]);
     const { messageFeedbackStats, getMessageFeedbackStats: handleGetMessageFeedbackStats,
         refreshMessageFeedbackStats, resetFeedback } = useMessageFeedback(currentRoom?.id, user?.id, messages);
 
@@ -177,23 +183,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
         }
 
-        // Assessment answers always use the trusted API boundary. Ordinary messages
-        // retain the legacy path when there is no owner-scoped transfer checklist.
-        let transferChecklist = null;
-        try {
-            const checklistService = ChecklistService as typeof ChecklistService & {
-                getChecklistForStudent?: typeof ChecklistService.getChecklistForStudent;
-                getActiveTransferChecklistForRoom?: typeof ChecklistService.getActiveTransferChecklistForRoom;
-            };
-            transferChecklist = user.current_role === 'student'
-                ? await checklistService.getChecklistForStudent?.(currentRoom.id, user.id) || null
-                : await checklistService.getActiveTransferChecklistForRoom?.(currentRoom.id) || null;
-        } catch (transferError) {
-            if (currentRoom.transfer_learning_enabled) throw transferError;
-            console.warn('Transfer checklist unavailable; using legacy message path:', transferError);
-        }
-        if (user.current_role === 'student' && (currentRoom.practice_type === 'cyberbullying' || options?.assessmentId ||
-            (currentRoom.transfer_learning_enabled && transferChecklist?.progress_policy_version === 'transfer_v1'))) {
+        // Every learner message uses the trusted boundary, regardless of assessment settings.
+        if (user.current_role === 'student') {
+            const warningRequest = { scope: progressWarningScope, sequence: progressWarningRequest.current.sequence + 1 };
+            progressWarningRequest.current = warningRequest;
+            setLearningProgressError(null);
             const answerOptions = options;
             const result = await transferAssessmentService.postMessage({
                 roomId: currentRoom.id,
@@ -214,8 +208,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const analyzeEvidence = async () => {
                     try {
                         await ChecklistService.analyzeStudentMessages(currentRoom.id, user.id, storedMessage.id, user.id);
-                    } catch (analysisError) {
-                        console.warn('Transfer evidence analysis unavailable; message was stored:', analysisError);
+                    } catch {
+                        if (progressWarningRequest.current === warningRequest) {
+                            setLearningProgressError('Your message was saved, but learning progress could not be updated. Ask your tutor to check the learning targets.');
+                        }
                     }
                 };
                 if (answerOptions?.assessmentId) {
@@ -381,30 +377,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 prev.filter(message => message.id !== optimisticMessage.id),
                 [persistedMessage]
             ));
-            if (user.current_role === 'student') {
-                try {
-                    // Targets can be initialized while this earlier ordinary insert is in flight.
-                    if (currentRoom.transfer_learning_enabled && !transferChecklist) {
-                        transferChecklist = await ChecklistService.getChecklistForStudent(currentRoom.id, user.id);
-                    }
-                    if (currentRoom.transfer_learning_enabled && transferChecklist?.progress_policy_version === 'transfer_v1') {
-                        await ChecklistService.analyzeStudentMessages(currentRoom.id, user.id, persistedMessage.id, user.id);
-                    } else {
-                        await ChecklistService.processStudentMessage(
-                            currentRoom.id,
-                            content,
-                            persistedMessage.id,
-                            messages.filter(message => !message.id.startsWith('temp-')).map(message => ({
-                                role: message.user_role === 'student' ? 'user' : 'assistant',
-                                content: message.content,
-                                timestamp: Math.floor(new Date(message.created_at).getTime() / 1000)
-                            }))
-                        );
-                    }
-                } catch (analysisError) {
-                    console.warn('Checklist analysis unavailable; message was stored:', analysisError);
-                }
-            }
+
         }
     };
 
@@ -548,10 +521,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 };
                 transferChecklist = await checklistService.getActiveTransferChecklistForRoom?.(currentRoom.id) || null;
             } catch (transferError) {
-                if (currentRoom.transfer_learning_enabled) throw transferError;
-                console.warn('Transfer preparation unavailable; keeping legacy AI generation:', transferError);
+                if (currentRoom.in_room_assessment_enabled === true) throw transferError;
+                console.warn('Learning progress unavailable for tutor generation:', transferError);
             }
-            if (currentRoom.transfer_learning_enabled) {
+            if (currentRoom.in_room_assessment_enabled === true || (transferChecklist &&
+                transferChecklist.detection_areas.length + transferChecklist.verification_steps.length > 0)) {
                 if (!transferChecklist ||
                     transferChecklist.detection_areas.length + transferChecklist.verification_steps.length === 0) {
                     throw createTransferPreparationError(
@@ -577,7 +551,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     (message as Partial<RoomMessageView>).publicQuestion
                 ).find(question => question?.studentId === checklistOwnerId)?.id;
                 if (readinessAssessmentId) {
-                    const review = await transferAssessmentService.readReview(currentRoom.id, readinessAssessmentId);
+                    const review = await transferAssessmentService.readAssessmentHistory(currentRoom.id, readinessAssessmentId);
                     const readiness = review.history_readiness;
                     if (!readiness || readiness.ready !== true || !Array.isArray(readiness.result_message_ids) ||
                         !Array.isArray(readiness.pending_answer_message_ids) || readiness.pending_answer_message_ids.length ||
@@ -591,10 +565,13 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     expectedAssessmentResultIds = readiness.result_message_ids;
                 }
                 await ChecklistService.analyzeStudentMessages(currentRoom.id, checklistOwnerMessage.user_id, parentMessageId, user.id);
-                const prepared = await transferAssessmentService.prepareAssessment({
+                const prepared = currentRoom.in_room_assessment_enabled !== true ? null : await transferAssessmentService.prepareAssessment({
                     roomId: currentRoom.id,
                     focusStudentMessageId: parentMessageId,
                   checklistId: transferChecklist.id,
+                }).catch(error => {
+                    if (error instanceof AssessmentApiRequestError && error.code === 'ASSESSMENT_FEATURE_DISABLED') return null;
+                    throw error;
                 });
                 if (prepared) {
                     const candidate = createReviewCandidate(prepared);
@@ -679,7 +656,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             await generateCyberbullyingResponse(true);
             return;
         }
-        if (currentRoom.transfer_learning_enabled) {
+        if (currentRoom.in_room_assessment_enabled === true) {
             await generateAIResponse(undefined, currentSuggestionContext.parentMessageId, parameterOverrides);
             return;
         }
@@ -795,48 +772,12 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCurrentRoom(normalizeRoom(updatedRoom));
     };
 
-    const setTransferLearningEnabled = async (enabled: boolean): Promise<void> => {
+    const setInRoomAssessmentEnabled = async (enabled: boolean): Promise<void> => {
         if (!currentRoom || !user || user.id !== currentRoom.tutor_id) {
-            throw new Error('Only the room tutor can configure transfer learning');
+            throw new Error('Only the room tutor can configure in-room assessment');
         }
-        const { data, error } = await supabase.from('rooms')
-            .update({ transfer_learning_enabled: enabled })
-            .eq('id', currentRoom.id)
-            .eq('tutor_id', user.id)
-            .select('*')
-            .single();
-        if (error) throw error;
+        const data = await transferAssessmentService.configureAssessment(currentRoom.id, enabled);
 
-        if (enabled) {
-            const { data: activeSessions, error: sessionError } = await supabase
-                .from('sessions')
-                .select('student_id')
-                .eq('room_id', currentRoom.id)
-                .eq('status', 'active');
-            if (sessionError) throw sessionError;
-
-            const studentId = (activeSessions || []).find((session) => session.student_id)?.student_id;
-            if (studentId) {
-                const legacyChecklist = await ChecklistService.getChecklistByRoom(currentRoom.id);
-                if (legacyChecklist) {
-                    const items: LearningTargetInput[] = [
-                        ...legacyChecklist.detection_areas,
-                        ...legacyChecklist.verification_steps,
-                    ].map(({ area_text, item_type, priority }) => ({
-                        area_text,
-                        item_type,
-                        priority: priority ?? 'important',
-                    }));
-                    if (items.length > 0) {
-                        await ChecklistService.initializeTransferChecklistForStudent(
-                            currentRoom.id,
-                            studentId,
-                            items,
-                        );
-                    }
-                }
-            }
-        }
         setCurrentRoom(normalizeRoom(data));
     };
 
@@ -1169,7 +1110,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         leaveRoom,
         sendMessage,
         setGuardMode,
-        setTransferLearningEnabled,
+        setInRoomAssessmentEnabled,
         generateAIResponse,
         regenerateAIResponse,
         toggleAIAssistant,
@@ -1178,6 +1119,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         stopTyping,
         aiConfig,
         loadingAI,
+        learningProgressError,
         downloadChatHistory,
         clearChatHistory,
         aiSuggestion,

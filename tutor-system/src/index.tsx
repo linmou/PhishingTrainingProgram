@@ -1,3 +1,4 @@
+// Deployment provenance for this frontend build is published at /release.json.
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';

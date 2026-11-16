@@ -29,7 +29,7 @@ An assessment is a tutor turn inside the room. It does not switch the room into 
 
 ## What Is A Transfer Learning Enabled Room
 
-A transfer learning enabled room is an ordinary tutoring room whose **Enable In-Room Assessment** setting has been saved on. The room keeps the same tutor, learner, chat, AI, and Guard controls, but it also supports learner-owned learning targets, evidence-based transfer checks, tutor-reviewed assessment drafts, and persisted answer attempts.
+Learning targets are traced whenever the learner has an active `transfer_v1` checklist. **Enable In-Room Assessment** controls only new assessment preparation and delivery, defaults on for new rooms, and can be turned off without stopping analysis or progress views. The room keeps the same tutor, learner, chat, AI, and Guard controls, but it also supports learner-owned learning targets, evidence-based transfer checks, tutor-reviewed assessment drafts, and persisted answer attempts.
 
 New rooms start with this setting on for all teaching and test templates. Existing rooms retain their saved choice, and tutors can turn it off in AI settings.
 
@@ -60,7 +60,7 @@ The room is ready for transfer-assessment QA only after the setting is saved, th
 
 Use a room with:
 
-1. A transfer learning enabled room: create a room, save **Enable In-Room Assessment** in AI settings, and create or load at least one learning target.
+1. A room with an active learner-owned transfer checklist: create or load at least one learning target. Enable assessment only for assessment-generation checks.
 2. A tutor account and a separate learner account.
 3. An approved learner-owned checklist with at least one target, such as “Verify payment requests through a trusted channel.”
 4. An initial learner message establishing partial understanding, followed by tutoring and a later message demonstrating full understanding of that same target.
@@ -349,3 +349,7 @@ For each manual run, keep:
 - [Assessment draft editor tests](../src/components/__tests__/AssessmentDraftEditor.test.tsx)
 
 The feature file includes one explicitly tagged `@non_feasible` selection scenario that is not currently executable in the BDD suite; treat it as a specification item requiring separate review rather than as passing automated coverage.
+
+### Assessment-off tracing regression (#100)
+
+On staging, turn **Enable In-Room Assessment** off and save. Send a learner message relevant to an approved target. Verify `analysis:<message_id>` in `private.learning_event_inbox`, visible target progress, and the tutor progress panel. Generate a tutor response: ordinary tutoring must remain available and no assessment draft may appear. Direct `prepare_turn` and `send_reviewed` requests must return `IN_ROOM_ASSESSMENT_DISABLED`. Reopen settings and save without touching the checkbox: neither room flag may change. Repeat with assessment on; verify new rooms default on and existing migrated rooms preserve their old choice. Keep existing delivered answers processable after disabling new assessments.

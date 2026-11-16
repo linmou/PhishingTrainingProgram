@@ -927,3 +927,23 @@ defineFeature(feature, (test) => {
     });
   });
 });
+
+// Regression for #100: tracing and tutor context survive the assessment switch.
+it('keeps ordinary tutor generation and analysis when in-room assessment is off', async () => {
+  const state = makeState();
+  transferRoom.in_room_assessment_enabled = false;
+  try {
+    await mountTeacherRoom(state);
+    (generateTutorSuggestion as jest.Mock).mockResolvedValue({
+      success: true, suggestion: 'Check the official site.', contextMessages: [],
+      decision: { mode: 'tutoring', instruction: 'continue' },
+    });
+    await act(async () => { await state.room!.generateAIResponse(); });
+    expect(state.analyzeSpy).toHaveBeenCalled();
+    expect(state.prepareSpy).not.toHaveBeenCalled();
+    expect(state.room!.transferDraft).toBeNull();
+    expect(generateTutorSuggestion).toHaveBeenCalled();
+  } finally {
+    transferRoom.in_room_assessment_enabled = true;
+  }
+});

@@ -6,14 +6,13 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { RoomFeaturesService } from '../services/roomFeaturesService';
 import { SessionChecklist, ChecklistItem, ChecklistProgress, LearningTargetInput } from '../types/checklist';
-import { getAIConfig } from '../services/aiService';
 import { assessChecklistGenerationContext, ChecklistGenerationContext } from '../services/checklistGenerationContext';
 import { useOptionalAuth } from '../contexts/AuthContext';
 import { transferAssessmentService } from '../services/transferAssessmentService';
 import { useRealtimeInvalidation } from './useRealtimeInvalidation';
 import { boundedRead } from './boundedRead';
 
-export interface GenerationModalState {
+interface GenerationModalState {
   mode: 'no_ai_config' | 'empty_system_prompt';
   message: string;
   context: ChecklistGenerationContext;
@@ -126,10 +125,8 @@ export interface UseChecklistReturn {
   showManualInput: boolean;
 
   // Actions
-  generateChecklist: (templateName: string) => Promise<void>;
   updateItem: (itemId: string, updates: Partial<ChecklistItem>) => Promise<boolean>;
   refreshChecklist: () => Promise<void>;
-  deleteChecklist: () => Promise<void>;
   
   // New user interaction actions
   startSmartGeneration: (templateName?: string) => Promise<void>;
@@ -151,7 +148,6 @@ export interface UseChecklistReturn {
 export function useChecklist(roomId: string, transfer?: { enabled: boolean; studentId: string | null }): UseChecklistReturn {
   const auth = useOptionalAuth();
   const user = auth?.user || null;
-  const transferEnabled = transfer?.enabled === true;
   const transferStudentId = transfer?.studentId ?? null;
   const [checklist, setChecklist] = useState<SessionChecklist | null>(null);
   const [priorChecklist, setPriorChecklist] = useState<SessionChecklist | null>(null);
@@ -163,9 +159,9 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
   // New modal states
   const [showGenerationModal, setShowGenerationModal] = useState<GenerationModalState | null>(null);
   const [showManualInput, setShowManualInput] = useState(false);
-  const setupScope = JSON.stringify([roomId, transferEnabled, user?.id, user?.current_role]);
+  const setupScope = JSON.stringify([roomId, user?.id, user?.current_role]);
   const [modalScope, setModalScope] = useState(setupScope);
-  const transferScope = JSON.stringify([roomId, transferStudentId, transferEnabled, user?.id, user?.current_role]);
+  const transferScope = JSON.stringify([roomId, transferStudentId, user?.id, user?.current_role]);
   const [dataScope, setDataScope] = useState(transferScope);
   const loadedScope = useRef<string | null>(null);
   const readRequest = useRef<{ scope: string; pending: boolean; promise: Promise<void>; controller: AbortController } | null>(null);
@@ -174,7 +170,7 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
   const transferPromotionInFlight = useRef<{ scope: string } | null>(null);
   useEffect(() => {
     setDataScope(transferScope);
-    const localDraft = transferEnabled && user?.current_role === 'tutor' ? readLearningTargetDraft(roomId) : null;
+    const localDraft = user?.current_role === 'tutor' ? readLearningTargetDraft(roomId) : null;
     const scopedDraft = localDraft ? draftChecklist(roomId, localDraft) : null;
     setChecklist(scopedDraft);
     setPriorChecklist(null);
@@ -188,7 +184,7 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
       readRequest.current?.controller.abort();
       readRequest.current = null;
     };
-  }, [transferScope, roomId, transferEnabled, user?.current_role]);
+  }, [transferScope, roomId, user?.current_role]);
 
   // Resolving the learner must not discard the tutor's unfinished setup form.
   useEffect(() => {
@@ -198,7 +194,7 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
   }, [setupScope]);
 
   const syncTransferDraft = useCallback(async () => {
-    if (!transferEnabled || !transferStudentId || user?.current_role !== 'tutor') return;
+    if (!transferStudentId || user?.current_role !== 'tutor') return;
     const draft = readLearningTargetDraft(roomId);
     if (!draft || draft.detectionAreas.length + draft.verificationSteps.length === 0
       || transferPromotionInFlight.current?.scope === transferScope) return;
@@ -239,65 +235,7 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
         setLoading(false);
       }
     }
-  }, [roomId, transferEnabled, transferStudentId, user?.current_role, transferScope]);
-
-  // Generate new checklist using TDD system prompt detection with template fallback
-  const generateChecklist = useCallback(async (templateName: string) => {
-    if (!roomId) return;
-    if (transferEnabled) {
-      setError('Transfer learning targets must be approved from room context or entered manually.');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      console.log('🚀 Generating checklist for room:', roomId, 'template fallback:', templateName);
-      
-      // Try to get current AI configuration/system prompt for the room
-      let systemPrompt = '';
-      try {
-        const aiConfig = await getAIConfig(roomId);
-        systemPrompt = aiConfig?.system_prompt || '';
-        console.log('📝 Retrieved system prompt for detection areas extraction');
-      } catch (aiError) {
-        console.log('⚠️ No AI config found, will use template fallback');
-      }
-
-      // Use our new TDD method: try system prompt first, fallback to template
-      const newChecklist = await RoomFeaturesService.checklist.createFromSystemPromptOrTemplate(
-        roomId, 
-        systemPrompt, 
-        templateName
-      );
-      
-      // Check if checklist was created successfully
-      if (!newChecklist) {
-        throw new Error('Failed to create checklist - returned null');
-      }
-      
-      setChecklist(newChecklist);
-      
-      setProgress(progressForChecklist(newChecklist));
-      
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to generate checklist';
-      setError(errorMessage);
-      console.error('Failed to generate checklist:', err);
-      
-      // Log more details for debugging
-      if (err instanceof Error) {
-        console.error('Error details:', {
-          message: err.message,
-          stack: err.stack,
-          cause: (err as any).cause
-        });
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [roomId, transferEnabled]);
+  }, [roomId, transferStudentId, user?.current_role, transferScope]);
 
   const saveTransferTargets = useCallback(async (detectionAreas: string[], verificationSteps: string[]) => {
     const items = [
@@ -325,96 +263,22 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
       console.log('🧠 Starting smart checklist generation for room:', roomId);
       
       // Assess the situation first
-      const context = await assessChecklistGenerationContext(roomId, transferEnabled);
+      const context = await assessChecklistGenerationContext(roomId, true);
 
-      if (transferEnabled) {
-        if (context.type === 'ready_for_extraction') {
-          const detection = (context.detectionAreas || []).filter(text => text.trim());
-          const verification = (context.verificationSteps || []).filter(text => text.trim());
-          if (!detection.length && !verification.length) {
-            throw new Error('No learning targets found. Edit the room configuration or enter targets manually.');
-          }
-          await saveTransferTargets(detection, verification);
-        } else {
-          setShowGenerationModal({
-            mode: context.type,
-            message: 'No learning targets found. Edit the room configuration or enter targets manually.',
-            context,
-          });
+      if (context.type === 'ready_for_extraction') {
+        const detection = (context.detectionAreas || []).filter(text => text.trim());
+        const verification = (context.verificationSteps || []).filter(text => text.trim());
+        if (!detection.length && !verification.length) {
+          throw new Error('No learning targets found. Edit the room configuration or enter targets manually.');
         }
-        return;
+        await saveTransferTargets(detection, verification);
+      } else {
+        setShowGenerationModal({
+          mode: context.type,
+          message: 'No learning targets found. Edit the room configuration or enter targets manually.',
+          context,
+        });
       }
-      const legacyTemplateName = templateName || 'General Scam Indicators';
-      
-      console.log('🔍 Smart generation context assessment:', context);
-      
-      switch (context.type) {
-        case 'no_ai_config':
-          console.log('⚠️ No AI config found, showing generation modal');
-          setShowGenerationModal({
-            mode: 'no_ai_config',
-            message: 'No AI assistant found. Would you like to set up AI first or create a manual checklist?',
-            context
-          });
-          break;
-          
-        case 'empty_system_prompt':
-          console.log('⚠️ Empty system prompt, showing generation modal');
-          setShowGenerationModal({
-            mode: 'empty_system_prompt',
-            message: 'No detection areas found in AI system prompt. Add custom areas or use a template?',
-            context
-          });
-          break;
-          
-        case 'ready_for_extraction':
-          console.log('✅ Ready for extraction, proceeding with smart generation');
-          // If prompt_config already contains structured checklist items, use them directly.
-          const hasStructuredPromptConfigItems = Boolean(
-            context.verificationSteps || (context.detectionAreas && context.detectionAreas.length > 0)
-          );
-          const newChecklist = hasStructuredPromptConfigItems
-            ? await RoomFeaturesService.checklist.createManual(
-                roomId,
-                context.detectionAreas || [],
-                context.verificationSteps || []
-              )
-            : await RoomFeaturesService.checklist.createFromSystemPromptOrTemplate(
-                roomId,
-                context.systemPrompt!,
-                legacyTemplateName
-              );
-          
-          // Check if checklist was created successfully
-          if (!newChecklist) {
-            throw new Error('Failed to create checklist - returned null');
-          }
-          
-          setChecklist(newChecklist);
-          
-          setProgress(progressForChecklist(newChecklist));
-          
-          console.log('✅ Smart generation completed with system prompt extraction');
-          break;
-          
-        default:
-          console.warn('🚨 Unexpected context type, falling back to template generation');
-          // Fallback: just generate using template without showing modal
-          const fallbackChecklist = await RoomFeaturesService.checklist.create(roomId, legacyTemplateName);
-          
-          // Check if checklist was created successfully
-          if (!fallbackChecklist) {
-            throw new Error('Failed to create fallback checklist - returned null');
-          }
-          
-          setChecklist(fallbackChecklist);
-          
-          setProgress(progressForChecklist(fallbackChecklist));
-          
-          console.log('✅ Fallback template generation completed');
-          break;
-      }
-      
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate checklist';
       setError(errorMessage);
@@ -422,7 +286,7 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
     } finally {
       setLoading(false);
     }
-  }, [roomId, saveTransferTargets, transferEnabled]);
+  }, [roomId, saveTransferTargets]);
 
   // Open manual input form
   const openManualInput = useCallback(() => {
@@ -451,46 +315,7 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
     setError(null);
 
     try {
-      if (transferEnabled) {
-        await saveTransferTargets(detectionAreas, verificationSteps);
-        return;
-      }
-      console.log('📝 Creating manual checklist:', { detectionAreas, verificationSteps });
-      
-      // Save manual checklist to database to get proper UUIDs
-      const savedChecklist = await RoomFeaturesService.checklist.createManual(
-        roomId, 
-        detectionAreas, 
-        verificationSteps
-      );
-      
-      // Check if checklist was created successfully
-      if (!savedChecklist) {
-        throw new Error('Failed to create manual checklist - returned null');
-      }
-      
-      setChecklist(savedChecklist);
-      
-      // Set initial progress for manual checklist
-      const total = detectionAreas.length + verificationSteps.length;
-      setProgress({
-        total_areas: total,
-        covered_areas: 0,
-        partially_covered_areas: 0,
-        pending_areas: total,
-        completion_percentage: 0,
-        critical_pending: 0,
-        critical_covered: 0,
-        important_pending: total, // All manual items default to important
-        important_covered: 0,
-        optional_pending: 0,
-        optional_covered: 0
-      });
-      
-      setShowManualInput(false);
-      
-      console.log('✅ Manual checklist created successfully');
-      
+      await saveTransferTargets(detectionAreas, verificationSteps);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create manual checklist';
       setError(errorMessage);
@@ -498,7 +323,7 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
     } finally {
       setLoading(false);
     }
-  }, [roomId, saveTransferTargets, transferEnabled]);
+  }, [roomId, saveTransferTargets]);
 
   // Reads are serialized per viewer scope. Notifications never promote drafts or judge messages.
   const readChecklist = useCallback(async () => {
@@ -515,7 +340,7 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
       do {
         request.pending = false;
         if (loadedScope.current !== transferScope) setLoading(true);
-        const localDraft = transferEnabled && user?.current_role === 'tutor' ? readLearningTargetDraft(roomId) : null;
+        const localDraft = user?.current_role === 'tutor' ? readLearningTargetDraft(roomId) : null;
         setReadError(null);
         try {
           const api = RoomFeaturesService.checklist;
@@ -528,10 +353,13 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
             if (!localDraft || !isOwnerlessTransferError(err)) throw err;
           }
           if (!current()) return;
-          const draft = transferEnabled && user?.current_role === 'tutor' ? readLearningTargetDraft(roomId) : null;
+          const draft = user?.current_role === 'tutor' ? readLearningTargetDraft(roomId) : null;
           if (draft) saved = draftChecklist(roomId, draft);
-          else if (!saved) saved = await boundedRead(api.read(roomId), request.controller.signal);
+          const historical = await boundedRead(api.read(roomId), request.controller.signal);
           if (!current()) return;
+          if (historical?.progress_policy_version === 'transfer_v1') {
+            throw new Error('Unscoped read returned learner progress for a different learner.');
+          }
           const wrongRoom = saved && saved.room_id !== roomId;
           const wrongOwner = saved?.progress_policy_version === 'transfer_v1' && !saved.id.startsWith('draft-') && (
             !saved.student_id || (user?.current_role === 'student' && saved.student_id !== user.id)
@@ -546,7 +374,7 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
             return;
           }
           setChecklist(saved);
-          setPriorChecklist(null);
+          setPriorChecklist(historical?.progress_policy_version === 'legacy_v1' ? historical : null);
           setProgress(saved ? progressForChecklist(saved) : null);
         } catch (err) {
           if (current()) setReadError(err instanceof Error ? err.message : 'Failed to refresh checklist');
@@ -560,16 +388,16 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
     })();
     try { await request.promise; }
     finally { if (current()) readRequest.current = null; }
-  }, [roomId, user?.id, user?.current_role, transferEnabled, transferStudentId, transferScope]);
+  }, [roomId, user?.id, user?.current_role, transferStudentId, transferScope]);
 
   const refreshChecklist = useCallback(async () => {
     if (transferPromotionInFlight.current?.scope === transferScope) return;
-    if (transferEnabled && transferStudentId && user?.current_role === 'tutor' && readLearningTargetDraft(roomId)) {
+    if (transferStudentId && user?.current_role === 'tutor' && readLearningTargetDraft(roomId)) {
       await syncTransferDraft();
     } else {
       await readChecklist();
     }
-  }, [roomId, transferScope, transferEnabled, transferStudentId, user?.current_role, syncTransferDraft, readChecklist]);
+  }, [roomId, transferScope, transferStudentId, user?.current_role, syncTransferDraft, readChecklist]);
 
   // Update checklist item
   const updateItem = useCallback(async (itemId: string, updates: Partial<ChecklistItem>) => {
@@ -649,7 +477,7 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
           return next;
         });
       } else {
-        await RoomFeaturesService.checklist.update(itemId, updates);
+        throw new Error('Only supported learner-owned progress edits are permitted.');
       }
       
       // Refresh checklist to get updated data
@@ -681,27 +509,6 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
   useEffect(() => {
     void syncTransferDraft();
   }, [syncTransferDraft]);
-
-  // Delete checklist
-  const deleteChecklist = useCallback(async () => {
-    if (!roomId) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      await RoomFeaturesService.checklist.delete(roomId);
-      setChecklist(null);
-      setProgress(null);
-      
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to delete checklist';
-      setError(errorMessage);
-      console.error('Failed to delete checklist:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [roomId]);
 
   // Utility: Check if item is completed
   const isItemCompleted = useCallback((itemId: string): boolean => {
@@ -741,10 +548,8 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
     showManualInput: modalScope === setupScope && showManualInput,
 
     // Actions
-    generateChecklist,
     updateItem,
     refreshChecklist,
-    deleteChecklist,
     
     // New user interaction actions
     startSmartGeneration,

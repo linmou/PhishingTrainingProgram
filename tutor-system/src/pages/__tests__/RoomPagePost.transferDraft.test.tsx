@@ -15,6 +15,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import RoomPagePost from '../RoomPagePost';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRoom } from '../../contexts/RoomContext';
+import { supabase } from '../../services/supabase';
 import {
   LEARNER_A_MESSAGE_ID,
   TRANSFER_ROOM_ID,
@@ -26,8 +27,8 @@ import type { Message } from '../../types';
 
 jest.mock('../../contexts/AuthContext');
 jest.mock('../../contexts/RoomContext');
-jest.mock('../../components/ChecklistPanel', () => function MockChecklistPanel() {
-  return <div data-testid="checklist-panel" />;
+jest.mock('../../components/ChecklistPanel', () => function MockChecklistPanel({ studentId }: { studentId: string | null }) {
+  return <div data-testid="checklist-panel" data-student-id={studentId || ''} />;
 });
 jest.mock('../../components/AIAssistantSettings', () => function MockAIAssistantSettings() {
   return <div data-testid="ai-settings-modal" />;
@@ -125,6 +126,27 @@ describe('RoomPagePost transfer review surface', () => {
       </Routes>
     </MemoryRouter>
   );
+
+  it('resolves joined learner membership while assessments are off before any learner message', async () => {
+    const value = (useRoom as jest.Mock)();
+    value.currentRoom = { ...value.currentRoom, tutor_id: 'tutor-1', transfer_learning_enabled: false };
+    value.messages = [];
+    const query = { select: jest.fn().mockReturnThis(), eq: jest.fn().mockReturnThis(),
+      not: jest.fn().mockResolvedValue({ data: [{ student_id: 'joined-learner' }], error: null }) };
+    const from = jest.spyOn(supabase, 'from').mockReturnValue(query as any);
+    renderPage();
+    await waitFor(() => expect(screen.getByTestId('checklist-panel')).toHaveAttribute('data-student-id', 'joined-learner'));
+    expect(query.not).toHaveBeenCalledWith('student_id', 'is', null);
+    from.mockRestore();
+  });
+
+  it('shows a tracking warning separately from successful message delivery', () => {
+    const value = (useRoom as jest.Mock)();
+    value.learningProgressError = 'Your message was saved, but learning progress could not be updated.';
+    renderPage();
+    expect(screen.getByRole('alert')).toHaveTextContent('Your message was saved');
+    expect(screen.queryByText(/Failed to send message/)).not.toBeInTheDocument();
+  });
 
   it('shows the structured review surface for a prepared candidate', () => {
     renderPage();

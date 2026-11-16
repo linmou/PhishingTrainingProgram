@@ -349,8 +349,20 @@ export class TransferAssessmentService {
     return this.request('join_room', { room_id: roomId, ...(visitKey ? { visit_key: visitKey } : {}) });
   }
 
+  async configureAssessment(roomId: string, enabled: boolean): Promise<Room> {
+    const result = await this.request<{ room: Room }>('configure_assessment', { room_id: roomId, enabled });
+    if (!result.room || result.room.id !== roomId || typeof result.room.in_room_assessment_enabled !== 'boolean') {
+      throw new Error('Invalid assessment configuration response');
+    }
+    return result.room;
+  }
+
   readReview(roomId: string, assessmentId: string): Promise<TutorAssessmentReview> {
     return this.request('read_review', { room_id: roomId, assessment_id: assessmentId });
+  }
+
+  readAssessmentHistory(roomId: string, assessmentId: string): Promise<Pick<TutorAssessmentReview, 'history_readiness'>> {
+    return this.request('read_history_readiness', { room_id: roomId, assessment_id: assessmentId });
   }
 
   async readLearningEvidence(roomId: string, checklistId: string): Promise<LearningEvidenceRow[]> {

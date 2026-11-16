@@ -889,7 +889,7 @@ describe('RoomContext learner answer path', () => {
     expect(answer.answerLifecycle?.code).toBe('ANSWER_FORMAT_UNRESOLVED');
   });
 
-  it('keeps an ordinary learner message on the legacy path when the room has no transfer checklist', async () => {
+  it('uses trusted storage even when a historical checklist exists', async () => {
     initialMessages = [learnerAMessageRow];
     (ChecklistService.getChecklistForStudent as jest.Mock).mockResolvedValue({
       ...transferChecklist,
@@ -901,7 +901,7 @@ describe('RoomContext learner answer path', () => {
       await room!.sendMessage('Just chatting', {});
     });
 
-    expect(postMessage).not.toHaveBeenCalled();
+    expect(postMessage).toHaveBeenCalledTimes(1);
   });
 
   // RoomContext.tsx: retry permits ordinary chat, while explicit answers retain the option gate.

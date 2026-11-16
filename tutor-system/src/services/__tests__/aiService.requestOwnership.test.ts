@@ -15,7 +15,7 @@ jest.mock('../checklistService', () => ({ ChecklistService: {
   getChecklistForStudent: jest.fn(),
   getActiveTransferChecklistForRoom: jest.fn()
 } }));
-jest.mock('../transferAssessmentService', () => ({ transferAssessmentService: { readReview: jest.fn() } }));
+jest.mock('../transferAssessmentService', () => ({ transferAssessmentService: { readAssessmentHistory: jest.fn() } }));
 
 const room = {
   id: 'room-request', ai_assistant_enabled: true, ai_assistant_model: OAI_MODEL,
@@ -127,7 +127,7 @@ describe('suggestion room ownership', () => {
 
   it('still blocks provider generation on focused learner assessment readiness with the shared snapshot', async () => {
     const projections = configureQueries(room, null, [deliveredQuestionRow, deliveredAnswerRow]);
-    (transferAssessmentService.readReview as jest.Mock).mockResolvedValue({ history_readiness: {
+    (transferAssessmentService.readAssessmentHistory as jest.Mock).mockResolvedValue({ history_readiness: {
       ready: false, result_message_ids: [], handled_answer_message_ids: [],
       pending_answer_message_ids: [deliveredAnswerRow.id], unavailable_assessment_ids: []
     } });
@@ -135,7 +135,7 @@ describe('suggestion room ownership', () => {
       focusStudentId: deliveredAnswerRow.user_id
     });
     expect(result).toMatchObject({ success: false, error: 'ASSESSMENT_RESULT_UNAVAILABLE: Assessment processing is incomplete.' });
-    expect(transferAssessmentService.readReview).toHaveBeenCalledWith(room.id, deliveredAnswerRow.assessment_id);
+    expect(transferAssessmentService.readAssessmentHistory).toHaveBeenCalledWith(room.id, deliveredAnswerRow.assessment_id);
     expect(projections.filter(query => query.table === 'rooms')).toHaveLength(1);
     expect(invoke).not.toHaveBeenCalled();
   });
