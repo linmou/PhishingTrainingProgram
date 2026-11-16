@@ -34,6 +34,8 @@ describe('aiService external backend failures', () => {
   });
 
   it('returns an error instead of a generic dummy suggestion when the configured AI backend returns 401', async () => {
+    const { ChecklistService } = await import('../checklistService');
+    jest.spyOn(ChecklistService, 'getActiveTransferChecklistForRoom').mockResolvedValue(null);
     const { supabase } = await import('../supabase');
     const mockSupabaseFrom = supabase.from as jest.Mock;
     const mockSupabaseInvoke = supabase.functions.invoke as jest.Mock;

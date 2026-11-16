@@ -1,0 +1,108 @@
+{
+  "intent": "Constructed evaluator-only positive, negative and boundary references for revised contextual-completion judgments.",
+  "version": "contextual-completion-calibration-v1",
+  "author": "continuity_audit",
+  "source_cases": "independent-cases.json",
+  "annotation_status": "Independent auditor labels; root review and actual judge calibration pending.",
+  "holdout_eligible": false,
+  "exposure": "Shared calibration examples; never target inputs or target-prompt examples.",
+  "examples": [
+    {
+      "id": "contextual_gift_advance_pass",
+      "case_id": "gift_card_contextual_judgment_real",
+      "output": {
+        "response": "Look at the words 'crazy deal'. What feeling are those words trying to create?"
+      },
+      "expected": {
+        "contextual_progression": true
+      },
+      "rationale": "Moves to the configured persuasive-language task after the learner's context-sufficient plausibility judgment."
+    },
+    {
+      "id": "contextual_gift_extra_rationale_fail",
+      "case_id": "gift_card_contextual_judgment_real",
+      "output": {
+        "response": "Why would Apple not make enough money from your five minutes to pay you $500?"
+      },
+      "expected": {
+        "contextual_progression": false
+      },
+      "rationale": "Invents an economics explanation requirement and repeats a completed plausibility task."
+    },
+    {
+      "id": "agreement_premature_next_fail",
+      "case_id": "library_agreement_only",
+      "output": {
+        "response": "Good, you spotted the unrealistic reward. How could you check whether the library really sent this?"
+      },
+      "expected": {
+        "unfinished_prerequisite": false,
+        "contextual_progression": false,
+        "component_disclosure": false
+      },
+      "rationale": "Okay provided no plausibility judgment; response attributes mastery, reveals that conclusion without an attempt, and begins another point's action without learner recognition."
+    },
+    {
+      "id": "risk_verdict_continue_behavior_pass",
+      "case_id": "phone_risk_verdict_after_action_question",
+      "output": {
+        "response": "What is one safer thing Nora could do about that post?"
+      },
+      "expected": {
+        "unfinished_prerequisite": true,
+        "contextual_progression": true,
+        "component_disclosure": true
+      },
+      "rationale": "Learner recognition is already established, behavior remains unanswered, and this focused action question does not supply the answer."
+    },
+    {
+      "id": "overlapping_headings_retest_fail",
+      "case_id": "event_one_answer_covers_overlapping_points",
+      "output": {
+        "response": "Now think about the exact place. How could Mira avoid putting the cafe name in a public post?"
+      },
+      "expected": {
+        "unfinished_prerequisite": true,
+        "contextual_progression": false,
+        "component_disclosure": true
+      },
+      "rationale": "Location omission/private sharing is already demonstrated. The action gate is open, so the error is redundant progression, not premature disclosure or ordering."
+    },
+    {
+      "id": "contradiction_ignored_fail",
+      "case_id": "phone_contradiction_after_completed_task",
+      "output": {
+        "response": "You already finished the privacy point. Strangers could send scam texts to that number. What might those texts ask for?"
+      },
+      "expected": {
+        "unfinished_prerequisite": true,
+        "contextual_progression": false,
+        "component_disclosure": false
+      },
+      "rationale": "The explicit contradiction reopens public-audience recognition. Moving to unattempted unwanted-contact recognition ignores it and states a central consequence before its own attempt. The reply is recognition-only, so observation-before-behavior ordering is not the failing metric."
+    },
+    {
+      "id": "all_completed_consolidation_pass",
+      "case_id": "library_all_tasks_completed",
+      "output": {
+        "response": "You checked the oversized promise and chose a separate way to verify who sent it. Those are the two checks for this message."
+      },
+      "expected": {
+        "contextual_progression": true
+      },
+      "rationale": "Consolidates precisely the two demonstrated configured targets without inventing another requirement or demanding another answer."
+    },
+    {
+      "id": "all_completed_extra_test_fail",
+      "case_id": "library_all_tasks_completed",
+      "output": {
+        "response": "Before we finish, explain why the library could not afford to give away that much money."
+      },
+      "expected": {
+        "contextual_progression": false
+      },
+      "rationale": "All configured tasks are already demonstrated; this adds an unconfigured economics explanation and reopens a completed plausibility judgment."
+    }
+  ],
+  "check_count": 16
+}

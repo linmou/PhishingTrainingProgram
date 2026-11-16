@@ -60,7 +60,7 @@ describe('Custom Detection Areas and Verification Steps Test', () => {
 
         // All supplied targets share the same learning inventory.
         expect(generatedPrompt).toContain('## Detection Areas to Focus On:');
-        const targetSection = generatedPrompt.split('## Detection Areas to Focus On:')[1].split('## Default Safe Actions:')[0];
+        const targetSection = generatedPrompt.split('## Detection Areas to Focus On:')[1].split('During tutoring, help teens')[0];
         expect(targetSection.match(/^- /gm)).toHaveLength(7);
 
         // Test that the content is properly formatted
@@ -99,7 +99,7 @@ describe('Custom Detection Areas and Verification Steps Test', () => {
         
         // Should not have any bullet points under these sections
         const detectionSectionIndex = generatedPrompt.indexOf('## Detection Areas to Focus On:');
-        const nextSectionIndex = generatedPrompt.indexOf('## Default Safe Actions:');
+        const nextSectionIndex = generatedPrompt.indexOf('During tutoring, help teens');
         
         const detectionSection = generatedPrompt.substring(detectionSectionIndex, nextSectionIndex);
         

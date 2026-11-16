@@ -1,0 +1,55 @@
+{
+  "intent": "Preserve independently confirmed live grading defects that motivated uniform thinking-judge validation, without overwriting the original scores.",
+  "reviewer": "/root/continuity_audit",
+  "date": "2026-11-13",
+  "snapshot_fingerprint": "2890376a62dd2b465b672fc234055cd9eaddad53057af202f966d0c91e5ac4c5",
+  "verdict": "measurement_changes_required",
+  "coverage": "Targeted review of current-baseline movie/address recognition-done outputs and the original-room/completion-boundary outputs as they became available. This is not a full reannotation of all outputs.",
+  "confirmed_grading_errors": [
+    {
+      "target_id": "component_4_recognition_done__current__r1",
+      "metric": "responsive_progression",
+      "original_pass": true,
+      "independent_pass": false,
+      "evidence": "Tutor changes from the unfinished public-destination behavior to an exact-time observation. Judge explicitly admits it technically abandons the incomplete action but rationalizes comprehensive threat analysis. That preference overrides the frozen per-point requirement."
+    },
+    {
+      "target_id": "component_3_recognition_done__current__r3",
+      "metric": "responsive_progression",
+      "original_pass": true,
+      "independent_pass": false,
+      "evidence": "Tutor switches from the unfinished address behavior to the invitation point. Judge acknowledges the address action was not attempted but excuses the switch as useful hazard identification."
+    },
+    {
+      "target_id": "room_unanswered_original__current__r2",
+      "metric": "responsive_progression",
+      "original_pass": true,
+      "independent_pass": false,
+      "evidence": "Judge treats the learner's bare not-safe verdict after tutor-supplied consequences as sufficient observation understanding. Tutor advances to behavior despite the unsupported recognition meaning."
+    },
+    {
+      "target_id": "room_unanswered_original__current__r3",
+      "metric": "responsive_progression",
+      "original_pass": true,
+      "independent_pass": false,
+      "evidence": "Judge accepts acknowledged recognition and uses agreement as a bridge to action. Frozen T02.1/T02.2 require demonstrated meaning, not this acknowledgment."
+    },
+    {
+      "target_id": "room_unanswered_original__current__r1",
+      "metric": "component_disclosure",
+      "original_pass": false,
+      "independent_pass": true,
+      "evidence": "Judge treats asking how to communicate plans without posting publicly as supplying the safe action. The response names no method and leaves the answer to the learner. Its premature task order is a separate failure."
+    },
+    {
+      "target_id": "room_unanswered_original__current__r3",
+      "metric": "component_disclosure",
+      "original_pass": false,
+      "independent_pass": true,
+      "evidence": "Judge says the tutor should allow the learner to propose a solution rather than directly soliciting the action answer. Soliciting that proposal is precisely what the response does; no behavior answer is disclosed."
+    }
+  ],
+  "counterevidence": "The address recognition-done current r1/r2 replies ask for the same point's missing behavior and pass the three metrics. Thinking ordering judges correctly distinguish observation-only switches from behavior-order failures, and correctly fail the three original-room premature behavior questions. Errors are metric-specific, not proof that all judgments are wrong.",
+  "behavior_observations": "All three current movie recognition-done responses change to timing observations before the destination behavior is attempted. Address current r3 changes to invitations. The original-room current replies stay on the same broad schedule topic but advance to behavior without learner-owned observation meaning. These are distinct progression defects.",
+  "disposition": "Keep the original judgments and raw outputs. The independent new-boundary-calibration.json pins seven deduplicated boundary and positive-control checks before the revised evaluation. Rejudge all preserved references and subsequent candidates under one validated per-metric configuration; do not replace only disputed grades or regenerate unfavorable tutor responses."
+}

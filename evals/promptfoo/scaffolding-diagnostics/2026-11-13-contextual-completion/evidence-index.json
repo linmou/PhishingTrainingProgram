@@ -1,0 +1,8 @@
+{
+  "intent": "Inventory preserved raw inputs, outputs, judgments and execution metadata after model and summary writers closed.",
+  "manifest": "evidence-manifest.json",
+  "location": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/tutor-stage-scaffolding/evals/promptfoo/scaffolding-diagnostics/2026-11-13-contextual-completion",
+  "file_count": 371,
+  "bytes": 23815660,
+  "manifest_sha256": "0dc6d9812b4b7176ba12cb50d9693c97ce29560fce33ee1f4e7e39c1183d530c"
+}

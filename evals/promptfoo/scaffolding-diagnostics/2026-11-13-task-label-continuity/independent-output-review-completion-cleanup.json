@@ -1,0 +1,70 @@
+{
+  "intent": "Preserve independent qualitative review of every cleanup candidate output and distinguish continuity gains from remaining evidence and disclosure failures.",
+  "date": "2026-11-13",
+  "reviewer": "continuity_audit; did not author candidate or generate target outputs",
+  "frozen_fingerprint": "8900d7eb5dba07a2ff6950263c017582ad49fc46420d305b7f042e8785225e53",
+  "system_shell_sha256": "48db842fbb1ee8fe77f1ab33807e8cd333263e93d975792c84165215ae5a1fe8",
+  "reviewed_records": 60,
+  "record_manifest_sha256": "410cb06eb1a3e359e1f88b10a079fead6d37f988e0d8941c8be962fa00621757",
+  "record_manifest_method": "SHA256 of JSON.stringify of sorted filename and raw-file-SHA256 pairs for raw/targets filenames containing __completion_cleanup__",
+  "operational_errors_observed": 0,
+  "status": "All target responses reviewed; machine grading pending at review time. Manual counts below are focused diagnostic observations, not the full aggregate metric.",
+  "findings": [
+    {
+      "case": "component_4_recognition_done",
+      "finding": "All3 cleanup replies stay on the current destination behavior, improving the observed same-point selection from sequence1/3 and labels0/3.",
+      "qualification": "All3 questions supply the central omission action: without naming the theater, without giving away the exact place, or without telling strangers where he will be. This improves continuity while violating the still-unattempted behavior disclosure gate."
+    },
+    {
+      "case": "journey_3 and journey_5 turn2",
+      "finding": "All6 replies stay on the current point's behavior, compared with sequence5/6, labels0/6 and current1/6.",
+      "qualification": "journey_3 r3 gives the full answer before an action attempt: The safe action is to never post your full home address online. If a friend shares theirs, tell them to delete it. The6/6 same-point observation is not6/6 all-metric passage."
+    },
+    {
+      "case": "room_unanswered_original",
+      "finding": "All3 replies still ask behavior before learner-owned observation meaning. r2 repeats tutor-supplied meaning and immediately asks behavior; r3 additionally says Try using a private message. The explicit evidence repair clause did not resolve this observed history."
+    },
+    {
+      "case": "component_5_bare_agreement",
+      "finding": "All3 replies begin behavior after only tutor explanation and learner Okay. r1 asks a safe way to share, r2 asks how to keep the number private, and r3 asks how to check audience and directs attention to a privacy setting.",
+      "qualification": "This creates recognition-before-action failures compared with sequence's recognition-only replies. Earlier sequence replies still had other problems; the metric distinction matters."
+    },
+    {
+      "case": "room_completion_completed",
+      "finding": "All3 replies retest demonstrated content. r2 asks whether naming Regal identifies the place. r1/r3 ask how to omit the theater in a public post even though the learner already said to share exact time and place privately instead of putting those details in a public post.",
+      "basis": "Semantic equivalence counts; requiring a second formulation of the same omission behavior is redundant, not necessary evidence that this point was unfinished."
+    },
+    {
+      "case": "room_completion_unfinished__completion_cleanup__r2",
+      "finding": "Think about private messages supplies the behavior method before an action attempt or explicit action confusion. The other two replies also embed the privacy goal; apply the preserved corrected boundary consistently."
+    },
+    {
+      "case": "journey_5 turn4",
+      "finding": "r1/r3 retest the already-demonstrated public audience; r2 moves to stranger-use consequences, a useful unmet point."
+    }
+  ],
+  "completed_pair_judge_disagreements": {
+    "status": "Observed after initial output review; root second review confirmed all5 false passes. Machine grades preserved.",
+    "metric": "responsive_progression",
+    "machine_pass_independent_fail": [
+      "room_completion_completed__sequence__r1",
+      "room_completion_completed__sequence__r3",
+      "room_completion_completed__completion_cleanup__r1",
+      "room_completion_completed__completion_cleanup__r2",
+      "room_completion_completed__completion_cleanup__r3"
+    ],
+    "learner_observation_evidence": "Ethan gives strangers the exact theater and time, so someone could use those details to find him there.",
+    "learner_behavior_evidence": "I would send the exact time and place privately to the friends who are coming, instead of putting those details in a public post.",
+    "basis": "The sequence questions retest whether strangers can see the public post; cleanup r1/r3 retest omitting location from public sharing; cleanup r2 asks whether the named place identifies location. These meanings are already demonstrated despite being presented under different inventory headings. T02.2 counts semantic equivalence, not heading-specific repetition.",
+    "machine_rationale": "The judge treated audience or location as a new unmet point after completing exact-time coordination, and accepted cleanup r2 as refining whether Regal is exact enough to identify the place.",
+    "counterconsideration": "Asking the learner to compose an actual new public message could be a transfer/application exercise, and Regal alone could raise a separate precision question. The frozen task does not declare either as a required new demonstration, and these responses primarily repeat the already-established omission or observation.",
+    "root_adjudication": "Root inspected all9 completed-pair replies across labels, sequence and cleanup alongside exact learner evidence, and agreed that all9 retest demonstrated meaning. A public-caption example is not a separate required task. Root participated in candidate refinement, so this is a second review, not an additional blind independent auditor.",
+    "manual_completed_pair_progression": {"labels": "0/3", "sequence": "0/3", "completion_cleanup": "0/3"},
+    "implication": "Preserve original automatic scores and display the adjudicated completed-pair result separately. Known-error adjustments may be reported as partial corrections, not as a fully reannotated dataset."
+  },
+  "interpretation": {
+    "supported": "Clarifying completion language improved same-point selection on these recognition-to-action cases, but the resulting tutor remains unreliable about learner evidence and answer disclosure.",
+    "not_established": "This small development comparison does not establish population-wide reliability, human learning benefit, or that generic completion wording is the only causal mechanism.",
+    "grounding": "No requirement incompatibility was identified: a focused action question without its answer after learner observation, or observation repair after mere agreement, can satisfy the combined requirements. Observed failures concern model conformance and residual evaluator error."
+  }
+}

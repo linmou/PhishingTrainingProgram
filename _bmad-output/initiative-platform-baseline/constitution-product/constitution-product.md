@@ -87,6 +87,7 @@ Parent links for the tutoring constitution (applied on 2026-10-22 with the owner
 | P4 Explainability for human supervision; H4 | P2 |
 | H1 No falsehoods | P4 |
 | R2 Protective instruction before exploration | P3 (root rule R6) |
+| R6 Repair foundational understanding before progression (added 2026-11-15, tutoring constitution 1.1) | P1 |
 
 ## Decision record and revision authority
 

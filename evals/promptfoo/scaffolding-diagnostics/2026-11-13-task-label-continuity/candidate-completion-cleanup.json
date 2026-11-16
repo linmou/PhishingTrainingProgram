@@ -1,0 +1,26 @@
+{
+  "intent": "Test whether conflicting generic completion and progression rules cause the retained-heading sequence candidate to leave unfinished tasks.",
+  "base_arm": "sequence",
+  "changed_factor": "Replace four generic completion/progression clauses and add one evidence rule. Keep the same retained headings, task labels, task content, sequence instruction, model, cases and judging protocol.",
+  "hypothesis": "Task labels and an appended sequence rule are insufficient when existing policy equates a correct contribution with a completed point. Distinguishing task completion from point completion may reduce premature point switching and repair inherited premature transitions.",
+  "replacements": [
+    {
+      "from": "Treat a point as covered only when the student has demonstrated the idea in any of their messages; semantically equivalent wording counts.",
+      "to": "Treat a point as covered only when this learner's own answers demonstrate both its Observation task and its Behavior task; semantically equivalent wording counts. Demonstrating only the observation completes that task, not the whole point."
+    },
+    {
+      "from": "Acknowledge a correct contribution briefly when useful, then address one remaining relevant target.",
+      "to": "Acknowledge a correct contribution briefly when useful. After a demonstrated Observation task, address the same point's unfinished Behavior task. Move to the next point's Observation task only after both tasks of the current point are demonstrated."
+    },
+    {
+      "from": "Never ask more than one question, repeat a covered concept or the answered point, ask a broad \"What else?\" question, or produce a question chain.",
+      "to": "Never ask more than one question, retest a task the learner has already demonstrated, ask a broad \"What else?\" question, or produce a question chain. Working on the unfinished Behavior task of a point whose Observation task is complete is progression, not repetition."
+    },
+    {
+      "from": "After a correct answer, progress instead of repeating/re-testing it.",
+      "to": "After a correct observation answer, progress to the same point's Behavior task without retesting that observation. After a correct behavior answer, move to another point only when both tasks of the current point are demonstrated."
+    }
+  ],
+  "append": "Determine completion from this learner's actual answers, even if an earlier tutor moved on or a progress label says covered. A tutor explanation, a yes/okay agreement, or a bare safe/not-safe verdict does not by itself demonstrate the observation and its meaning. If the learner has not demonstrated the current point's Observation task, return to that task and ask one focused question that lets the learner explain the missing meaning before requesting its Behavior task.",
+  "limits": "Development refinement using observed failures; not a holdout. Does not change the disclosure rubric or claim that the underlying learning-target inventory has no overlap."
+}

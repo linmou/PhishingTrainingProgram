@@ -1,0 +1,114 @@
+{
+  "intent": "Independently reconcile final machine summaries and preserve semantic disagreements without overwriting grades.",
+  "reviewer": "final_review; did not author candidates, cases, generations or summary helper",
+  "date": "2026-11-13",
+  "frozen_fingerprint": "8c5f19e0fb1ecc4fd32daa8d30a3b42aa1ef60cd2055345eb228789bf74f2a43",
+  "summary_sha256": "0805bf477c571703f6e91d4c36c99ae74ca55a43bf98775590b90f3494917312",
+  "prior_output_review_sha256": "1c0f40670c6e332441db4dff35b1f7d39b5cce840ff59416ea5cb5ae0b68cc34",
+  "verdict": "Numerical reconciliation clear; no candidate accepted.",
+  "verification": {
+    "targets_valid": 81,
+    "judgments_saved": 243,
+    "judge_errors": 0,
+    "checks": [
+      "All 81 target and 243 judgment hashes independently verified against detailed summary",
+      "Three arm metric totals and all-three joint counts recomputed from raw verdicts",
+      "All 27 case-arm partitions recomputed",
+      "Both requested same-output pairwise 2x2 matrices recomputed for every arm",
+      "All three paired arm comparisons recomputed, including exact pass-to-fail and fail-to-pass IDs",
+      "Both controlled pairs checked for every arm and repetition",
+      "Detailed summary hash matches compact summary",
+      "Two nonoverlapping budget intervals total 7.0101667 active minutes; interruption excluded"
+    ]
+  },
+  "machine_counts": {
+    "denominator_per_arm": 27,
+    "metric_order": [
+      "contextual_progression",
+      "unfinished_prerequisite",
+      "component_disclosure"
+    ],
+    "baseline": [
+      21,
+      25,
+      26
+    ],
+    "candidate": [
+      23,
+      24,
+      24
+    ],
+    "task_meaning": [
+      22,
+      27,
+      26
+    ],
+    "all_three": [
+      18,
+      18,
+      21
+    ]
+  },
+  "semantic_review": {
+    "scope": "Reviewed prior independent observations against final raw responses, task meanings and machine rationales. This is a bounded disagreement audit, not a full replacement human annotation set.",
+    "confirmed_failures": [
+      "All three arms fail the overlapping meeting-plan progression boundary in all three repetitions.",
+      "Task-meaning gift repetition 3 requires saying the completed plausibility question aloud.",
+      "Task-meaning library judgment repetition 3 asks an extra generic action after a completed judgment.",
+      "Task-meaning agreement repetition 2 discloses the plausibility answer after only Okay."
+    ],
+    "disagreements": [
+      {
+        "metric": "contextual_progression",
+        "machine": "pass",
+        "independent": "fail under prior task-specific interpretation",
+        "ids": [
+          "library_contextual_judgment__baseline__r1",
+          "library_contextual_judgment__baseline__r2",
+          "library_contextual_judgment__baseline__r3",
+          "library_contextual_judgment__candidate__r2"
+        ],
+        "basis": "Generic what-should-you-do questions after the completed plausibility judgment do not identify a genuinely missing task meaning. The judge assumes they elicit source verification; the prior independent review classifies them as extra action demands. Near-identical baseline repetition 2 and task_meaning repetition 3 receive opposing grades, demonstrating unstable interpretation.",
+        "counterconsideration": "A generic action question can be interpreted as inviting the still-unmet source-verification behavior. Resolve this ambiguity prospectively rather than changing selected raw labels."
+      },
+      {
+        "metric": "component_disclosure",
+        "machine": "pass",
+        "independent": "fail under retained privacy-goal boundary",
+        "ids": [
+          "phone_risk_verdict_after_action_question__candidate__r1",
+          "phone_risk_verdict_after_action_question__candidate__r2"
+        ],
+        "basis": "Both prescribe keeping the number private before an action attempt; this supplies part of the configured private-sharing behavior even though the exact removal method is left open.",
+        "counterconsideration": "The judge treats privacy as a risk dimension rather than the central action. This repeats the goal-versus-method boundary already adjudicated in the preceding experiment."
+      },
+      {
+        "metric": "component_disclosure",
+        "machine": "pass",
+        "independent": "fail",
+        "ids": [
+          "gift_card_contextual_judgment_real__candidate__r2"
+        ],
+        "basis": "Instead of clicking the link prescribes the configured Don't click behavior before a link-action attempt. The judge says no specific action is supplied, overlooking that negative action."
+      },
+      {
+        "metric": "component_disclosure",
+        "machine": "inconsistent",
+        "ids": [
+          "gift_card_contextual_judgment_real__candidate__r1",
+          "gift_card_contextual_judgment_real__task_meaning__r2"
+        ],
+        "basis": "Both ask why scammers use exciting words. Candidate fails because scammers allegedly reveals the central risky conclusion; task_meaning passes. Neither supplies the actual excitement-to-urgency mechanism. Treat as a residual evaluator-boundary disagreement, not a target improvement."
+      }
+    ],
+    "cross_metric_caution": "Candidate gift repetitions 2 and 3 can pass contextual_progression by selecting an unmet link task while failing unfinished_prerequisite for beginning its behavior before observation. Do not treat every differing metric result as an evaluator contradiction.",
+    "counterevidence": "All arms consolidate the all-complete library case 3/3 and correct the explicit phone contradiction 3/3. Task_meaning advances to appropriate new observation on gift and library judgment cases 2/3 each."
+  },
+  "acceptance": {
+    "overall_threshold": "Both candidate arms clear the automatic 80% marginal thresholds, but this is insufficient.",
+    "non_regression": "First candidate has machine pass-to-fail changes on all three metrics; task_meaning has progression and disclosure regressions against baseline.",
+    "pairs": "Judgment-versus-agreement pair passes only 1/3 for each candidate arm; all-repetition gate fails. Task_meaning passes acknowledgment-versus-contradiction 3/3.",
+    "decision": "Reject both prompt candidates for acceptance. Preserve useful generalized specs/rubrics/cases and separate request-routing repair; residual repetition and evaluator instability remain.",
+    "limitations": "Nine exposed development cases, three repetitions, no unseen holdout, no human-learning measurement. Calibration 16/16 does not establish perfect actual-output grading."
+  }
+}

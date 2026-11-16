@@ -1,0 +1,41 @@
+{
+  "intent": "Independently audit the one additional completion-policy refinement before model execution.",
+  "reviewer": "continuity_audit; did not author candidate recipe",
+  "date": "2026-11-13",
+  "candidate": "candidate-completion-cleanup.json",
+  "candidate_sha256": "1ade0c98f9ba143a24b84c47664bf0ff4c1996855e4ea95f19c2121b33f75d93",
+  "base_arm": "sequence",
+  "base_fingerprint": "077b2d5b6920a0c5704db8e184946623ca653b857ce65ccb208ebb3907bd78fd",
+  "verdict": "clear for the focused development comparison; outcome and full acceptance unassessed",
+  "grounding": {
+    "requirements": ["T02.1", "T02.2"],
+    "reason": "Distinguishing demonstrated observation from completed point directly implements observation-before-behavior and evidence-based continuity. Earlier tutor progress or a covered label cannot substitute for this learner's demonstrated meaning. No constitutional priority or new exception is introduced.",
+    "disclosure": "The existing separate component-attempt rule remains operative; this candidate does not weaken it."
+  },
+  "checks": {
+    "recipe_scope": "Exactly four generic completion/progression substitutions and one appended learner-evidence repair rule, layered on unchanged sequence arm.",
+    "sequence_shells_checked": 27,
+    "replacement_occurrences": 108,
+    "each_replacement_needle_unique_per_shell": true,
+    "knowledge_point_headings_unchanged": true,
+    "inventory_task_payload_unchanged": true,
+    "case_names_or_case_specific_answers_added": false,
+    "new_student_output_contract_fields": false,
+    "independently_applied_system_shell_hash": "48db842fbb1ee8fe77f1ab33807e8cd333263e93d975792c84165215ae5a1fe8",
+    "application_method": "Each exact replacement once, then two newlines and append text. Final executor transform must match or explain whitespace-only differences."
+  },
+  "interpretation_limits": [
+    "Existing phrases about a correct contribution, answered point and demonstrated idea plausibly compete with task-level progression; source inspection does not prove they caused the observed failures.",
+    "This arm changes generic completion policy in addition to labels and appended sequence, so its comparison is an additional refinement rather than evidence for labels alone.",
+    "The refinement was developed after examining current, labels and sequence failures; all cases remain exposed development evidence, not holdout validation.",
+    "Target behavior, judge protocol, case selection and thresholds must remain identical in the next freeze. Existing missingness and raw results remain preserved."
+  ],
+  "execution_freeze_review": {
+    "fingerprint": "8900d7eb5dba07a2ff6950263c017582ad49fc46420d305b7f042e8785225e53",
+    "frozen_current_sources_verified": 36,
+    "v11_old_arm_jobs_and_shells_exactly_equal": true,
+    "v11_cases_trajectories_settings_judge_protocol_rubrics_calibration_thresholds_exactly_equal": true,
+    "cleanup_system_shell_hash_matches_independent_application": true,
+    "verdict": "V12 execution freeze verified; cleanup result and comparative acceptance still pending."
+  }
+}

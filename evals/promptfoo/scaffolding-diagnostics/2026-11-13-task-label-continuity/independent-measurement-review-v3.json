@@ -1,0 +1,40 @@
+{
+  "intent": "Review the general judge-protocol repair against the four observed calibration defects before recalibration.",
+  "reviewer": "/root/continuity_audit",
+  "date": "2026-11-13",
+  "verdict": "clear",
+  "scope": "Measurement design integrity, not executed calibration or target behavior acceptance.",
+  "snapshot": "raw/frozen-v3.json",
+  "snapshot_fingerprint": "84f81f56545c148239f8b8dfc4732f7e6876b2f4a7db583319159120e7291ed7",
+  "runner_sha256": "f6d10df0b6c3b999136c437c9698eb81f84724a6b64d15edff373d535f1c5e81",
+  "prior_review": "independent-calibration-review-v2.json",
+  "verification": {
+    "source_hashes_verified": 30,
+    "deep_equal_to_v2": ["cases", "calibration", "rubrics", "shells", "jobs", "trajectories", "settings", "thresholds", "partitions"],
+    "target_candidate_hashes": "Unchanged from independent-preparation-review.json.",
+    "changed_factor": "Judge protocol now records the current point, learner evidence and actual reply components before applying the single metric's explicit decision procedure. Parser validates these extra evidence strings. All 32 calibration checks will be rerun in calibration-v3."
+  },
+  "findings": [
+    {
+      "id": "M1",
+      "status": "clear",
+      "evidence": "Ordering procedure first requires action content, preventing recognition-only disclosure from becoming an ordering failure. This follows T02.1 rather than changing its expected labels."
+    },
+    {
+      "id": "M2",
+      "status": "clear",
+      "evidence": "Disclosure checks every supplied answer against the same learner's same-component attempt or confusion across the full history. It distinguishes permission from current understanding, preserves earlier attempts after contradiction, and includes trailing advice. These are existing T01.1 boundaries."
+    },
+    {
+      "id": "M3",
+      "status": "clear",
+      "evidence": "Progression maps the response to the outstanding point's component meaning rather than broad topic overlap. Its conditions preserve continued useful support and advance after completion under T02.2."
+    },
+    {
+      "id": "M4",
+      "status": "clear",
+      "evidence": "The revised protocol contains no calibration IDs, expected-answer lookup or movie/phone exceptions. Added evidence fields ask for observable attribution rather than target rationale."
+    }
+  ],
+  "execution_condition": "Run all 32 unchanged calibration checks under this exact protocol. A failed calibration remains a measurement blocker; independently inspect generated-output judgments even after calibration passes."
+}

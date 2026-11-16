@@ -45,15 +45,12 @@ const metadata = {
   scenario_template: 'Account Security Alert',
   source_files: [
     'tutor-system/src/services/prompts/index.ts',
-    'tutor-system/src/services/prompts/basePrompt.ts',
+    'tutor-system/src/services/prompts/activeTutorAgentPrompt.ts',
     'tutor-system/src/services/prompts/presets.ts',
     'tutor-system/src/services/prompts/pedagogy/parameters/roleParameters.ts',
     'tutor-system/src/services/prompts/pedagogy/parameters/communicationStyles.ts',
     'tutor-system/src/services/prompts/pedagogy/parameters/cognitiveParameters.ts',
   'tutor-system/src/services/prompts/pedagogy/parameters/emotionalParameters.ts',
-    'tutor-system/src/services/prompts/responsePolicy.ts',
-    'tutor-system/src/services/prompts/pedagogy/techniques/scaffoldingTechniques.ts',
-    'tutor-system/src/services/prompts/content/cybersecurity/detectionRules.ts',
     'tutor-system/src/services/detectionTemplates.ts'
   ],
   git_commit: 'pending-review',

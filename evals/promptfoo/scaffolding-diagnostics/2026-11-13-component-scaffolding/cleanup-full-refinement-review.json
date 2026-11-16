@@ -1,0 +1,27 @@
+{
+  "intent": "Independently audit the full assembled prompt after the earlier partial-cleanup audit missed room-generator directives.",
+  "reviewer": "/root/focused_audit",
+  "date": "2026-11-13",
+  "verdict": "clear",
+  "scope": "Final bounded diagnostic candidate; no model-conformance or release acceptance claim.",
+  "candidate": {
+    "path": "candidate-cleanup-full.json",
+    "sha256": "352fac8f279a32df6496b7ad4351c43ce5b9bec15973f5d5b010e99a9d1139e6",
+    "parent": "instruction",
+    "replacement_count": 9,
+    "presentation": "Original full learning inventories, unchanged template histories."
+  },
+  "review_surface": "Read the complete composed system prompt, including room-level role/style/cognitive/emotional/learning-process text, inventory and defaults, active decision policy, content-precision sections, assessment policy, and final component policy. Checked replacement occurrences for all27 fixed cases spanning six templates and both roles.",
+  "execution_source": {"path":"refine.cjs","sha256":"179bf65ea22051600ed0448af682b1370236b5f73a8cca41c8ba823e676ae580","verdict":"clear","evidence":"Selected recipe and arm propagate through fixed and actual-history trajectory paths; original comparison source/settings guards remain. Raw records and frozen configuration identify cleanup_full. The convenience summary retains a hardcoded cleanup metric key and must be relabeled from frozen.arms when reporting; this does not alter requests or judgments."},
+  "findings": [
+    {"status":"clear","evidence":"All nine before clauses occur exactly once and are absent after replacement in every checked prompt."},
+    {"status":"clear","evidence":"The three room-generator rules missed by the six-clause recipe now explicitly preserve recognition/action opportunities and no longer require an action answer after recognition correction."},
+    {"status":"clear","evidence":"Immediate protection still requires stopping the unsafe action and giving a concrete safe alternative; the component gate explicitly exempts protection."},
+    {"status":"clear","evidence":"No remaining unconditional ordinary correction-to-safe-action mandate was found in the fully rendered prompt. Existing generic teaching-method and explanation permissions are qualified by the explicit component policy."},
+    {"status":"clear","evidence":"Changes are generic policy corrections grounded in T01.1/T02.1/T02.2, with no case IDs, expected-answer matching, selected learner quotes or template-specific exceptions."},
+    {"status":"limitation","evidence":"Direct-style examples, Default Safe Actions and generic method-request guidance remain. They may empirically encourage premature answers despite the eligibility rule; this experiment does not remove or isolate every possible prompt influence."}
+  ],
+  "comparison": "The extra three edits versus cleanup-v1 isolate the remaining mandatory room-level directives on the same frozen fixed histories/settings. Controlled trajectories have arm-specific generated histories, so their comparison is a journey-level diagnostic rather than an identical-history single-turn contrast.",
+  "measurement": "The single repaired disclosure judge retains known calibration failures. Keep automated scores provisional and separate independent AI disclosure adjudication from human gold or full acceptance.",
+  "prior_audit": "cleanup-refinement-review.json retains the initial overbroad clearance and its correction; no historical evidence was overwritten."
+}

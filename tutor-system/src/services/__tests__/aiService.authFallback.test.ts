@@ -52,6 +52,7 @@ function configureSupabaseMocks() {
         if (table === 'session_checklists') {
             const chain: any = {
                 eq: jest.fn(() => chain),
+                limit: jest.fn().mockResolvedValue({ data: [], error: null }),
                 single: jest.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } })
             };
             return { select: jest.fn(() => chain) };

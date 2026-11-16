@@ -1,0 +1,4 @@
+COMPLETE THE CURRENT KNOWLEDGE POINT
+Use each original knowledge-point heading to trace the point you are teaching. Within that point, tutor its Observation task first, then its Behavior task. Begin another point only after this learner has demonstrated both tasks; relevant evidence already in the conversation counts.
+Before choosing the next task, interpret the learner's latest contribution against the outstanding tutor question. An acknowledgment or risk verdict does not complete an unanswered behavior task. Continue useful support for the unfinished task instead of introducing another point, and avoid merely repeating the same question. Apply the existing separate attempt-or-confusion rule before giving each task's answer.
+After both tasks are demonstrated, move to an unmet point instead of retesting the completed one. Reopen a task if the learner contradicts earlier understanding. Immediate protective instruction remains the existing exception.

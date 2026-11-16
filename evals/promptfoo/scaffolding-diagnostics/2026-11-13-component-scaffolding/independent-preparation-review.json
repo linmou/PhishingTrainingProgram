@@ -1,0 +1,59 @@
+{
+  "intent": "Audit focused tutoring experiment preparation independently of candidate authorship and distinguish readiness from observed model conformance.",
+  "reviewer": "/root/focused_audit",
+  "date": "2026-11-13",
+  "verdict": "clear",
+  "scope": "Static candidate, rubric, dataset and harness preparation; live calibration and candidate response audit remain separately required.",
+  "snapshot_sha256": {
+    "candidate-policy.txt": "c7c6609786e0d3f2c3469054ea77295e3e2f095e174d2d28aab7bf42ef890301",
+    "rubrics.json": "67a0a1607054b09363d0f4b2c5cbea8bfb51a5d53cfdb9cc5f6642a2619c691d",
+    "prepare.cjs": "6a8ec1d16fd4e5e745ce51b6cb13b0f57c96490ba40df84e2fad05751177a62f",
+    "run.cjs": "6353db792cd5db8de2dd4ab6c9b829bb44619b256d028680025c0bfd7fd92bda",
+    "harness.test.cjs": "361dc43d67a6d16b9731c92726b3b767374439c9bbcf9ebfa2c8ca9e6bb58f35",
+    "generated/v2/cases.json": "718377d9c2196ce113b195466b7b4f7da1c7da3e3274b09a35391d0906d7e44e",
+    "generated/v2/trajectories.json": "cdfb524e1d67fce1dc81816f5ee10105d71789f89f9fe085cb0caadf82876144",
+    "existing-case-audit.json": "f14e141e6cc85488e477e264762510995f863083be7cfe2cb36955cf3a87cc9b",
+    "tutor-system/docs/ai-behaviors/tutor-behavior-specification.md": "152c747fa777c75f66201b0d626de7b1af549a31e447675c8a6d80a27c806457",
+    "tutor-system/docs/ai-behaviors/tutor-behavior-evaluation-plan.md": "e8a8cfeeb1c7ac501b3ca69a4c4409e47b4abcad4f560c85cbcf3eeee4744714"
+  },
+  "grounding": "The specification's status-only review linkage preserves the previously reviewed substantive T01/T02 clarification. P2/R1 governs separate component opportunities; R2 retains protection; H1-H4 remain constraints.",
+  "changed_factors": [
+    "Merged Notice-action baseline versus a component-specific teaching policy replacing the existing policy once.",
+    "Instruction-only candidate versus the same candidate with teacher-reference labels replacing headings; original learning-point content is preserved exactly.",
+    "New component-specific rubrics and fixed simulated learner histories; all arms use the same cases, settings and evaluators."
+  ],
+  "findings": [
+    {"id":"P1","status":"clear","evidence":"compose() passes only room inventory, role and input to the product builders. Evaluator reference fields and expected labels do not enter target requests."},
+    {"id":"P2","status":"clear","evidence":"All six phishing/privacy template prefixes and full inventories are retained. Catalog equality and reversible label transformation are asserted. No point, sentence payload or room template is rewritten."},
+    {"id":"P3","status":"clear","evidence":"Candidate policy contains generic evidence-based component rules rather than case names, exact learner answers, expected-label lookups or scenario-specific exceptions."},
+    {"id":"P4","status":"resolved","evidence":"Scoped instruction_realization removes the old mandatory safe action after every recognition correction, while preserving protection plus safe alternative."},
+    {"id":"P5","status":"resolved","evidence":"responsive_progression explicitly separates stage/useful support from disclosure eligibility. factual_accuracy scores truth rather than penalizing withholding future content. Cross-metric calibration checks preserve these boundaries."},
+    {"id":"P6","status":"resolved","evidence":"Primary judge evidence excludes private reason; secondary judges explicitly isolate it to decision_reasoning. Full-secondary positive and mixed-reason calibrations were added."},
+    {"id":"P7","status":"resolved","evidence":"Missing target generations are reconstructed from frozen fixed and trajectory IDs. Missing or malformed judge results remain visible errors/missing counts; no inapplicability escape is permitted except feedback's declared conditional scope."},
+    {"id":"P8","status":"resolved","evidence":"Execution and secondary replay verify frozen source hashes before using live trajectory composition. Actual generated tutor turns remain in trajectory histories."},
+    {"id":"P9","status":"resolved","evidence":"Budget enforcement occurs before requests; the finalizer only records elapsed time so a just-completed response is not discarded when the deadline passes."},
+    {"id":"P10","status":"clear","evidence":"27 fixed cases include separate attempt/confusion, focused correction, other-learner attribution, irrelevant attempts, agreement, later contradiction, immediate protection and post-protection return. Two four-turn trajectories use scripted learner interventions and are labeled accordingly."}
+  ],
+  "validation": {
+    "command": "rtk proxy node --test evals/promptfoo/scaffolding-diagnostics/2026-11-13-component-scaffolding/harness.test.cjs",
+    "working_directory": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/tutor-stage-scaffolding",
+    "observed_exit_code": 0,
+    "passed": 10,
+    "failed": 0,
+    "kind": "Independent structural validation; no semantic behavior claims."
+  },
+  "calibration_status_at_review": "calibration-v3 agrees on all 49 judgments across 31 requests and 11 metrics, with zero errors. Reviewer independently recomputed each expected/actual applicability and pass comparison and verified every request used qwen3.8-flash and received HTTP200. No tutor-model conformance is asserted.",
+  "calibration_evidence": {
+    "path": "raw/calibration-v3/summary-1794555249371.json",
+    "frozen_sha256": "086f4c5add71737e30838681273b4f090bc92012c859087e3ccc9481e503b819",
+    "reviewed_boundary_outputs": ["cross_metric_leak", "protection_exception", "secondary_batch_mixed", "secondary_batch_positive"],
+    "prior_failures": "calibration-v1 and v2 HTTP400 records remain preserved. The restored provider required the literal JSON instruction; adding Return only valid JSON is a reviewed protocol correction without rubric or label changes.",
+    "verdict": "clear for focused target comparison; calibration coverage is small and output adjudication remains required"
+  },
+  "limitations": [
+    "Focused diagnostic evidence only; no unseen holdout, full-suite acceptance, deployment acceptance or measured student learning gain.",
+    "Trajectories preserve tutor replies but supply fixed learner revelations, not naturally responsive learners.",
+    "61 original cases and 173 assertions are enumerated. The prior 64-case expansion and 16 controls are referenced but not individually relabeled for these new metrics; broader applicability authoring remains deferred.",
+    "Separate observed-output audit is required after model execution; a clear static candidate audit is not model acceptance."
+  ]
+}

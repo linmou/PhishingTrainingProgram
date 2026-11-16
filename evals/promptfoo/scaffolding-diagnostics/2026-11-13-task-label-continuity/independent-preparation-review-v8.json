@@ -1,0 +1,24 @@
+{
+  "intent": "Verify the restored evaluator configuration after the user's clarification that judge thinking is permitted while tutor thinking remains disabled.",
+  "reviewer": "/root/continuity_audit",
+  "date": "2026-11-13",
+  "verdict": "clear",
+  "scope": "Exact configuration and candidate integrity; output review and acceptance remain pending.",
+  "snapshot_fingerprint": "2890376a62dd2b465b672fc234055cd9eaddad53057af202f966d0c91e5ac4c5",
+  "runner_sha256": "ec9a7bff9de787e0be7797f20d912d2b3952b52957e97c1ea9cf85da435c6f17",
+  "calibration_selection_script_sha256": "fc5c5dac79e63122a7482ef3986ef8c12a03ada49869483cfa5c7bb2a1c9b917",
+  "evaluation_plan_sha256": "cb28ae2cee15e42ffd43433d0079f399d6dc4d884284def3e7f8f34fe08e0493",
+  "prior_design_review": "independent-preparation-review-v6.json",
+  "independent_verification": {
+    "current_source_hashes": 32,
+    "deep_equal_to_v6": ["judge_system", "judge_steps", "calibration", "rubrics", "shells", "jobs", "cases", "prepared_cases", "selection", "trajectories", "thresholds", "partitions", "judge_settings_by_metric"],
+    "runtime_metric_routing_matches_snapshot": true,
+    "target_enable_thinking": false,
+    "target_max_tokens": 600,
+    "ordering_judge": "thinking enabled, 8000 tokens",
+    "progression_and_disclosure_judges": "thinking disabled, 2600 tokens",
+    "expected_generations": 207
+  },
+  "authority": "The user's latest clarification permits judge thinking. The intervening nonthinking-only proposal remains unrun; no target response informed this configuration restoration.",
+  "execution_condition": "Complete the zero-call per-metric calibration provenance check, then references before candidates, using the existing active-time cap. The preserved calibration provenance and prior design limitations apply unchanged."
+}

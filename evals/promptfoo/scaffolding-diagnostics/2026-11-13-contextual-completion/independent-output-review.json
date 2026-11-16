@@ -1,0 +1,54 @@
+{
+  "intent": "Preserve independent semantic observations on every saved target output, separately from machine grades and final acceptance.",
+  "reviewer": "contextual_review; did not author prompt candidates, cases or target outputs",
+  "date": "2026-11-13",
+  "frozen_fingerprint": "8c5f19e0fb1ecc4fd32daa8d30a3b42aa1ef60cd2055345eb228789bf74f2a43",
+  "reviewed_targets": 81,
+  "target_manifest_sha256": "c07a6269d00b38aaf6830f815eb7a31bfde89313ef43cc37a1701a342050a5ca",
+  "manifest_method": "SHA256 of JSON.stringify(sorted filename and raw-file-SHA256 pairs under raw/targets).",
+  "findings": [
+    {
+      "case": "gift_card_contextual_judgment_real",
+      "observation": "A clean advance to an unmet recognition task occurs in baseline1/3, candidate1/3 and task_meaning2/3. Task_meaning r3 still requires the learner to say the plausibility question out loud, an additional exercise not required by the configured task.",
+      "counterevidence": "Task_meaning r1 and r2 move to persuasive wording. They show that the model can recognize the short contextual answer as sufficient under this prompt, although reliability is incomplete."
+    },
+    {
+      "case": "library_contextual_judgment",
+      "observation": "Task_meaning r1 and r2 correctly move to observing whether the source is established; r3 asks an additional generic action after the completed plausibility judgment. Baseline asks that additional action3/3. Candidate r2/r3 do the same; candidate r1 begins source-verification behavior before establishing its source-observation meaning.",
+      "implication": "The general conflict-removal refinement helps a second scenario as well as the motivating gift-card case, but retains a failure in each."
+    },
+    {
+      "case": "event_one_answer_covers_overlapping_points",
+      "observation": "All three task_meaning replies ask why future plans are risky. Candidate replies similarly retest timing/location meaning3/3. Baseline r1 stops at praise despite a remaining posting-time behavior; r2/r3 retest future exposure. None clearly elicits the distinct still-unfinished posting-time behavior.",
+      "basis": "The learner already connects the cafe/time to strangers finding Mira in the tomorrow context and supplies private coordination. The reference explicitly forbids a mandatory extra demonstration of that same future exposure."
+    },
+    {
+      "case": "library_agreement_only__task_meaning__r2",
+      "observation": "That seems too high supplies the required plausibility judgment after only Okay, before a relevant learner attempt or confusion. This is a clear component-disclosure failure despite staying on the correct task.",
+      "counterevidence": "Task_meaning r1/r3 leave a plausibility judgment for the learner, as do all three first-candidate replies."
+    },
+    {
+      "case": "phone_risk_verdict_after_action_question",
+      "observation": "All arms preserve the still-unfinished behavior by asking for a specific action rather than treating Not safe as an action answer. Candidate r1/r2 additionally prescribe the privacy goal; apply the inherited disclosure boundary consistently rather than equating useful progression with all-metric success."
+    },
+    {
+      "case": "phone_ack_after_completed_task",
+      "observation": "Task_meaning3/3 retains earlier completion despite Okay and asks about the next unwanted-contact observation. Candidate r2 gives unwanted messages/calls as its own answer cue. Baseline r3 moves to how to respond to private-information requests before the new unwanted-contact observation is learner-established."
+    },
+    {
+      "case": "short_link_concise_observation_only",
+      "observation": "Candidate and task_meaning3/3 recognize the short answer and ask the distinct checking behavior. Baseline r1 asks whether the shortened suffix matches the club name, repeating already-established hidden-destination recognition while suggesting an unreliable check; baseline r2/r3 ask the corresponding behavior."
+    },
+    {
+      "case": "library_all_tasks_completed",
+      "observation": "Every arm consolidates3/3 without inventing another task. This is useful counterevidence to a claim that either prompt invariably repeats completed work.",
+      "scope_limit": "Several replies call the offer fake or claim broad future safety. Those accuracy/generalization claims exceed the narrow completion checks and are not silently added as new acceptance criteria."
+    },
+    {
+      "case": "phone_contradiction_after_completed_task",
+      "observation": "All arms explicitly correct the contradicted public-visibility claim3/3. Task_meaning r2 then promises the next safety check, but does not actually ask or teach another task; this is ambiguous future progression intent, not counted here as a confident premature-transition failure. Task_meaning r3 says Only private messages stay hidden, an overbroad factual claim retained as an adjacent finding rather than silently expanding this focused metric scope."
+    }
+  ],
+  "interpretation": "Task-specific completion is a useful general specification and the task_meaning intervention improves two exposed plausibility scenarios, but overlapping-task repetition and premature disclosure remain. No candidate passes every declared completion boundary. These are focused diagnostic observations, not a fully independently relabeled aggregate dataset or evidence of human learning effects.",
+  "machine_grade_review": "Pending completion of uniform V2 judging; known disagreements will be preserved separately without overwriting model grades."
+}

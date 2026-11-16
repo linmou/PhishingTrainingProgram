@@ -1,0 +1,62 @@
+[
+  {
+    "id": "quoted_feature_comparison",
+    "case_id": "component_0_no_attempt",
+    "output": {"reason":"Invite the learner to compare a visible sender label.","decision":{"guard_mode":false,"instruction":"scaffolding"},"response":"Read the sender label: Socail Media Testdrive. Does it match the service you use?"},
+    "expected": {"component_disclosure":{"applicable":true,"pass":true},"recognition_before_action":{"applicable":true,"pass":true},"factual_accuracy":{"applicable":true,"pass":true}}
+  },
+  {
+    "id": "supplied_conclusion_question",
+    "case_id": "component_0_no_attempt",
+    "output": {"reason":"Identify the misspelled sender.","decision":{"guard_mode":false,"instruction":"explanation"},"response":"The sender name is misspelled and is not an official company. Which part looks wrong?"},
+    "expected": {"component_disclosure":{"applicable":true,"pass":false},"recognition_before_action":{"applicable":true,"pass":true}}
+  },
+  {
+    "id": "comparison_prerequisite",
+    "case_id": "component_1_no_attempt",
+    "output": {"reason":"Supply a price reference while leaving its implication to the learner.","decision":{"guard_mode":false,"instruction":"scaffolding"},"response":"A new console normally costs hundreds of dollars. Compare that with the advertised price; what do you make of the difference?"},
+    "expected": {"component_disclosure":{"applicable":true,"pass":true},"recognition_before_action":{"applicable":true,"pass":true},"factual_accuracy":{"applicable":true,"pass":true}}
+  },
+  {
+    "id": "price_risk_presupposition",
+    "case_id": "component_1_no_attempt",
+    "output": {"reason":"Explain the warning sign.","decision":{"guard_mode":false,"instruction":"explanation"},"response":"This price is far too low to be believable. Why is such an unrealistic price a warning sign?"},
+    "expected": {"component_disclosure":{"applicable":true,"pass":false},"recognition_before_action":{"applicable":true,"pass":true}}
+  },
+  {
+    "id": "consequence_reasoning_not_action",
+    "case_id": "component_5_bare_agreement",
+    "output": {"reason":"Invite reasoning about consequences without an action instruction.","decision":{"guard_mode":false,"instruction":"scaffolding"},"response":"What might an unfamiliar person do after finding this phone number?"},
+    "expected": {"recognition_before_action":{"applicable":true,"pass":true}}
+  },
+  {
+    "id": "premature_learner_action_question",
+    "case_id": "component_5_bare_agreement",
+    "output": {"reason":"Ask for a behavior before learner recognition is demonstrated.","decision":{"guard_mode":false,"instruction":"scaffolding"},"response":"What should Jake change about how he shares his phone number?"},
+    "expected": {"recognition_before_action":{"applicable":true,"pass":false}}
+  },
+  {
+    "id": "earlier_action_attempt_retained",
+    "case_id": "component_5_later_contradiction",
+    "output": {"reason":"Correct the renewed false audience inference and repeat prior action knowledge.","decision":{"guard_mode":false,"instruction":"correction"},"response":"A public page is visible to people outside your friends. Keep the number in private conversations with people you trust."},
+    "expected": {"component_disclosure":{"applicable":true,"pass":true},"recognition_before_action":{"applicable":true,"pass":false},"factual_accuracy":{"applicable":true,"pass":true}}
+  },
+  {
+    "id": "unattempted_action_after_recognition_failure",
+    "case_id": "component_5_failed_focused",
+    "output": {"reason":"Correct the audience inference but also supply the unattempted action.","decision":{"guard_mode":false,"instruction":"correction"},"response":"A public page is visible to people outside your friends. Keep the number in private conversations with people you trust."},
+    "expected": {"component_disclosure":{"applicable":true,"pass":false},"recognition_before_action":{"applicable":true,"pass":false},"factual_accuracy":{"applicable":true,"pass":true}}
+  },
+  {
+    "id": "absolute_authenticity_falsehood",
+    "case_id": "component_0_recognition_confusion",
+    "output": {"reason":"Explain warning language.","decision":{"guard_mode":false,"instruction":"explanation"},"response":"A genuine company never sends an urgent warning. Every frightening security notice is fake."},
+    "expected": {"factual_accuracy":{"applicable":true,"pass":false}}
+  },
+  {
+    "id": "qualified_urgency_explanation",
+    "case_id": "component_0_recognition_confusion",
+    "output": {"reason":"Explain the manipulation without claiming urgency proves fraud.","decision":{"guard_mode":false,"instruction":"explanation"},"response":"Scammers can use frightening words to rush people. Urgent words alone do not prove whether a warning is genuine."},
+    "expected": {"factual_accuracy":{"applicable":true,"pass":true},"component_disclosure":{"applicable":true,"pass":true},"recognition_before_action":{"applicable":true,"pass":true}}
+  }
+]

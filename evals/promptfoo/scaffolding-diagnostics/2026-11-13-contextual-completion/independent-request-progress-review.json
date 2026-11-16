@@ -1,0 +1,35 @@
+{
+  "intent": "Independently review the narrow learner-progress request repair and its request-boundary evidence, separately from semantic prompt performance.",
+  "reviewer": "continuity_audit; did not author runtime fix or tests",
+  "date": "2026-11-13",
+  "verdict": "clear for the inspected local source change; no live release or semantic tutor acceptance claimed",
+  "implementation": {
+    "path": "tutor-system/src/services/aiService.ts",
+    "sha256": "e88ecbbade1713b854d222e5a1df8715967be409dceb5df3ad7ec79c797dbafb",
+    "tests_path": "tutor-system/src/services/__tests__/aiService.requestOwnership.test.ts",
+    "tests_sha256": "dee9d0e3b29ecf4ecfa137e07f79e34dbd326770697c318af69d4414e5a109d4"
+  },
+  "source_checks": [
+    "Legacy getChecklistByRoom filters progress_policy_version=legacy_v1 and therefore cannot read the reported transfer_v1 checklist.",
+    "getChecklistForStudent filters room, selected student, transfer_v1 and active; its read failures throw.",
+    "getActiveTransferChecklistForRoom returns null for none, selects the sole student, and rejects multiple or unidentified ownership before provider generation.",
+    "generateTutorSuggestion chooses explicit learner first, otherwise sole-room transfer ownership, independently of quiz enablement.",
+    "Explicit learner with no checklist does not fall back to another learner or legacy room state. Legacy fallback remains only for no explicit learner and absent transfer progress.",
+    "Transfer-reader errors occur outside the inner legacy best-effort catch and propagate to the outer failure result, stopping provider invocation.",
+    "The existing alternate cyberbullying route returns before this changed path; no behavior claim is made for it."
+  ],
+  "test_review": {
+    "evidence": "raw/request-progress-fix/verification.json",
+    "recorded_hashes_match_current": "All7 implementation/test file hashes verified.",
+    "meaningful_coverage": [
+      "Focused learner provider payload contains their covered and pending states while excluding conflicting other-learner and legacy fixtures, including quizzes disabled.",
+      "No-focus sole learner and absent-transfer legacy routing.",
+      "Read failure and ambiguous ownership stop provider calls.",
+      "Missing explicit learner state produces no foreign progress or progress heading."
+    ],
+    "executed_evidence": "Author recorded18/18 final request-ownership tests after fallback correction; prior39/39 across6 suites is bounded to unchanged adjacent paths. Independent reviewer read tests and matching hashes without repeating unchanged runs.",
+    "limits": "Service and provider responses are mocked. These are request-boundary integration checks, not live RLS, backend availability or tutoring-quality evidence. Full TypeScript check is not clean; the record distinguishes existing diagnostics and final-edit timing."
+  },
+  "findings": [],
+  "scope_limit": "No source edits by this reviewer. No claim that restoring progress context alone resolves repeated tutoring; the model's task-completion interpretation is separately evaluated."
+}

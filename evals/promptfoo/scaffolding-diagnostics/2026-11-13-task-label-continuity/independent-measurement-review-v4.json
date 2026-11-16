@@ -1,0 +1,21 @@
+{
+  "intent": "Review a parser-only recovery of structured auxiliary judge evidence without resampling unfavorable judgments.",
+  "reviewer": "/root/continuity_audit",
+  "date": "2026-11-13",
+  "verdict": "clear",
+  "scope": "Parser correction and replay integrity; semantic calibration and behavior acceptance remain separate.",
+  "snapshot_fingerprint": "a317e127b9f5282311568637a29d12ef5e686049a101a0d241e09aa608f53766",
+  "runner_sha256": "bb9eab70d04eca966c9b6e90e5d93cec8ed0de769e209896c426cd5fb2b91e17",
+  "reparse_script_sha256": "21a2a7a185cbf188448b26765b84644dd1bc83daf2cb0d95a01ce555c3504335",
+  "prior_protocol_review": "independent-measurement-review-v3.json",
+  "verification": {
+    "frozen_source_hashes": 31,
+    "unchanged_from_v3": ["judge_system", "judge_steps", "cases", "calibration", "rubrics", "shells", "jobs", "trajectories", "settings", "thresholds", "partitions"],
+    "auxiliary_fields": "current_point, learner_evidence and reply_components accept nonempty strings, nonempty string-valued objects or nonempty lists of those values. Raw representation is retained.",
+    "decisive_fields": "reason and evidence remain nonempty strings; pass remains a boolean. No semantic inference fills missing fields.",
+    "selection": "Reparse all retained attempts for every one of the 32 checks and select the first structurally usable attempt, without consulting its verdict or expected label. Preserve all attempts, their verdicts, selected index, source path and source hash.",
+    "requests": "Replay code requires identical messages, judge protocol, cases and settings; it makes zero model calls."
+  },
+  "observed_evidence": "V3 auxiliary reply_components contained meaningful clause/point/component arrays or keyed objects rather than the requested string. This is a schema representation defect distinct from a behavior judgment. Inspection also found semantic errors in retained first attempts, which this parser correction does not erase.",
+  "execution_condition": "Report the reparsed calibration outcome including all remaining disagreements. A later favorable format retry must not replace an earlier now-valid unfavorable judgment."
+}

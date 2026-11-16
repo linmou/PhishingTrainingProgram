@@ -1,0 +1,192 @@
+{
+  "intent": "Independently review every saved learner-facing output on the focused continuity and disclosure criteria, preserving disagreements with automatic grades.",
+  "reviewer": "/root/history_refinement_audit; did not author candidate, cases, generation runner, or outputs",
+  "date": "2026-11-14",
+  "frozen_fingerprint": "0f6e1f0a5c7758bfac33e24f28d82409b73d74210c1bd3e9b0b9c6c09fbc5296",
+  "scope": "72 outputs across six cases, two arms, three repetitions, and two generated turns. Labels use actual learner history and posted tutor wording, without treating private reason as evidence of learner mastery.",
+  "label_key": {
+    "P": "contextual_progression",
+    "U": "unfinished_prerequisite",
+    "D": "component_disclosure",
+    "true": "pass",
+    "false": "fail",
+    "slot": "arm__rN__tN; prefix with case_id and two underscores to recover target generation ID"
+  },
+  "interpretation_rules": [
+    "Recognition questions can pass U even when they select the wrong point or repeat completed meaning; those defects belong to P.",
+    "A response selecting a genuinely missing behavior can pass P while failing U or D. A correct target does not license its answer disclosure.",
+    "The library plausibility judgment completes its first configured point. A generic demand to say what to do with that same implausible message does not clearly select the missing source-check observation; classify P as fail under the prior independent task-specific interpretation and retain this known ambiguity.",
+    "The learner's original meeting answer already establishes the overlapping future-exposure meaning. Requiring a new explanation about tomorrow, strangers' opportunity, or time to act retests it. Posting-after-visit behavior remains missing.",
+    "After the phone contradiction is corrected, Okay supplies no repaired learner observation. Advancing to the second point is premature under T02.2. Merely naming messages/calls can leave the unwanted-contact inference open; explicitly saying messages or calls you did not ask for supplies it.",
+    "The narrow progression rubric does not automatically fail every repeated question on an unfinished task. Exact repeated questions are separately reported as an adaptation defect; they are not treated as completed-target retesting.",
+    "Calling reward wording exciting or mentioning scammers can still leave the urgency mechanism open. Explicitly explaining that the words make the learner hurry or act without thinking reveals that mechanism before its own attempt."
+  ],
+  "case_reviews": [
+    {
+      "case_id": "gift_card_contextual_judgment_real",
+      "outputs": [
+        {"slot":"baseline__r1__t1","P":true,"U":true,"D":true,"evidence":"Why do you think they use all caps and exclamation marks? selects the unmet language-purpose observation without supplying urgency."},
+        {"slot":"baseline__r1__t2","P":true,"U":true,"D":true,"evidence":"Why do you think they use big letters and marks like that? remains on the unanswered language-purpose task after Okay."},
+        {"slot":"baseline__r2__t1","P":true,"U":true,"D":true,"evidence":"Why might a scammer use such exciting language? selects a new observation; the effect on speed/checking remains for the learner."},
+        {"slot":"baseline__r2__t2","P":false,"U":false,"D":false,"evidence":"Scammers use exciting words to make you act fast without thinking supplies unattempted recognition, then What should you do before clicking a link moves to behavior before learner observation evidence."},
+        {"slot":"baseline__r3__t1","P":true,"U":true,"D":true,"evidence":"Why do you think it uses loud words like CRAZY DEAL? selects the unmet language-purpose observation."},
+        {"slot":"baseline__r3__t2","P":true,"U":true,"D":false,"evidence":"Exciting words can make you act fast without thinking supplies the unanswered recognition conclusion; Does this post try to rush you remains on recognition, so P/U pass separately."},
+        {"slot":"full_history__r1__t1","P":false,"U":true,"D":true,"evidence":"Since it is not possible, what does that tell you about offers that seem too good to be true? demands another conclusion from the completed plausibility point."},
+        {"slot":"full_history__r1__t2","P":false,"U":true,"D":true,"evidence":"When a reward is way too big for the work, it is a major warning sign repeats the completed plausibility lesson instead of selecting another unmet point."},
+        {"slot":"full_history__r2__t1","P":true,"U":true,"D":false,"evidence":"What kind of language do they use to make you feel excited or hurry up? selects the language task but supplies its central hurry/excitement effect before an attempt."},
+        {"slot":"full_history__r2__t2","P":true,"U":true,"D":true,"evidence":"Does that sound like a normal business message or a loud advertisement? continues the unanswered language comparison without asserting the risky urgency conclusion."},
+        {"slot":"full_history__r3__t1","P":false,"U":true,"D":true,"evidence":"Would a big company really give away $500 just for five minutes of work? directly repeats the already answered plausibility question."},
+        {"slot":"full_history__r3__t2","P":true,"U":true,"D":true,"evidence":"Why do scammers use exciting words like these? advances from the completed reward point to the unmet language-purpose observation."}
+      ]
+    },
+    {
+      "case_id": "library_contextual_judgment",
+      "outputs": [
+        {"slot":"baseline__r1__t1","P":false,"U":true,"D":true,"evidence":"When a prize is too good to be true, what should you do with that message? adds a generic action demand after the completed plausibility judgment; no source observation is selected."},
+        {"slot":"baseline__r1__t2","P":false,"U":true,"D":false,"evidence":"What should you do with a message that has a prize too good to be true? Do not click it repeats the extra action demand and supplies its unattempted safe-action answer."},
+        {"slot":"baseline__r2__t1","P":false,"U":true,"D":true,"evidence":"When a prize seems too big for the work, what should you do with that message? remains a generic extra action after completed judgment."},
+        {"slot":"baseline__r2__t2","P":true,"U":false,"D":false,"evidence":"Should you click that survey link, or check the library's real website first? reaches the missing verification behavior but skips missing source observation and supplies the independent-check answer."},
+        {"slot":"baseline__r3__t1","P":false,"U":true,"D":true,"evidence":"When a prize seems too good to be true, what should you do with that message? does not select the missing source observation."},
+        {"slot":"baseline__r3__t2","P":false,"U":true,"D":true,"evidence":"What is the safest thing to do with a message that seems too good to be true? repeats an extra generic action requirement instead of source recognition."},
+        {"slot":"full_history__r1__t1","P":false,"U":true,"D":true,"evidence":"You spotted that the prize is too big ... What should you do with this message now? adds another generic action rather than selecting source observation."},
+        {"slot":"full_history__r1__t2","P":false,"U":true,"D":false,"evidence":"What is one safe thing to do with this message instead of filling out the survey? repeats that generic action and prescribes not filling it out before an action attempt."},
+        {"slot":"full_history__r2__t1","P":false,"U":true,"D":true,"evidence":"How should you treat a promise that seems too good to be true? retests the first point's completed plausibility/caution meaning."},
+        {"slot":"full_history__r2__t2","P":false,"U":true,"D":true,"evidence":"What should you do when a message makes a promise that seems too good to be true? continues the extra generic action demand."},
+        {"slot":"full_history__r3__t1","P":true,"U":true,"D":true,"evidence":"Look at who sent the message. Does it show that the library actually sent it? clearly selects the missing source observation without supplying its answer."},
+        {"slot":"full_history__r3__t2","P":true,"U":true,"D":true,"evidence":"Check the sender's name and email address. Does it match the library's official contact? continues the unanswered source-evidence comparison; it does not direct independent contact or assert legitimacy."}
+      ]
+    },
+    {
+      "case_id": "library_agreement_only",
+      "outputs": [
+        {"slot":"baseline__r1__t1","P":true,"U":true,"D":true,"evidence":"Does $2,000 seem like a fair price for just that little bit of time? scaffolds the still-unanswered plausibility judgment."},
+        {"slot":"baseline__r1__t2","P":true,"U":true,"D":true,"evidence":"Is $2,000 for one minute believable? Answer yes or no keeps the unfinished judgment. Saying Okay stops our practice is a separate unscored participation concern."},
+        {"slot":"baseline__r2__t1","P":true,"U":true,"D":true,"evidence":"Is $2,000 too much money for just one minute of effort? leaves the plausibility comparison to the learner."},
+        {"slot":"baseline__r2__t2","P":true,"U":true,"D":true,"evidence":"Imagine someone pays you $2,000 for one minute of work. Does that sound like a real job offer? provides a comparison for the unfinished judgment."},
+        {"slot":"baseline__r3__t1","P":true,"U":true,"D":true,"evidence":"Would a library really pay $2,000 for just one minute of work? leaves the plausibility judgment open."},
+        {"slot":"baseline__r3__t2","P":true,"U":true,"D":true,"evidence":"Please answer: Does $2,000 for one minute seem real? retains the unfinished target. Saying Okay stops our practice is separately flagged, outside these three metrics."},
+        {"slot":"full_history__r1__t1","P":true,"U":true,"D":true,"evidence":"Is $2,000 a normal price for one minute of work? leaves the unanswered comparison open."},
+        {"slot":"full_history__r1__t2","P":true,"U":true,"D":true,"evidence":"Is $2,000 a normal price for one minute of work? still selects the unfinished task; whole response repeats t1 verbatim, flagged separately as no adaptation."},
+        {"slot":"full_history__r2__t1","P":true,"U":true,"D":true,"evidence":"Does getting $2,000 for one minute of work seem like a real deal? stays on unanswered plausibility."},
+        {"slot":"full_history__r2__t2","P":true,"U":true,"D":true,"evidence":"Would you pay $2,000 for one minute of work? changes perspective while leaving the judgment open."},
+        {"slot":"full_history__r3__t1","P":true,"U":true,"D":true,"evidence":"Does $2,000 feel like a fair price for just one minute of work? leaves the unfinished judgment to the learner."},
+        {"slot":"full_history__r3__t2","P":true,"U":true,"D":true,"evidence":"Does $2,000 feel like a fair price for just one minute of work? retains the unfinished task but repeats the whole t1 response verbatim."}
+      ]
+    },
+    {
+      "case_id": "event_one_answer_covers_overlapping_points",
+      "outputs": [
+        {"slot":"baseline__r1__t1","P":false,"U":true,"D":true,"evidence":"Does posting a future plan tell strangers when she will be away? retests the already demonstrated future-location/time exposure."},
+        {"slot":"baseline__r1__t2","P":false,"U":true,"D":true,"evidence":"Does it show when Mira will be away from home? again retests future exposure instead of the missing posting-after-visit behavior."},
+        {"slot":"baseline__r2__t1","P":false,"U":true,"D":true,"evidence":"Why does posting a future plan publicly give strangers extra time to act? demands extra explanation of already demonstrated exposure."},
+        {"slot":"baseline__r2__t2","P":false,"U":true,"D":true,"evidence":"How much time do strangers have to act before you leave? keeps retesting exposure rather than eliciting when to post."},
+        {"slot":"baseline__r3__t1","P":false,"U":true,"D":true,"evidence":"How does posting a future plan help strangers? retests the already expressed ability to find Mira."},
+        {"slot":"baseline__r3__t2","P":false,"U":true,"D":true,"evidence":"Do strangers have time to act on it before you leave? adds another exposure check without moving to the missing behavior."},
+        {"slot":"full_history__r1__t1","P":false,"U":true,"D":true,"evidence":"What does that tell strangers about when Mira will be there? repeats the schedule/exposure meaning already supplied."},
+        {"slot":"full_history__r1__t2","P":true,"U":true,"D":false,"evidence":"Wait until after the meeting ends to post about it selects the missing posting-time behavior, but directly gives its central answer before any behavior attempt or confusion."},
+        {"slot":"full_history__r2__t1","P":false,"U":true,"D":true,"evidence":"Why does posting a future plan early give strangers more time to act? requires extra explanation of demonstrated exposure."},
+        {"slot":"full_history__r2__t2","P":false,"U":true,"D":true,"evidence":"Why does that wait make strangers more likely to show up? continues the unnecessary exposure explanation; no learner posting-time choice is elicited."},
+        {"slot":"full_history__r3__t1","P":false,"U":true,"D":true,"evidence":"Why is posting a future plan risky, even if you hide the location? repeats future-exposure reasoning and adds a hypothetical instead of selecting missing posting time."},
+        {"slot":"full_history__r3__t2","P":false,"U":true,"D":true,"evidence":"How does that change their ability to act on the information? again requires future-exposure explanation rather than posting-time behavior."}
+      ]
+    },
+    {
+      "case_id": "phone_contradiction_after_completed_task",
+      "outputs": [
+        {"slot":"baseline__r1__t1","P":true,"U":true,"D":true,"evidence":"Public posts are visible to anyone, including strangers corrects the learner's explicit contradictory audience claim after a focused prior attempt."},
+        {"slot":"baseline__r1__t2","P":false,"U":true,"D":true,"evidence":"If a stranger saves that number, what might they do with it? moves to the second point after only Okay, without repaired learner audience understanding."},
+        {"slot":"baseline__r2__t1","P":true,"U":true,"D":true,"evidence":"Public posts are visible to anyone on the internet, including strangers corrects the contradicted audience recognition."},
+        {"slot":"baseline__r2__t2","P":false,"U":true,"D":true,"evidence":"What might they try to do with it? Think about messages or calls moves to second-point recognition before repair evidence. The hint leaves the unwanted-contact inference open."},
+        {"slot":"baseline__r3__t1","P":true,"U":true,"D":true,"evidence":"They do not need to be friends to read it directly repairs the actual audience misconception."},
+        {"slot":"baseline__r3__t2","P":false,"U":true,"D":true,"evidence":"If a stranger saves that number, what might they do with it? advances after acknowledgment rather than repaired learner evidence."},
+        {"slot":"full_history__r1__t1","P":true,"U":true,"D":true,"evidence":"Public posts are visible to anyone on the platform, including strangers corrects the actual contradiction."},
+        {"slot":"full_history__r1__t2","P":false,"U":true,"D":false,"evidence":"Think about messages or calls you didn't ask for advances after bare agreement and supplies the second point's unwanted-contact recognition before an attempt."},
+        {"slot":"full_history__r2__t1","P":true,"U":true,"D":true,"evidence":"Public posts are visible to anyone with the link or profile access, including strangers corrects the contradicted audience claim."},
+        {"slot":"full_history__r2__t2","P":false,"U":true,"D":true,"evidence":"What kind of messages or calls might they send? advances to unwanted-contact recognition without repaired audience evidence, while leaving the unwanted inference open."},
+        {"slot":"full_history__r3__t1","P":true,"U":true,"D":true,"evidence":"Public posts are visible to anyone, including strangers repairs the audience misconception."},
+        {"slot":"full_history__r3__t2","P":false,"U":true,"D":true,"evidence":"What kind of messages or calls could they send? advances to the second point after only Okay; it leaves the harmful/unwanted inference open."}
+      ]
+    },
+    {
+      "case_id": "library_all_tasks_completed",
+      "outputs": [
+        {"slot":"baseline__r1__t1","P":true,"U":true,"D":true,"evidence":"You spotted the too-good-to-be-true prize and knew to check the library directly consolidates demonstrated tasks without a new exercise."},
+        {"slot":"baseline__r1__t2","P":true,"U":true,"D":true,"evidence":"The prize was too big for the work, and you checked the source safely remains consolidation rather than demanding new proof."},
+        {"slot":"baseline__r2__t1","P":true,"U":true,"D":true,"evidence":"You spotted the too-good-to-be-true prize and checked the sender safely summarizes the two demonstrated targets."},
+        {"slot":"baseline__r2__t2","P":true,"U":true,"D":true,"evidence":"You correctly spotted the fake prize and checked the sender safely consolidates without opening another target."},
+        {"slot":"baseline__r3__t1","P":true,"U":true,"D":true,"evidence":"You correctly judged the prize was too good to be true and knew to check the library directly consolidates both completed points."},
+        {"slot":"baseline__r3__t2","P":true,"U":true,"D":true,"evidence":"Keep looking for unrealistic rewards and verifying sources independently reinforces completed meanings without a new task. Mastered is broader than this scoped demonstration, outside these metrics."},
+        {"slot":"full_history__r1__t1","P":true,"U":true,"D":true,"evidence":"You also knew to check the library directly before sharing details consolidates the demonstrated verification behavior."},
+        {"slot":"full_history__r1__t2","P":true,"U":true,"D":true,"evidence":"The t1 consolidation is repeated verbatim, but no new target or redundant learner exercise is introduced."},
+        {"slot":"full_history__r2__t1","P":true,"U":true,"D":true,"evidence":"You correctly spotted the too-good-to-be-true prize and knew to check the library's real website yourself summarizes completed tasks."},
+        {"slot":"full_history__r2__t2","P":true,"U":true,"D":true,"evidence":"You spotted the too-good-to-be-true prize and knew to check the library's real website yourself remains appropriate consolidation."},
+        {"slot":"full_history__r3__t1","P":true,"U":true,"D":true,"evidence":"You spotted the too-good-to-be-true prize and knew to check the library directly consolidates both demonstrated tasks."},
+        {"slot":"full_history__r3__t2","P":true,"U":true,"D":true,"evidence":"Great job spotting the fake prize and knowing to check the library directly remains consolidation without a new exercise."}
+      ]
+    }
+  ],
+  "additional_observations": [
+    {"ids":["library_agreement_only__full_history__r1__t2","library_agreement_only__full_history__r3__t2"],"finding":"Exact first-response repetition on an unfinished task; retained as a separate adaptation issue rather than redefining the narrow progression rubric."},
+    {"ids":["library_agreement_only__baseline__r1__t2","library_agreement_only__baseline__r3__t2"],"finding":"Saying Okay stops our practice imputes obstruction from acknowledgment. Participation-mode correctness was outside the three scored metrics."},
+    {"ids":["event_one_answer_covers_overlapping_points__baseline__r1__t1","event_one_answer_covers_overlapping_points__baseline__r1__t2"],"finding":"Away from home is not established by the cafe plan; content accuracy remains outside this three-metric diagnostic."},
+    {"ids":["event_one_answer_covers_overlapping_points__full_history__r2__t2"],"finding":"More likely to show up is an additional probabilistic claim, not required by the configured target."}
+  ],
+  "automatic_grade_reconciliation": {
+    "status": "Complete: 216 saved checks reconciled; 215 valid machine verdicts and one schema error. Ten substantive disagreements are preserved below. Independent labels were assigned before inspecting automatic grades.",
+    "substantive_disagreements": [
+      {"id":"gift_card_contextual_judgment_real__full_history__r1__t2","metric":"component_disclosure","independent":true,"machine":false,"basis":"Machine treats stop and check if real as an unattempted separate action. Independent review reads it as the configured plausibility-checking meaning already demonstrated in context; response still fails progression for repeating that completed point."},
+      {"id":"gift_card_contextual_judgment_real__full_history__r3__t2","metric":"component_disclosure","independent":true,"machine":false,"basis":"Machine treats scammers as resolving the exciting-language task. Independent review finds the urgency/acting-without-checking mechanism remains open; this matches a documented prior grader boundary disagreement."},
+      {"id":"library_contextual_judgment__baseline__r1__t1","metric":"contextual_progression","independent":false,"machine":true,"basis":"Machine assumes generic what should you do with the message opens source-checking. Independent review preserves the prior task-specific interpretation: no source observation is selected and a generic additional action is demanded after completed plausibility."},
+      {"id":"library_contextual_judgment__baseline__r3__t1","metric":"contextual_progression","independent":false,"machine":true,"basis":"Same generic-action/source-check ambiguity. Near-identical baseline r2t1 receives machine fail, so machine interpretation varies across wording with equivalent meaning."},
+      {"id":"library_contextual_judgment__full_history__r1__t1","metric":"contextual_progression","independent":false,"machine":true,"basis":"Machine infers missing source-check from What should you do with this message now? Independent review does not infer an unstated target or count extra generic action as correct progression."},
+      {"id":"library_contextual_judgment__full_history__r1__t2","metric":"unfinished_prerequisite","independent":true,"machine":false,"basis":"Machine assigns the generic safe action to point2 and finds its observation missing. Independent review treats it as the extra point1 action demand already failing progression, so point1 observation is established. This is a target-attribution ambiguity, not evidence of a clean effect."},
+      {"id":"library_contextual_judgment__full_history__r1__t2","metric":"component_disclosure","independent":false,"machine":true,"basis":"Machine says instead of filling out the survey leaves the independent-contact method open. Independent review treats that phrase as supplying a central safe avoidance choice before a behavior attempt, consistent with the earlier goal-versus-method disclosure concern."},
+      {"id":"library_contextual_judgment__full_history__r3__t2","metric":"unfinished_prerequisite","independent":true,"machine":false,"basis":"Machine counts Check sender name/email as behavior before observation. Independent review sees a source-evidence comparison that elicits recognition; the configured behavior is independently contacting the library before sharing details."},
+      {"id":"event_one_answer_covers_overlapping_points__full_history__r1__t2","metric":"contextual_progression","independent":true,"machine":false,"basis":"Machine fails the reply for briefly repeating future-exposure explanation. Independent review sees its substantive move selecting the genuinely missing posting-time behavior; both agree that directly supplying its answer fails disclosure."},
+      {"id":"phone_contradiction_after_completed_task__full_history__r2__t2","metric":"contextual_progression","independent":false,"machine":true,"basis":"Machine accepts conditional use of the corrected premise as sufficient to advance to unwanted contact. T02.2 requires learner repair evidence after explanation; Okay supplies none. Equivalent continuation replies in the other repetitions fail the machine check."}
+    ],
+    "schema_errors": [
+      {"id":"gift_card_contextual_judgment_real__full_history__r2__t2","metric":"unfinished_prerequisite","independent":true,"machine":"error","error":"Missing evidence: learner_evidence","disposition":"Retain machine error in denominator. An independently reviewed semantic pass does not repair the invalid judge output or replace its recorded operational result."}
+    ],
+    "policy": "Raw machine verdicts are preserved. Independent labels are a separate interpretation, not rewritten grades. Disagreements prevent treating small aggregate differences as reliable evidence."
+  },
+  "coverage_verification": {
+    "expected": 72,
+    "reviewed": 72,
+    "unique_generation_ids": 72,
+    "matched_valid_target_files": 72
+  },
+  "independent_counts": {
+    "metric_order": ["contextual_progression", "unfinished_prerequisite", "component_disclosure", "all_three"],
+    "denominator_per_arm_per_turn": 18,
+    "turn_1": {"baseline": [12,18,18,12], "full_history": [11,18,17,10]},
+    "turn_2": {"baseline": [9,16,14,7], "full_history": [10,18,15,9]},
+    "all_turns_denominator_per_arm": 36,
+    "all_turns": {"baseline": [21,34,32,19], "full_history": [21,36,32,19]}
+  },
+  "final_integrity_verification": {
+    "verdict": "clear diagnostic integrity; behavior conformance not accepted",
+    "valid_targets": 72,
+    "judgment_records": 216,
+    "valid_machine_verdicts": 215,
+    "machine_schema_errors": 1,
+    "substantive_machine_disagreements": 10,
+    "raw_manifest_files_verified": 315,
+    "raw_manifest_bytes_verified": 16378340,
+    "raw_manifest_records_sha256": "a79b415ecd9d5a158ab55f26a433feaeaf0bafc3c57aa4ad4654937551dc8a94",
+    "evidence_manifest_file_sha256": "e3771450d55fb757625d27374ea01f7e9de92e9a2bf3346ec80a5d168358c3ac",
+    "final_summary_file_sha256": "6fb18843ddef8aab8380255265beddefb627afdf5b3584230c9af803e94f8b4c",
+    "executed_checks": "Independently read every manifest record, checked file byte length and SHA-256, summed manifest counts/bytes, checked all 72 targets valid, loaded all 216 judgments, and recomputed overall/per-turn three-metric and joint counts against final-summary.json.",
+    "machine_counts": {
+      "metric_order": ["contextual_progression", "unfinished_prerequisite", "component_disclosure", "all_three"],
+      "denominator_per_arm_per_turn": 18,
+      "turn_1": {"baseline": [14,18,18,14], "full_history": [12,18,17,11]},
+      "turn_2": {"baseline": [9,16,14,7], "full_history": [10,15,14,7]},
+      "all_turns_denominator_per_arm": 36,
+      "all_turns": {"baseline": [23,34,32,21], "full_history": [22,33,31,18]},
+      "error_location": "Candidate turn-two unfinished_prerequisite has one schema error, retained in the denominator."
+    }
+  },
+  "scheduling_note": "Original eight-worker process interrupted after 72 targets, 16 calibration checks and 24 saved judgments; resumed unchanged frozen requests with 16 workers. Scheduling amendment retains exit 130 and up to eight unrecorded in-flight provider completions. This is not an output-based semantic retry; saved verdicts remain authoritative for machine counts.",
+  "summary": "No accepted solution. Independent continuation counts improve by one progression pass and two joint passes among 18 responses, while all-turn progression and joint totals are unchanged. Completed-task repetition, meeting-plan retesting, and advancement after bare acknowledgment remain. The narrow sample and two bundled factors do not establish a general improvement."
+}

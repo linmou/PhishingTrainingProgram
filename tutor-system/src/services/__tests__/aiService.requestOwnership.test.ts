@@ -1,5 +1,5 @@
+/** Tests aiService.ts and simplifiedAIContext.ts: room/learner ownership controls provider progress and history inputs. */
 import { OAI_MODEL } from '../aiModels';
-/** Tests aiService.ts and simplifiedAIContext.ts: one room snapshot owns suggestion inputs; history packaging preserves each branch's contract. */
 
 import { generateTutorSuggestion, TutorSuggestionService } from '../aiService';
 import { supabase } from '../supabase';
@@ -10,7 +10,11 @@ import { transferAssessmentService } from '../transferAssessmentService';
 import { deliveredAnswerRow, deliveredQuestionRow } from '../../test-support/transferRoomFixtures';
 
 jest.mock('../supabase', () => ({ supabase: { from: jest.fn(), functions: { invoke: jest.fn() } } }));
-jest.mock('../checklistService', () => ({ ChecklistService: { getChecklistByRoom: jest.fn() } }));
+jest.mock('../checklistService', () => ({ ChecklistService: {
+  getChecklistByRoom: jest.fn(),
+  getChecklistForStudent: jest.fn(),
+  getActiveTransferChecklistForRoom: jest.fn()
+} }));
 jest.mock('../transferAssessmentService', () => ({ transferAssessmentService: { readAssessmentHistory: jest.fn() } }));
 
 const room = {
@@ -56,6 +60,8 @@ function configureQueries(roomData: object | null = room, roomError: object | nu
 beforeEach(() => {
   jest.clearAllMocks();
   (ChecklistService.getChecklistByRoom as jest.Mock).mockResolvedValue(null);
+  (ChecklistService.getChecklistForStudent as jest.Mock).mockResolvedValue(null);
+  (ChecklistService.getActiveTransferChecklistForRoom as jest.Mock).mockResolvedValue(null);
   invoke.mockResolvedValue({ data: { content: JSON.stringify(decision) }, error: null });
 });
 
@@ -132,6 +138,90 @@ describe('suggestion room ownership', () => {
     expect(transferAssessmentService.readAssessmentHistory).toHaveBeenCalledWith(room.id, deliveredAnswerRow.assessment_id);
     expect(projections.filter(query => query.table === 'rooms')).toHaveLength(1);
     expect(invoke).not.toHaveBeenCalled();
+  });
+});
+
+describe('suggestion learning-progress ownership', () => {
+  const progressFor = (studentId: string) => ({
+    student_id: studentId,
+    progress_policy_version: 'transfer_v1',
+    detection_areas: [{ area_text: `${studentId}-observation`, status: 'covered' }],
+    verification_steps: [{ area_text: `${studentId}-behavior`, status: 'pending' }]
+  });
+
+  it('sends only the focused learner progress to the provider even when quizzes are disabled', async () => {
+    configureQueries({ ...room, transfer_learning_enabled: false });
+    (ChecklistService.getChecklistForStudent as jest.Mock).mockImplementation(async (_roomId, studentId) => progressFor(studentId));
+    (ChecklistService.getActiveTransferChecklistForRoom as jest.Mock).mockResolvedValue(progressFor('learner-2'));
+    (ChecklistService.getChecklistByRoom as jest.Mock).mockResolvedValue(progressFor('legacy-owner'));
+
+    const result = await generateTutorSuggestion(room.id, 'tutor-1', undefined, { focusStudentId: 'learner-1' });
+
+    expect(result.success).toBe(true);
+    expect(ChecklistService.getChecklistForStudent).toHaveBeenCalledWith(room.id, 'learner-1');
+    expect(ChecklistService.getActiveTransferChecklistForRoom).not.toHaveBeenCalled();
+    expect(ChecklistService.getChecklistByRoom).not.toHaveBeenCalled();
+    const system = invoke.mock.calls[0][1].body.messages[0].content;
+    expect(system).toContain('- learner-1-observation: covered');
+    expect(system).toContain('- learner-1-behavior: pending');
+    expect(system).not.toContain('learner-2');
+    expect(system).not.toContain('legacy-owner');
+  });
+
+  it('uses the sole learner checklist when the caller has no explicit learner focus', async () => {
+    configureQueries();
+    (ChecklistService.getActiveTransferChecklistForRoom as jest.Mock).mockResolvedValue(progressFor('sole-learner'));
+
+    const result = await generateTutorSuggestion(room.id, 'tutor-1');
+
+    expect(result.success).toBe(true);
+    expect(ChecklistService.getActiveTransferChecklistForRoom).toHaveBeenCalledWith(room.id);
+    expect(ChecklistService.getChecklistForStudent).not.toHaveBeenCalled();
+    expect(ChecklistService.getChecklistByRoom).not.toHaveBeenCalled();
+    expect(invoke.mock.calls[0][1].body.messages[0].content).toContain('- sole-learner-observation: covered');
+  });
+
+  it('uses legacy room progress only when no learner is selected and no transfer checklist exists', async () => {
+    configureQueries();
+    (ChecklistService.getChecklistByRoom as jest.Mock).mockResolvedValue(progressFor('legacy-owner'));
+
+    const result = await generateTutorSuggestion(room.id, 'tutor-1');
+
+    expect(result.success).toBe(true);
+    expect(ChecklistService.getChecklistForStudent).not.toHaveBeenCalled();
+    expect(ChecklistService.getActiveTransferChecklistForRoom).toHaveBeenCalledWith(room.id);
+    expect(ChecklistService.getChecklistByRoom).toHaveBeenCalledWith(room.id);
+    expect(invoke.mock.calls[0][1].body.messages[0].content).toContain('- legacy-owner-observation: covered');
+  });
+
+  it.each([
+    ['focused read unavailable', 'learner-1', 'Progress read unavailable'],
+    ['ambiguous room ownership', undefined, 'UNSUPPORTED_ROOM_SCOPE: transfer assessment requires one identified learner']
+  ])('stops provider generation when %s', async (_label, focusStudentId, message) => {
+    configureQueries();
+    const reader = focusStudentId ? ChecklistService.getChecklistForStudent : ChecklistService.getActiveTransferChecklistForRoom;
+    (reader as jest.Mock).mockRejectedValue(new Error(message));
+
+    const result = await generateTutorSuggestion(room.id, 'tutor-1', undefined, { focusStudentId });
+
+    expect(result).toMatchObject({ success: false, error: message });
+    expect(ChecklistService.getChecklistByRoom).not.toHaveBeenCalled();
+    expect(invoke).not.toHaveBeenCalled();
+  });
+
+  it('does not substitute another learner or legacy room progress when focused progress is absent', async () => {
+    configureQueries();
+    (ChecklistService.getActiveTransferChecklistForRoom as jest.Mock).mockResolvedValue(progressFor('learner-2'));
+    (ChecklistService.getChecklistByRoom as jest.Mock).mockResolvedValue(progressFor('legacy-owner'));
+
+    const result = await generateTutorSuggestion(room.id, 'tutor-1', undefined, { focusStudentId: 'learner-1' });
+
+    expect(result.success).toBe(true);
+    expect(ChecklistService.getActiveTransferChecklistForRoom).not.toHaveBeenCalled();
+    expect(ChecklistService.getChecklistByRoom).not.toHaveBeenCalled();
+    expect(invoke.mock.calls[0][1].body.messages[0].content).not.toContain('learner-2');
+    expect(invoke.mock.calls[0][1].body.messages[0].content).not.toContain('legacy-owner');
+    expect(invoke.mock.calls[0][1].body.messages[0].content).not.toContain('\n\nCURRENT LEARNING PROGRESS\n');
   });
 });
 

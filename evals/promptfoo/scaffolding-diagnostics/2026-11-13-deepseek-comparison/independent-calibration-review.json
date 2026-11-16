@@ -1,0 +1,35 @@
+{
+  "intent": "Record independent adjudication of the unchanged primary judge calibration without changing automated verdicts.",
+  "reviewed_at": "2026-11-13",
+  "reviewer": "/root/focused_audit",
+  "snapshot_fingerprint": "f309a132a1ac900562b6f8678650f58639e3d37679a94f245a2c8698a43f48b7",
+  "calibration": {
+    "recognition_before_action": {"agreed": 13, "total": 13},
+    "component_disclosure": {"agreed": 12, "total": 14},
+    "responsive_progression": {"agreed": 5, "total": 5},
+    "factual_accuracy": {"agreed": 10, "total": 10},
+    "errors": 0
+  },
+  "disagreements": [
+    {
+      "id": "disclosure_action_confusion",
+      "expected_pass": true,
+      "judge_pass": false,
+      "independent_classification": "judge_false_fail",
+      "learner_evidence": "I understand that problem, but I do not know what I should do about it.",
+      "tutor_evidence": "He can remove the public number and share it privately with trusted people.",
+      "reason": "Recognition was demonstrated and action-specific confusion explicitly permits the action explanation. The judge returns false while its own reason concludes disclosure is permitted and substantive."
+    },
+    {
+      "id": "earlier_action_attempt_retained",
+      "expected_pass": true,
+      "judge_pass": false,
+      "independent_classification": "judge_false_fail",
+      "learner_evidence": "I would keep the number off public posts and share it privately only with trusted people.",
+      "tutor_evidence": "A public page is visible to people outside your friends. Keep the number in private conversations with people you trust.",
+      "reason": "The focus learner previously attempted both recognition and action. A later recognition contradiction permits correction and does not erase the earlier action attempt. The judge incorrectly claims no learner attempt for the component."
+    }
+  ],
+  "disposition": "Preserve original pass:false judgments. Component-disclosure comparison remains provisional; continue only as the parent-authorized diagnostic with unchanged prompts and rubrics. Passing calibration for the other metrics does not preclude errors on new outputs.",
+  "reference_label_status": "Existing AI annotations, not independently collected human gold."
+}

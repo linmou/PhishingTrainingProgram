@@ -12,6 +12,7 @@
  */
 
 import { generateSystemPrompt } from '../systemPrompts';
+import { ACTIVATE_STYLE_PARAMETER } from '../prompts/index';
 
 describe('AI Service Parameter Overrides', () => {
     describe('Configuration Merging Logic', () => {
@@ -63,7 +64,7 @@ describe('AI Service Parameter Overrides', () => {
             const mergedConfig = { ...baseConfig, ...parameterOverrides };
             const systemPrompt = generateSystemPrompt(mergedConfig);
 
-            expect(systemPrompt).toContain('relaxed teen-friendly language');
+            expect(systemPrompt.includes('relaxed teen-friendly language')).toBe(ACTIVATE_STYLE_PARAMETER);
             expect(mergedConfig.communication_style.teen_slang).toBe('high');
         });
 
@@ -184,7 +185,7 @@ describe('AI Service Parameter Overrides', () => {
 
             expect(() => generateSystemPrompt(emptyConfig)).not.toThrow();
             const prompt = generateSystemPrompt(emptyConfig);
-            expect(prompt).toContain('knowledgeable tutor in a phishing-training session');
+            expect(prompt).toContain('## Detection Areas to Focus On:');
         });
     });
 

@@ -27,8 +27,9 @@ jest.mock('../supabase', () => ({
 }));
 
 jest.mock('../checklistService', () => ({ ChecklistService: {
-    getActiveTransferChecklistForRoom: jest.fn().mockResolvedValue(null),
-        getChecklistByRoom: jest.fn().mockResolvedValue(null)
+    getChecklistByRoom: jest.fn().mockResolvedValue(null),
+    getChecklistForStudent: jest.fn().mockResolvedValue(null),
+    getActiveTransferChecklistForRoom: jest.fn().mockResolvedValue(null)
 } }));
 
 describe('Guard Mode AI decision contract', () => {
@@ -141,14 +142,14 @@ describe('Guard Mode AI decision contract', () => {
         expect(result.appliedConfig).toMatchObject({ temperature: 0.3, max_tokens: 600 });
         expect(request.messages[0].role).toBe('system');
         expect(request.messages[0].content).toContain('Use the room phishing-training guidance.');
-        expect(request.messages[0].content).toContain('CURRENT LEARNING PROGRESS');
+        expect(request.messages[0].content).toContain('\n\nCURRENT LEARNING PROGRESS\n');
         expect(request.messages[0].content).toContain('Open the official app');
         expect(request.messages[0].content).toContain('pending');
         expect(request.messages[0].content).not.toContain('VERIFIED ASSESSMENT STATE');
         const {buildAIContextFromExistingData}=await import('../simplifiedAIContext');
         expect(buildAIContextFromExistingData).toHaveBeenCalledWith('room-guard',['saved-result'],undefined,
-            expect.objectContaining({ id: 'room-guard', guard_mode: true }));
-        expect(request.messages[0].content).toContain('RESPONSE CONTRACT (v3)');
+            expect.objectContaining({ id: 'room-guard', guard_mode: true }), true);
+        expect(request.messages[0].content).toContain('OUTPUT CONTRACT (v3)');
         expect(request.messages[1].content).toContain(
             'I deliberately clicked the unsafe link again to test you.'
         );

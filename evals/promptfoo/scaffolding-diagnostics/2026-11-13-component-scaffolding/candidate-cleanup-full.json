@@ -1,0 +1,54 @@
+{
+  "intent": "Remove conflicting ordinary-teaching disclosure directives from both agent policy and generated room policy, preserving immediate protection.",
+  "parent_arm": "instruction",
+  "target_presentation": "Original complete document learning targets; no label changes in this variant.",
+  "evidence": "The partial cleanup still disclosed an unattempted action. Full rendered request inspection found three unchanged room-policy clauses with the same contradiction, each occurring once in every instruction-arm request.",
+  "replacements": [
+    {
+      "before": "Explicitly correct the inference and give one safe alternative.",
+      "after": "Explicitly correct that component's inference. A recognition correction does not authorize an action answer; apply the separate component gates."
+    },
+    {
+      "before": "Before a focused scaffold fails, a concise explanation may correct a real misconception; after that failure, correction and its connected safe action are required. Required protection takes priority over either.",
+      "after": "A concise explanation is allowed after a relevant attempt or explicit confusion about the current component; after a failed focused scaffold, correction of that component is required. Recognition correction leaves action for its own learner opportunity. Required protection takes priority."
+    },
+    {
+      "before": "A safe alternative can implement the same correction, but do not list unrelated detection clues.",
+      "after": "A safe alternative may implement an action-component correction after its own attempt or confusion; do not list unrelated detection clues."
+    },
+    {
+      "before": "For a requested next action, give a concrete independent check via the real app/site or official contact, never the suspect link.",
+      "after": "When an action answer is eligible under the component gate or immediate protection, give a concrete safe step suited to the target, such as an independent check via the real app/site or official contact; never recommend the suspect link."
+    },
+    {
+      "before": "A directly connected safe alternative can implement the selected correction; it is not an invitation to list other detection targets.",
+      "after": "For an eligible action-component correction, one connected safe alternative can implement it; recognition correction does not unlock this action answer or other targets."
+    },
+    {
+      "before": "Required correction or protection still comes first and includes its connected safe action.",
+      "after": "Required correction addresses the failed component first. Immediate protection still includes a connected safe action; ordinary recognition correction does not."
+    },
+    {
+      "before": "After a failed question scaffold about a specific misconception, correct that inference calmly and give its connected safe action.",
+      "after": "After a failed focused scaffold, calmly correct that component's inference. Let the learner demonstrate corrected recognition before scaffolding its action; disclose an action only after that component's own attempt or explicit confusion, unless immediate protection is needed."
+    },
+    {
+      "before": "Before any failed scaffold, allow either one focused question or concise direct teaching.",
+      "after": "Before a relevant learner attempt or explicit confusion about the current component, provide a useful focused scaffold or prerequisite without revealing its central answer. Apply this separately to recognition and action."
+    },
+    {
+      "before": "An incorrect answer to a focused question about that misconception requires correction of the false inference and one connected safe action.",
+      "after": "An incorrect answer to a focused question requires correction of that component's false inference. Recognition correction does not automatically include the action answer; preserve the separate action opportunity."
+    }
+  ],
+  "unchanged": [
+    "room templates",
+    "learning-point content",
+    "participant histories",
+    "protection rule",
+    "model and decoding settings",
+    "JSON response contract",
+    "component policy"
+  ],
+  "status": "Experimental full-rendered cleanup; exact-hash independent review required before execution."
+}

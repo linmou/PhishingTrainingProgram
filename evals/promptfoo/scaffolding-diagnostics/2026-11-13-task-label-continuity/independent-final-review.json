@@ -1,0 +1,525 @@
+{
+  "intent": "Independent final aggregation and semantic-verdict audit",
+  "reviewer": "continuity_audit",
+  "date": "2026-11-13",
+  "frozen_fingerprint": "8900d7eb5dba07a2ff6950263c017582ad49fc46420d305b7f042e8785225e53",
+  "summary_source": "final-summary.json",
+  "summary_sha256": "9fc9245ae0746707a65a18e4c9eb24c50b60d002b5bcae6b9882da79b9690174",
+  "detailed_source": {
+    "path": "raw/final-summary-1794568356944.json",
+    "sha256": "01d9d9325c91905597b1fdb2489ed0553b4ce902c30714640bc0d509ed225fb9"
+  },
+  "checks": {
+    "target_hashes": 266,
+    "effective_grade_status_and_source_hashes": 798,
+    "original_and_effective_partitions": true,
+    "pairwise_joint_counts": true,
+    "all_three_joint_counts": true,
+    "all_four_fixed_transition_sets": true,
+    "matched_historical_cases_per_arm": 27,
+    "completion_pair_machine_counts": true,
+    "repair_exact_request_and_immutable_error_provenance": true,
+    "budget_interval_union": true
+  },
+  "coverage": {
+    "planned": 267,
+    "saved": 266,
+    "valid": 262,
+    "target_status": {
+      "valid": 262,
+      "format_or_transport_error": 3,
+      "provider_error": 1,
+      "blocked_by_prior_turn": 1
+    },
+    "judgments": {
+      "planned": 801,
+      "saved": 798,
+      "valid_target_judge_errors": 1,
+      "original_valid_target_judge_errors": 2,
+      "repaired_entries": 1,
+      "propagated_target_errors": 12,
+      "missing": 3
+    }
+  },
+  "execution_time": {
+    "allowance_minutes": 60,
+    "active_union_minutes": 55.88256666666667,
+    "process_sum_minutes": 88.03516666666667,
+    "accounting": "Union of overlapping active intervals; process sum is retained to expose concurrency rather than count overlap as extra elapsed time."
+  },
+  "machine_overall": {
+    "production": {
+      "metrics": {
+        "recognition_before_action": {
+          "expected": 27,
+          "pass": 20,
+          "fail": 7,
+          "error": 0,
+          "missing": 0,
+          "pass_rate_planned": 0.7407407407407407,
+          "pass_rate_evaluable": 0.7407407407407407
+        },
+        "responsive_progression": {
+          "expected": 27,
+          "pass": 19,
+          "fail": 8,
+          "error": 0,
+          "missing": 0,
+          "pass_rate_planned": 0.7037037037037037,
+          "pass_rate_evaluable": 0.7037037037037037
+        },
+        "component_disclosure": {
+          "expected": 27,
+          "pass": 17,
+          "fail": 10,
+          "error": 0,
+          "missing": 0,
+          "pass_rate_planned": 0.6296296296296297,
+          "pass_rate_evaluable": 0.6296296296296297
+        }
+      },
+      "all_three": {
+        "pass": 12,
+        "fail": 15,
+        "unevaluable": 0
+      }
+    },
+    "current": {
+      "metrics": {
+        "recognition_before_action": {
+          "expected": 60,
+          "pass": 54,
+          "fail": 3,
+          "error": 3,
+          "missing": 0,
+          "pass_rate_planned": 0.9,
+          "pass_rate_evaluable": 0.9473684210526315
+        },
+        "responsive_progression": {
+          "expected": 60,
+          "pass": 44,
+          "fail": 13,
+          "error": 3,
+          "missing": 0,
+          "pass_rate_planned": 0.7333333333333333,
+          "pass_rate_evaluable": 0.7719298245614035
+        },
+        "component_disclosure": {
+          "expected": 60,
+          "pass": 47,
+          "fail": 9,
+          "error": 4,
+          "missing": 0,
+          "pass_rate_planned": 0.7833333333333333,
+          "pass_rate_evaluable": 0.8392857142857143
+        }
+      },
+      "all_three": {
+        "pass": 37,
+        "fail": 19,
+        "unevaluable": 4
+      }
+    },
+    "labels": {
+      "metrics": {
+        "recognition_before_action": {
+          "expected": 60,
+          "pass": 55,
+          "fail": 3,
+          "error": 1,
+          "missing": 1,
+          "pass_rate_planned": 0.9166666666666666,
+          "pass_rate_evaluable": 0.9482758620689655
+        },
+        "responsive_progression": {
+          "expected": 60,
+          "pass": 39,
+          "fail": 19,
+          "error": 1,
+          "missing": 1,
+          "pass_rate_planned": 0.65,
+          "pass_rate_evaluable": 0.6724137931034483
+        },
+        "component_disclosure": {
+          "expected": 60,
+          "pass": 47,
+          "fail": 11,
+          "error": 1,
+          "missing": 1,
+          "pass_rate_planned": 0.7833333333333333,
+          "pass_rate_evaluable": 0.8103448275862069
+        }
+      },
+      "all_three": {
+        "pass": 33,
+        "fail": 25,
+        "unevaluable": 2
+      }
+    },
+    "sequence": {
+      "metrics": {
+        "recognition_before_action": {
+          "expected": 60,
+          "pass": 57,
+          "fail": 3,
+          "error": 0,
+          "missing": 0,
+          "pass_rate_planned": 0.95,
+          "pass_rate_evaluable": 0.95
+        },
+        "responsive_progression": {
+          "expected": 60,
+          "pass": 50,
+          "fail": 10,
+          "error": 0,
+          "missing": 0,
+          "pass_rate_planned": 0.8333333333333334,
+          "pass_rate_evaluable": 0.8333333333333334
+        },
+        "component_disclosure": {
+          "expected": 60,
+          "pass": 48,
+          "fail": 12,
+          "error": 0,
+          "missing": 0,
+          "pass_rate_planned": 0.8,
+          "pass_rate_evaluable": 0.8
+        }
+      },
+      "all_three": {
+        "pass": 42,
+        "fail": 18,
+        "unevaluable": 0
+      }
+    },
+    "completion_cleanup": {
+      "metrics": {
+        "recognition_before_action": {
+          "expected": 60,
+          "pass": 54,
+          "fail": 6,
+          "error": 0,
+          "missing": 0,
+          "pass_rate_planned": 0.9,
+          "pass_rate_evaluable": 0.9
+        },
+        "responsive_progression": {
+          "expected": 60,
+          "pass": 52,
+          "fail": 8,
+          "error": 0,
+          "missing": 0,
+          "pass_rate_planned": 0.8666666666666667,
+          "pass_rate_evaluable": 0.8666666666666667
+        },
+        "component_disclosure": {
+          "expected": 60,
+          "pass": 45,
+          "fail": 15,
+          "error": 0,
+          "missing": 0,
+          "pass_rate_planned": 0.75,
+          "pass_rate_evaluable": 0.75
+        }
+      },
+      "all_three": {
+        "pass": 42,
+        "fail": 18,
+        "unevaluable": 0
+      }
+    }
+  },
+  "fixed_transitions": {
+    "current__to__labels": {
+      "recognition_before_action": {
+        "expected": 36,
+        "both_pass": 30,
+        "baseline_only": 0,
+        "candidate_only": 0,
+        "both_fail": 3,
+        "unevaluable": 3,
+        "pass_to_fail": [],
+        "fail_to_pass": []
+      },
+      "responsive_progression": {
+        "expected": 36,
+        "both_pass": 22,
+        "baseline_only": 4,
+        "candidate_only": 1,
+        "both_fail": 6,
+        "unevaluable": 3,
+        "pass_to_fail": [
+          "component_5_bare_agreement__labels__r3",
+          "room_completion_completed__labels__r1",
+          "room_completion_completed__labels__r2",
+          "room_completion_completed__labels__r3"
+        ],
+        "fail_to_pass": [
+          "component_3_recognition_done__labels__r3"
+        ]
+      },
+      "component_disclosure": {
+        "expected": 36,
+        "both_pass": 22,
+        "baseline_only": 3,
+        "candidate_only": 2,
+        "both_fail": 6,
+        "unevaluable": 3,
+        "pass_to_fail": [
+          "component_4_recognition_done__labels__r1",
+          "room_unanswered_original__labels__r1",
+          "room_unanswered_original__labels__r3"
+        ],
+        "fail_to_pass": [
+          "component_3_recognition_done__labels__r3",
+          "component_5_bare_agreement__labels__r3"
+        ]
+      }
+    },
+    "current__to__sequence": {
+      "recognition_before_action": {
+        "expected": 36,
+        "both_pass": 30,
+        "baseline_only": 0,
+        "candidate_only": 0,
+        "both_fail": 3,
+        "unevaluable": 3,
+        "pass_to_fail": [],
+        "fail_to_pass": []
+      },
+      "responsive_progression": {
+        "expected": 36,
+        "both_pass": 24,
+        "baseline_only": 2,
+        "candidate_only": 2,
+        "both_fail": 5,
+        "unevaluable": 3,
+        "pass_to_fail": [
+          "component_5_bare_agreement__sequence__r3",
+          "room_completion_completed__sequence__r2"
+        ],
+        "fail_to_pass": [
+          "component_3_recognition_done__sequence__r3",
+          "component_4_recognition_done__sequence__r1"
+        ]
+      },
+      "component_disclosure": {
+        "expected": 36,
+        "both_pass": 20,
+        "baseline_only": 5,
+        "candidate_only": 3,
+        "both_fail": 5,
+        "unevaluable": 3,
+        "pass_to_fail": [
+          "component_4_no_attempt__sequence__r3",
+          "component_4_recognition_done__sequence__r3",
+          "room_unanswered_original__sequence__r1",
+          "room_unanswered_original__sequence__r3",
+          "room_completion_unfinished__sequence__r3"
+        ],
+        "fail_to_pass": [
+          "component_3_recognition_done__sequence__r3",
+          "component_4_recognition_done__sequence__r2",
+          "room_unanswered_original__sequence__r2"
+        ]
+      }
+    },
+    "current__to__completion_cleanup": {
+      "recognition_before_action": {
+        "expected": 36,
+        "both_pass": 27,
+        "baseline_only": 3,
+        "candidate_only": 0,
+        "both_fail": 3,
+        "unevaluable": 3,
+        "pass_to_fail": [
+          "component_5_bare_agreement__completion_cleanup__r1",
+          "component_5_bare_agreement__completion_cleanup__r2",
+          "component_5_bare_agreement__completion_cleanup__r3"
+        ],
+        "fail_to_pass": []
+      },
+      "responsive_progression": {
+        "expected": 36,
+        "both_pass": 23,
+        "baseline_only": 3,
+        "candidate_only": 4,
+        "both_fail": 3,
+        "unevaluable": 3,
+        "pass_to_fail": [
+          "component_5_bare_agreement__completion_cleanup__r1",
+          "component_5_bare_agreement__completion_cleanup__r2",
+          "component_5_bare_agreement__completion_cleanup__r3"
+        ],
+        "fail_to_pass": [
+          "component_3_recognition_done__completion_cleanup__r3",
+          "component_4_recognition_done__completion_cleanup__r1",
+          "component_4_recognition_done__completion_cleanup__r2",
+          "component_4_recognition_done__completion_cleanup__r3"
+        ]
+      },
+      "component_disclosure": {
+        "expected": 36,
+        "both_pass": 18,
+        "baseline_only": 7,
+        "candidate_only": 3,
+        "both_fail": 5,
+        "unevaluable": 3,
+        "pass_to_fail": [
+          "component_4_no_attempt__completion_cleanup__r3",
+          "component_4_recognition_done__completion_cleanup__r1",
+          "component_4_recognition_done__completion_cleanup__r3",
+          "room_unanswered_original__completion_cleanup__r1",
+          "room_unanswered_original__completion_cleanup__r3",
+          "room_completion_unfinished__completion_cleanup__r2",
+          "room_completion_completed__completion_cleanup__r3"
+        ],
+        "fail_to_pass": [
+          "component_3_recognition_done__completion_cleanup__r3",
+          "component_5_bare_agreement__completion_cleanup__r1",
+          "room_unanswered_original__completion_cleanup__r2"
+        ]
+      }
+    },
+    "sequence__to__completion_cleanup": {
+      "recognition_before_action": {
+        "expected": 36,
+        "both_pass": 30,
+        "baseline_only": 3,
+        "candidate_only": 0,
+        "both_fail": 3,
+        "unevaluable": 0,
+        "pass_to_fail": [
+          "component_5_bare_agreement__completion_cleanup__r1",
+          "component_5_bare_agreement__completion_cleanup__r2",
+          "component_5_bare_agreement__completion_cleanup__r3"
+        ],
+        "fail_to_pass": []
+      },
+      "responsive_progression": {
+        "expected": 36,
+        "both_pass": 27,
+        "baseline_only": 2,
+        "candidate_only": 3,
+        "both_fail": 4,
+        "unevaluable": 0,
+        "pass_to_fail": [
+          "component_5_bare_agreement__completion_cleanup__r1",
+          "component_5_bare_agreement__completion_cleanup__r2"
+        ],
+        "fail_to_pass": [
+          "component_4_recognition_done__completion_cleanup__r2",
+          "component_4_recognition_done__completion_cleanup__r3",
+          "room_completion_completed__completion_cleanup__r2"
+        ]
+      },
+      "component_disclosure": {
+        "expected": 36,
+        "both_pass": 22,
+        "baseline_only": 4,
+        "candidate_only": 2,
+        "both_fail": 8,
+        "unevaluable": 0,
+        "pass_to_fail": [
+          "component_4_recognition_done__completion_cleanup__r1",
+          "component_4_recognition_done__completion_cleanup__r2",
+          "room_completion_unfinished__completion_cleanup__r2",
+          "room_completion_completed__completion_cleanup__r3"
+        ],
+        "fail_to_pass": [
+          "component_5_bare_agreement__completion_cleanup__r1",
+          "room_completion_unfinished__completion_cleanup__r3"
+        ]
+      }
+    }
+  },
+  "remaining_judge_error": [
+    {
+      "id": "journey_3__current__r3__t4",
+      "metrics": [
+        "component_disclosure"
+      ]
+    }
+  ],
+  "verdict": "No candidate accepted. Arithmetic and preserved request provenance verified; semantic reliability remains limited by known machine false passes, failed behavior gates, operational missingness, and no unseen holdout.",
+  "semantic_review": {
+    "coverage": "Qualitative inspection of all saved candidate outputs plus targeted baseline boundaries; not a complete independent reannotation of all267 planned records.",
+    "known_machine_false_passes": [
+      {
+        "id": "component_4_recognition_done__sequence__r1",
+        "metric": "component_disclosure",
+        "machine_pass": true,
+        "independent_pass": false,
+        "basis": "Question supplies location-omission behavior before its own attempt; same rule as corrected room privacy-goal boundary."
+      },
+      {
+        "id": "room_completion_completed__sequence__r1",
+        "metric": "responsive_progression",
+        "machine_pass": true,
+        "independent_pass": false,
+        "root_second_review": "confirmed",
+        "basis": "Retests already-demonstrated public audience, location observation or location omission. Different headings do not erase semantic equivalence."
+      },
+      {
+        "id": "room_completion_completed__sequence__r3",
+        "metric": "responsive_progression",
+        "machine_pass": true,
+        "independent_pass": false,
+        "root_second_review": "confirmed",
+        "basis": "Retests already-demonstrated public audience, location observation or location omission. Different headings do not erase semantic equivalence."
+      },
+      {
+        "id": "room_completion_completed__completion_cleanup__r1",
+        "metric": "responsive_progression",
+        "machine_pass": true,
+        "independent_pass": false,
+        "root_second_review": "confirmed",
+        "basis": "Retests already-demonstrated public audience, location observation or location omission. Different headings do not erase semantic equivalence."
+      },
+      {
+        "id": "room_completion_completed__completion_cleanup__r2",
+        "metric": "responsive_progression",
+        "machine_pass": true,
+        "independent_pass": false,
+        "root_second_review": "confirmed",
+        "basis": "Retests already-demonstrated public audience, location observation or location omission. Different headings do not erase semantic equivalence."
+      },
+      {
+        "id": "room_completion_completed__completion_cleanup__r3",
+        "metric": "responsive_progression",
+        "machine_pass": true,
+        "independent_pass": false,
+        "root_second_review": "confirmed",
+        "basis": "Retests already-demonstrated public audience, location observation or location omission. Different headings do not erase semantic equivalence."
+      }
+    ],
+    "manual_completed_pair_progression": {
+      "labels": "0/3",
+      "sequence": "0/3",
+      "completion_cleanup": "0/3"
+    },
+    "interpretations": [
+      "Labels alone did not resolve premature switching.",
+      "Clarifying task completion improved same-point selection but introduced recognition-before-action regressions on bare agreement and retained disclosure/retesting problems.",
+      "Partial adjustments for known errors are not a full corrected benchmark or statistical accuracy bound.",
+      "The new gift-card repetition report is separate exposed evidence and does not retroactively change these frozen scores."
+    ],
+    "audit_sources": [
+      "independent-preparation-review-v11.json",
+      "independent-refinement-review-completion-cleanup.json",
+      "independent-output-review-completion-cleanup.json",
+      "independent-manual-room-review.json"
+    ]
+  },
+  "acceptance": {
+    "result": "No candidate accepted",
+    "reasons": [
+      "Each candidate has observed fixed-case pass-to-fail regressions preserved in fixed_transitions.",
+      "All three candidates fail the manually adjudicated completed-boundary cases.",
+      "No unseen holdout or full existing regression acceptance was run; scope was a focused development diagnostic.",
+      "One baseline judgment remains unevaluable; target/provider and dependent-turn missingness remain visible."
+    ],
+    "experiment_status": "Bounded diagnostic execution and reconciliation finished with disclosed errors; not a fully scored or accepted behavior version.",
+    "next_action": "Use new exposed evidence to clarify contextual completion in a separately frozen specification/evaluation; do not rewrite this comparison."
+  }
+}

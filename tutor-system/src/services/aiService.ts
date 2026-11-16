@@ -898,9 +898,15 @@ export const generateTutorSuggestion = async (
         // 3. Apply parameter overrides if provided
         aiConfig = SystemPromptProcessor.processOverrides(aiConfig, parameterOverrides);
 
+        // Learner-owned progress is independent of whether transfer quizzes are enabled.
+        // An ambiguous or failed transfer read must not substitute another learner's state.
+        const transferChecklist = options?.focusStudentId
+            ? await ChecklistService.getChecklistForStudent(roomId, options.focusStudentId)
+            : await ChecklistService.getActiveTransferChecklistForRoom(roomId);
         try {
-            const checklist = await ChecklistService.getActiveTransferChecklistForRoom(roomId)
-                || await ChecklistService.getChecklistByRoom(roomId);
+            const checklist = transferChecklist ?? (options?.focusStudentId
+                ? null
+                : await ChecklistService.getChecklistByRoom(roomId));
             if (checklist) {
                 const items = [...checklist.detection_areas, ...checklist.verification_steps];
                 const progress = items.map(item => `- ${item.area_text}: ${item.status}`).join('\n');
@@ -917,7 +923,7 @@ export const generateTutorSuggestion = async (
         console.log('📋 Using AI config with system prompt:', aiConfig.system_prompt?.substring(0, 100) + '...');
         
         // 5. Get conversation history (includes pre-populated discussion for ecology)
-        const conversationHistory = await buildAIContextFromExistingData(roomId,options?.expectedAssessmentResultIds,options?.focusStudentId,roomData);
+        const conversationHistory = await buildAIContextFromExistingData(roomId,options?.expectedAssessmentResultIds,options?.focusStudentId,roomData,true);
         console.log(`📚 Conversation history length: ${conversationHistory.length} messages`);
 
         const scenarioContext = formatRoomScenarioContext(

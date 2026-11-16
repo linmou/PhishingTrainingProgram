@@ -1,0 +1,80 @@
+{
+  "intent": "Independently verify the final corrected-label freeze and preserve candidate-output observations before aggregate acceptance.",
+  "reviewer": "continuity_audit; did not author target candidate prompts or execute target generations",
+  "date": "2026-11-13",
+  "fingerprint": "077b2d5b6920a0c5704db8e184946623ca653b857ce65ccb208ebb3907bd78fd",
+  "freeze_file_sha256": "baeb4987ef24efd73489c7cf4ecb808a4e192e9a3426497e2fcb96ba3dae4c4d",
+  "runner_sha256": "55546c3986beb93b76609b18d6588d319532769b5521767f96f199d7b3edaac6",
+  "sequence_sha256": "61d54a6734f19ec3d8b7df770a9592804e79b8e5d1305be6f4c7d86b554de241",
+  "preparation_verdict": "verified for the focused diagnostic; not full behavior acceptance",
+  "checks": {
+    "frozen_source_hashes_match_current_files": 35,
+    "v10_v11_exactly_equal_fields": ["shells", "jobs", "cases", "trajectories", "settings", "judge_system", "judge_steps", "rubrics", "judge_settings_by_metric"],
+    "worker_limit": 32,
+    "target_thinking": false,
+    "target_max_tokens": 600,
+    "judge_thinking_all_three_metrics": true,
+    "judge_max_tokens_all_three_metrics": 8000,
+    "calibration_reconciliation": "All32 original calibration examples use v5; all7 observed boundaries use v9. Independent exact message, model, temperature, thinking and token-setting checks agree with corrected expectations39/39. No new model calls.",
+    "changed_expected_labels": ["observed_behavior_question_not_answer_disclosure"],
+    "annotation_history": "The original boundary run remains6/7. The corrected expected-label reconciliation is7/7, not a newly executed perfect boundary run."
+  },
+  "candidate_output_coverage": {
+    "saved_candidate_records": 119,
+    "expected_candidate_records": 120,
+    "saved_all_arm_records": 206,
+    "expected_all_arm_records": 207,
+    "manifest_method": "SHA256 of JSON.stringify of sorted filename and raw-file-SHA256 pairs for target filenames containing __labels__ or __sequence__",
+    "candidate_record_manifest_sha256": "c069856280b6fb0047c1d0acb5ae37b304a28f8773457b58675857bcb0acad3c",
+    "review": "All119 saved candidate records inspected for learner-facing text; one record has no tutor response because the provider blocked its request. Full uniform grading was still in progress at this review."
+  },
+  "manual_observations": [
+    {
+      "case": "component_4_recognition_done",
+      "finding": "Labels-only switches from unfinished destination behavior to Friday/time observation in all3 repetitions. Sequence keeps destination behavior in r1 but switches in r2 and r3.",
+      "scope": "A targeted observation of these3 repetitions per arm, not an independent scenario-level effect estimate."
+    },
+    {
+      "case": "journey_3 and journey_5, turn2",
+      "finding": "Same-point behavior is elicited in current1/6, labels0/6 and sequence5/6. Sequence journey_5 r1 still switches to stranger consequences. All three address sequence repetitions and phone sequence r2/r3 remain on behavior.",
+      "scope": "Manual continuity observation at the controlled recognition-to-action boundary; does not imply disclosure or all-turn passage."
+    },
+    {
+      "case": "room_unanswered_original",
+      "finding": "Both candidates ask behavior in all3 repetitions even though learner observation meaning is not established by Yes and Oh, not safe after tutor-supplied consequences."
+    },
+    {
+      "case": "room_completion_completed",
+      "finding": "Both candidates redundantly retest established observation evidence: labels asks theater/location risk in3/3; sequence asks already-known public audience in r1/r3 and already-known named place in r2."
+    },
+    {
+      "case": "room_completion_unfinished__sequence__r3",
+      "source": "raw/targets/room_completion_unfinished__sequence__r3.json",
+      "source_sha256": "a5d3dadbb6781a5f6fcd56d073068fad96a0541b4e9e73046ced9dca83dd918e",
+      "quote": "You found the risk. How can Ethan tell friends the time and place safely? Think about private messages.",
+      "finding": "Private messages supplies the central behavior method before a behavior attempt or confusion."
+    }
+  ],
+  "residual_judge_disagreement": {
+    "case": "component_4_recognition_done__sequence__r1",
+    "metric": "component_disclosure",
+    "source": "raw/targets/component_4_recognition_done__sequence__r1.json",
+    "source_sha256": "f7125d2b0a97dc411f8d3c5dd14e74c31ac03be75788b2215d95cba24060cdc9",
+    "machine_pass": true,
+    "independent_expected_pass": false,
+    "quote": "Right, strangers could find him. How can Ethan share his excitement without giving away that specific place?",
+    "basis": "The inventory behavior begins Avoid sharing your exact location in public posts. The question supplies this central action while leaving its wording/example open, matching the corrected privacy-goal boundary in disclosure-boundary-adjudication.json. Recognition is demonstrated, but no behavior attempt or explicit confusion exists.",
+    "disposition": "Preserve the machine grade, report manual disagreement separately, and avoid interpreting39/39 calibration as perfect real-output judge reliability. No scorer change or target rerun requested by this review."
+  },
+  "operational_missingness": {
+    "case": "journey_3__labels__r2__t3",
+    "source": "raw/targets/journey_3__labels__r2__t3.json",
+    "source_sha256": "175d03523536103091157a5505c7fd3cacd7d1eb8545e694b42ff913d2901ac4",
+    "http_status": 400,
+    "provider_error_type": "data_inspection_failed",
+    "provider_message": "Input text data may contain inappropriate content.",
+    "evidence_location": "attempts[0].attempts[0].raw",
+    "dependent_missing_case": "journey_3__labels__r2__t4",
+    "disposition": "Provider-blocked turn and skipped dependent turn are operational missingness, not scored behavioral failures or successful responses. Preserve planned denominators and incomplete trajectory coverage."
+  }
+}

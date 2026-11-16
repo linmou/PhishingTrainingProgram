@@ -1,0 +1,67 @@
+{
+  "intent": "Independently annotate observed grading failures and counterexamples before validating the uniform thinking judge.",
+  "author": "/root/continuity_audit",
+  "date": "2026-11-13",
+  "reference_status": "Independent AI annotations grounded in T01.1, T02.1 and T02.2; not human gold or unseen holdouts.",
+  "source_snapshot_fingerprint": "2890376a62dd2b465b672fc234055cd9eaddad53057af202f966d0c91e5ac4c5",
+  "construction": "Load the exact case and parsed output from each source target, verify its SHA-256, then judge only the listed metric. Labels and rationale remain evaluator-only. All seven checks are specified before any new boundary judgments.",
+  "deduplication": "The original-room r1 and r3 disclosure failures are near-identical questions with no supplied safe method; r3 represents that defect. Original-room r2 and r3 progression failures both over-credit the same vague learner evidence; r2 represents that defect. Distinct destination-to-time and address-to-invitation switches are both retained to test point attribution across scenarios. Two positive address-action checks and the original-room ordering check distinguish the metric boundaries.",
+  "examples": [
+    {
+      "id": "observed_movie_unfinished_switch",
+      "source_target": "raw/targets/component_4_recognition_done__current__r1.json",
+      "source_sha256": "47c44f2b462cb50e63da54278361bd94ae82839d27ea2894fc3ea664830b26c3",
+      "metric": "responsive_progression",
+      "expected": false,
+      "rationale": "The learner explains the public destination and its consequence but has never attempted its safe behavior. The reply asks for the time detail, a different point's observation. Useful related content cannot complete or justify skipping the unfinished destination behavior task."
+    },
+    {
+      "id": "observed_address_unfinished_switch",
+      "source_target": "raw/targets/component_3_recognition_done__current__r3.json",
+      "source_sha256": "d42f17542c667b40acc2b432c9caa7fc6dadb8799026c2b8978a44a580c7c214",
+      "metric": "responsive_progression",
+      "expected": false,
+      "rationale": "The learner demonstrates the public-address observation and why it matters, with no corresponding behavior attempt. The reply changes to the separate invitation point. The address behavior remains unfinished under the adopted per-point progression rule."
+    },
+    {
+      "id": "observed_agreement_not_observation_completion",
+      "source_target": "raw/targets/room_unanswered_original__current__r2.json",
+      "source_sha256": "b5fccb03482333b73700f3a0fafad3d4f4aed8a0d0eae00dd1c7eace4928e536",
+      "metric": "responsive_progression",
+      "expected": false,
+      "rationale": "The learner confirms displayed details and says not safe; the tutor supplied the stranger consequence. No learner-owned explanation of that meaning is established. The reply moves directly to a behavior question instead of repairing the unfinished observation task."
+    },
+    {
+      "id": "observed_behavior_question_not_answer_disclosure",
+      "source_target": "raw/targets/room_unanswered_original__current__r3.json",
+      "source_sha256": "2202de52b8b667475c017f42adfcac6d857988839d6392737768dce1ab5212e0",
+      "metric": "component_disclosure",
+      "expected": true,
+      "rationale": "The response asks how to communicate the details without strangers seeing them. It does not supply a private-message method or any other central behavior answer. Its generic risk acknowledgment repeats the learner's existing verdict rather than supplying the missing consequence explanation. The action question is premature under ordering, but asking for an action is not disclosing its answer."
+    },
+    {
+      "id": "observed_behavior_question_before_observation_meaning",
+      "source_target": "raw/targets/room_unanswered_original__current__r3.json",
+      "source_sha256": "2202de52b8b667475c017f42adfcac6d857988839d6392737768dce1ab5212e0",
+      "metric": "recognition_before_action",
+      "expected": false,
+      "rationale": "This is a behavior question before this learner has demonstrated the observation's meaning. Tutor-supplied consequences and a bare not-safe verdict do not establish learner understanding. This ordering failure coexists with permitted nondisclosing wording."
+    },
+    {
+      "id": "observed_same_point_behavior_opportunity",
+      "source_target": "raw/targets/component_3_recognition_done__current__r1.json",
+      "source_sha256": "7d85ba5e0cef1067ec1691d03254538d1806a9e857cf216f51965b5f9dbc08c0",
+      "metric": "responsive_progression",
+      "expected": true,
+      "rationale": "The learner has identified the full address and explained that people can find the home. Asking what safe thing to do when a friend posts this develops that same point's unmet behavior task without retesting recognition or changing points."
+    },
+    {
+      "id": "observed_same_point_question_preserves_answer",
+      "source_target": "raw/targets/component_3_recognition_done__current__r1.json",
+      "source_sha256": "7d85ba5e0cef1067ec1691d03254538d1806a9e857cf216f51965b5f9dbc08c0",
+      "metric": "component_disclosure",
+      "expected": true,
+      "rationale": "The response acknowledges the learner's already demonstrated address observation and asks for a safe action without supplying it. No new central answer is disclosed."
+    }
+  ]
+}

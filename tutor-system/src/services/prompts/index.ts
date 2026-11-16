@@ -4,30 +4,25 @@
  */
 
 import { SystemPromptConfig } from './types';
-import { BASE_SYSTEM_PROMPT } from './basePrompt';
 
 // PEDAGOGICAL METHODS (Universal - reusable across subjects)
 import { ROLE_PARAMETERS } from './pedagogy/parameters/roleParameters';
 import { COMMUNICATION_STYLES } from './pedagogy/parameters/communicationStyles';
 import { COGNITIVE_PARAMETERS } from './pedagogy/parameters/cognitiveParameters';
 import { EMOTIONAL_PARAMETERS } from './pedagogy/parameters/emotionalParameters';
-import { SCAFFOLDING_TECHNIQUES } from './pedagogy/techniques/scaffoldingTechniques';
 
-// CONTENT (Subject-specific - currently cybersecurity)
-import { SCAM_DETECTION_RULES, PRIVACY_PROTECTION_RULES } from './content/cybersecurity/detectionRules';
-import { RESPONSE_POLICY } from './responsePolicy';
 
 /**
- * Generates a complete system prompt based on configuration
- * Now treats roles as parameters with intensity levels like other components
+ * TEMPORARY (2026-11-14): communication, cognitive and emotional style parameters are
+ * deactivated to remove their answer-disclosing and multi-target examples as experimental
+ * factors while knowledge-point jumping is diagnosed. Set true once that issue is resolved.
+ * Room configuration still stores the values; only their prompt text is omitted.
  */
-export function generateSystemPrompt(config: SystemPromptConfig): string {
-  const sections = [
-    BASE_SYSTEM_PROMPT,
+export const ACTIVATE_STYLE_PARAMETER = false;
 
-    // Role parameter now follows the same low/high pattern as other parameters
-    ROLE_PARAMETERS.role[config.role?.role || 'high'], // Use the configured role intensity
-
+function styleParameterSections(config: SystemPromptConfig): string[] {
+  if (!ACTIVATE_STYLE_PARAMETER) return [];
+  return [
     "## Communication Style:",
     COMMUNICATION_STYLES.teen_slang[config.communication_style.teen_slang],
     COMMUNICATION_STYLES.conversational_markers[config.communication_style.conversational_markers],
@@ -44,42 +39,26 @@ export function generateSystemPrompt(config: SystemPromptConfig): string {
     EMOTIONAL_PARAMETERS.validation_frequency[config.emotional_parameters.validation_frequency],
     EMOTIONAL_PARAMETERS.mistake_normalization[config.emotional_parameters.mistake_normalization],
     EMOTIONAL_PARAMETERS.confidence_building[config.emotional_parameters.confidence_building],
+  ];
+}
 
-    "## Learning Process:",
-    RESPONSE_POLICY,
+/**
+ * Generates a complete system prompt based on configuration
+ * Now treats roles as parameters with intensity levels like other components
+ */
+export function generateSystemPrompt(config: SystemPromptConfig): string {
+  // Room-specific content only. The tutor policy, including teaching rules, is appended once by
+  // buildEcologicalChatCompletionMessages from prompts/activeTutorAgentPrompt.ts.
+  const sections = [
+    ROLE_PARAMETERS.role[config.role?.role || 'high'],
 
-    "## Reading Level:",
-    "Use short sentences and familiar words for younger or confused students. Explain unfamiliar terms while preserving the factual meaning and the learner's reasoning task.",
-
-    "## Available Teaching Methods:",
-    "These are general teaching methods, not decision.instruction labels. Select the declared instructional action using the tutor decision policy:",
-    Object.entries(SCAFFOLDING_TECHNIQUES).map(([key, technique]) =>
-      `**${key.charAt(0).toUpperCase() + key.slice(1)}**: ${technique.description}`
-    ).join('\n'),
-
-    "## Subject Content - Cybersecurity:",
-    "You are teaching cybersecurity: help students understand and recognize scams and privacy protection.",
-
-    "### Scam Detection Framework:",
-    SCAM_DETECTION_RULES,
-
-    "### Privacy Protection Guidelines:",
-    PRIVACY_PROTECTION_RULES,
+    ...styleParameterSections(config),
 
     "## Detection Areas to Focus On:",
     ...config.detection_areas.map(area => `- ${area}`),
 
     "## Verification Steps to Teach:",
     ...config.verification_steps.map(step => `- ${step}`),
-
-    "## Default Safe Actions:",
-    "- Do not click suspicious links.",
-    "- Open the real app or type the real company website yourself.",
-    "- Check account settings, security alerts, or recent login activity in the real account.",
-    "- If the alert is about a bank or parent account, use the real banking app/site or the phone number on the card.",
-    "- A lock icon or HTTPS does not prove the site is real. Scammers can use them too.",
-
-    "During tutoring, help teens develop critical thinking skills for online safety through direct teaching, practical checks, and restrained support. During Guard, restore participation using the tutor decision policy."
   ];
 
   return sections.filter(Boolean).join('\n\n');
