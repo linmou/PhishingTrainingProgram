@@ -2,7 +2,7 @@
 title: Online Safety Tutor Platform
 status: final
 created: 2026-10-22
-updated: 2026-11-12
+updated: 2026-11-18
 ---
 
 <!-- Scope updated: 2026-11-12. Source baseline commit: 878ed46. -->
@@ -261,6 +261,8 @@ The room owner and the learner can exchange messages, and every participant sees
 - A sent message appears for every participant within about 2 seconds.
 - Leaving and re-entering shows the full history in order.
 - Messages sent while a participant was offline appear when they reconnect.
+- Choosing Reply on a message starts the composer with `@<name> `, where `<name>` is the name participants see on that message: the persona name for a character reply, "Security Supervisor" for a Guard reply, otherwise the display name. Text already typed is kept, choosing another message swaps the mention, and cancelling the reply removes it while it is still at the start.
+- A message that contains only the reply mention cannot be sent.
 
 #### FR-15: Typing indicator
 The room owner and the learner can see when the other is typing; the indicator clears when typing stops or after 3 seconds without input.
@@ -746,3 +748,7 @@ Questions OQ-1 to OQ-15 were all resolved on 2026-10-22. Each decision is built 
 ### Approved extension: automatic learning progress (2026-11-12)
 
 Issue #75 extends FR-23 and NFR-8 under the owner-approved automatic refresh design. P2/P4/P5 favor timely visibility; P6 and P7/R7 favor the existing Realtime mechanism. The P1 tension of learners seeing progress sooner is accepted by the owner; progress rules and assessment privacy remain unchanged. This is a target contract, not evidence of deployment. Release status is recorded in `tutor-system/docs/doc_update_record/documentation_update_record_v2026_11_12_learning_target_auto_refresh.md`.
+
+### Approved extension: reply mentions (2026-11-18)
+
+Issue #107 extends FR-14 under the owner-requested reply mention. P5 favors a clear reply target. Using the visible name keeps FR-22/FR-30 (Guard shown as "Security Supervisor") and FR-49 (persona identity) intact; the mention-only rule follows FR-28's empty-reply refusal. Copying an AI suggestion replaces the draft and drops the reply target, because a reviewed reply is threaded to the message it was generated for. The owner accepted that a tutor who adds a mention to a copied AI suggestion is recorded as `modified` (FR-28). The mention is part of the saved message text. Frontend only; Render deploys it from `no_sign_up`.

@@ -24,6 +24,8 @@ import type { AssessmentOptionId } from '../types/assessment';
 import type { AssessmentAnswerAttempt } from '../components/PublicAssessmentQuestion';
 import PublicAssessmentQuestion from '../components/PublicAssessmentQuestion';
 import type { Message } from '../types';
+import { resolveMessagePresentation } from '../utils/messagePresentation';
+import { applyReplyMention, buildReplyMention, isReplyMentionOnly, removeReplyMention } from '../utils/replyMention';
 import { findOpenLearnerAssessments, learnerConversationMessages, readAnswerLifecycle, readAssessmentId, readPublicQuestion } from '../contexts/transferAssessmentUiAdapter';
 
 const COMPARISON_PAIR_LABELS = {
@@ -96,6 +98,9 @@ const RoomPagePost: React.FC = () => {
     const [clearingChat, setClearingChat] = useState(false);
     const [showChecklist, setShowChecklist] = useState(false);
     const [replyingTo, setReplyingTo] = useState<{ id: string; authorName: string } | null>(null);
+    // The "@name " prefix Reply inserted, kept in a ref so quick successive actions see the latest value.
+    const insertedMentionRef = useRef<string | null>(null);
+    const replyMentionOnly = replyingTo !== null && isReplyMentionOnly(messageText, buildReplyMention(replyingTo.authorName));
     const isGuardComposer = user?.current_role === 'tutor' && currentRoom?.guard_mode === true;
     const composerIdentity = isGuardComposer
         ? { displayName: 'Security Supervisor', avatarUrl: null, isGuard: true }
@@ -392,6 +397,8 @@ const RoomPagePost: React.FC = () => {
 
     const sendCurrentPost = async (ratedMessageId?: string) => {
         if (!messageText.trim() || sendingMessage) return;
+        // A bare reply mention has no content of its own.
+        if (replyMentionOnly) return;
 
         const unratedResponse = getUnratedResponse(ratedMessageId);
         if (unratedResponse) {
@@ -409,6 +416,7 @@ const RoomPagePost: React.FC = () => {
                 replyToMessageId: replyingTo?.id,
             });
             setMessageText('');
+            insertedMentionRef.current = null;
             setReplyingTo(null); // Clear reply state
         } catch (error) {
             console.error('Failed to send message:', error);
@@ -573,12 +581,24 @@ const RoomPagePost: React.FC = () => {
     const handleMessageReply = (messageId: string) => {
         const message = messages.find(m => m.id === messageId);
         if (message) {
-            setReplyingTo({
-                id: messageId,
-                authorName: message.display_name || message.user_role
-            });
+            // Use the name participants see on the comment (persona, Guard or account name).
+            const authorName = resolveMessagePresentation(message, user?.current_role).displayName;
+            const applied = applyReplyMention(messageText, buildReplyMention(authorName), insertedMentionRef.current);
+            insertedMentionRef.current = applied.inserted;
+            setMessageText(applied.text);
+            setReplyingTo({ id: messageId, authorName });
         }
     };
+
+    const handleCancelReply = useCallback(() => {
+        const inserted = insertedMentionRef.current;
+        insertedMentionRef.current = null;
+        setMessageText(current => removeReplyMention(current, inserted));
+        setReplyingTo(null);
+    }, []);
+
+    // A reply target belongs to one room; drop it and its mention when the room changes.
+    useEffect(() => handleCancelReply, [roomId, handleCancelReply]);
 
     const handleAssessmentSubmit = async (
         messageId: string,
@@ -594,6 +614,9 @@ const RoomPagePost: React.FC = () => {
 
     const handleCopyAISuggestion = async (suggestion: string) => {
         setMessageText(suggestion);
+        // A reviewed suggestion is threaded to the message it was generated for, so drop the reply target.
+        insertedMentionRef.current = null;
+        setReplyingTo(null);
         // Don't clear or record yet - wait for actual send
     };
 
@@ -1093,7 +1116,9 @@ const RoomPagePost: React.FC = () => {
                                 disabled={sendingMessage}
                                 isLoading={sendingMessage}
                                 replyingTo={replyingTo}
-                                onCancelReply={() => setReplyingTo(null)}
+                                submitBlocked={replyMentionOnly}
+                                submitBlockedTitle="Add a message after the mention"
+                                onCancelReply={handleCancelReply}
                             />
                             {user?.current_role === 'tutor' && canUseAI && isAIEnabled && (
                                 <button
