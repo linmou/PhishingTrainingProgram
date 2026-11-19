@@ -19,6 +19,8 @@ interface CommentInputProps {
     disabled?: boolean;
     /** Learner may still type, but the message cannot be submitted yet (staged playback). */
     submitBlocked?: boolean;
+    /** Tooltip shown on the Send button while submitBlocked is true. */
+    submitBlockedTitle?: string;
     isLoading?: boolean;
     maxLength?: number;
     replyingTo?: {
@@ -39,6 +41,7 @@ const CommentInput: React.FC<CommentInputProps> = ({
     placeholder = "Write a comment...",
     disabled = false,
     submitBlocked = false,
+    submitBlockedTitle = 'Wait for the second AI message',
     isLoading = false,
     maxLength = 1000,
     replyingTo = null,
@@ -183,7 +186,7 @@ const CommentInput: React.FC<CommentInputProps> = ({
                             disabled={!canSubmit}
                             className={`comment-submit-btn ${canSubmit ? 'comment-submit-active' : ''}`}
                             title={submitBlocked
-                                ? 'Wait for the second AI message'
+                                ? submitBlockedTitle
                                 : canSubmit ? 'Send comment' : 'Type a message to send'}
                         >
                             {isLoading ? (

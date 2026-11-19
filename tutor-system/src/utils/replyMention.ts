@@ -11,18 +11,32 @@ export function removeReplyMention(text: string, mention: string | null | undefi
   return text.slice(mention.length);
 }
 
+/** True when the draft holds nothing but the reply mention, with or without its trailing space. */
+export function isReplyMentionOnly(text: string, mention: string | null | undefined): boolean {
+  return Boolean(mention) && text.trim() === (mention as string).trim();
+}
+
+export interface AppliedReplyMention {
+  text: string;
+  /** The prefix this call added, or null when nothing was added and so nothing should be removed later. */
+  inserted: string | null;
+}
+
 /**
- * Put `mention` at the start of the draft, replacing the mention of an earlier
- * reply target and keeping whatever the user already typed. The result never
- * exceeds `maxLength`.
+ * Put `mention` at the start of the draft, first removing the mention an earlier
+ * Reply inserted, and keeping whatever the user typed. A mention the user typed
+ * themselves is left in place and not claimed, and the mention is skipped rather
+ * than cutting typed text when it would not fit within `maxLength`.
  */
 export function applyReplyMention(
   text: string,
   mention: string,
-  previousMention?: string | null,
+  previousInserted?: string | null,
   maxLength = 1000
-): string {
-  const body = removeReplyMention(text, previousMention);
-  const withMention = body.startsWith(mention) ? body : `${mention}${body}`;
-  return withMention.slice(0, maxLength);
+): AppliedReplyMention {
+  const body = removeReplyMention(text, previousInserted);
+  if (body.startsWith(mention) || mention.length + body.length > maxLength) {
+    return { text: body, inserted: null };
+  }
+  return { text: `${mention}${body}`, inserted: mention };
 }

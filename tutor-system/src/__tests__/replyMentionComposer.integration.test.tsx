@@ -43,14 +43,14 @@ const message = (id: string, from: User, extra: Partial<Message> = {}): Message 
   created_at: '2026-09-01T00:00:00Z', display_name: from.display_name, avatar_url: null, ...extra,
 } as Message);
 
-const renderRoom = (viewer: User, messages: Message[]) => {
+const renderRoom = (viewer: User, messages: Message[], aiSuggestion: string | null = null) => {
   const sendMessage = jest.fn().mockResolvedValue(undefined);
   (useAuth as jest.Mock).mockReturnValue({ user: viewer, loading: false });
   (useRoom as jest.Mock).mockReturnValue({
     currentRoom: room, messages, participants: [tutor, student], loading: false, typingUsers: [],
     joinRoom: jest.fn(), leaveRoom: jest.fn(), sendMessage, generateAIResponse: jest.fn(),
     regenerateAIResponse: jest.fn(), startTyping: jest.fn(), stopTyping: jest.fn(), aiConfig: null,
-    loadingAI: false, downloadChatHistory: jest.fn(), clearChatHistory: jest.fn(), aiSuggestion: null,
+    loadingAI: false, downloadChatHistory: jest.fn(), clearChatHistory: jest.fn(), aiSuggestion,
     aiDecision: null, finalGuardMode: false, updateFinalResponse: jest.fn(), updateFinalGuardMode: jest.fn(),
     setGuardMode: jest.fn(), clearAISuggestion: jest.fn(), recordAIFeedback: jest.fn(),
     currentSuggestionContext: null, submitMessageFeedback: jest.fn(), messageFeedbackStats: {},
@@ -95,6 +95,34 @@ describe('Reply button mention', () => {
     expect(composer().value).toBe('@Taylor Tutor hi');
     fireEvent.click(screen.getByTitle('Cancel reply'));
     expect(composer().value).toBe('hi');
+    expect(screen.queryByText(/Replying to/)).not.toBeInTheDocument();
+  });
+
+  it('blocks Send while only the mention is present, even after its trailing space is deleted', () => {
+    const { composer, sendMessage } = renderRoom(tutor, [message('m1', student)]);
+    fireEvent.click(screen.getByTestId('reply-m1'));
+    const send = screen.getByTitle('Add a message after the mention');
+    expect(send).toBeDisabled();
+    fireEvent.change(composer(), { target: { value: '@Sam Student' } });
+    expect(send).toBeDisabled();
+    fireEvent.keyDown(composer(), { key: 'Enter' });
+    expect(sendMessage).not.toHaveBeenCalled();
+  });
+
+  it('does not remove a mention the user typed themselves when the reply is cancelled', () => {
+    const { composer } = renderRoom(tutor, [message('m1', student)]);
+    fireEvent.change(composer(), { target: { value: '@Sam Student thanks' } });
+    fireEvent.click(screen.getByTestId('reply-m1'));
+    expect(composer().value).toBe('@Sam Student thanks');
+    fireEvent.click(screen.getByTitle('Cancel reply'));
+    expect(composer().value).toBe('@Sam Student thanks');
+  });
+
+  it('drops the reply target and mention when the tutor copies an AI suggestion', () => {
+    const { composer } = renderRoom(tutor, [message('m1', student)], 'Look at the sender address.');
+    fireEvent.click(screen.getByTestId('reply-m1'));
+    fireEvent.click(screen.getByRole('button', { name: /copy/i }));
+    expect(composer().value).toBe('Look at the sender address.');
     expect(screen.queryByText(/Replying to/)).not.toBeInTheDocument();
   });
 
