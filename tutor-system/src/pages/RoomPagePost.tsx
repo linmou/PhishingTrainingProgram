@@ -24,6 +24,8 @@ import type { AssessmentOptionId } from '../types/assessment';
 import type { AssessmentAnswerAttempt } from '../components/PublicAssessmentQuestion';
 import PublicAssessmentQuestion from '../components/PublicAssessmentQuestion';
 import type { Message } from '../types';
+import { resolveMessagePresentation } from '../utils/messagePresentation';
+import { applyReplyMention, buildReplyMention, removeReplyMention } from '../utils/replyMention';
 import { findOpenLearnerAssessments, learnerConversationMessages, readAnswerLifecycle, readAssessmentId, readPublicQuestion } from '../contexts/transferAssessmentUiAdapter';
 
 const COMPARISON_PAIR_LABELS = {
@@ -95,7 +97,7 @@ const RoomPagePost: React.FC = () => {
     const [showClearChatModal, setShowClearChatModal] = useState(false);
     const [clearingChat, setClearingChat] = useState(false);
     const [showChecklist, setShowChecklist] = useState(false);
-    const [replyingTo, setReplyingTo] = useState<{ id: string; authorName: string } | null>(null);
+    const [replyingTo, setReplyingTo] = useState<{ id: string; authorName: string; mention: string } | null>(null);
     const isGuardComposer = user?.current_role === 'tutor' && currentRoom?.guard_mode === true;
     const composerIdentity = isGuardComposer
         ? { displayName: 'Security Supervisor', avatarUrl: null, isGuard: true }
@@ -392,6 +394,8 @@ const RoomPagePost: React.FC = () => {
 
     const sendCurrentPost = async (ratedMessageId?: string) => {
         if (!messageText.trim() || sendingMessage) return;
+        // A bare reply mention has no content of its own.
+        if (replyingTo && !removeReplyMention(messageText, replyingTo.mention).trim()) return;
 
         const unratedResponse = getUnratedResponse(ratedMessageId);
         if (unratedResponse) {
@@ -573,11 +577,18 @@ const RoomPagePost: React.FC = () => {
     const handleMessageReply = (messageId: string) => {
         const message = messages.find(m => m.id === messageId);
         if (message) {
-            setReplyingTo({
-                id: messageId,
-                authorName: message.display_name || message.user_role
-            });
+            // Use the name participants see on the comment (persona, Guard or account name).
+            const authorName = resolveMessagePresentation(message, user?.current_role).displayName;
+            const mention = buildReplyMention(authorName);
+            setMessageText(current => applyReplyMention(current, mention, replyingTo?.mention));
+            setReplyingTo({ id: messageId, authorName, mention });
         }
+    };
+
+    const handleCancelReply = () => {
+        const mention = replyingTo?.mention;
+        setMessageText(current => removeReplyMention(current, mention));
+        setReplyingTo(null);
     };
 
     const handleAssessmentSubmit = async (
@@ -1093,7 +1104,7 @@ const RoomPagePost: React.FC = () => {
                                 disabled={sendingMessage}
                                 isLoading={sendingMessage}
                                 replyingTo={replyingTo}
-                                onCancelReply={() => setReplyingTo(null)}
+                                onCancelReply={handleCancelReply}
                             />
                             {user?.current_role === 'tutor' && canUseAI && isAIEnabled && (
                                 <button
