@@ -13,6 +13,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useRoom } from '../contexts/RoomContext';
 import type { Message, Room, User } from '../types';
 
+jest.mock('../services/roomSeatService', () => require('../test-support/seatSignedInStudent'));
 jest.mock('../contexts/AuthContext', () => ({ useAuth: jest.fn() }));
 jest.mock('../contexts/RoomContext', () => ({ useRoom: jest.fn() }));
 jest.mock('../components/RoomPost', () => () => <div data-testid="room-post" />);
