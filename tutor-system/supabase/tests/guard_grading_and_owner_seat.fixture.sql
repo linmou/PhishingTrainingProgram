@@ -70,27 +70,32 @@ BEGIN
     'f1100000-0000-4000-8000-000000000015');
   v_question := (v_result->'message'->>'id')::uuid;
   SELECT id INTO STRICT v_assessment FROM private.transfer_assessments WHERE question_message_id = v_question;
-  -- Two committed answers: a wrong one (answer 1) and a correct one (answer 2).
+  -- Three committed answers: a wrong option (A), the correct option (B) and a free-text reply
+  -- (the clarification/assisted paths).
   PERFORM public.post_assessment_message_v2('f1100000-0000-4000-8000-000000000011', 'A', v_question, v_assessment,
     ARRAY['A'], 'f1100000-0000-4000-8000-000000000002', 'f1100000-0000-4000-8000-000000000016');
   PERFORM public.post_assessment_message_v2('f1100000-0000-4000-8000-000000000011', 'B', v_question, v_assessment,
     ARRAY['B'], 'f1100000-0000-4000-8000-000000000002', 'f1100000-0000-4000-8000-000000000017');
+  PERFORM public.post_assessment_message_v2('f1100000-0000-4000-8000-000000000011', 'I am not sure, can you help?',
+    v_question, v_assessment, NULL, 'f1100000-0000-4000-8000-000000000002', 'f1100000-0000-4000-8000-000000000019');
 END;
 $setup$;
 
--- Helper table for the tests: the assessment and its two answers.
+-- Helper table for the tests: the assessment and its three answers.
 CREATE TABLE public.guard_seat_fixture AS
 SELECT a.id AS assessment_id, a.student_id,
   (SELECT m.id FROM public.messages m WHERE m.assessment_request_id = 'f1100000-0000-4000-8000-000000000016') AS answer_wrong,
-  (SELECT m.id FROM public.messages m WHERE m.assessment_request_id = 'f1100000-0000-4000-8000-000000000017') AS answer_right
+  (SELECT m.id FROM public.messages m WHERE m.assessment_request_id = 'f1100000-0000-4000-8000-000000000017') AS answer_right,
+  (SELECT m.id FROM public.messages m WHERE m.assessment_request_id = 'f1100000-0000-4000-8000-000000000019') AS answer_text
 FROM private.transfer_assessments a
 WHERE a.item_id = 'f1100000-0000-4000-8000-000000000013' AND a.lifecycle = 'open';
 GRANT SELECT ON public.guard_seat_fixture TO service_role;
 
 DO $check$
 BEGIN
-  ASSERT (SELECT count(*) FROM public.guard_seat_fixture WHERE answer_wrong IS NOT NULL AND answer_right IS NOT NULL) = 1,
-    'fixture did not create one open assessment with two answers';
+  ASSERT (SELECT count(*) FROM public.guard_seat_fixture
+      WHERE answer_wrong IS NOT NULL AND answer_right IS NOT NULL AND answer_text IS NOT NULL) = 1,
+    'fixture did not create one open assessment with three answers';
 END;
 $check$;
 COMMIT;

@@ -308,6 +308,15 @@ const StudentView: React.FC = () => {
             if (joinError) {
                 console.error('Join error:', joinError);
 
+                // The room owner is never their own room's learner (#112); open the room read-only.
+                if (joinError.code === '23514' && joinError.message === 'OWNER_CANNOT_BE_LEARNER') {
+                    if (typeof window !== 'undefined') {
+                        window.sessionStorage.setItem(`room-observer:${roomId}`, 'true');
+                    }
+                    navigate(`/room/${roomId}`);
+                    return;
+                }
+
                 if (joinError.code === '23505') {
                     const { data: activeSession, error: activeSessionError } = await activeStudentSessionForRoom(roomId);
                     if (!activeSessionError && activeSession?.student_id === user.id) {

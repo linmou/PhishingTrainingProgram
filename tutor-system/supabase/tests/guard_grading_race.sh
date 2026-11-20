@@ -3,8 +3,8 @@
 # service_role) calls process_assessment_message_v2 with the grade it computed while Guard was off and
 # blocks on the room lock. After A commits, B must defer the answer: no attempt, no result message.
 # Run inside an owned disposable database (scripts/database/disposable-database.js) after
-# guard_grading_and_owner_seat.fixture.sql, the candidate migration and guard_grading_and_owner_seat.sql
-# (which rolls back), as the postgres executor.
+# guard_grading_and_owner_seat.fixture.sql and the candidate migration, as the postgres executor
+# (guard_grading.sql and owner_seat.sql roll back, so they may run before or after this script).
 set -eu
 : "${MIGRATION_TEST_DB:?Use scripts/database/disposable-database.js}"
 : "${PG_VALIDATION_LEASE_FILE:?Disposable database lease is required}"

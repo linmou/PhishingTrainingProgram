@@ -1,16 +1,19 @@
 -- Purpose: fix #110 (an assessment answer graded while Guard is on) and #112 (the room owner
 -- taking their own room's learner seat).
 --
--- #110: process_assessment_message_v2 re-reads rooms.guard_mode under the room lock. When Guard is
---   on it records the answer through the existing guard_deferred path
---   (record_transfer_assessment_processing_v1): no attempt is used and no result message is written.
---   The deferred row is ignored by the processing context once Guard is off, so catch-up/review
---   replay grades the answer later.
+-- #110: every trusted write that resolves a learner answer re-reads rooms.guard_mode under the room
+--   lock, because the edge's processing context (and its Guard flag) may be stale by commit time:
+--   - process_assessment_message_v2 (grading) and cancel_transfer_assessment_v1 (assisted closure)
+--     record the answer through the existing guard_deferred path instead;
+--   - record_transfer_assessment_processing_v1 stores a clarification/unresolved result as
+--     guard_deferred instead of a permanent rejection.
+--   A held answer uses no attempt and gets no result/closure message. The deferred row is ignored by
+--   the processing context once Guard is off, so catch-up/review replay processes it later.
 -- #112: join_room_v1 never seats the room owner (they join as observer), and a row trigger on
 --   public.sessions refuses any insert or update that makes the room owner the active learner.
 --   Existing rows are not rewritten: an already-active owner seat may still be updated or ended.
 --
--- Preconditions: the three replaced functions must match the definitions inspected on staging
+-- Preconditions: the four replaced functions must match the definitions inspected on staging
 -- (ciubrzggdqesgvfkpolj) and production (zgbufaxooqxeabewktzd) on 2026-11-19; otherwise the
 -- migration fails atomically. Owners, SECURITY DEFINER, search_path and grants are preserved.
 
@@ -19,7 +22,8 @@ DECLARE
   v_expected CONSTANT jsonb := jsonb_build_object(
     'public.process_assessment_message_v2(uuid,uuid,uuid,uuid,integer,text,text,text[],jsonb,text)', '82e8b7943f82ea53042d325ba23c6bff',
     'public.join_room_v1(uuid,uuid)', '81199a303e5e380486e20f8573511243',
-    'public.record_transfer_assessment_processing_v1(uuid,uuid,uuid,uuid,integer,text,text)', '5b4dc2e2250d3169a5a4d4eaab65afba');
+    'public.record_transfer_assessment_processing_v1(uuid,uuid,uuid,uuid,integer,text,text)', '5b4dc2e2250d3169a5a4d4eaab65afba',
+    'public.cancel_transfer_assessment_v1(uuid,uuid,uuid,uuid)', '804201725f0a75d57c0923e0fb9cd187');
   v_key text;
   v_actual text;
 BEGIN
@@ -71,11 +75,6 @@ BEGIN
   IF a.lifecycle IS DISTINCT FROM p_expected_resolution OR a.attempt_count IS DISTINCT FROM p_expected_attempt_count THEN
     RETURN jsonb_build_object('code','CONCURRENT_MODIFICATION'); END IF;
   IF a.lifecycle<>'open' THEN RAISE EXCEPTION 'ASSESSMENT_TERMINAL'; END IF;
-  IF v_guard_mode IS TRUE THEN
-    -- Same held state as the edge's guard_deferred path: no attempt, no result message, replayed after Guard.
-    RETURN public.record_transfer_assessment_processing_v1(p_assessment_id,p_message_id,p_actor_id,p_request_id,
-      p_expected_attempt_count,p_expected_resolution,'guard_deferred');
-  END IF;
   IF NOT EXISTS (SELECT 1 FROM public.checklist_items ci
       WHERE ci.id=a.item_id AND NOT ci.deleted AND ci.status='covered' AND ci.understanding_level='good')
     OR private.transfer_item_hash(a.item_id) IS DISTINCT FROM a.progress_snapshot_hash THEN RAISE EXCEPTION 'INVALID_TRANSITION'; END IF;
@@ -83,6 +82,11 @@ BEGIN
   IF v_selected IS NULL OR NOT v_selected <@ ARRAY['A','B','C','D']
     OR (a.selection_type='single' AND cardinality(v_selected)<>1)
     OR v_selected IS DISTINCT FROM p_selected_option_ids THEN RAISE EXCEPTION 'ITEM_VALIDATION_FAILED'; END IF;
+  IF v_guard_mode IS TRUE THEN
+    -- Same held state as the edge's guard_deferred path: no attempt, no result message, replayed after Guard.
+    RETURN public.record_transfer_assessment_processing_v1(p_assessment_id,p_message_id,p_actor_id,p_request_id,
+      p_expected_attempt_count,p_expected_resolution,'guard_deferred');
+  END IF;
   v_count := a.attempt_count+1;
   v_outcome := CASE WHEN v_selected=a.correct_option_ids THEN 'passed' WHEN v_count=1 THEN 'retry' ELSE 'failed' END;
   IF p_answer_outcome IS DISTINCT FROM v_outcome OR p_applied_transition IS DISTINCT FROM
@@ -122,6 +126,95 @@ BEGIN
 END;
 $function$;
 
+CREATE OR REPLACE FUNCTION public.record_transfer_assessment_processing_v1(p_assessment_id uuid, p_message_id uuid, p_actor_id uuid, p_request_id uuid, p_expected_attempt_count integer, p_expected_resolution text, p_code text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'private'
+AS $function$
+DECLARE
+  a private.transfer_assessments%ROWTYPE;
+  m public.messages%ROWTYPE;
+  v_result jsonb;
+  v_guard_mode boolean;
+BEGIN
+  IF p_request_id IS NULL OR p_code NOT IN ('AMBIGUOUS_SELECTION','SELECTION_NOT_RECOGNIZED',
+    'SINGLE_SELECTION_CARDINALITY','guard_deferred','stale','unresolved','duplicate','not_delivered') THEN
+    RAISE EXCEPTION 'INVALID_REQUEST'; END IF;
+  SELECT guard_mode INTO v_guard_mode FROM public.rooms
+    WHERE id=(SELECT room_id FROM private.transfer_assessments WHERE id=p_assessment_id) FOR UPDATE;
+  SELECT * INTO a FROM private.transfer_assessments WHERE id=p_assessment_id FOR UPDATE;
+  IF NOT FOUND OR a.student_id IS DISTINCT FROM p_actor_id THEN RAISE EXCEPTION 'WRONG_LEARNER'; END IF;
+  SELECT * INTO m FROM public.messages WHERE id=p_message_id;
+  IF NOT FOUND OR m.room_id IS DISTINCT FROM a.room_id OR m.user_id IS DISTINCT FROM a.student_id
+    OR m.user_role<>'student' OR m.assessment_id IS DISTINCT FROM a.id
+    OR m.parent_message_id IS DISTINCT FROM a.question_message_id THEN RAISE EXCEPTION 'INVALID_SCOPE'; END IF;
+  IF EXISTS(SELECT 1 FROM private.transfer_assessment_attempts WHERE answer_message_id=m.id) THEN
+    RAISE EXCEPTION 'INVALID_ATTEMPT_TRANSITION'; END IF;
+  -- The resolver ranks Guard above these codes; if Guard turned on after the context read, hold the answer.
+  IF v_guard_mode IS TRUE AND p_code IN ('AMBIGUOUS_SELECTION','SELECTION_NOT_RECOGNIZED','SINGLE_SELECTION_CARDINALITY','unresolved') THEN
+    p_code := 'guard_deferred';
+  END IF;
+  IF a.lifecycle IS DISTINCT FROM p_expected_resolution OR a.attempt_count IS DISTINCT FROM p_expected_attempt_count
+    OR (p_code='guard_deferred' AND NOT v_guard_mode) THEN RETURN jsonb_build_object('code','CONCURRENT_MODIFICATION'); END IF;
+  v_result:=jsonb_build_object('message_id',m.id,'assessment_id',a.id,
+    'processing_state',CASE WHEN p_code='guard_deferred' THEN 'deferred' ELSE 'rejected' END,
+    'answer_outcome',NULL,'attempt_number',NULL,'attempts_used',a.attempt_count,
+    'attempts_remaining',CASE WHEN a.lifecycle='open' THEN 2-a.attempt_count ELSE 0 END,
+    'selected_option_ids',NULL,'terminal',a.lifecycle<>'open','transition',NULL,'feedback_required',false,
+    'code',p_code,'already_processed',false,'terminal_failure_feedback',NULL,'result_message',NULL);
+  INSERT INTO private.transfer_assessment_processing(answer_message_id,assessment_id,code,authoritative_result)
+  VALUES(m.id,a.id,p_code,v_result)
+  ON CONFLICT(answer_message_id) DO UPDATE SET code=EXCLUDED.code,authoritative_result=EXCLUDED.authoritative_result
+    WHERE transfer_assessment_processing.code='guard_deferred' AND EXCLUDED.code<>'guard_deferred';
+  SELECT authoritative_result INTO v_result FROM private.transfer_assessment_processing WHERE answer_message_id=m.id;
+  RETURN v_result;
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION public.cancel_transfer_assessment_v1(p_assessment_id uuid, p_message_id uuid, p_actor_id uuid, p_request_id uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'private'
+AS $function$
+DECLARE
+  a private.transfer_assessments%ROWTYPE;
+  m public.messages%ROWTYPE;
+  v_duplicate boolean;
+  v_guard_mode boolean;
+BEGIN
+  IF p_request_id IS NULL THEN RAISE EXCEPTION 'INVALID_REQUEST'; END IF;
+  SELECT guard_mode INTO v_guard_mode FROM public.rooms
+    WHERE id=(SELECT room_id FROM private.transfer_assessments WHERE id=p_assessment_id) FOR UPDATE;
+  SELECT * INTO a FROM private.transfer_assessments WHERE id=p_assessment_id FOR UPDATE;
+  IF NOT FOUND OR a.student_id IS DISTINCT FROM p_actor_id THEN RAISE EXCEPTION 'WRONG_LEARNER'; END IF;
+  SELECT * INTO m FROM public.messages WHERE id=p_message_id;
+  IF NOT FOUND OR m.user_id IS DISTINCT FROM p_actor_id OR m.user_role<>'student'
+    OR m.room_id IS DISTINCT FROM a.room_id OR m.assessment_id IS DISTINCT FROM a.id
+    OR m.parent_message_id IS DISTINCT FROM a.question_message_id OR m.assessment_selected_option_ids IS NOT NULL
+    THEN RAISE EXCEPTION 'INVALID_SCOPE'; END IF;
+  v_duplicate := COALESCE(a.lifecycle='cancelled' AND a.terminal_answer_message_id=p_message_id,false);
+  IF NOT v_duplicate AND a.lifecycle<>'open' THEN RETURN jsonb_build_object('code','CONCURRENT_MODIFICATION'); END IF;
+  IF NOT v_duplicate AND v_guard_mode IS TRUE THEN
+    -- Guard turned on after the context read: hold the answer instead of closing the assessment.
+    RETURN public.record_transfer_assessment_processing_v1(p_assessment_id,p_message_id,p_actor_id,p_request_id,
+      a.attempt_count,a.lifecycle,'guard_deferred');
+  END IF;
+  IF NOT v_duplicate THEN
+    UPDATE private.transfer_assessments SET lifecycle='cancelled',terminal_answer_message_id=m.id,
+      closed_at=now(),updated_at=now() WHERE id=a.id;
+    UPDATE public.messages SET assessment_lifecycle='cancelled',assessment_closed_at=now() WHERE id=a.question_message_id;
+  END IF;
+  RETURN jsonb_build_object('message_id',m.id,'assessment_id',a.id,
+    'processing_state',CASE WHEN v_duplicate THEN 'duplicate' ELSE 'applied' END,
+    'answer_outcome',NULL,'attempt_number',NULL,'attempts_used',a.attempt_count,'attempts_remaining',0,
+    'selected_option_ids',NULL,'terminal',true,'transition',NULL,'feedback_required',false,
+    'code','assisted','already_processed',v_duplicate,'terminal_failure_feedback',NULL,
+    'result_message',private.write_assessment_closure_message(a.id,'assisted'));
+END;
+$function$;
+
 CREATE OR REPLACE FUNCTION public.join_room_v1(p_room_id uuid, p_student_id uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -133,7 +226,6 @@ DECLARE
   v_learner uuid;
   v_role text;
   v_status text;
-  v_owner boolean;
 BEGIN
   IF current_user NOT IN ('service_role', 'postgres') THEN RAISE EXCEPTION 'FORBIDDEN'; END IF;
   SELECT * INTO v_room FROM public.rooms WHERE id = p_room_id AND is_active FOR UPDATE;
@@ -142,12 +234,14 @@ BEGIN
   FROM public.users AS u
   WHERE u.id = p_student_id;
   IF v_role <> 'student' OR v_status <> 'active' THEN RAISE EXCEPTION 'FORBIDDEN'; END IF;
-  -- The owner is never the room's learner, whatever role their profile shows.
-  v_owner := p_student_id = v_room.tutor_id;
   SELECT student_id INTO v_learner FROM public.sessions
   WHERE room_id = p_room_id AND status = 'active' AND student_id IS NOT NULL
   ORDER BY started_at, id LIMIT 1;
-  IF v_learner IS NULL AND NOT v_owner THEN
+  -- The owner is never the room's learner, whatever role their profile shows: always an observer.
+  IF p_student_id = v_room.tutor_id THEN
+    RETURN jsonb_build_object('room_id', p_room_id, 'learner_id', v_learner, 'room_role', 'observer');
+  END IF;
+  IF v_learner IS NULL THEN
     INSERT INTO public.sessions(room_id, tutor_id, student_id, status)
     VALUES (p_room_id, v_room.tutor_id, p_student_id, 'active')
     ON CONFLICT DO NOTHING;
@@ -155,13 +249,13 @@ BEGIN
     WHERE room_id = p_room_id AND status = 'active' AND student_id IS NOT NULL
     ORDER BY started_at, id LIMIT 1;
   END IF;
-  IF v_learner = p_student_id AND NOT v_owner AND v_room.practice_type='cyberbullying' THEN
+  IF v_learner = p_student_id AND v_room.practice_type='cyberbullying' THEN
     PERFORM public.initialize_cyberbullying_progress_v1(p_room_id,p_student_id);
   END IF;
   RETURN jsonb_build_object(
     'room_id', p_room_id,
     'learner_id', v_learner,
-    'room_role', CASE WHEN v_learner = p_student_id AND NOT v_owner THEN 'student' ELSE 'observer' END
+    'room_role', CASE WHEN v_learner = p_student_id THEN 'student' ELSE 'observer' END
   );
 END;
 $function$;
@@ -173,7 +267,7 @@ CREATE FUNCTION private.prevent_owner_learner_seat()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
- SET search_path TO 'public', 'private', 'pg_catalog'
+ SET search_path TO 'public', 'private'
 AS $function$
 BEGIN
   IF NEW.status = 'active' AND NEW.student_id IS NOT NULL

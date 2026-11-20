@@ -76,6 +76,31 @@ BEGIN
   v_result := public.process_assessment_message_v2(f.assessment_id, f.answer_wrong, f.student_id, gen_random_uuid(),
     1, 'open', 'failed', ARRAY['A'], jsonb_build_object('status','needs_review','understanding_level','basic'), 'assessment_fail');
   ASSERT v_result->>'code' = 'CONCURRENT_MODIFICATION', '#110: stale attempt count must still report CONCURRENT_MODIFICATION';
+
+  -- 6b. Invalid input is still rejected under Guard, not held: the selection must match the saved answer.
+  BEGIN
+    PERFORM public.process_assessment_message_v2(f.assessment_id, f.answer_wrong, f.student_id, gen_random_uuid(),
+      0, 'open', 'retry', ARRAY['C'], jsonb_build_object('status','partially_covered','understanding_level','basic'), NULL);
+    RAISE EXCEPTION '#110: a mismatched selection was accepted under Guard';
+  EXCEPTION WHEN raise_exception THEN
+    ASSERT SQLERRM = 'ITEM_VALIDATION_FAILED', '#110: expected ITEM_VALIDATION_FAILED under Guard, got ' || SQLERRM;
+  END;
+
+  -- 6c. Clarification computed while Guard was off is held, not stored as a permanent rejection.
+  v_result := public.record_transfer_assessment_processing_v1(f.assessment_id, f.answer_text, f.student_id, gen_random_uuid(),
+    0, 'open', 'AMBIGUOUS_SELECTION');
+  ASSERT v_result->>'processing_state' = 'deferred' AND v_result->>'code' = 'guard_deferred',
+    format('#110: a clarification under Guard must be held, got %s', v_result);
+  ASSERT (SELECT code FROM private.transfer_assessment_processing WHERE answer_message_id = f.answer_text) = 'guard_deferred',
+    '#110: clarification under Guard stored as a rejection';
+
+  -- 6d. Assisted closure computed while Guard was off is held; the assessment stays open, no closure message.
+  v_result := public.cancel_transfer_assessment_v1(f.assessment_id, f.answer_text, f.student_id, gen_random_uuid());
+  ASSERT v_result->>'processing_state' = 'deferred' AND v_result->>'code' = 'guard_deferred',
+    format('#110: an assisted closure under Guard must be held, got %s', v_result);
+  ASSERT (SELECT lifecycle FROM private.transfer_assessments WHERE id = f.assessment_id) = 'open', '#110: Guard cancel closed the assessment';
+  ASSERT NOT EXISTS (SELECT 1 FROM public.messages WHERE assessment_event->>'kind' = 'closure'
+      AND assessment_event->>'assessment_id' = f.assessment_id::text), '#110: a closure message was written under Guard';
 END;
 $guard$;
 RESET ROLE;
@@ -103,6 +128,14 @@ BEGIN
     0, 'open', 'retry', ARRAY['A'], jsonb_build_object('status','partially_covered','understanding_level','basic'), NULL);
   ASSERT v_result->>'processing_state' = 'duplicate', '#110: replaying a graded answer must be a duplicate';
   ASSERT (SELECT attempt_count FROM private.transfer_assessments WHERE id = f.assessment_id) = 1, '#110: duplicate used an attempt';
+  -- The held free-text answer is also offered for replay and now closes the assessment as assisted.
+  v_ctx := public.get_transfer_assessment_processing_context_v1(f.assessment_id, f.answer_text, f.student_id);
+  ASSERT v_ctx->'authoritative_result' IS NULL OR jsonb_typeof(v_ctx->'authoritative_result') = 'null',
+    '#110: after Guard the held free-text answer must be offered for replay';
+  v_result := public.cancel_transfer_assessment_v1(f.assessment_id, f.answer_text, f.student_id, gen_random_uuid());
+  ASSERT v_result->>'processing_state' = 'applied' AND v_result->>'code' = 'assisted'
+    AND jsonb_typeof(v_result->'result_message') = 'object', format('#110: replayed assisted closure, got %s', v_result);
+  ASSERT (SELECT lifecycle FROM private.transfer_assessments WHERE id = f.assessment_id) = 'cancelled', '#110: replay did not close';
 END;
 $replay$;
 RESET ROLE;
