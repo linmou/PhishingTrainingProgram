@@ -9,7 +9,7 @@ Updated: 2026-11-19. Base commit: `f5def40` (`origin/no_sign_up`). PR: #114.
 | Release owner | Claude agent on branch `fix/110-112-guard-and-owner-seat` (worktree `agent-a14839e543eb429ff`). Owns staging and production SQL, verification, cleanup and archival for this batch. |
 | Batch | #110 + #112. Members: one SQL migration plus a small frontend handler in `StudentView.tsx`. No Edge source change. Other agents' concurrent #109/#111 PRs are frontend-only and deploy no server changes. |
 | Migration | `tutor-system/supabase/migrations/20261119000000_guard_grading_and_owner_seat.sql`, SHA-256 `c9ac43628de4b9768f345c5773dd44bfdcc3b4a802be9a2e7ed4be2bc34a6f0a`. Supersedes the initial candidate `ad88f98e…`, which was never deployed. |
-| Status | `local tests passed` |
+| Status | Staging: `staging verified` (fixture cleanup pending approval). Production: `production applied`, with SQL acceptance verified; the browser journey is pending approval for its fixtures. The release is **not complete**; see "Release status and handoff". |
 
 ## Changed behavior and contracts
 
@@ -133,8 +133,55 @@ Private run package (outside Git, contains exported rows): `/Users/admin/.transf
 
   To remove them, run `DELETE FROM public.sessions WHERE room_id='f1120000-0000-4000-8000-000000000011'; DELETE FROM public.rooms WHERE id='f1120000-0000-4000-8000-000000000011'; DELETE FROM public.users WHERE id IN ('f1120000-0000-4000-8000-000000000001','f1120000-0000-4000-8000-000000000002');` under an approved operator session. Production checks therefore use only rolled-back fixtures.
 
-## Hosted state
+## Integration (merge before production)
 
-- **Staging:** migration applied and verified, with the cleanup exception above.
-- **Production:** unchanged.
-- **Next:** merge PR #114 → integrated manifest comparison → production preconditions → apply the same SQL → fingerprint, rolled-back live assertions and the `assessment-answer` journey.
+- PR #114 was merged into `no_sign_up` at 2026-11-20T05:14:37Z. **Release commit: `2b0c49a692b6155b82b34221baedc3a7710260e3`.**
+  - Required checks `isolation-harness`, `frontend-jest` and `frontend-build` passed on head `f346a46`.
+  - Merge authorization: the maintainer task naming this agent release owner, plus the standing release authorization in `AGENTS.md`.
+  - Codex was unavailable (usage limit), so the local review outcome is recorded on the PR.
+- The base was unchanged since `f5def40`. `git diff f2bf67a 2b0c49a` touches only this record.
+- **Frozen manifest:**
+
+  | Artifact | SHA-256 | Note |
+  | --- | --- | --- |
+  | migration | `c9ac43628de4b9768f345c5773dd44bfdcc3b4a802be9a2e7ed4be2bc34a6f0a` | the only file in `supabase/migrations/` |
+  | `assessment-api/index.ts` | `ce11e8e2…` | unchanged and not redeployed |
+  | `src/pages/StudentView.tsx` | `10ad0226ae27c086672c525fefd8960420539e1257c7f5ae76f66df5bf230f02` | |
+
+  All are identical to the staged candidate `f2bf67a`, so the staging evidence holds for the integrated artifacts.
+- **Staging recheck (05:15Z):** all five function fingerprints unchanged; trigger enabled.
+
+## Production (zgbufaxooqxeabewktzd): production applied; SQL acceptance verified
+
+- **Lease:** `refs/tags/verification-locks/zgbufaxooqxeabewktzd`, tag `17af548019dc97f1fa4cdd6b10657c4304ab5475`, run `2d9cc27a-4017-4094-afbf-887c95840f26`, commit `2b0c49a`. Acquired 05:15:12Z; token-released after the checks below. No other production lease existed.
+- **Preconditions (05:15Z):** the four function hashes equal the tested baseline. The trigger and its function were absent. The latest migration was still `20261115215038`, unchanged since the 04:26Z export. The only owner-seat row was still `0564bc9a…` (active). `public.sessions` is owned by `postgres`.
+- **Application:** Supabase MCP `apply_migration` `guard_grading_and_owner_seat`, with the same file content as staging (`c9ac4362…`). Result: success; history entry `20261120051613 guard_grading_and_owner_seat`.
+- **Catalog (05:16Z):** all five function fingerprints are identical to staging and local Green. Owners, SECURITY DEFINER, `search_path` and ACLs are preserved. The trigger is enabled. `anon`, `authenticated` and `service_role` cannot execute the trigger function. The owner-seat row `0564bc9a…` is unchanged (active), so no user data was rewritten.
+- **Live SQL assertions:** the same `live-assertions.sql` batch, run in one transaction, ended with `ALL_ASSERTIONS_PASSED_ROLLED_BACK`. It covered:
+  - Guard hold for grading, clarification and assisted closure;
+  - replay after Guard;
+  - CAS and validation precedence;
+  - browser-role denial;
+  - the owner as observer; the trigger under the anon, authenticated and service_role roles; the legacy row still updatable and endable.
+
+  Follow-up check: 0 fixture users, rooms or sessions; no helper table; trigger enabled; no idle-in-transaction sessions.
+- **Frontend:** Render auto-deployed `no_sign_up` after the merge. The served `index.html` shows Last-Modified 2026-11-20T05:15:42Z, and bundle `/static/js/main.d513ab7a.js` contains the `OWNER_CANNOT_BE_LEARNER` handler. The static `/release.json` still names the earlier release and is not authoritative for this commit.
+- **Not run on production:** the `assessment-answer` browser journey and the live PostgREST owner-insert check.
+  - The pinned production browser rooms (`d6b6b8f0…`, `79be49a2…`, `286de02f…`, `3630671f…`) do not exist.
+  - The previous release created temporary tagged rooms for this and deleted them afterwards. Here, fixture deletion through MCP was declined by the operator permission system (see the staging cleanup exception), so no persistent production fixtures were created.
+
+## Release status and handoff
+
+| Item | Status |
+| --- | --- |
+| Staging | `staging verified`. Open: cleanup of the four tagged `f1120000-…` rows, which needs an approved `DELETE` (statement above). The staging lease `f24ec201…` is **retained** for this cleanup per the coordination protocol. Lease file: `output/staging-release-110-112-f2bf67a/coordination-lease.json` in the release worktree. |
+| Production | `production applied`; SQL behavior and catalog acceptance verified; frontend served. Open: the `assessment-answer` journey on production, which needs approval to create and then delete temporary tagged fixture rooms (`E2E_ROOM_FIXTURES_JSON`, as in the 2026-11-15 release). |
+| Archive | **Not archived.** The migration stays pending in `supabase/migrations/` until the production journey passes. |
+| Issues | #110 and #112 stay open until production acceptance is complete. |
+| Pre-existing data | Production session `0564bc9a…` (owner seat in room `74e8939a…`) is reported, not repaired. A maintainer should decide whether to end it. |
+
+**Resumption (named owner: this release agent, or a maintainer-designated successor):**
+
+1. With operator approval, run the staging cleanup `DELETE`, verify zero `f1120000-…` rows, then token-release the staging lease with `node scripts/staging-coordination.js release output/staging-release-110-112-f2bf67a/coordination-lease.json`.
+2. Acquire a production lease for `2b0c49a`. Create three tagged temporary production fixture rooms, then run `npm run test:e2e:production -- --workflow=assessment-answer` with `E2E_ROOM_FIXTURES_JSON` (launcher `runs/guard-owner-seat-20261119/browser.cjs`). Delete the fixtures, verify their absence and release the lease.
+3. Move the migration to `supabase/archived_migrations/`, record the result here, and close #110 and #112.
