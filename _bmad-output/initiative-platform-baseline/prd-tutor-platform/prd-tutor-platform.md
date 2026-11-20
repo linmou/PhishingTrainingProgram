@@ -164,6 +164,7 @@ A user can leave, which removes the application identity from this browser only.
 
 **Consequences (testable):**
 - Leaving deletes no user, room, message or learning progress data.
+- Leaving signs out every open tab of this browser. A tab whose identity or role changed elsewhere stops acting and returns to sign-in; it never continues as another user or as nobody.
 
 ### 4.2 Rooms, Scenarios and Templates
 
@@ -243,6 +244,7 @@ A student can become a room's learner if it has none; any later student enters a
 - At most one learner per room at any time, enforced on the server.
 - The room owner is never the learner of their own room, and never answers an assessment, whatever role their profile shows.
 - The learner keeps the seat for the room's whole life; rooms are not reused for another learner.
+- The learner seat is taken only by the student's explicit Join action, never as a side effect of opening a page or changing identity.
 
 #### FR-13: Observe rooms
 An observer can list active rooms other than test rooms and open any of them read-only. Realizes UJ-3.
