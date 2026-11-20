@@ -217,6 +217,7 @@ describe('RoomContext learner answer path', () => {
       replyToMessageId: DELIVERED_QUESTION_ID,
       assessmentId: DELIVERED_QUESTION_ID,
       selectedOptionIds: ['B'],
+      requestId: expect.any(String),
     });
     expect(processMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID, DELIVERED_QUESTION_ID);
     expect(analyzeMessage).not.toHaveBeenCalled();
@@ -259,6 +260,7 @@ describe('RoomContext learner answer path', () => {
       replyToMessageId: DELIVERED_QUESTION_ID,
       assessmentId: DELIVERED_QUESTION_ID,
       selectedOptionIds: ['B', 'D'],
+      requestId: expect.any(String),
     });
     expect(processMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID, DELIVERED_QUESTION_ID);
     const answer = room!.messages.find((message) => message.id === DELIVERED_ANSWER_ID);

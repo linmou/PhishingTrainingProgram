@@ -370,6 +370,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
       checklistId: CHECKLIST_ID,
       itemId: CHECKLIST_ITEM_ID,
       focusStudentMessageId: LEARNER_A_MESSAGE_ID,
+      requestId: expect.any(String),
     });
     expect(room!.messages.map((message) => message.id)).toContain(DELIVERED_QUESTION_ID);
     expect(room!.messages.map((message) => message.id)).toContain('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
@@ -423,6 +424,31 @@ describe('RoomContext teacher transfer review lifecycle', () => {
 
     expect(room!.messages.map((message) => message.id)).toEqual(before);
     expect(room!.transferDraft).not.toBeNull();
+  });
+
+  it('retries a delivery whose response was lost with the same request id (FR-36, AD-7)', async () => {
+    sendReviewed
+      .mockRejectedValueOnce(new Error('Assessment API request failed: Failed to send a request to the Edge Function'))
+      .mockResolvedValueOnce(reviewedDelivery);
+    await mountRoom();
+    await act(async () => {
+      await room!.generateAIResponse();
+    });
+
+    let lost: Error | null = null;
+    await act(async () => {
+      await room!.confirmTransferDraft(preparedCandidate).catch((error: Error) => { lost = error; });
+    });
+    expect(lost).toEqual(expect.objectContaining({ message: expect.stringMatching(/Edge Function/) }));
+    await act(async () => {
+      await room!.confirmTransferDraft(preparedCandidate);
+    });
+
+    expect(sendReviewed).toHaveBeenCalledTimes(2);
+    const [first, second] = sendReviewed.mock.calls.map(([input]) => input.requestId);
+    expect(typeof first).toBe('string');
+    expect(second).toBe(first);
+    expect(room!.messages.filter((message) => message.id === DELIVERED_QUESTION_ID)).toHaveLength(1);
   });
 
   it('merges a repeated delivery result into one visible message', async () => {

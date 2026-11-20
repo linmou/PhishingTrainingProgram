@@ -38,6 +38,7 @@ import { buildRoomExportData, buildRoomTextExport } from './roomExportBuilder';
 import { useMessageFeedback } from '../hooks/useMessageFeedback';
 import { normalizeRoom, useRoomMembership } from './useRoomMembership';
 import { useRoomRealtime } from './useRoomRealtime';
+import { ActionRequestIds } from './actionRequestIds';
 
 const RoomContext = createContext<RoomContextType | undefined>(undefined);
 
@@ -82,6 +83,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } | null>(null);
     // True while a reviewed delivery is in flight, so one tab cannot deliver twice.
     const deliveryInFlightRef = useRef(false);
+    // One request id per user action, reused when that action is retried (AD-7, issue #111).
+    const [actionRequestIds] = useState(() => new ActionRequestIds());
     const { user } = useAuth();
     const {
         currentRoom, setCurrentRoom, messages, setMessages, participants, loading,
@@ -189,13 +192,26 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             progressWarningRequest.current = warningRequest;
             setLearningProgressError(null);
             const answerOptions = options;
+            // A retry after a lost response reuses this action's id, so the server returns the row
+            // it already stored instead of saving a second answer (and using a second attempt).
+            const postSlot = answerOptions?.assessmentId
+                ? `answer:${answerOptions.assessmentId}`
+                : `post:${currentRoom.id}`;
+            const postRequestId = actionRequestIds.claim(postSlot, JSON.stringify([
+                content,
+                answerOptions?.replyToMessageId ?? null,
+                answerOptions?.assessmentId ?? null,
+                answerOptions?.selectedOptionIds ?? null,
+            ]));
             const result = await transferAssessmentService.postMessage({
                 roomId: currentRoom.id,
                 content,
                 replyToMessageId: answerOptions?.replyToMessageId,
                 assessmentId: answerOptions?.assessmentId,
                 selectedOptionIds: answerOptions?.selectedOptionIds,
+                requestId: postRequestId,
             });
+            actionRequestIds.settle(postSlot, postRequestId);
             const storedRow = result.message as Record<string, unknown> | undefined;
             if (!storedRow) {
                 throw new Error('Transfer message operation did not return a stored message');
@@ -963,6 +979,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!deliverable.ok) throw new Error(deliverable.message);
 
         deliveryInFlightRef.current = true;
+        // One delivery per candidate: a retry, even of an edited draft, reuses the id, because the
+        // server allows at most one open assessment for the candidate's item anyway.
+        const deliverySlot = `deliver:${scope.roomId}:${scope.focusStudentMessageId}:${scope.itemId}`;
+        const deliveryRequestId = actionRequestIds.claim(deliverySlot, deliverySlot);
         try {
             // No draft row exists, so the reviewed payload and its scope are delivered in one call.
             const sent = await transferAssessmentService.sendReviewed({
@@ -972,7 +992,9 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 checklistId: scope.checklistId,
                 itemId: scope.itemId,
                 focusStudentMessageId: scope.focusStudentMessageId,
+                requestId: deliveryRequestId,
             });
+            actionRequestIds.settle(deliverySlot, deliveryRequestId);
             const sentMessage = sent.message as unknown;
             if (sentMessage) {
                 const storedRow = sentMessage as Record<string, unknown>;

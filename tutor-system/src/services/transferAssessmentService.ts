@@ -278,7 +278,8 @@ function projectProcessedMessage(value: unknown): ProcessedMessageDTO {
   };
 }
 
-function defaultRequestId(): string {
+/** A fresh request id. Callers mint one per user action and reuse it on that action's retries (AD-7). */
+export function newRequestId(): string {
   const randomUuid = globalThis.crypto?.randomUUID;
   return randomUuid ? randomUuid.call(globalThis.crypto) : `transfer-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
@@ -312,11 +313,24 @@ export class TransferAssessmentService {
 
   constructor(options: TransferAssessmentServiceOptions = {}) {
     this.api = options.api ?? createDefaultApi();
-    this.requestId = options.requestId ?? defaultRequestId;
+    this.requestId = options.requestId ?? newRequestId;
   }
 
-  private async request<T>(operation: AssessmentApiOperation, payload: Record<string, unknown>, applicationUserId?: string): Promise<T> {
-    const { data, error } = await this.api.invoke({ operation, request_id: this.requestId(), ...payload }, applicationUserId);
+  /**
+   * Calls one assessment-api operation. `requestId` is the caller's id for the user action; a retry
+   * of that action must pass the same id so the server replays the stored result. Without one, the
+   * call is treated as a new action.
+   */
+  private async request<T>(
+    operation: AssessmentApiOperation,
+    payload: Record<string, unknown>,
+    applicationUserId?: string,
+    requestId?: string
+  ): Promise<T> {
+    const { data, error } = await this.api.invoke(
+      { operation, ...payload, request_id: requestId ?? this.requestId() },
+      applicationUserId
+    );
     if (error?.context && typeof error.context.json === 'function') {
       let body: unknown;
       try {
@@ -398,6 +412,8 @@ export class TransferAssessmentService {
     replyToMessageId?: string;
     assessmentId?: string;
     selectedOptionIds?: ReadonlyArray<AssessmentOptionId>;
+    /** The learner action's id; reuse it when retrying the same post. */
+    requestId?: string;
   }): Promise<Record<string, unknown>> {
     return this.request('post_message', {
       room_id: input.roomId,
@@ -405,7 +421,7 @@ export class TransferAssessmentService {
       parent_message_id: input.replyToMessageId ?? null,
       assessment_id: input.assessmentId ?? null,
       selected_option_ids: input.selectedOptionIds ? [...input.selectedOptionIds] : null,
-    });
+    }, undefined, input.requestId);
   }
 
   prepareAssessment(input: { roomId: string; focusStudentMessageId: string; checklistId: string }): Promise<Record<string, unknown> | null> {
@@ -423,6 +439,8 @@ export class TransferAssessmentService {
     checklistId: string;
     itemId: string;
     focusStudentMessageId: string;
+    /** The delivery action's id; reuse it when retrying the same delivery. */
+    requestId?: string;
   }): Promise<ReviewedDeliveryDTO> {
     const result = await this.request('send_reviewed', {
       reviewed_payload: input.reviewedPayload,
@@ -431,7 +449,7 @@ export class TransferAssessmentService {
       checklist_id: input.checklistId,
       item_id: input.itemId,
       focus_student_message_id: input.focusStudentMessageId,
-    });
+    }, undefined, input.requestId);
     return projectReviewedDelivery(result);
   }
 
