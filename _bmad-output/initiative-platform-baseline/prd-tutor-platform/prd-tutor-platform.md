@@ -149,12 +149,15 @@ A visitor can enter a display name and choose tutor, student or observer to get 
 - After joining, the user lands on their role's dashboard; reloading the page keeps them signed in.
 
 #### FR-2: Manage own profile
-A user can change their display name, role and avatar (from presets).
+A user can change their display name and avatar (from presets). The role is chosen at join and cannot be changed afterwards; to use another role, a person joins again with that role, which creates a separate user (FR-1).
 **Grounding:** P5.
 
 **Consequences (testable):**
 - Changes are saved to the user record and to the browser.
-- The user identifier does not change when name or role changes.
+- The user identifier does not change when the display name changes.
+- The profile offers no role change.
+
+**Change (2026-11-20):** role change removed from the profile. It let a room owner's own user take the student role in their own room (G-38, #112). The server rule that the owner is never the learner of their own room (FR-12) stays as the guarantee.
 
 **Out of Scope:** custom avatar upload.
 
