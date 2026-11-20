@@ -394,6 +394,69 @@ for (const scenario of ['ambiguity_then_pass','guard_then_clear','ordered_retry_
   });
 }
 
+// #110: Guard turns on after the context read. process_assessment_message_v2 re-checks Guard under the
+// room lock and returns the guard_deferred record; the edge must project it as held, not as a grade.
+Deno.test('Guard turned on after the context read: server deferral is projected without a grade', async () => {
+  const writes: string[] = [];
+  const handler = createAssessmentApiHandler(dependencies({
+    resolveAnswer: resolveTransferAnswer,
+    rpc: async name => {
+      if (name === 'get_transfer_assessment_processing_context_v1') return { data: { lifecycle: 'open',
+        context: { progress: { status: 'covered', understanding_level: 'good' }, guard_mode: false,
+          progress_snapshot_hash: 'h', feedback_required: false, eligible_assessment_item_ids: ['item-1'],
+          unresolved_assessment: { id: 'a' }, pending_repair_message_id: null,
+          attempt_snapshot: { assessment_id: 'a', accepted_attempt_count: 0, resolution: 'open', processed_answer_message_ids: [] } },
+        assessment: { id: 'a', item_id: 'item-1', selection_type: 'single', progress_snapshot_hash: 'h',
+          options: ['A', 'B', 'C', 'D'].map(id => ({ id, text: `Option ${id}` })),
+          correct_option_ids: ['B'], learner_safe_explanation: 'Use an independent channel.' },
+        answer: { content: 'A', selected_option_ids: ['A'], references_message_id: 'q' } }, error: null };
+      writes.push(name);
+      assertEquals(name, 'process_assessment_message_v2');
+      return { data: { message_id: 'm', assessment_id: 'a', processing_state: 'deferred', answer_outcome: null,
+        attempt_number: null, attempts_used: 0, attempts_remaining: 2, selected_option_ids: null, terminal: false,
+        transition: null, feedback_required: false, code: 'guard_deferred', already_processed: false,
+        terminal_failure_feedback: null, result_message: null }, error: null };
+    },
+  }));
+  const response = await handler(request('process_message', { assessment_id: 'a', message_id: 'm' }));
+  const payload = await response.json();
+  assertEquals(response.status, 200);
+  assertEquals(writes, ['process_assessment_message_v2']);
+  assertEquals(payload.data.processing_state, 'deferred');
+  assertEquals(payload.data.code, 'guard_deferred');
+  assertEquals(payload.data.answer_outcome, null);
+  assertEquals(payload.data.attempts_used, 0);
+  assertEquals(payload.data.attempts_remaining, 2);
+  assertEquals(payload.data.result_message, null);
+});
+
+Deno.test('Guard turned on before an assisted closure commits: server deferral is projected, not a closure', async () => {
+  const writes: string[] = [];
+  const handler = createAssessmentApiHandler(dependencies({
+    resolveAnswer: () => ({ disposition: 'assisted' } as never),
+    rpc: async name => {
+      if (name === 'get_transfer_assessment_processing_context_v1') return { data: { lifecycle: 'open',
+        context: { guard_mode: false, attempt_snapshot: { assessment_id: 'a', accepted_attempt_count: 0, resolution: 'open',
+          processed_answer_message_ids: [] } },
+        assessment: { id: 'a' }, answer: { content: 'Can you help?', selected_option_ids: null, references_message_id: 'q' } }, error: null };
+      writes.push(name);
+      assertEquals(name, 'cancel_transfer_assessment_v1');
+      return { data: { message_id: 'm', assessment_id: 'a', processing_state: 'deferred', answer_outcome: null,
+        attempt_number: null, attempts_used: 0, attempts_remaining: 2, selected_option_ids: null, terminal: false,
+        transition: null, feedback_required: false, code: 'guard_deferred', already_processed: false,
+        terminal_failure_feedback: null, result_message: null }, error: null };
+    },
+  }));
+  const response = await handler(request('process_message', { assessment_id: 'a', message_id: 'm' }));
+  const payload = await response.json();
+  assertEquals(response.status, 200);
+  assertEquals(writes, ['cancel_transfer_assessment_v1']);
+  assertEquals(payload.data.processing_state, 'deferred');
+  assertEquals(payload.data.code, 'guard_deferred');
+  assertEquals(payload.data.terminal, false);
+  assertEquals(payload.data.result_message, null);
+});
+
 Deno.test('accepted retry replay after cancellation keeps its grade and marks it duplicate', async () => {
   const handler = createAssessmentApiHandler(dependencies({
     featureEnabled: async () => false,
