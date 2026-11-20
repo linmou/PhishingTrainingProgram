@@ -554,7 +554,10 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
   const draftSyncError = Boolean(error && checklist?.id.startsWith('draft-'));
   const warnings = <>
     {liveError && <div className="checklist-error" role="status"><p>{liveError}</p></div>}
-    {error && (checklist || !isVisible || showManualInput) && <div className="checklist-error" role="status">
+    {error && (checklist || !isVisible || showManualInput) && <div
+      className={draftSyncError ? 'checklist-error checklist-sync-failed' : 'checklist-error'}
+      role={draftSyncError ? 'alert' : 'status'}>
+      {draftSyncError && <strong>Learning targets are not saved. Learner progress is not being recorded.</strong>}
       <p>{error}</p>
       <button onClick={refreshChecklist} className="retry-button">
         <RotateCcw size={14} />{draftSyncError ? 'Retry sync' : 'Retry'}

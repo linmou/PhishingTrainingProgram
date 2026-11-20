@@ -709,6 +709,13 @@
   color: #d32f2f;
 }
 
+.checklist-sync-failed {
+  padding: 16px 20px;
+  background: #fdecea;
+  border: 2px solid #d32f2f;
+  border-radius: 6px;
+}
+
 .retry-button {
   display: flex;
   align-items: center;

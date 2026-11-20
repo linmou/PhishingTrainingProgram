@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { AuthContextType, User, UserRole } from '../types';
 import { supabase } from '../services/supabase';
+import { setApplicationUserId } from '../services/applicationIdentity';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -82,7 +83,12 @@ const ensureStoredUserProfile = async (storedUser: User): Promise<User> => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUserState] = useState<User | null>(null);
+    // Requests read this tab's identity at send time, so update it together with the state, not after render.
+    const setUser = useCallback((nextUser: User | null) => {
+        setApplicationUserId(nextUser?.id ?? null);
+        setUserState(nextUser);
+    }, []);
     const [loading, setLoading] = useState(true);
 
     // Debug user state changes
@@ -130,7 +136,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
 
         initializeAuth();
-    }, []);
+    }, [setUser]);
+
+    // localStorage is shared by every tab of this site, and a reload shows whatever it holds now.
+    // Follow another tab's sign-out or sign-in visibly instead of showing a user this tab no longer is.
+    useEffect(() => {
+        const followStoredIdentity = (event: StorageEvent) => {
+            if (event.key !== USER_STORAGE_KEY && event.key !== null) return;
+            let nextUser: User | null = null;
+            try {
+                const parsed = event.key === null || !event.newValue ? null : JSON.parse(event.newValue);
+                nextUser = typeof parsed?.id === 'string' && parsed.id ? parsed : null;
+            } catch {
+                nextUser = null;
+            }
+            console.log('🔄 AuthContext: Stored identity changed in another tab:', { userId: nextUser?.id ?? null });
+            setUser(nextUser);
+        };
+        window.addEventListener('storage', followStoredIdentity);
+        return () => window.removeEventListener('storage', followStoredIdentity);
+    }, [setUser]);
 
     const joinWithNameAndRole = async (displayName: string, role: UserRole): Promise<void> => {
         setLoading(true);

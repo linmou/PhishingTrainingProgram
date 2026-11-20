@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { TransferAssessmentService, type TransferAssessmentApi } from '../transferAssessmentService';
 import { supabase } from '../supabase';
+import { setApplicationUserId } from '../applicationIdentity';
 import { processedFirstIncorrectRetry } from '../../test-support/transferRoomFixtures';
 
 jest.mock('../supabase', () => ({ supabase: { functions: { invoke: jest.fn() } } }));
@@ -14,14 +15,18 @@ function transport(result: unknown): { api: TransferAssessmentApi; invoke: jest.
 }
 
 describe('transfer assessment browser facade', () => {
-  afterEach(() => localStorage.removeItem('tutor_system_user'));
+  afterEach(() => {
+    setApplicationUserId(null);
+    localStorage.removeItem('tutor_system_user');
+  });
 
   it.each([
-    [JSON.stringify({ id: 'learner-1', current_role: 'student' }), { 'x-application-user-id': 'learner-1' }],
-    ['malformed JSON', {}],
-    [JSON.stringify({ current_role: 'tutor' }), {}],
-  ])('forwards the stored identity hint while leaving authorization to assessment-api (%s)', async (stored, headers) => {
-    localStorage.setItem('tutor_system_user', stored);
+    ['learner-1', null, { 'x-application-user-id': 'learner-1' }],
+    ['learner-1', JSON.stringify({ id: 'other-user' }), { 'x-application-user-id': 'learner-1' }],
+    [null, JSON.stringify({ id: 'other-user' }), {}],
+  ])('forwards the tab session identity %s, never shared storage (%s), leaving authorization to assessment-api', async (sessionUserId, stored, headers) => {
+    setApplicationUserId(sessionUserId);
+    if (stored) localStorage.setItem('tutor_system_user', stored);
     const invoke = supabase.functions.invoke as jest.Mock;
     invoke.mockResolvedValue({ data: { ok: true, data: { room_id: 'room-1', room_role: 'observer', learner_id: null } }, error: null });
     const service = new TransferAssessmentService({ requestId: () => 'join-1' });
