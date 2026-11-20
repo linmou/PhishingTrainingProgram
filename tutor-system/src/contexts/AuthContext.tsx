@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { AuthContextType, User, UserRole } from '../types';
 import { supabase } from '../services/supabase';
 import { setApplicationUserId } from '../services/applicationIdentity';
@@ -48,6 +48,29 @@ const generateUserId = (displayName: string, role: UserRole) => {
 // Local storage keys
 const USER_STORAGE_KEY = 'tutor_system_user';
 
+export const SIGNED_OUT_ELSEWHERE_NOTICE = 'You signed out or switched account in another tab. Sign in again to continue.';
+
+const USER_ROLES: ReadonlyArray<UserRole> = ['student', 'tutor', 'observer'];
+
+/** The one reader of the stored identity: a user with an id and a known (or no) role, otherwise null. */
+export const parseStoredUser = (raw: string | null | undefined): User | null => {
+    if (!raw) return null;
+    try {
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object' || typeof parsed.id !== 'string' || !parsed.id) return null;
+        if (parsed.current_role != null && !USER_ROLES.includes(parsed.current_role)) return null;
+        return parsed as User;
+    } catch {
+        return null;
+    }
+};
+
+/** Same session: same user id and same role. Display name and avatar may differ. */
+const sameIdentity = (left: User | null, right: User | null) =>
+    Boolean(left && right && left.id === right.id && (left.current_role ?? null) === (right.current_role ?? null));
+
+const readStoredUser = () => parseStoredUser(localStorage.getItem(USER_STORAGE_KEY));
+
 const ensureStoredUserProfile = async (storedUser: User): Promise<User> => {
     const { data: existingUser, error: checkError } = await supabase
         .from('users')
@@ -84,11 +107,24 @@ const ensureStoredUserProfile = async (storedUser: User): Promise<User> => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUserState] = useState<User | null>(null);
+    const [sessionNotice, setSessionNotice] = useState<string | null>(null);
+    // The user this tab acts as, read synchronously by the storage listener and after awaits.
+    const userRef = useRef<User | null>(null);
+    // The stored user being restored on load, before it becomes this tab's user.
+    const restoringRef = useRef<User | null>(null);
+    // Bumped whenever this tab's identity (id or role) changes. Work awaited under an older generation
+    // must not write the identity back to storage or state.
+    const generationRef = useRef(0);
     // Requests read this tab's identity at send time, so update it together with the state, not after render.
     const setUser = useCallback((nextUser: User | null) => {
+        if (!sameIdentity(userRef.current, nextUser)) generationRef.current += 1;
+        userRef.current = nextUser;
         setApplicationUserId(nextUser?.id ?? null);
         setUserState(nextUser);
     }, []);
+    /** True when this tab's identity has not changed since `generation` and storage still holds `expected`. */
+    const stillCurrent = (generation: number, expected: User) =>
+        generation === generationRef.current && sameIdentity(readStoredUser(), expected);
     const [loading, setLoading] = useState(true);
 
     // Debug user state changes
@@ -106,52 +142,70 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const initializeAuth = async () => {
             try {
                 console.log('🔄 AuthContext: Initializing simple auth...');
-                const storedUser = localStorage.getItem(USER_STORAGE_KEY);
+                const rawStoredUser = localStorage.getItem(USER_STORAGE_KEY);
+                const userData = parseStoredUser(rawStoredUser);
 
-                if (storedUser) {
-                    const userData = JSON.parse(storedUser);
+                if (userData) {
                     console.log('✅ AuthContext: Found stored user:', {
                         id: userData.id,
                         displayName: userData.display_name,
                         role: userData.current_role
                     });
+                    restoringRef.current = userData;
+                    const generation = generationRef.current;
 
+                    let restoredUser = userData;
                     try {
-                        const syncedUser = await ensureStoredUserProfile(userData);
-                        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(syncedUser));
-                        setUser(syncedUser);
+                        restoredUser = await ensureStoredUserProfile(userData);
                     } catch (syncError) {
                         console.warn('⚠️ AuthContext: Failed to sync stored user with database, keeping local session:', syncError);
-                        setUser(userData);
                     }
+                    const unchanged = restoringRef.current === userData && stillCurrent(generation, userData);
+                    restoringRef.current = null;
+                    // Another tab may have signed out or switched account while the profile was read.
+                    if (!unchanged) {
+                        console.log('ℹ️  AuthContext: Stored identity changed during restore; not restoring it');
+                        return;
+                    }
+                    if (restoredUser !== userData) localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(restoredUser));
+                    setUser(restoredUser);
+                } else if (rawStoredUser) {
+                    console.error('💥 AuthContext: Stored user is unreadable; removing it');
+                    localStorage.removeItem(USER_STORAGE_KEY);
                 } else {
                     console.log('ℹ️  AuthContext: No stored user found');
                 }
             } catch (error) {
                 console.error('💥 AuthContext: Error loading stored user:', error);
-                localStorage.removeItem(USER_STORAGE_KEY);
             } finally {
                 setLoading(false);
             }
         };
 
         initializeAuth();
+        // stillCurrent reads only refs and storage.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [setUser]);
 
-    // localStorage is shared by every tab of this site, and a reload shows whatever it holds now.
-    // Follow another tab's sign-out or sign-in visibly instead of showing a user this tab no longer is.
+    // localStorage is shared by every tab of this site, so the session is browser-scoped and fails closed.
+    // If another tab signs out, clears or corrupts the stored user, or stores another user or role, this tab
+    // signs itself out and returns to sign-in (SessionEndedRedirect). It never adopts the other tab's user.
+    // Only a change to the same user and role (display name, avatar) is taken over in place.
     useEffect(() => {
         const followStoredIdentity = (event: StorageEvent) => {
             if (event.key !== USER_STORAGE_KEY && event.key !== null) return;
-            let nextUser: User | null = null;
-            try {
-                const parsed = event.key === null || !event.newValue ? null : JSON.parse(event.newValue);
-                nextUser = typeof parsed?.id === 'string' && parsed.id ? parsed : null;
-            } catch {
-                nextUser = null;
+            const current = userRef.current ?? restoringRef.current;
+            if (!current) return;
+            const stored = event.key === null ? null : parseStoredUser(event.newValue);
+            if (stored && sameIdentity(stored, current)) {
+                if (userRef.current) setUser(stored);
+                return;
             }
-            console.log('🔄 AuthContext: Stored identity changed in another tab:', { userId: nextUser?.id ?? null });
-            setUser(nextUser);
+            console.log('🔄 AuthContext: Signed out because another tab changed the stored identity');
+            restoringRef.current = null;
+            generationRef.current += 1;
+            setUser(null);
+            setSessionNotice(SIGNED_OUT_ELSEWHERE_NOTICE);
         };
         window.addEventListener('storage', followStoredIdentity);
         return () => window.removeEventListener('storage', followStoredIdentity);
@@ -216,6 +270,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 // Store user locally
                 localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(offlineUser));
                 setUser(offlineUser);
+                setSessionNotice(null);
                 
                 console.log('✅ AuthContext: Offline mode activated, user created locally');
                 return; // Skip database operations
@@ -301,6 +356,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             // Set user state - this should trigger re-render
             setUser(newUser);
+            setSessionNotice(null);
             console.log('📢 AuthContext: User state updated');
 
             // Small delay to ensure state propagates
@@ -332,7 +388,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const setUserRole = async (role: UserRole): Promise<void> => {
+        const user = userRef.current;
         if (!user) throw new Error('No user logged in');
+        const generation = generationRef.current;
 
         console.log('🎭 AuthContext: Setting user role to:', role);
 
@@ -354,6 +412,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.error('❌ AuthContext: Error updating role:', error);
             throw error;
         }
+        // This tab signed out or changed identity while the update was in flight; write nothing back.
+        if (!stillCurrent(generation, user)) {
+            console.log('ℹ️  AuthContext: Identity changed during role update; not writing it back');
+            return;
+        }
 
         // Update local user
         const updatedUser = {
@@ -372,7 +435,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const updateUserProfile = async (updates: Partial<Pick<User, 'display_name' | 'avatar_url'>>): Promise<void> => {
+        const user = userRef.current;
         if (!user) throw new Error('No user logged in');
+        const generation = generationRef.current;
 
         console.log('👤 AuthContext: Updating user profile:', updates);
 
@@ -392,10 +457,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.error('❌ AuthContext: Error updating profile:', error);
             throw error;
         }
+        if (!stillCurrent(generation, user)) {
+            console.log('ℹ️  AuthContext: Identity changed during profile update; not writing it back');
+            return;
+        }
 
-        // Update local user
+        // Update local user, keeping any same-identity change (such as a new avatar) made meanwhile
         const updatedUser = {
-            ...user,
+            ...userRef.current!,
             ...updates,
             updated_at: new Date().toISOString()
         };
@@ -412,6 +481,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const value: AuthContextType = {
         user,
         loading,
+        sessionNotice,
         joinWithNameAndRole,
         signOut,
         setUserRole,

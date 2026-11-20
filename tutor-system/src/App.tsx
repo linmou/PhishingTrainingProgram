@@ -9,6 +9,7 @@ import TestRoomsView from './pages/TestRoomsView';
 import ObserverView from './pages/ObserverView';
 import RoomPagePost from './pages/RoomPagePost';
 import UserProfile from './pages/UserProfile';
+import SessionEndedRedirect from './components/SessionEndedRedirect';
 import './App.css';
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
             <AuthProvider>
                 <RoomProvider>
                     <Router>
+                        <SessionEndedRedirect />
                         <Routes>
                             <Route path="/" element={<HomePage />} />
                             <Route path="/student" element={<StudentView />} />
