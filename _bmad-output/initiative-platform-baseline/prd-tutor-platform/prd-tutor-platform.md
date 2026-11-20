@@ -157,7 +157,7 @@ A user can change their display name and avatar (from presets). The role is chos
 - The user identifier does not change when the display name changes.
 - The profile offers no role change.
 
-**Change (2026-11-20):** role change removed from the profile. It let a room owner's own user take the student role in their own room (G-38, #112). The server rule that the owner is never the learner of their own room (FR-12) stays as the guarantee.
+**Change (2026-11-20):** role change removed from the profile. Not yet implemented: the deployed profile still offers it (gap G-79). It let a room owner's own user take the student role in their own room (G-38, #112). The server rule that the owner is never the learner of their own room (FR-12) stays as the guarantee.
 
 **Out of Scope:** custom avatar upload.
 
