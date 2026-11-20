@@ -114,6 +114,27 @@ Private run package (outside Git, contains exported rows): `/Users/admin/.transf
   - Real-code harness: `guard` holds, `guardControl` holds, and `duplicate` is broken as expected (#111).
   - The model does not cover the clarification and assisted paths ("Not covered" in the skill). They are covered by the SQL tests above.
 
+## Staging (ciubrzggdqesgvfkpolj): staging verified
+
+- **Candidate:** `f2bf67aaebb5b58adbf6dc245106220c91a52435` (PR #114 head; CI `isolation-harness`, `frontend-jest` and `frontend-build` passed).
+- **Lease:** `refs/tags/verification-locks/ciubrzggdqesgvfkpolj`, tag `f24ec20155d37a0496f7048ba119fce336aebec9`, run `bc549b1c-9ed3-44eb-b1da-e69db589b86f`, acquired 2026-11-20T05:00:40Z for the exact candidate. No other lease existed.
+- **Preconditions (05:01Z):** the four function hashes matched the expected values. The trigger and its function were absent. 0 owner seats, 0 fixture rows. Latest migration was `20261115213658`.
+- **Application:** Supabase MCP `apply_migration` `guard_grading_and_owner_seat` with the exact file content, SHA-256 `c9ac4362…a6f0a`. Result: success; history entry `20261120050152 guard_grading_and_owner_seat`.
+- **Catalog:** all five function `md5(pg_get_functiondef)` values equal the local Green fingerprint (`1e234e08…`, `2df6eb8b…`, `edc389b9…`, `411c8835…`, `94f3d704…`). Owners, SECURITY DEFINER, `search_path` and ACLs are unchanged from before. The trigger is enabled (`O`), and its function is not executable by `anon`, `authenticated` or `service_role`.
+- **Live SQL assertions:** the `live-assertions.sql` batch (SHA-256 `bbf21c20…b0470`, from the committed fixture, `guard_grading.sql` and `owner_seat.sql`) ran through MCP in one transaction. It ended with `P0001 ALL_ASSERTIONS_PASSED_ROLLED_BACK`, so every #110 and #112 assertion passed against the hosted functions. Follow-up check: 0 fixture users, rooms or sessions; no helper table; trigger still enabled; no idle-in-transaction sessions.
+- **Live StudentView fallback path (PostgREST, anon key, `x-practice-contract`):** inserting an active session for the room owner returned HTTP 400 `23514 OWNER_CANNOT_BE_LEARNER`. The non-owner control insert returned 201 (`staging-live-owner-insert.json`).
+- **Browser journeys** (candidate app against staging, runner borrowing the lease):
+  - `assessment-answer`: pass (`staging-template-20261120050430-51c285bf`). Cleanup passed for rooms `d6b6b8f0…`, `79be49a2…` and `286de02f…`.
+  - `exit-assessment`: pass (`staging-template-20261120050700-e50753c0`). This includes the Guard-held answer (`deferred/guard_deferred`, zero attempts) and its recovery. Cleanup passed for room `d6b6b8f0…`.
+- **Cleanup exception (open):** the committed fixture for the PostgREST check is still on staging, because the cleanup `DELETE` through MCP was declined by the operator permission system. The leftover rows are tagged and inert:
+  - users `f1120000-0000-4000-8000-000000000001` and `…0002`;
+  - room `f1120000-0000-4000-8000-000000000011` ("owner seat live check (#112, temporary)");
+  - one active session in that room for `…0002`.
+
+  To remove them, run `DELETE FROM public.sessions WHERE room_id='f1120000-0000-4000-8000-000000000011'; DELETE FROM public.rooms WHERE id='f1120000-0000-4000-8000-000000000011'; DELETE FROM public.users WHERE id IN ('f1120000-0000-4000-8000-000000000001','f1120000-0000-4000-8000-000000000002');` under an approved operator session. Production checks therefore use only rolled-back fixtures.
+
 ## Hosted state
 
-Not yet changed. Next: CI on the revised head → acquire the staging lease → apply SQL and run the staging checks above → merge → integrated manifest comparison → production.
+- **Staging:** migration applied and verified, with the cleanup exception above.
+- **Production:** unchanged.
+- **Next:** merge PR #114 → integrated manifest comparison → production preconditions → apply the same SQL → fingerprint, rolled-back live assertions and the `assessment-answer` journey.
