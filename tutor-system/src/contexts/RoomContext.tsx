@@ -229,7 +229,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (user.current_role === 'student') {
                 const analyzeEvidence = async () => {
                     try {
-                        await ChecklistService.analyzeStudentMessages(currentRoom.id, user.id, storedMessage.id, user.id);
+                        await ChecklistService.analyzeStudentMessages(currentRoom.id, user.id, storedMessage.id);
                     } catch {
                         if (progressWarningRequest.current === warningRequest) {
                             setLearningProgressError('Your message was saved, but learning progress could not be updated. Ask your tutor to check the learning targets.');
@@ -454,7 +454,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     setCurrentSuggestionContext(null);
                 }
             }
-            await ChecklistService.analyzeStudentMessages(roomId, learnerMessage.user_id, learnerMessage.id, user.id);
+            await ChecklistService.analyzeStudentMessages(roomId, learnerMessage.user_id, learnerMessage.id);
             if (epoch !== generationEpoch.current || activeRoomId.current !== roomId) return;
             const result = await generateTutorSuggestion(roomId, user.id, undefined, {
                 parentMessageId: learnerMessage.id,
@@ -586,7 +586,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     }
                     expectedAssessmentResultIds = readiness.result_message_ids;
                 }
-                await ChecklistService.analyzeStudentMessages(currentRoom.id, checklistOwnerMessage.user_id, parentMessageId, user.id);
+                await ChecklistService.analyzeStudentMessages(currentRoom.id, checklistOwnerMessage.user_id, parentMessageId);
                 const prepared = currentRoom.in_room_assessment_enabled !== true ? null : await transferAssessmentService.prepareAssessment({
                     roomId: currentRoom.id,
                     focusStudentMessageId: parentMessageId,

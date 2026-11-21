@@ -1,8 +1,8 @@
-#!/usr/bin/env node
+import { renderRoomProvider } from '../../test-support/renderRoomProvider';
 /** Test responsible for RoomContext.tsx analyzing persisted ordinary learner messages. */
 import React from 'react';
-import { act, render, waitFor } from '@testing-library/react';
-import { RoomProvider, useRoom } from '../RoomContext';
+import { act, waitFor } from '@testing-library/react';
+import { useRoom } from '../RoomContext';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../../services/supabase';
 import { transferAssessmentService } from '../../services/transferAssessmentService';
@@ -65,7 +65,7 @@ describe('ordinary learner checklist coverage', () => {
   });
 
   async function mount() {
-    const view = render(<RoomProvider><Probe onChange={value => { api = value; }} /></RoomProvider>);
+    const view = renderRoomProvider(<Probe onChange={value => { api = value; }} />);
     await waitFor(() => expect(api).toBeDefined());
     await act(async () => { await api.joinRoom(room.id); });
     return view;
@@ -76,7 +76,7 @@ describe('ordinary learner checklist coverage', () => {
     await mount();
     await act(async () => { await api.sendMessage('I would open the official app.'); });
     expect(transferAssessmentService.postMessage).toHaveBeenCalledWith(expect.objectContaining({ roomId: room.id }));
-    expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(room.id, 'student-1', 'stored-1', 'student-1');
+    expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(room.id, 'student-1', 'stored-1');
     expect(api.messages.some(message => message.id === 'stored-1')).toBe(true);
   });
 
@@ -131,7 +131,7 @@ describe('ordinary learner checklist coverage', () => {
     await act(async () => { pending = api.sendMessage('Hello'); });
     await waitFor(() => expect(rejectAnalysis).toBeDefined());
     (useAuth as jest.Mock).mockReturnValue({ user: { id: 'other-student', current_role: 'student' } });
-    view.rerender(<RoomProvider><Probe onChange={value => { api = value; }} /></RoomProvider>);
+    view.rerenderRoomProvider(<Probe onChange={value => { api = value; }} />);
     await act(async () => { rejectAnalysis(new Error('old viewer failure')); await pending; });
     expect(api.learningProgressError).toBeNull();
   });
@@ -144,7 +144,7 @@ describe('ordinary learner checklist coverage', () => {
     await act(async () => { pending = api.sendMessage('Hello'); });
     await waitFor(() => expect(rejectAnalysis).toBeDefined());
     (useAuth as jest.Mock).mockReturnValue({ user: { id: 'student-1', current_role: 'tutor' } });
-    view.rerender(<RoomProvider><Probe onChange={value => { api = value; }} /></RoomProvider>);
+    view.rerenderRoomProvider(<Probe onChange={value => { api = value; }} />);
     await act(async () => { rejectAnalysis(new Error('old role failure')); await pending; });
     expect(api.learningProgressError).toBeNull();
   });

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// Learner-status reads are exercised in their own component/hook and browser suites.
 // Test responsible for executable bindings to features/chat_history_download.feature through RoomContext exports and RoomPagePost controls.
 
 import React from 'react';
@@ -20,6 +21,8 @@ import {
   transferRoom,
 } from '../test-support/transferRoomFixtures';
 import type { AIInteraction, Message, Room, UserRole } from '../types';
+jest.mock('../hooks/useRoomLearningStatus', () => ({ useRoomLearningStatus: () => ({ statuses: {}, error: false }) }));
+
 
 jest.mock('../services/supabase', () => ({
   supabase: { channel: jest.fn(), from: jest.fn(), storage: { from: jest.fn() } },

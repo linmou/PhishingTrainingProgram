@@ -47,7 +47,7 @@ import {
 import { isValidTransferProgress, type TransferProgress } from '../types/learningProgress';
 
 jest.mock('../services/supabase', () => ({
-  supabase: { channel: jest.fn(), from: jest.fn(), storage: { from: jest.fn() } },
+  supabase: { channel: jest.fn(), removeChannel: jest.fn().mockResolvedValue('ok'), from: jest.fn(), storage: { from: jest.fn() } },
   validateRoomPassword: jest.fn(),
   submitMessageFeedback: jest.fn(),
   getMessageFeedbackStats: jest.fn(),
@@ -334,7 +334,7 @@ function resolveSelection(state: ScenarioState, content: string, answerId: strin
 }
 
 function serviceFor(response: unknown, state: ScenarioState): TransferAssessmentService {
-  return new TransferAssessmentService({
+  return new TransferAssessmentService({ getApplicationUserId: () => 'teacher-1',
     api: {
       invoke: async (body) => {
         state.serviceCalls.push(body);
@@ -886,7 +886,7 @@ defineFeature(feature, (test) => {
     });
     // RoomPagePost.tsx: tutors get an actionable reminder before opening the setup panel.
     then('the room shows the learning-target setup reminder', async () => {
-      expect(await screen.findByRole('status')).toHaveTextContent(/learning targets/i);
+      expect(await screen.findByText('Set up learning targets before preparing a transfer assessment.')).toBeInTheDocument();
       expect(screen.queryByTestId('checklist-panel')).not.toBeInTheDocument();
       fireEvent.click(screen.getByRole('button', { name: 'Open Learning Targets' }));
       expect(await screen.findByTestId('checklist-panel')).toBeInTheDocument();

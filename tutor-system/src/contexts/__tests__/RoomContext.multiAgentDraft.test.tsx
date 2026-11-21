@@ -1,5 +1,4 @@
-// #!/usr/bin/env node
-// Covers AISuggestionBox.tsx: Cyberbullying character selection, shared review actions, and generation state.
+// // Covers AISuggestionBox.tsx: Cyberbullying character selection, shared review actions, and generation state.
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';

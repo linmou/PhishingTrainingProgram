@@ -10,3 +10,8 @@ export function setApplicationUserId(userId: string | null): void {
 export function getApplicationUserId(): string | null {
   return currentApplicationUserId;
 }
+
+/** Reset isolated test state without manufacturing an AuthContext session. */
+export function resetApplicationIdentityForTests(): void {
+  currentApplicationUserId = null;
+}

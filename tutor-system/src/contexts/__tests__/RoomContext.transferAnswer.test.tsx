@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+import { renderRoomProvider, RoomProbe } from '../../test-support/renderRoomProvider';
 /**
  * Test responsible for src/contexts/RoomContext.tsx on the learner answer path: a learner answer
  * is posted through the trusted facade with the delivered assessment identity and is graded only
@@ -67,13 +67,7 @@ jest.mock('../../services/checklistService', () => ({
   },
 }));
 
-const RoomProbe: React.FC<{ onReady: (room: ReturnType<typeof useRoom>) => void }> = ({ onReady }) => {
-  const room = useRoom();
-  React.useEffect(() => {
-    onReady(room);
-  }, [onReady, room]);
-  return null;
-};
+
 
 describe('RoomContext learner answer path', () => {
   let postMessage: jest.SpyInstance;
@@ -189,11 +183,9 @@ describe('RoomContext learner answer path', () => {
   });
 
   const mountRoom = async () => {
-    render(
-      <RoomProvider>
+    renderRoomProvider(
         <RoomProbe onReady={(api) => { room = api; }} />
-      </RoomProvider>
-    );
+      );
     await waitFor(() => expect(room).not.toBeNull());
     await act(async () => {
       await room!.joinRoom(TRANSFER_ROOM_ID);
@@ -303,7 +295,7 @@ describe('RoomContext learner answer path', () => {
 
     expect(processMessage).not.toHaveBeenCalled();
     expect(analyzeMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID, TRANSFER_ROOM_ID);
-    expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(TRANSFER_ROOM_ID, LEARNER_A_ID, DELIVERED_ANSWER_ID, LEARNER_A_ID);
+    expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(TRANSFER_ROOM_ID, LEARNER_A_ID, DELIVERED_ANSWER_ID);
   });
 
   // RoomContext.tsx: hidden exit assessments do not block ordinary conversation.

@@ -1,12 +1,12 @@
-#!/usr/bin/env node
+import { renderRoomProvider, RoomProbe as TestRoomHelper } from '../../test-support/renderRoomProvider';
 /**
  * Test responsible for RoomContext.tsx surfacing AI generation failures instead of silently keeping a generic or empty suggestion state.
  */
 
 import React from 'react';
-import { act, render, waitFor } from '@testing-library/react';
+import { act, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { RoomProvider, useRoom } from '../RoomContext';
+import { useRoom } from '../RoomContext';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../../services/supabase';
 import { generateTutorSuggestion, getAIConfig } from '../../services/aiService';
@@ -38,15 +38,7 @@ jest.mock('../AuthContext', () => ({
   useAuth: jest.fn()
 }));
 
-const TestRoomHelper: React.FC<{ onReady: (roomApi: ReturnType<typeof useRoom>) => void }> = ({ onReady }) => {
-  const roomApi = useRoom();
 
-  React.useEffect(() => {
-    onReady(roomApi);
-  }, [onReady, roomApi]);
-
-  return null;
-};
 
 describe('RoomContext AI generation failures', () => {
   beforeEach(() => {
@@ -186,11 +178,9 @@ describe('RoomContext AI generation failures', () => {
 
     let roomApi: ReturnType<typeof useRoom> | null = null;
 
-    render(
-      <RoomProvider>
+    renderRoomProvider(
         <TestRoomHelper onReady={(api) => { roomApi = api; }} />
-      </RoomProvider>
-    );
+      );
 
     await waitFor(() => {
       expect(roomApi).not.toBeNull();
