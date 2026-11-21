@@ -8,6 +8,7 @@ import { ChecklistIntegration } from '../services/checklistIntegration';
 import { ChecklistService } from '../services/checklistService';
 import { LLMExtractionService } from '../services/llmExtractionService';
 import { supabase } from '../services/supabase';
+import { setApplicationUserId } from '../services/applicationIdentity';
 import { ChecklistItem, SessionChecklist } from '../types/checklist';
 
 jest.mock('../services/supabase', () => {
@@ -116,7 +117,7 @@ describe('Checklist Management System', () => {
     mockSupabase.from.mockReturnValue(mockQuery);
     mockSupabase.rpc.mockReset();
     mockSupabase.functions.invoke.mockReset().mockResolvedValue({ data: { ok: true, data: [] }, error: null });
-    window.localStorage.setItem('tutor_system_user', JSON.stringify({ id: 'tutor-1' }));
+    setApplicationUserId('tutor-1');
     (LLMExtractionService.extractFromSystemPrompt as jest.Mock).mockReset();
   });
 

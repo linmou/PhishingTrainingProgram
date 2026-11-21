@@ -5,6 +5,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { useChecklist } from '../useChecklist';
 import { supabase } from '../../services/supabase';
 import { ChecklistService } from '../../services/checklistService';
+import { setApplicationUserId } from '../../services/applicationIdentity';
 
 jest.mock('../../services/supabase', () => ({ supabase: { from: jest.fn(), functions: { invoke: jest.fn() } } }));
 jest.mock('../../services/aiService', () => ({ getAIConfig: jest.fn() }));
@@ -51,6 +52,8 @@ describe('goals saved after learner messages', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // AuthContext is mocked, so sign the tab in the way AuthProvider does: requests carry the tutor.
+    setApplicationUserId('tutor-1');
     window.localStorage.clear();
     window.sessionStorage.clear();
     messages = [];

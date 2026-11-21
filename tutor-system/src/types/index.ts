@@ -256,6 +256,8 @@ export type { ProgressPolicyVersion, TransferProgress, TransferStatus, TransferU
 export interface AuthContextType {
     user: User | null;
     loading: boolean;
+    // Why this tab was signed out by a change in another tab; cleared by the next sign-in.
+    sessionNotice?: string | null;
     // Simplified authentication - just join with name and role
     joinWithNameAndRole: (displayName: string, role: UserRole) => Promise<void>;
     signOut: () => Promise<void>;

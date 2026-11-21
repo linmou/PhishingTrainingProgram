@@ -40,6 +40,7 @@ import {
 } from '../../test-support/transferRoomFixtures';
 import type { Message } from '../../types';
 
+jest.mock('../../services/roomSeatService', () => require('../../test-support/seatSignedInStudent'));
 jest.mock('../../contexts/AuthContext');
 jest.mock('../../contexts/RoomContext');
 let mockPanelProps: any;

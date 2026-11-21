@@ -3,6 +3,7 @@
 import { ChecklistService } from '../checklistService';
 import { CYBERBULLYING_LEARNING_TARGETS, CYBERBULLYING_TARGET_VERSION } from '../detectionTemplates';
 import { supabase } from '../supabase';
+import { setApplicationUserId } from '../applicationIdentity';
 import { buildRoomExportData, buildRoomTextExport } from '../../contexts/roomExportBuilder';
 import { transferRoom } from '../../test-support/transferRoomFixtures';
 
@@ -31,7 +32,7 @@ test.each(['cyberbullying_v1', CYBERBULLYING_TARGET_VERSION])('reads and exports
     target_version: targetVersion, template_name: 'Cyberbullying', session_start: now,
     total_items: 5, completed_items: 1, completion_percentage: 20, created_at: now, updated_at: now, is_active: true };
   const queries: any[] = [];
-  window.localStorage.setItem('tutor_system_user', JSON.stringify({ id: 'learner-1' }));
+  setApplicationUserId('learner-1');
   (supabase.functions.invoke as jest.Mock).mockImplementation(async (name, { body, headers }) => {
     expect(name).toBe('assessment-api');
     expect(body).toEqual({ operation: 'read_learning_evidence', room_id: transferRoom.id,

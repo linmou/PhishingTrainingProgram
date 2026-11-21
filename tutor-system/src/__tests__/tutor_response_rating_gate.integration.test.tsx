@@ -17,6 +17,7 @@ import type { Message, MessageFeedbackStats, Room, User, UserRole } from '../typ
 import { projectRoomMessage } from '../contexts/transferAssessmentUiAdapter';
 import { deliveredQuestionRow, LEARNER_A_ID } from '../test-support/transferRoomFixtures';
 
+jest.mock('../services/roomSeatService', () => require('../test-support/seatSignedInStudent'));
 jest.mock('../contexts/AuthContext', () => ({
   useAuth: jest.fn(),
 }));

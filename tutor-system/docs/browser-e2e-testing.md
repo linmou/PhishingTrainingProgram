@@ -78,6 +78,7 @@ The app and runner must use the same selected target. `test:e2e:staging` and `te
 | --- | --- | --- | --- |
 | Jest unit and `*.integration.test.tsx` | jsdom, mocked services | None | Default regression suite. |
 | `test:integration:qwen` | Real provider, no browser | None | Opt-in provider contract checks. |
+| `test:e2e:tabs` | Real Chromium, two tabs in one context, local fake Supabase backend | None (no network to any real server) | Two-tab identity journeys A–H (#109); runs in CI as `browser-tabs`. |
 | `test:e2e:staging` / `test:e2e:production` | Eleven default Playwright workflows, plus opt-in staging security and privacy workflows | Test rows are deleted after each workflow; fixture rooms remain; new-room workflows delete their tagged rooms | Explicit live suite against the selected project. |
 | `eval:behavior:web` | Playwright and seven real tutor calls with rubric judge | Seven staging Test Rooms | Deeper behavior evaluation; separate from the workflow suite. |
 | `scripts/browser-capture-prompt-contrast.js` | Playwright and six prompt comparisons | Six staging Test Rooms | Specialized capture utility. |
@@ -88,6 +89,9 @@ The app and runner must use the same selected target. `test:e2e:staging` and `te
 GitHub Actions includes deterministic PR isolation checks and a manually dispatched assessment API deployment/inspection workflow. Hosted browser E2E is not in CI. The `frontend-jest` job installs Playwright Chromium and runs `test:e2e:unit` against local HTML fixtures; these checks do not connect to staging or establish hosted acceptance. The [2026-10-14 release record](doc_update_record/documentation_update_record_v2026_10_14_final_assessment_release.md) contains successful staging/production answer and full-inventory delivery runs, cleanup, and earlier failure evidence. Status observations now preserve the analysis-context RPC result before assertions and fixture cleanup; on success this is the context after analysis, not a raw provider-response audit.
 
 The [early-message browser record](doc_update_record/documentation_update_record_v2026_10_14_early_message_recheck_browser.md) verifies automatic replay after manual goal creation in the merged app against staging, including reload and duplicate prevention.
+
+`npm run test:e2e:tabs` builds the app against a fake Supabase origin and runs the two-tab identity scenarios (cross-tab sign-out, other user, rename, explicit learner join, rejoin, learning-target save, reload/new-tab restore, in-flight sign-out); add `-- --dev` to run them on the StrictMode dev server and `-- --scenario=A,G` to select some. It prints each check and an evidence folder (screenshots, `network.json`, `backend.json`).
+The fake backend models `join_room` (owner observes, first student claims an empty seat, one visit per `visit_key`), so it cannot prove the server's real seat rules, RLS, rejection of headerless calls or realtime refetches; those still need the live suite.
 
 ## Select The Release Checks
 

@@ -1,6 +1,7 @@
 // Purpose: expose a typed browser facade for the trusted transfer-assessment API.
 
 import { supabase } from './supabase';
+import { getApplicationUserId } from './applicationIdentity';
 import type { Room } from '../types';
 import type { CoverageEvidence, LearningTargetInput } from '../types/checklist';
 import type { AssessmentEvent, AssessmentHistoryReadiness, AssessmentOption, AssessmentOptionId, PrivateAssessment, TransferAssessmentDraft } from '../types/assessment';
@@ -283,24 +284,18 @@ function defaultRequestId(): string {
   return randomUuid ? randomUuid.call(globalThis.crypto) : `transfer-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
-function storedApplicationUserId(): string | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const storedUser = window.localStorage.getItem('tutor_system_user');
-    const user = storedUser ? asRecord(JSON.parse(storedUser)) : {};
-    return nullableString(user.id);
-  } catch {
-    return null;
-  }
-}
+/** Raised without sending a request when this tab has no signed-in user: the server's answer to an anonymous call. */
+export const SIGNED_OUT_ERROR: AssessmentApiError = { code: 'UNAUTHORIZED', message: 'Signed out: sign in to continue.', retryable: false };
 
 function createDefaultApi(): TransferAssessmentApi {
   return {
     invoke: async (body, applicationUserId) => {
-      const userId = applicationUserId ?? storedApplicationUserId();
+      const userId = applicationUserId ?? getApplicationUserId();
+      // Every operation needs a signed-in user; never send an anonymous request after this tab signs out.
+      if (!userId) throw new AssessmentApiRequestError(SIGNED_OUT_ERROR);
       return (supabase as any).functions.invoke('assessment-api', {
         body,
-        headers: userId ? { 'x-application-user-id': userId } : {},
+        headers: { 'x-application-user-id': userId },
       });
     },
   };

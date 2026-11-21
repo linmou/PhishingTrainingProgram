@@ -39,6 +39,7 @@ jest.mock('../services/supabase', () => ({
   clearChatHistory: jest.fn()
 }));
 
+jest.mock('../services/roomSeatService', () => require('../test-support/seatSignedInStudent'));
 jest.mock('../contexts/AuthContext', () => ({
   ...jest.requireActual('../contexts/AuthContext'),
   useAuth: () => require('react').useContext(MockAuthClientContext)

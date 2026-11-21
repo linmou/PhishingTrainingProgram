@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
- * Test responsible for src/pages/RoomPagePost.tsx direct room URL entry: a learner must claim the
- * learner seat through the trusted join operation, while an observer must remain read-only.
+ * Test responsible for src/pages/RoomPagePost.tsx direct room URL entry: opening the URL never claims the
+ * learner seat (FR-12; only the explicit Join does), the seated learner re-enters through the trusted join
+ * operation, and an observer remains read-only.
  */
 
 import React from 'react';
@@ -13,9 +14,11 @@ import { findFirstPersistedStudentId, resolveTransferLearnerId } from '../RoomPa
 import { useAuth } from '../../contexts/AuthContext';
 import { useRoom } from '../../contexts/RoomContext';
 import { transferAssessmentService } from '../../services/transferAssessmentService';
+import { readRoomLearnerIds } from '../../services/roomSeatService';
 
 jest.mock('../../contexts/AuthContext', () => ({ useAuth: jest.fn() }));
 jest.mock('../../contexts/RoomContext', () => ({ useRoom: jest.fn() }));
+jest.mock('../../services/roomSeatService', () => ({ readRoomLearnerIds: jest.fn() }));
 jest.mock('../../services/transferAssessmentService', () => ({
     transferAssessmentService: { joinRoom: jest.fn() },
 }));
@@ -80,11 +83,21 @@ describe('RoomPagePost direct learner entry', () => {
         );
     };
 
-    it('claims the learner seat when a student opens the room URL directly', async () => {
+    it('does not claim an empty learner seat when a student opens the room URL directly', async () => {
+        (readRoomLearnerIds as jest.Mock).mockResolvedValue([]);
         mount('student');
 
         await waitFor(() => expect(joinRoom).toHaveBeenCalledWith('room-1', undefined));
+        await waitFor(() => expect(readRoomLearnerIds).toHaveBeenCalledWith('room-1'));
+        expect(transferAssessmentService.joinRoom).not.toHaveBeenCalled();
+    });
+
+    it('re-enters the seated learner through the trusted join with this page open as the visit', async () => {
+        (readRoomLearnerIds as jest.Mock).mockResolvedValue(['student-1']);
+        mount('student');
+
         await waitFor(() => expect(transferAssessmentService.joinRoom).toHaveBeenCalledWith('room-1', expect.any(String)));
+        expect(transferAssessmentService.joinRoom).toHaveBeenCalledTimes(1);
     });
 
     it('does not claim the learner seat for an observer opening the room URL', async () => {
@@ -92,6 +105,7 @@ describe('RoomPagePost direct learner entry', () => {
 
         await waitFor(() => expect(joinRoom).toHaveBeenCalledWith('room-1', undefined));
         expect(transferAssessmentService.joinRoom).not.toHaveBeenCalled();
+        expect(readRoomLearnerIds).not.toHaveBeenCalled();
     });
 
     // RoomPagePost.tsx: fallback learner identity comes from the first persisted real student message.
