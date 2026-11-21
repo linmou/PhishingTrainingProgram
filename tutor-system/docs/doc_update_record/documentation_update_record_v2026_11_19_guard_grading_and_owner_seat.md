@@ -185,3 +185,15 @@ Private run package (outside Git, contains exported rows): `/Users/admin/.transf
 1. With operator approval, run the staging cleanup `DELETE`, verify zero `f1120000-…` rows, then token-release the staging lease with `node scripts/staging-coordination.js release output/staging-release-110-112-f2bf67a/coordination-lease.json`.
 2. Acquire a production lease for `2b0c49a`. Create three tagged temporary production fixture rooms, then run `npm run test:e2e:production -- --workflow=assessment-answer` with `E2E_ROOM_FIXTURES_JSON` (launcher `runs/guard-owner-seat-20261119/browser.cjs`). Delete the fixtures, verify their absence and release the lease.
 3. Move the migration to `supabase/archived_migrations/`, record the result here, and close #110 and #112.
+
+
+## Resumed verification — 2026-11-21
+
+Release owner: Codex successor, following the maintainer instruction to continue after PR #115 merged. Integrated candidate: `956702c204bd72103265d193f9f1b276fdb8686e` (#113 and #115 included).
+
+- Verified the original staging process (PID 84792) had stopped, the remote lease tag still matched `f24ec20155d37a0496f7048ba119fce336aebec9`, and the exact-candidate coordinator accepted borrowing the saved lease from a checkout of `f2bf67a`.
+- Deleted only the recorded temporary `f1120000-…` staging fixtures using Supabase MCP in one transaction. Follow-up counts: sessions 0, rooms 0, users 0. Token-released the old staging lease successfully.
+- Acquired a new staging lease for integrated candidate `956702c`; evidence: `/private/tmp/ptp-integrated-956702c/output/release-resume-20261121/`.
+- Direct staging MCP inspection confirms all five function hashes still match the release fingerprints above.
+- Started the integrated staging `assessment-answer` and `exit-assessment` browser journeys. Results and cleanup remain pending; see `browser.log` in that evidence directory.
+- Production owner-seat data is untouched. Production acceptance and migration archival remain open.

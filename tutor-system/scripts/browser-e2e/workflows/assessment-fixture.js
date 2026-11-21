@@ -61,6 +61,8 @@ async function seedTransferChecklist(client, roomId, studentId, tutorId, focusMe
 async function assessmentRoom(ctx) {
   const room = await ctx.existingRoom(ctx.kind);
   await openRoom(ctx.studentPage, ctx.appUrl, room.id);
+  // Direct links open read-only; enrollment is an explicit learner action.
+  await ctx.studentPage.getByRole('button', { name: 'Join as learner', exact: true }).click();
   const sessions = await waitForMatch(
     () => query(ctx.client, 'sessions', '*', 'room_id', room.id),
     rows => rows.some(row => row.status === 'active' && row.student_id === ctx.student.id),
