@@ -6,6 +6,7 @@ import type { Room } from '../types';
 import type { CoverageEvidence, LearningTargetInput } from '../types/checklist';
 import type { AssessmentEvent, AssessmentHistoryReadiness, AssessmentOption, AssessmentOptionId, PrivateAssessment, TransferAssessmentDraft } from '../types/assessment';
 import { parseAssessmentEvent } from './assessmentRendering';
+import { newRequestId } from '../utils/requestId';
 import {
   PUBLIC_ASSESSMENT_DTO_KEYS,
   type AssessmentApiEnvelope,
@@ -279,10 +280,6 @@ function projectProcessedMessage(value: unknown): ProcessedMessageDTO {
   };
 }
 
-function defaultRequestId(): string {
-  const randomUuid = globalThis.crypto?.randomUUID;
-  return randomUuid ? randomUuid.call(globalThis.crypto) : `transfer-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}
 
 /** Raised without sending a request when this tab has no signed-in user: the server's answer to an anonymous call. */
 export const SIGNED_OUT_ERROR: AssessmentApiError = { code: 'UNAUTHORIZED', message: 'Signed out: sign in to continue.', retryable: false };
@@ -307,11 +304,23 @@ export class TransferAssessmentService {
 
   constructor(options: TransferAssessmentServiceOptions = {}) {
     this.api = options.api ?? createDefaultApi();
-    this.requestId = options.requestId ?? defaultRequestId;
+    this.requestId = options.requestId ?? (() => newRequestId('transfer'));
   }
 
-  private async request<T>(operation: AssessmentApiOperation, payload: Record<string, unknown>, applicationUserId?: string): Promise<T> {
-    const { data, error } = await this.api.invoke({ operation, request_id: this.requestId(), ...payload }, applicationUserId);
+  /**
+   * Calls one assessment-api operation. `requestId` is the caller's id for the user action; a retry
+   * of that action must pass the same id so the server replays the stored result. Without one, the
+   * call is treated as a new action.
+   */
+  private async request<T>(
+    operation: AssessmentApiOperation,
+    payload: Record<string, unknown>,
+    { requestId, applicationUserId }: { requestId?: string; applicationUserId?: string } = {}
+  ): Promise<T> {
+    const { data, error } = await this.api.invoke(
+      { operation, ...payload, request_id: requestId ?? this.requestId() },
+      applicationUserId
+    );
     if (error?.context && typeof error.context.json === 'function') {
       let body: unknown;
       try {
@@ -393,6 +402,8 @@ export class TransferAssessmentService {
     replyToMessageId?: string;
     assessmentId?: string;
     selectedOptionIds?: ReadonlyArray<AssessmentOptionId>;
+    /** The learner action's id; reuse it when retrying the same post. */
+    requestId?: string;
   }): Promise<Record<string, unknown>> {
     return this.request('post_message', {
       room_id: input.roomId,
@@ -400,7 +411,7 @@ export class TransferAssessmentService {
       parent_message_id: input.replyToMessageId ?? null,
       assessment_id: input.assessmentId ?? null,
       selected_option_ids: input.selectedOptionIds ? [...input.selectedOptionIds] : null,
-    });
+    }, { requestId: input.requestId });
   }
 
   prepareAssessment(input: { roomId: string; focusStudentMessageId: string; checklistId: string }): Promise<Record<string, unknown> | null> {
@@ -440,7 +451,7 @@ export class TransferAssessmentService {
   }
 
   analyzeMessage(messageId: string, roomId: string, applicationUserId?: string): Promise<Record<string, unknown>> {
-    return this.request('analyze_message', { message_id: messageId, room_id: roomId }, applicationUserId);
+    return this.request('analyze_message', { message_id: messageId, room_id: roomId }, { applicationUserId });
   }
 
   static toPublicAssessment(value: unknown): PublicAssessmentDTO {

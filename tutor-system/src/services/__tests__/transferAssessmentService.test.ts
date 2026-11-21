@@ -37,6 +37,29 @@ describe('transfer assessment DTO projections', () => {
     expect(invoke).toHaveBeenCalledWith({ operation: 'read_history_readiness', request_id: 'request-1', room_id: 'room-1', assessment_id: 'assessment-1' }, undefined);
   });
 
+  it('sends the caller-owned request id for a post, and mints one otherwise and for every delivery', async () => {
+    const invoke = jest.fn().mockResolvedValue({ data: { ok: true, data: { message: {} } }, error: null });
+    let minted = 0;
+    const service = new TransferAssessmentService({ api: { invoke }, requestId: () => `minted-${++minted}` });
+    const post = { roomId: 'room-1', content: 'A', replyToMessageId: 'q-1', assessmentId: 'a-1', selectedOptionIds: ['A'] as const };
+
+    await service.postMessage({ ...post, requestId: 'action-1' });
+    await service.postMessage({ ...post, requestId: 'action-1' });
+    await service.postMessage(post);
+    const delivery = { reviewedPayload: {} as never, roomId: 'room-1', studentId: 's-1',
+      checklistId: 'c-1', itemId: 'i-1', focusStudentMessageId: 'm-1' };
+    await service.sendReviewed(delivery).catch(() => undefined);
+    await service.sendReviewed(delivery).catch(() => undefined);
+
+    expect(invoke.mock.calls.map(([body]) => [body.operation, body.request_id])).toEqual([
+      ['post_message', 'action-1'],
+      ['post_message', 'action-1'],
+      ['post_message', 'minted-1'],
+      ['send_reviewed', 'minted-2'],
+      ['send_reviewed', 'minted-3'],
+    ]);
+  });
+
   it('records page visits with the same supplied key and leaves pre-navigation joins unkeyed', async () => {
     const invoke = jest.fn().mockResolvedValue({ data: { ok: true, data: { room_role: 'student' } }, error: null });
     const service = new TransferAssessmentService({ api: { invoke }, requestId: () => 'request-1' });

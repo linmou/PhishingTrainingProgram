@@ -38,6 +38,7 @@ import { buildRoomExportData, buildRoomTextExport } from './roomExportBuilder';
 import { useMessageFeedback } from '../hooks/useMessageFeedback';
 import { normalizeRoom, useRoomMembership } from './useRoomMembership';
 import { useRoomRealtime } from './useRoomRealtime';
+import { ActionRequestIds, learnerPostAction } from './actionRequestIds';
 
 const RoomContext = createContext<RoomContextType | undefined>(undefined);
 
@@ -82,11 +83,18 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } | null>(null);
     // True while a reviewed delivery is in flight, so one tab cannot deliver twice.
     const deliveryInFlightRef = useRef(false);
+    // One request id per learner action, reused when that action is retried (AD-7, issue #111).
+    const actionRequestIds = useRef(new ActionRequestIds()).current;
     const { user } = useAuth();
     const {
         currentRoom, setCurrentRoom, messages, setMessages, participants, loading,
         activeRoomId, joinRealtimeIds, addDisplayNameToMessage, createRoom, joinRoom, leaveRoom,
     } = useRoomMembership(user, setAIInteractions, setAiConfig);
+    // The messages on screen right now, read when a learner action starts.
+    const messagesRef = useRef(messages);
+    messagesRef.current = messages;
+    // A stored row that arrived by realtime or catch-up settles its action, even if its response was lost.
+    useEffect(() => { actionRequestIds.settleStored(messages); }, [actionRequestIds, messages]);
     const progressWarningScope = JSON.stringify([currentRoom?.id, user?.id, user?.current_role]);
     const progressWarningRequest = useRef({ scope: progressWarningScope, sequence: 0 });
     if (progressWarningRequest.current.scope !== progressWarningScope) {
@@ -189,13 +197,27 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             progressWarningRequest.current = warningRequest;
             setLearningProgressError(null);
             const answerOptions = options;
+            // A retry after a lost response reuses this action's id, so the server returns the row
+            // it already stored instead of saving a second answer (and using a second attempt).
+            const postAction = learnerPostAction({
+                roomId: currentRoom.id,
+                userId: user.id,
+                content,
+                replyToMessageId: answerOptions?.replyToMessageId,
+                assessmentId: answerOptions?.assessmentId,
+                selectedOptionIds: answerOptions?.selectedOptionIds,
+                onScreen: messagesRef.current,
+            });
+            const postRequestId = actionRequestIds.claim(postAction);
             const result = await transferAssessmentService.postMessage({
                 roomId: currentRoom.id,
                 content,
                 replyToMessageId: answerOptions?.replyToMessageId,
                 assessmentId: answerOptions?.assessmentId,
                 selectedOptionIds: answerOptions?.selectedOptionIds,
+                requestId: postRequestId,
             });
+            actionRequestIds.settle(postAction.slot, postRequestId);
             const storedRow = result.message as Record<string, unknown> | undefined;
             if (!storedRow) {
                 throw new Error('Transfer message operation did not return a stored message');

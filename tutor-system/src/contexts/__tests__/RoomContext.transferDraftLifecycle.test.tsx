@@ -425,6 +425,31 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     expect(room!.transferDraft).not.toBeNull();
   });
 
+  it('retries a delivery whose response was lost as a new request (FR-36; server replay tracked in #117)', async () => {
+    sendReviewed
+      .mockRejectedValueOnce(new Error('Assessment API request failed: Failed to send a request to the Edge Function'))
+      .mockResolvedValueOnce(reviewedDelivery);
+    await mountRoom();
+    await act(async () => {
+      await room!.generateAIResponse();
+    });
+
+    let lost: Error | null = null;
+    await act(async () => {
+      await room!.confirmTransferDraft(preparedCandidate).catch((error: Error) => { lost = error; });
+    });
+    expect(lost).toEqual(expect.objectContaining({ message: expect.stringMatching(/Edge Function/) }));
+    await act(async () => {
+      await room!.confirmTransferDraft(preparedCandidate);
+    });
+
+    // The server rejects a retried delivery before its replay lookup, and a kept id would make a later
+    // edited question replay the cancelled one, so each delivery call gets its own fresh id.
+    expect(sendReviewed).toHaveBeenCalledTimes(2);
+    expect(sendReviewed.mock.calls.map(([input]) => input.requestId)).toEqual([undefined, undefined]);
+    expect(room!.messages.filter((message) => message.id === DELIVERED_QUESTION_ID)).toHaveLength(1);
+  });
+
   it('merges a repeated delivery result into one visible message', async () => {
     await mountRoom();
     await act(async () => {
