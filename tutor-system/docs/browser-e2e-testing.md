@@ -78,7 +78,7 @@ The app and runner must use the same selected target. `test:e2e:staging` and `te
 | --- | --- | --- | --- |
 | Jest unit and `*.integration.test.tsx` | jsdom, mocked services | None | Default regression suite. |
 | `test:integration:qwen` | Real provider, no browser | None | Opt-in provider contract checks. |
-| `test:e2e:tabs` | Real Chromium, two tabs in one context, local fake Supabase backend | None (no network to any real server) | Two-tab identity journeys A–H (#109); runs in CI as `browser-tabs`. |
+| `test:e2e:tabs` | Real Chromium, two tabs in one context, local fake Supabase backend | None (no network to any real server) | Two-tab identity journeys A–H (#109); run manually with `npm run test:e2e:tabs`; not part of PR CI. |
 | `test:e2e:staging` / `test:e2e:production` | Eleven default Playwright workflows, plus opt-in staging security and privacy workflows | Test rows are deleted after each workflow; fixture rooms remain; new-room workflows delete their tagged rooms | Explicit live suite against the selected project. |
 | `eval:behavior:web` | Playwright and seven real tutor calls with rubric judge | Seven staging Test Rooms | Deeper behavior evaluation; separate from the workflow suite. |
 | `scripts/browser-capture-prompt-contrast.js` | Playwright and six prompt comparisons | Six staging Test Rooms | Specialized capture utility. |

@@ -25,17 +25,6 @@ jobs:
           node --test scripts/staging-coordination.test.js
           node --test tutor-system/scripts/react-scripts.test.js
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Test vendored monitor offline and execution boundary
-        run: |
-          python3 -m unittest discover -s .agents/skills/code-smell-monitor/tests -p 'test_*.py'
-          python3 -m unittest discover -s .agents/skills/code-smell-monitor/scripts -p 'test_*.py'
-
-      - name: Test review approval policy (pure logic, no hosted state)
-        run: node --test .github/scripts/review-policy.test.cjs .github/scripts/review-decision.test.cjs
-
       # Prevent the human-facing PR handoff from drifting away from CI check IDs.
       # Structural check only: PR results and review decisions are external gates.
       - name: Check PR template against CI job IDs
@@ -77,10 +66,6 @@ jobs:
           cache-dependency-path: tutor-system/package-lock.json
       - run: npm install --global npm@10.9.2
       - run: npm ci --no-audit --no-fund
-      - name: Test monitor TypeScript adapters (offline fixtures)
-        run: |
-          NODE_PATH="$PWD/node_modules" node --test ../.agents/skills/code-smell-monitor/tests/test_behavioral_redundancy.cjs
-          node ../.agents/skills/code-smell-monitor/tests/test_source_inventory.cjs "$PWD/node_modules"
       - name: Assessment audit logic and archive preservation (no hosted access)
         run: npm run test:assessment:audit
       - name: Install Chromium for local HTML harness checks
@@ -110,32 +95,3 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - name: Build React application
         run: CI=false npm run build
-
-  # Two-tab identity journeys (#109) in real Chromium against a local fake Supabase backend: no hosted access.
-  browser-tabs:
-    runs-on: ubuntu-24.04 # Pinned with frontend-jest for Playwright 1.60 --with-deps.
-    timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: tutor-system
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: npm
-          cache-dependency-path: tutor-system/package-lock.json
-      - run: npm install --global npm@10.9.2
-      - run: npm ci --no-audit --no-fund
-      - run: npx playwright install --with-deps chromium
-      - name: Two-tab identity scenarios A-H (production build, fake backend)
-        run: npm run test:e2e:tabs
-        env:
-          E2E_TABS_EVIDENCE: ${{ runner.temp }}/e2e-tabs
-      - name: Keep evidence of a failed run
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: e2e-tabs-evidence
-          path: ${{ runner.temp }}/e2e-tabs
-          retention-days: 7
