@@ -44,6 +44,19 @@ class MonitorRuntimeTests(unittest.TestCase):
             self.assertEqual(monitor.detector_status(
                 {"name": "ruff", "exit_code": 1, "timed_out": False}, root), "failed")
 
+    def test_successful_madge_distinguishes_cycles_empty_and_invalid_output(self):
+        with tempfile.TemporaryDirectory() as folder:
+            raw = Path(folder)
+            result = {"name": "madge_circular", "exit_code": 0, "timed_out": False}
+            for payload, expected in [([["a.ts", "b.ts"]], "findings"),
+                                      ([], "clean"), ({}, "failed"),
+                                      ([[]], "failed"), ([[1]], "failed")]:
+                with self.subTest(payload=payload):
+                    (raw / "madge_circular.json").write_text(json.dumps(payload))
+                    self.assertEqual(monitor.detector_status(result, raw), expected)
+            (raw / "madge_circular.json").write_text("invalid json")
+            self.assertEqual(monitor.detector_status(result, raw), "failed")
+
     def test_partial_coverage_is_not_success(self):
         results = [{"name": "ruff", "status": "clean"},
                    {"name": "radon_cc", "status": "unavailable"}]

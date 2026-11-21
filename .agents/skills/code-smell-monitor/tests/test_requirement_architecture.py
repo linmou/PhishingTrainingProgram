@@ -52,6 +52,16 @@ class RequirementArchitectureTests(unittest.TestCase):
         self.architecture = graph.analyze(payload)
         return self.path
 
+    def test_package_initializer_importing_own_symbol_has_no_self_cycle(self):
+        self.write('pkg/__init__.py', 'value = 1\nfrom . import value\n')
+        self.write('consumer.py', 'from pkg import value\n')
+        payload, coverage = python.collect(self.repo)
+        self.assertEqual(coverage['status'], 'covered')
+        modules = {m['source']: m['dependencies'] for m in payload['modules']}
+        self.assertEqual(modules['pkg/__init__.py'], [])
+        self.assertIn({'resolved': 'pkg/__init__.py'}, modules['consumer.py'])
+        self.assertEqual(graph.analyze(payload)['findings'], [])
+
     def test_cycle_mapping_preserves_source_hash_evidence_and_uncertainty(self):
         self.manifest()
         result = requirements.interpret(self.repo, self.architecture, self.path)

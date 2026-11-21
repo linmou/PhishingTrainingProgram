@@ -158,7 +158,12 @@ def classify(name: str, raw: Path, result: dict[str, Any], payload: Any) -> str:
     return 'failed'
 
 
-def prepare(repo: Path, scope_file: Path, out: Path, page_bytes: int) -> dict[str, Any]:
+def prepare(repo: Path, scope_file: Path, out: Path, page_bytes: int, *,
+            allow_project_execution: bool = False) -> dict[str, Any]:
+    # Version probes and resume identity checks can execute project-local tools.
+    # Refuse before any output creation, identity collection or subprocess call.
+    if not allow_project_execution:
+        raise ValueError('Project execution requires --allow-project-execution in a caller-provided credential-free sandbox')
     repo, out = repo.resolve(), out.resolve()
     scope = scope_files(repo, scope_file)
     if out == repo or repo.is_relative_to(out):
@@ -237,11 +242,14 @@ def main() -> int:
     parser.add_argument('--scope-file', type=Path, required=True)
     parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--page-bytes', type=int, default=6000)
+    parser.add_argument('--allow-project-execution', action='store_true',
+                        help='Permit project tools only in a caller-provided credential-free sandbox.')
     args = parser.parse_args()
     if args.page_bytes < 512:
         parser.error('--page-bytes must be at least512')
     try:
-        overview = prepare(args.repo, args.scope_file, args.out, args.page_bytes)
+        overview = prepare(args.repo, args.scope_file, args.out, args.page_bytes,
+                           allow_project_execution=args.allow_project_execution)
     except (ValueError, OSError, KeyError) as error:
         print(f'Preparation failed: {error}', file=sys.stderr)
         return 2

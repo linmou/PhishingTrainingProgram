@@ -11,8 +11,10 @@ Discover the requested production scope, package roots and instructions. Resolve
 For JS/TS, write or reuse an exact file manifest relative to the package root and run:
 
 ```text
-python3 <this-skill>/scripts/focused_redundancy.py --repo <package-root> --scope-file <manifest> --out <output>
+python3 <this-skill>/scripts/focused_redundancy.py --repo <package-root> --scope-file <manifest> --out <output> --allow-project-execution
 ```
+
+Use this active-analysis command only in a caller-provided credential-free sandbox; the flag does not create isolation. Without the flag, the focused runner refuses before probing tools or reading resume identity.
 
 This prepares normal/production Knip, scoped clone detection, behavioral candidates and syntax-only source navigation. The overview lists bounded page paths, counts and continuations; read pages separately. Inspect statuses and missing coverage first. A partial result can still supply usable evidence: preserve gaps and continue source review instead of repeatedly repairing or rerunning unchanged analyzers. Raw records remain linked for a concrete question. A source/navigation record is not a finding. For other stacks, use existing equivalent tools and the same review sequence; unavailable evidence stays explicit.
 

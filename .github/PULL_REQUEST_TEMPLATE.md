@@ -21,6 +21,8 @@ For a routine decision use `"risk_decision":"routine"` and a positive `"authoriz
 -->
 ```
 
+The current authenticated Codex receipt does not classify blocking findings. Therefore **any unresolved Codex finding blocks the automated gate**, even when a maintainer records acceptance. Fix and obtain a fresh clean review before merging; acceptance records alone cannot override this check.
+
 Agent judgment never grants its own merge authorization. GitHub's actual current-head APPROVED reviews are the human-approval evidence. To explicitly accept an unresolved non-blocking review finding, the trusted approver may include the following structured marker in their GitHub review body (not in the PR description):
 
 ```text

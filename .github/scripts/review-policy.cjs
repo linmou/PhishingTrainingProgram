@@ -144,8 +144,10 @@ function assess({ pr, files, receipt, approvals, routine, decision }) {
     reasons.push('Missing or invalid current-head structured risk decision');
   if (pr.draft) reasons.push('Draft PR');
   if (!receipt.complete) reasons.push('Missing authenticated current-head Codex code/security reviews');
-  if (receipt.unresolved && !approvals.some(a => a.accepted))
-    reasons.push('Unresolved Codex findings: fix/review again or obtain explicit trusted current-head acceptance');
+  // The authenticated receipt has no blocking/severity classification. Human
+  // acceptance cannot establish that every unresolved finding is non-blocking.
+  if (receipt.unresolved)
+    reasons.push('Unresolved Codex findings: fix and obtain a fresh clean review; blocking classification is unavailable');
   const needsHuman = files.some(isControl) || !routine ||
     !checkedDecision || checkedDecision.risk_decision === 'human_required';
   if (needsHuman && approvals.length === 0)

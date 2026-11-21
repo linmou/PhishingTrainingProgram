@@ -58,10 +58,10 @@ test('agent risk decision cannot authorize its own merge', () => {
   assert.equal(assess({pr:pr(decision().replace(sha,'b'.repeat(40))),routine:true,decision:null}).ok,false);
   assert.equal(assess({pr:pr(decision()+decision()),routine:true,decision:null}).ok,false);
 });
-test('findings require trusted current-head acceptance or fresh clean review', () => {
+test('unclassified unresolved findings require a fresh clean review even after trusted acceptance', () => {
   assert.equal(assess({routine:true,receipt:{complete:true,unresolved:true}}).ok,false);
   assert.equal(assess({routine:true,receipt:{complete:true,unresolved:true},approvals:[{accepted:false}]}).ok,false);
-  assert.equal(assess({routine:true,receipt:{complete:true,unresolved:true},approvals:[{accepted:true}]}).ok,true);
+  assert.equal(assess({routine:true,receipt:{complete:true,unresolved:true},approvals:[{accepted:true}]}).ok,false);
   assert.equal(assess({routine:true,receipt:{complete:false,unresolved:false},approvals:[{accepted:true}]}).ok,false);
 });
 test('authorization marker scopes are constrained', () => {

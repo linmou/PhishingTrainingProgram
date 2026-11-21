@@ -549,6 +549,15 @@ def detector_status(item: dict[str, Any], raw: Path) -> str:
         return "failed"
     if name in JSON_RESULTS and load_json(raw / (name + ".json")) is None:
         return "failed"
+    if name == "madge_circular":
+        cycles = load_json(raw / "madge_circular.json")
+        if not isinstance(cycles, list) or any(
+            not isinstance(cycle, list) or not cycle or
+            any(not isinstance(module, str) or not module for module in cycle)
+            for cycle in cycles
+        ):
+            return "failed"
+        return "findings" if cycles else "clean"
     if name == "behavioral_redundancy":
         result = load_json(raw / "behavioral_redundancy.json")
         if not isinstance(result, dict) or result.get("status") == "failed":

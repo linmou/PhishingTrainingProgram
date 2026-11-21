@@ -87,7 +87,7 @@ def collect(repo: Path) -> tuple[dict[str, Any], dict[str, Any]]:
                     status = 'unresolved_internal'
                 dependencies.update(targets)
                 # Importing a submodule also executes known package initializers.
-                if status == 'resolved':
+                if status == 'resolved' and targets:
                     target = Path(targets[0])
                     for parent in target.parents:
                         init = (parent / '__init__.py').as_posix()

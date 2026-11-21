@@ -2,6 +2,7 @@
 # Tests focused_redundancy.py: bounded preservation, strict scope/resume identity, failures and artifact integrity.
 from __future__ import annotations
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -15,6 +16,38 @@ from focused_redundancy import classify, pages, prepare, resume_state, scope_fil
 
 
 class FocusedTests(unittest.TestCase):
+    def test_default_api_refuses_before_tool_probes_or_resume(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            with patch('focused_redundancy.identity', side_effect=AssertionError('identity executed')), \
+                 patch('focused_redundancy.monitor.node_runner', side_effect=AssertionError('tool selected')):
+                with self.assertRaisesRegex(ValueError, 'requires --allow-project-execution'):
+                    prepare(root, root / 'scope.txt', root / 'out', 512)
+            self.assertFalse((root / 'out').exists())
+
+    def test_default_cli_does_not_execute_repo_local_binary(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo = root / 'repo'
+            tools = repo / 'node_modules' / '.bin'
+            tools.mkdir(parents=True)
+            (repo / 'package.json').write_text('{}')
+            (repo / 'a.ts').write_text('export const a = 1;')
+            marker = root / 'executed'
+            tool = tools / 'knip'
+            tool.write_text('#!/bin/sh\ntouch "' + str(marker) + '"\n')
+            tool.chmod(0o755)
+            scope = root / 'scope.txt'
+            scope.write_text('a.ts\n')
+            result = subprocess.run([sys.executable,
+                str(Path(__file__).resolve().parents[1] / 'scripts/focused_redundancy.py'),
+                '--repo', str(repo), '--scope-file', str(scope), '--out', str(root / 'out')],
+                capture_output=True, text=True, timeout=20)
+            self.assertEqual(result.returncode, 2)
+            self.assertIn('requires --allow-project-execution', result.stderr)
+            self.assertFalse(marker.exists())
+            self.assertFalse((root / 'out').exists())
+
     def test_scope_rejects_escape_duplicates_and_missing(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -79,7 +112,7 @@ class FocusedTests(unittest.TestCase):
                 'source_inventory': {'artifacts': {'raw/source_inventory.json': 'missing'}, 'result': {}}}}
             with patch('focused_redundancy.identity', return_value={}), patch('focused_redundancy.resume_state', return_value=state):
                 with self.assertRaisesRegex(ValueError, 'artifact missing or changed'):
-                    prepare(root, scope, out, 512)
+                    prepare(root, scope, out, 512, allow_project_execution=True)
 
 
 if __name__ == '__main__':
