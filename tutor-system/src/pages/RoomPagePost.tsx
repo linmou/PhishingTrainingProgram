@@ -15,6 +15,7 @@ import { supabase } from '../services/supabase';
 import { useRealtimeInvalidation } from '../hooks/useRealtimeInvalidation';
 import { boundedRead } from '../hooks/boundedRead';
 import { transferAssessmentService } from '../services/transferAssessmentService';
+import { readRoomLearnerIds } from '../services/roomSeatService';
 import { Download, Settings, ArrowLeft, Trash2, CheckSquare } from 'lucide-react';
 import { getConfigurationPreset } from '../services/prompts/parameterConfig';
 import { getRatingLabel } from '../components/feedbackRatingLabels';
@@ -130,6 +131,10 @@ const RoomPagePost: React.FC = () => {
     const [passwordError, setPasswordError] = useState('');
     const [joinError, setJoinError] = useState('');
     const [roomObserver, setRoomObserver] = useState(false);
+    // A student's place in this room, resolved from the room's records when the page opens.
+    const [studentSeat, setStudentSeat] = useState<'pending' | 'learner' | 'observer' | 'open' | 'unknown' | 'taken'>('pending');
+    const [joiningSeat, setJoiningSeat] = useState(false);
+    const [seatError, setSeatError] = useState('');
 
     useEffect(() => {
         if (!roomId || typeof window === 'undefined') return;
@@ -253,7 +258,9 @@ const RoomPagePost: React.FC = () => {
             pendingExit.current();
         }
     };
-    // Join after the stored identity has been restored so saved learner results can be replayed.
+    // Enter after the stored identity has been restored so saved learner results can be replayed.
+    // Runs once per page open. It does not follow identity changes: a change made in another tab signs
+    // this tab out and leaves the page (AuthContext), so it can never join as another user.
     useEffect(() => {
         if (roomId && !authLoading) {
             attemptJoinRoom();
@@ -263,7 +270,8 @@ const RoomPagePost: React.FC = () => {
         return () => {
             leaveRoom();
         };
-    }, [roomId, leaveRoom, authLoading, user?.id, user?.current_role]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [roomId, leaveRoom, authLoading]);
 
     // Scroll functions (defined before useEffect that uses them)
     const scrollToBottom = useCallback((smooth: boolean = true) => {
@@ -328,18 +336,67 @@ const RoomPagePost: React.FC = () => {
         }
     }, [visibleMessages.length, userHasScrolledUp, scrollToBottom]);
 
+    /** Enters the trusted room as the seated learner; this page's visit key records one visit (FR-40). */
+    const enterAsLearner = async (): Promise<void> => {
+        const result = await transferAssessmentService.joinRoom(roomId!, visitKey.current!);
+        if (result.room_role === 'observer') {
+            setRoomObserver(true);
+            setStudentSeat(result.learner_id && result.learner_id !== user?.id ? 'taken' : 'observer');
+        } else {
+            setRoomObserver(false);
+            setStudentSeat('learner');
+        }
+    };
+
+    // FR-12: opening the page, including by a direct link, never claims the learner seat. The student's role
+    // comes from the room's records (AD-8): the seated learner enters as learner (recording this visit); anyone
+    // else reads only. An empty seat is offered through an explicit Join, the same action as the room list's.
+    const resolveStudentSeat = async (studentId: string, seatRead: Promise<string[]>): Promise<void> => {
+        let learnerIds: string[];
+        try {
+            learnerIds = await seatRead;
+        } catch (error) {
+            console.warn('Unable to read the room learner; entering read-only:', error);
+            setRoomObserver(true);
+            setStudentSeat('unknown');
+            return;
+        }
+        if (learnerIds.includes(studentId)) {
+            // The records already seat this student; the trusted join confirms it and records this visit.
+            setStudentSeat('learner');
+            try {
+                await enterAsLearner();
+            } catch (error) {
+                console.warn('Trusted learner entry unavailable; the visit was not recorded:', error);
+            }
+            return;
+        }
+        setRoomObserver(true);
+        setStudentSeat(learnerIds.length ? 'observer' : 'open');
+    };
+
+    const handleJoinAsLearner = async () => {
+        setSeatError('');
+        setJoiningSeat(true);
+        try {
+            await enterAsLearner();
+        } catch (error) {
+            console.error('Failed to join as learner:', error);
+            setSeatError('Could not join as learner. Please try again.');
+        } finally {
+            setJoiningSeat(false);
+        }
+    };
+
     const attemptJoinRoom = async (password?: string): Promise<boolean> => {
         try {
             setJoinError('');
             setPasswordError('');
+            // Read the seat while the room loads, so the role is known by the time the room is shown.
+            const seatRead = user?.current_role === 'student' ? readRoomLearnerIds(roomId!) : null;
+            seatRead?.catch(() => undefined);
             await joinRoom(roomId!, password);
-            if (user?.current_role === 'student') {
-                const result = await transferAssessmentService.joinRoom(roomId!, visitKey.current!);
-                if (result.room_role === 'observer' && typeof window !== 'undefined') {
-                    setRoomObserver(true);
-                    window.sessionStorage.setItem(`room-observer:${roomId}`, 'true');
-                }
-            }
+            if (user?.current_role === 'student' && seatRead) await resolveStudentSeat(user.id, seatRead);
             return true;
         } catch (error: any) {
             console.error('Failed to join room:', error);
@@ -668,6 +725,8 @@ const RoomPagePost: React.FC = () => {
     };
 
     const canSendMessages = user && user.current_role !== 'observer' && !roomObserver;
+    const canOfferSeat = user?.current_role === 'student' && currentRoom?.tutor_id !== user.id
+        && (studentSeat === 'open' || studentSeat === 'unknown');
     const canUseAI = Boolean(user && user.current_role === 'tutor' && currentRoom);
     const isAIEnabled = Boolean(currentRoom?.ai_assistant_enabled);
     const firstPersistedStudentId = findFirstPersistedStudentId(messages.filter(message => message.room_id === currentRoom?.id));
@@ -1148,6 +1207,27 @@ const RoomPagePost: React.FC = () => {
                         <div className="observer-comment-notice">
                             👁️ You are in observer mode. You can view the conversation but cannot participate.
                         </div>
+                        {studentSeat === 'taken' && (
+                            <p role="status">Another student is now this room's learner.</p>
+                        )}
+                        {canOfferSeat && (
+                            <div className="learner-seat-offer">
+                                <p>
+                                    {studentSeat === 'unknown'
+                                        ? 'We could not check whether this room has a learner.'
+                                        : 'This room has no learner yet.'}
+                                </p>
+                                <button
+                                    type="button"
+                                    className="btn btn-primary btn-small"
+                                    onClick={handleJoinAsLearner}
+                                    disabled={joiningSeat}
+                                >
+                                    Join as learner
+                                </button>
+                                {seatError && <p role="alert">{seatError}</p>}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

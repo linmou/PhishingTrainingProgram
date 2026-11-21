@@ -11,6 +11,7 @@ jest.mock('../contexts/AuthContext', () => ({
     AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
+jest.mock('../components/SessionEndedRedirect', () => () => null);
 jest.mock('../contexts/RoomContext', () => ({
     RoomProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));

@@ -315,6 +315,8 @@ describe('useChecklist transfer progress ownership', () => {
 
     expect(await screen.findByText('Check the sender')).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText(/saved locally/i)).toBeInTheDocument());
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Learning targets are not saved. Learner progress is not being recorded.');
     expect(screen.getByRole('button', { name: 'Retry sync' })).toBeInTheDocument();
     checklistApi.initializeTransferChecklistForStudent.mockResolvedValueOnce(transferChecklist);
     fireEvent.click(screen.getByRole('button', { name: 'Retry sync' }));

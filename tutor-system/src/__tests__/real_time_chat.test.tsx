@@ -148,6 +148,7 @@ jest.mock('../services/supabase', () => {
 });
 
 // Mock AuthContext
+jest.mock('../services/roomSeatService', () => require('../test-support/seatSignedInStudent'));
 jest.mock('../contexts/AuthContext', () => ({
   ...jest.requireActual('../contexts/AuthContext'),
   useAuth: jest.fn()

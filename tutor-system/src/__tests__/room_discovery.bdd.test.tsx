@@ -28,6 +28,7 @@ jest.mock('../services/supabase', () => ({
   joinRoomAsObserver: jest.fn()
 }));
 
+jest.mock('../services/roomSeatService', () => require('../test-support/seatSignedInStudent'));
 jest.mock('../contexts/AuthContext', () => ({
   useOptionalAuth: () => ({ user: mockAuthUser, loading: false }),
   useAuth: () => ({ user: mockAuthUser, loading: false, signOut: jest.fn(), setUserRole: jest.fn() }),
