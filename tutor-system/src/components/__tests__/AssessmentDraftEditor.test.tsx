@@ -35,7 +35,7 @@ describe('AssessmentDraftEditor', () => {
         code: 'ASSESSMENT_NOT_ELIGIBLE', message: 'ASSESSMENT_NOT_ELIGIBLE', retryable: false,
       } }) },
     } });
-    const service = new TransferAssessmentService({ api: { invoke }, requestId: () => 'request-1' });
+    const service = new TransferAssessmentService({ getApplicationUserId: () => 'teacher-1', api: { invoke }, requestId: () => 'request-1' });
     const submit = (decision: TransferAssessmentDraft) => service.sendReviewed({
       reviewedPayload: decision, roomId: 'room', studentId: 'student', checklistId: 'checklist',
       itemId: decision.target_item_id, focusStudentMessageId: 'focus',

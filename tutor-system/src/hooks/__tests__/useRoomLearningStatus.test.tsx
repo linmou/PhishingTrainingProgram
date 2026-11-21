@@ -1,7 +1,9 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
+import { supabase } from '../../services/supabase';
 import { useRoomLearningStatus } from '../useRoomLearningStatus';
 import { readRoomLearningStatus } from '../../services/roomLearningStatusService';
 
+jest.mock('../../services/supabase', () => ({ supabase: { channel: jest.fn(), removeChannel: jest.fn() } }));
 jest.mock('../../services/roomLearningStatusService', () => ({ readRoomLearningStatus: jest.fn() }));
 const read = readRoomLearningStatus as jest.MockedFunction<typeof readRoomLearningStatus>;
 const saved = { room: { learnerId: 'learner', learnerName: 'Learner', joinedAt: '2026-11-01', targetsSaved: true, hasMessages: true } };
@@ -13,7 +15,10 @@ function deferred<T>() {
 }
 
 describe('persisted room status polling', () => {
-  beforeEach(() => { jest.useFakeTimers(); read.mockReset(); });
+  beforeEach(() => {
+    jest.useFakeTimers(); read.mockReset();
+    (supabase.channel as jest.Mock).mockReturnValue({ on: jest.fn().mockReturnThis(), subscribe: jest.fn().mockReturnThis() });
+  });
   afterEach(() => { jest.clearAllTimers(); jest.useRealTimers(); });
 
   it('does not read tutor-only status for an observer', () => {
@@ -37,11 +42,22 @@ describe('persisted room status polling', () => {
   it('replaces a saved assurance with unavailable when a refresh fails', async () => {
     read.mockResolvedValueOnce(saved).mockRejectedValueOnce(new Error('offline'));
     const { result } = renderHook(() => useRoomLearningStatus(['room'], 'owner'));
-    await act(async () => {});
-    expect(result.current.statuses).toEqual(saved);
+    await waitFor(() => expect(result.current.statuses).toEqual(saved));
     await act(async () => { jest.advanceTimersByTime(15000); });
     expect(result.current.error).toBe(true);
     expect(result.current.statuses).toEqual({});
+  });
+
+  it('refreshes a committed checklist immediately and reconciles on resubscription', async () => {
+    read.mockResolvedValue(saved);
+    renderHook(() => useRoomLearningStatus(['room'], 'owner'));
+    await waitFor(() => expect(read).toHaveBeenCalledTimes(1));
+    const channel = (supabase.channel as jest.Mock).mock.results.at(-1).value;
+    const checklistCallback = channel.on.mock.calls.find((call: any[]) => call[1].table === 'session_checklists')[2];
+    await act(async () => { checklistCallback(); });
+    expect(read).toHaveBeenCalledTimes(2);
+    await act(async () => { channel.subscribe.mock.calls[0][0]('SUBSCRIBED'); });
+    expect(read).toHaveBeenCalledTimes(3);
   });
 
   it('does not overlap reads or keep polling after unmount', async () => {

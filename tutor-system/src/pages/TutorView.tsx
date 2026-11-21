@@ -39,7 +39,7 @@ const TutorView: React.FC = () => {
     const [prePopulatedDialogue, setPrePopulatedDialogue] = useState<PrePopulatedMessage[]>([]);
     const [isCreating, setIsCreating] = useState(false);
     const [rooms, setRooms] = useState<Room[]>([]);
-    const learnerStatus = useRoomLearningStatus(rooms.map(room => room.id), user?.current_role === 'tutor' ? user.id : undefined);
+    const learnerStatus = useRoomLearningStatus(rooms.filter(room => room.tutor_id === user?.id).map(room => room.id), user?.current_role === 'tutor' ? user.id : undefined);
     // Dashboard filters
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
@@ -762,7 +762,7 @@ const TutorView: React.FC = () => {
                                     )}
                                     <div className="room-card-content">
                                         <h3 className="room-card-title">{room.title}</h3>
-                                        <RoomLearningStatus dashboard status={learnerStatus.statuses[room.id]} error={learnerStatus.error} />
+                                        {room.tutor_id === user?.id && user?.current_role === 'tutor' && <RoomLearningStatus dashboard status={learnerStatus.statuses[room.id]} error={learnerStatus.error} />}
                                         
                                         {room.description && (
                                             <p className="room-card-description">{room.description}</p>

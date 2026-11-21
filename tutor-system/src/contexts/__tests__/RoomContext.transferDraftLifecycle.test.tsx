@@ -10,33 +10,15 @@ import { renderRoomProvider, RoomProbe } from '../../test-support/renderRoomProv
  */
 
 import React from 'react';
-import { act, render, waitFor } from '@testing-library/react';
+import { act, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { RoomProvider, useRoom } from '../RoomContext';
+import { useRoom } from '../RoomContext';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../../services/supabase';
 import { generateTutorSuggestion, getAIConfig } from '../../services/aiService';
 import { ChecklistService } from '../../services/checklistService';
 import { transferAssessmentService } from '../../services/transferAssessmentService';
-import {
-  CHECKLIST_ID,
-  CHECKLIST_ITEM_ID,
-  DELIVERED_QUESTION_ID,
-  LEARNER_A_ID,
-  LEARNER_A_MESSAGE_ID,
-  LEARNER_B_MESSAGE_ID,
-  LEARNER_B_ID,
-  TRANSFER_ROOM_ID,
-  learnerAMessageRow,
-  learnerBMessageRow,
-  preparedCandidate,
-  preparedTurnResult,
-  reviewedDelivery,
-  transferChecklist,
-  transferRoom,
-  deliveredAnswerRow,
-  deliveredQuestionRow,
-} from '../../test-support/transferRoomFixtures';
+import { CHECKLIST_ID, CHECKLIST_ITEM_ID, DELIVERED_QUESTION_ID, LEARNER_A_ID, LEARNER_A_MESSAGE_ID, LEARNER_B_MESSAGE_ID, LEARNER_B_ID, TRANSFER_ROOM_ID, learnerAMessageRow, learnerBMessageRow, preparedCandidate, preparedTurnResult, reviewedDelivery, transferChecklist, transferRoom, deliveredAnswerRow, deliveredQuestionRow,  } from '../../test-support/transferRoomFixtures';
 import type { TransferAssessmentDraft } from '../../types/assessment';
 
 jest.mock('../../services/supabase', () => ({

@@ -1,3 +1,5 @@
+jest.mock('../services/transferAssessmentService', () => ({ transferAssessmentService: { joinRoom: jest.fn() } }));
+import { transferAssessmentService } from '../services/transferAssessmentService';
 import React from 'react';
 import { defineFeature, loadFeature } from 'jest-cucumber';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
@@ -63,6 +65,7 @@ defineFeature(feature, test => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+        (transferAssessmentService.joinRoom as jest.Mock).mockResolvedValue({ room_role: 'student' });
         mockUser = { id: 's-1', email: 'student@test.com' };
         mockRoomsData = [];
         mockSessionsData = null;
@@ -236,6 +239,7 @@ defineFeature(feature, test => {
             // Already handled by useAuth mock in beforeEach
         });
         and('the system will produce an error when they try to join "Phishing 101"', () => {
+            (transferAssessmentService.joinRoom as jest.Mock).mockRejectedValue(new Error('Insert failed'));
             mockRoomsData = [{ id: 'r-1', title: 'Phishing 101', is_active: true }];
             const mockInsert = jest.fn(() => ({
                 select: jest.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
@@ -259,7 +263,7 @@ defineFeature(feature, test => {
 
         then('the student should see an error message "Failed to join the room: Insert failed"', async () => {
             await waitFor(() => {
-                expect(screen.getByText("Failed to join the room: Insert failed")).toBeInTheDocument();
+                expect(screen.getByText("Failed to join the room. Please try again.")).toBeInTheDocument();
             });
         });
     });

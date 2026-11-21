@@ -12,24 +12,15 @@ import { renderRoomProvider, RoomProbe } from '../../test-support/renderRoomProv
  */
 
 import React from 'react';
-import { act, render, waitFor } from '@testing-library/react';
+import { act, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { RoomProvider, useRoom } from '../RoomContext';
+import { useRoom } from '../RoomContext';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../../services/supabase';
 import { getAIConfig } from '../../services/aiService';
 import { ChecklistService } from '../../services/checklistService';
 import { transferAssessmentService, type TransferAssessmentApi } from '../../services/transferAssessmentService';
-import {
-  DELIVERED_QUESTION_ID,
-  LEARNER_A_ID,
-  TRANSFER_ROOM_ID,
-  deliveredAnswerRow,
-  deliveredQuestionRow,
-  learnerAMessageRow,
-  transferChecklist,
-  transferRoom,
-} from '../../test-support/transferRoomFixtures';
+import { DELIVERED_QUESTION_ID, LEARNER_A_ID, TRANSFER_ROOM_ID, deliveredAnswerRow, deliveredQuestionRow, learnerAMessageRow, transferChecklist, transferRoom,  } from '../../test-support/transferRoomFixtures';
 
 jest.mock('../../services/supabase', () => ({
   supabase: { channel: jest.fn(), from: jest.fn(), storage: { from: jest.fn() }, functions: { invoke: jest.fn() } },

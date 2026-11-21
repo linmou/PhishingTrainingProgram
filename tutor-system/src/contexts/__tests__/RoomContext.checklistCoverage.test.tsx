@@ -1,8 +1,8 @@
 import { renderRoomProvider } from '../../test-support/renderRoomProvider';
 /** Test responsible for RoomContext.tsx analyzing persisted ordinary learner messages. */
 import React from 'react';
-import { act, render, waitFor } from '@testing-library/react';
-import { RoomProvider, useRoom } from '../RoomContext';
+import { act, waitFor } from '@testing-library/react';
+import { useRoom } from '../RoomContext';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../../services/supabase';
 import { transferAssessmentService } from '../../services/transferAssessmentService';

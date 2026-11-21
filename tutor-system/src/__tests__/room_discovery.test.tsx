@@ -1,3 +1,5 @@
+jest.mock('../services/transferAssessmentService', () => ({ transferAssessmentService: { joinRoom: jest.fn() } }));
+import { transferAssessmentService } from '../services/transferAssessmentService';
 import React from 'react';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -221,6 +223,7 @@ describe('Feature: Room Discovery and Joining', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+        (transferAssessmentService.joinRoom as jest.Mock).mockResolvedValue({ room_role: 'student' });
   });
 
   describe('Background: System has users', () => {

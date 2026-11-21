@@ -1,10 +1,10 @@
 import { renderRoomProvider } from '../../test-support/renderRoomProvider';
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { RoomProvider, useRoom } from '../RoomContext';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { useRoom } from '../RoomContext';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../../services/supabase';
-import { User, Message } from '../../types';
+import { User } from '../../types';
 
 // Mock Supabase client
 jest.mock('../../services/supabase', () => ({

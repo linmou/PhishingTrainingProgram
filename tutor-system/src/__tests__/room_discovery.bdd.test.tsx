@@ -1,4 +1,5 @@
-#!/usr/bin/env node
+jest.mock('../services/transferAssessmentService', () => ({ transferAssessmentService: { joinRoom: jest.fn() } }));
+import { transferAssessmentService } from '../services/transferAssessmentService';
 // Binds room_discovery.feature to the student and observer dashboards and room page.
 import React from 'react';
 import { defineFeature, loadFeature } from 'jest-cucumber';
@@ -193,6 +194,7 @@ const assertRoomTable = (roomCard: HTMLElement, title: string, rows: any[]) => {
 
 beforeEach(() => {
   jest.clearAllMocks();
+        (transferAssessmentService.joinRoom as jest.Mock).mockResolvedValue({ room_role: 'student' });
   mockAuthUser = null;
   mockRooms = [];
   mockSessions = [];

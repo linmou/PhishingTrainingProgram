@@ -10,7 +10,7 @@ function serviceWith(data: unknown): TransferAssessmentService {
     source.result_message={...message,assessment_event:{...message.assessment_event,assessment_id:source.assessment_id}};
   }
   const api: TransferAssessmentApi = { invoke: async () => ({ data: { ok: true, data }, error: null }) };
-  return new TransferAssessmentService({ api, requestId: () => 'request-1' });
+  return new TransferAssessmentService({ getApplicationUserId: () => 'teacher-1', api, requestId: () => 'request-1' });
 }
 
 const assessment = {
@@ -25,22 +25,22 @@ describe('transfer assessment DTO projections', () => {
   });
 
   it('surfaces evidence transport failures', async () => {
-    const service = new TransferAssessmentService({ api: { invoke: async () => ({ data: null, error: { message: 'network unavailable' } }) } });
+    const service = new TransferAssessmentService({ getApplicationUserId: () => 'teacher-1', api: { invoke: async () => ({ data: null, error: { message: 'network unavailable' } }) } });
     await expect(service.readLearningEvidence('room-1', 'checklist-1')).rejects.toThrow('network unavailable');
   });
 
   it('uses keyless history readiness for ordinary tutoring context', async () => {
     const history_readiness = { ready: true, result_message_ids: ['result-1'] };
     const invoke = jest.fn().mockResolvedValue({ data: { ok: true, data: { history_readiness } }, error: null });
-    const service = new TransferAssessmentService({ api: { invoke }, requestId: () => 'request-1' });
+    const service = new TransferAssessmentService({ getApplicationUserId: () => 'teacher-1', api: { invoke }, requestId: () => 'request-1' });
     await expect(service.readAssessmentHistory('room-1', 'assessment-1')).resolves.toEqual({ history_readiness });
-    expect(invoke).toHaveBeenCalledWith({ operation: 'read_history_readiness', request_id: 'request-1', room_id: 'room-1', assessment_id: 'assessment-1' }, undefined);
+    expect(invoke).toHaveBeenCalledWith({ operation: 'read_history_readiness', request_id: 'request-1', room_id: 'room-1', assessment_id: 'assessment-1' }, 'teacher-1');
   });
 
   it('sends the caller-owned request id for a post, and mints one otherwise and for every delivery', async () => {
     const invoke = jest.fn().mockResolvedValue({ data: { ok: true, data: { message: {} } }, error: null });
     let minted = 0;
-    const service = new TransferAssessmentService({ api: { invoke }, requestId: () => `minted-${++minted}` });
+    const service = new TransferAssessmentService({ getApplicationUserId: () => 'teacher-1', api: { invoke }, requestId: () => `minted-${++minted}` });
     const post = { roomId: 'room-1', content: 'A', replyToMessageId: 'q-1', assessmentId: 'a-1', selectedOptionIds: ['A'] as const };
 
     await service.postMessage({ ...post, requestId: 'action-1' });
@@ -62,7 +62,7 @@ describe('transfer assessment DTO projections', () => {
 
   it('records page visits with the same supplied key and leaves pre-navigation joins unkeyed', async () => {
     const invoke = jest.fn().mockResolvedValue({ data: { ok: true, data: { room_role: 'student' } }, error: null });
-    const service = new TransferAssessmentService({ api: { invoke }, requestId: () => 'request-1' });
+    const service = new TransferAssessmentService({ getApplicationUserId: () => 'teacher-1', api: { invoke }, requestId: () => 'request-1' });
     await service.joinRoom('room-1');
     await service.joinRoom('room-1', 'visit-1');
     await service.joinRoom('room-1', 'visit-1');
@@ -73,7 +73,7 @@ describe('transfer assessment DTO projections', () => {
     ]);
   });
   it('preserves retryability from a non-2xx error envelope', async () => {
-    const service = new TransferAssessmentService({ api: { invoke: async () => ({ data: null, error: {
+    const service = new TransferAssessmentService({ getApplicationUserId: () => 'teacher-1', api: { invoke: async () => ({ data: null, error: {
       message: 'Edge Function returned a non-2xx status code',
       context: { json: async () => ({ ok: false, error: { code: 'PERSISTENCE_FAILED', message: 'Persistence failed', retryable: true } }) },
     } }) } });
@@ -81,7 +81,7 @@ describe('transfer assessment DTO projections', () => {
   });
 
   it('retains transport failures when the HTTP body is not JSON', async () => {
-    const service = new TransferAssessmentService({ api: { invoke: async () => ({ data: null, error: {
+    const service = new TransferAssessmentService({ getApplicationUserId: () => 'teacher-1', api: { invoke: async () => ({ data: null, error: {
       message: 'Bad gateway', context: { json: async () => { throw new Error('Unexpected token'); } },
     } }) } });
     await expect(service.readReview('room', 'assessment')).rejects.toThrow('Assessment API request failed: Bad gateway');

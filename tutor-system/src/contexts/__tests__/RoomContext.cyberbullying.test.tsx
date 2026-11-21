@@ -1,8 +1,8 @@
 import { renderRoomProvider } from '../../test-support/renderRoomProvider';
 // // Test responsibility: RoomContext.tsx browser drafts, shared review logging, saved comments, and character projection.
 import React from 'react';
-import { act, render, waitFor } from '@testing-library/react';
-import { RoomProvider, useRoom } from '../RoomContext';
+import { act, waitFor } from '@testing-library/react';
+import { useRoom } from '../RoomContext';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../../services/supabase';
 import { generateTutorSuggestion, recordAISuggestionFeedback, getAIConfig } from '../../services/aiService';

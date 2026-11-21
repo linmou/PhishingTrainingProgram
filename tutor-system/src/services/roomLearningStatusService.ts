@@ -24,7 +24,7 @@ export async function readRoomLearningStatus(roomIds: string[]): Promise<Record<
   const result: Record<string, RoomLearningStatus> = {};
   for (let offset = 0; offset < roomIds.length; offset += 100) {
     const ids = roomIds.slice(offset, offset + 100);
-    const sessions = await readAllRows(supabase.from('sessions').select('room_id,student_id,started_at').in('room_id', ids).eq('status', 'active').order('id'));
+    const sessions = await readAllRows(supabase.from('sessions').select('room_id,student_id,started_at').in('room_id', ids).eq('status', 'active').not('student_id', 'is', null).order('id'));
     const learners = Array.from(new Set(sessions.map(row => row.student_id)));
     const [users, checklists] = await Promise.all([
       learners.length ? readAllRows(supabase.from('users').select('id,display_name').in('id', learners).order('id')) : Promise.resolve([]),
