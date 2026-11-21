@@ -1,4 +1,3 @@
-jest.mock('../services/transferAssessmentService', () => ({ transferAssessmentService: { joinRoom: jest.fn() } }));
 import { transferAssessmentService } from '../services/transferAssessmentService';
 import React from 'react';
 import { render, screen, waitFor, within } from '@testing-library/react';
@@ -11,6 +10,7 @@ import StudentView from '../pages/StudentView';
 import ObserverView from '../pages/ObserverView';
 import RoomPagePost from '../pages/RoomPagePost';
 import { getRoomsByObserver, joinRoomAsObserver, supabase } from '../services/supabase';
+jest.mock('../services/transferAssessmentService', () => ({ transferAssessmentService: { joinRoom: jest.fn() } }));
 
 // Mock Supabase
 jest.mock('../services/supabase', () => ({

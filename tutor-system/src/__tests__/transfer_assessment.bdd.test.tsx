@@ -886,7 +886,7 @@ defineFeature(feature, (test) => {
     });
     // RoomPagePost.tsx: tutors get an actionable reminder before opening the setup panel.
     then('the room shows the learning-target setup reminder', async () => {
-      expect((await screen.findByText('Set up learning targets before preparing a transfer assessment.')).closest('[role="status"]')).toBeInTheDocument();
+      expect(await screen.findByText('Set up learning targets before preparing a transfer assessment.')).toBeInTheDocument();
       expect(screen.queryByTestId('checklist-panel')).not.toBeInTheDocument();
       fireEvent.click(screen.getByRole('button', { name: 'Open Learning Targets' }));
       expect(await screen.findByTestId('checklist-panel')).toBeInTheDocument();

@@ -1,4 +1,3 @@
-jest.mock('../services/transferAssessmentService', () => ({ transferAssessmentService: { joinRoom: jest.fn() } }));
 import { transferAssessmentService } from '../services/transferAssessmentService';
 import React from 'react';
 import { defineFeature, loadFeature } from 'jest-cucumber';
@@ -13,6 +12,7 @@ import { supabase } from '../services/supabase';
 import StudentView from '../pages/StudentView';
 import RoomPagePost from '../pages/RoomPagePost';
 import { BEHAVIOR_TEST_ROOM_MARKER } from '../utils/behaviorTestRooms';
+jest.mock('../services/transferAssessmentService', () => ({ transferAssessmentService: { joinRoom: jest.fn() } }));
 
 const feature = loadFeature('./features/student_view.feature');
 

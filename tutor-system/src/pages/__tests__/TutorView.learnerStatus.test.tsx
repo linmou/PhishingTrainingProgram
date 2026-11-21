@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import TutorView from '../TutorView';
 import { useAuth } from '../../contexts/AuthContext';
@@ -19,11 +19,11 @@ it('neither queries nor displays a previous owner\'s learner after identity chan
   const view = render(<MemoryRouter><TutorView /></MemoryRouter>);
   await screen.findByText('Learner: Previous learner');
   user = { id: 'owner-b', display_name: 'B', current_role: 'tutor' };
-  await act(async () => { view.rerender(<MemoryRouter><TutorView /></MemoryRouter>); });
+  view.rerender(<MemoryRouter><TutorView /></MemoryRouter>);
   await waitFor(() => expect(useRoomLearningStatus).toHaveBeenLastCalledWith([], 'owner-b'));
   expect(screen.queryByText('Learner: Previous learner')).toBeNull();
   user = { id: 'owner-a', display_name: 'A', current_role: 'observer' };
-  await act(async () => { view.rerender(<MemoryRouter><TutorView /></MemoryRouter>); });
+  view.rerender(<MemoryRouter><TutorView /></MemoryRouter>);
   expect(useRoomLearningStatus).toHaveBeenLastCalledWith(['room-a'], undefined);
   expect(screen.queryByText('Learner: Previous learner')).toBeNull();
 });
