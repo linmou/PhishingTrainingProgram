@@ -247,6 +247,7 @@ A student can become a room's learner if it has none; any later student enters a
 - At most one learner per room at any time, enforced on the server.
 - The room owner is never the learner of their own room, and never answers an assessment, whatever role their profile shows.
 - The learner keeps the seat for the room's whole life; rooms are not reused for another learner.
+- The room owner can see the learner name and join time, and whether that learner's targets are recorded on the server; the room list warns when a learner chats without saved targets. **Grounding:** P4; #119.
 - The learner seat is taken only by the student's explicit Join action, never as a side effect of opening a page or changing identity.
 
 #### FR-13: Observe rooms

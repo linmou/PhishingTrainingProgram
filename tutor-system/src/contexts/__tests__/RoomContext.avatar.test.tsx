@@ -1,9 +1,10 @@
+import { renderRoomProvider } from '../../test-support/renderRoomProvider';
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { RoomProvider, useRoom } from '../RoomContext';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { useRoom } from '../RoomContext';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../../services/supabase';
-import { User, Message } from '../../types';
+import { User } from '../../types';
 
 // Mock Supabase client
 jest.mock('../../services/supabase', () => ({
@@ -155,11 +156,9 @@ describe('RoomContext - Avatar Display', () => {
     });
 
     it('should enrich messages with avatar URLs from participants', async () => {
-        render(
-            <RoomProvider>
+        renderRoomProvider(
                 <TestComponent />
-            </RoomProvider>
-        );
+            );
 
         fireEvent.click(screen.getByRole('button', { name: 'Join Room' }));
 

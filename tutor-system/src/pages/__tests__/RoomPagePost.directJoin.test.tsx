@@ -11,10 +11,13 @@ import '@testing-library/jest-dom';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import RoomPagePost from '../RoomPagePost';
 import { findFirstPersistedStudentId, resolveTransferLearnerId } from '../RoomPagePost';
+import { useRoomLearningStatus } from '../../hooks/useRoomLearningStatus';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRoom } from '../../contexts/RoomContext';
 import { transferAssessmentService } from '../../services/transferAssessmentService';
 import { readRoomLearnerIds } from '../../services/roomSeatService';
+
+jest.mock('../../hooks/useRoomLearningStatus', () => ({ useRoomLearningStatus: jest.fn(() => ({ statuses: {}, error: false })) }));
 
 jest.mock('../../contexts/AuthContext', () => ({ useAuth: jest.fn() }));
 jest.mock('../../contexts/RoomContext', () => ({ useRoom: jest.fn() }));
@@ -82,6 +85,14 @@ describe('RoomPagePost direct learner entry', () => {
             </MemoryRouter>
         );
     };
+
+    it('does not query a new route using ownership inferred from the previous room', () => {
+        (useAuth as jest.Mock).mockReturnValue({ user: { id: 'owner', current_role: 'tutor' } });
+        const previous = (useRoom as jest.Mock)();
+        (useRoom as jest.Mock).mockReturnValue({ ...previous, currentRoom: { id: 'previous-room', tutor_id: 'owner' } });
+        render(<MemoryRouter initialEntries={['/room/room-1']}><Routes><Route path="/room/:roomId" element={<RoomPagePost />} /></Routes></MemoryRouter>);
+        expect(useRoomLearningStatus).toHaveBeenLastCalledWith([], undefined);
+    });
 
     it('does not claim an empty learner seat when a student opens the room URL directly', async () => {
         (readRoomLearnerIds as jest.Mock).mockResolvedValue([]);

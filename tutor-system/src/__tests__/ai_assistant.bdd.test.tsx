@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// Learner-status reads are exercised in their own component/hook and browser suites.
 /** File: src/__tests__/ai_assistant.bdd.test.tsx; Purpose: bind tutor AI assistant feature workflows to RoomPagePost, RoomProvider, persistence, export, and the Qwen boundary. */
 
 import { OAI_MODEL } from '../services/aiModels';
@@ -14,6 +15,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../services/supabase';
 import { buildAIContextFromExistingData } from '../services/simplifiedAIContext';
 import type { Room, User } from '../types';
+jest.mock('../hooks/useRoomLearningStatus', () => ({ useRoomLearningStatus: () => ({ statuses: {}, error: false }) }));
+
 
 jest.mock('../contexts/AuthContext', () => ({ useAuth: jest.fn() }));
 

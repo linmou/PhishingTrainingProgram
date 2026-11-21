@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+import { renderRoomProvider, RoomProbe } from '../../test-support/renderRoomProvider';
 /**
  * Test responsible for src/contexts/RoomContext.tsx under retry and duplicate-tab conditions on
  * the transfer path.
@@ -9,32 +9,16 @@
  */
 
 import React from 'react';
-import { act, render, waitFor } from '@testing-library/react';
+import { act, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { RoomProvider, useRoom } from '../RoomContext';
+import { useRoom } from '../RoomContext';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../../services/supabase';
 import { getAIConfig } from '../../services/aiService';
 import { ChecklistService } from '../../services/checklistService';
 import { transferAssessmentService } from '../../services/transferAssessmentService';
 import type { ProcessedMessageDTO } from '../../services/transferAssessmentService';
-import {
-  CHECKLIST_ID,
-  CHECKLIST_ITEM_ID,
-  DELIVERED_ANSWER_ID,
-  DELIVERED_QUESTION_ID,
-  LEARNER_A_ID,
-  TRANSFER_ROOM_ID,
-  deliveredAnswerRow,
-  deliveredQuestionRow,
-  learnerAMessageRow,
-  learnerBMessageRow,
-  preparedCandidate,
-  preparedTurnResult,
-  reviewedDelivery,
-  transferChecklist,
-  transferRoom,
-} from '../../test-support/transferRoomFixtures';
+import { CHECKLIST_ID, CHECKLIST_ITEM_ID, DELIVERED_ANSWER_ID, DELIVERED_QUESTION_ID, LEARNER_A_ID, TRANSFER_ROOM_ID, deliveredAnswerRow, deliveredQuestionRow, learnerAMessageRow, learnerBMessageRow, preparedCandidate, preparedTurnResult, reviewedDelivery, transferChecklist, transferRoom,  } from '../../test-support/transferRoomFixtures';
 
 jest.mock('../../services/supabase', () => ({
   supabase: { channel: jest.fn(), from: jest.fn(), storage: { from: jest.fn() } },
@@ -64,13 +48,7 @@ jest.mock('../../services/checklistService', () => ({
   },
 }));
 
-const RoomProbe: React.FC<{ onReady: (room: ReturnType<typeof useRoom>) => void }> = ({ onReady }) => {
-  const room = useRoom();
-  React.useEffect(() => {
-    onReady(room);
-  }, [onReady, room]);
-  return null;
-};
+
 
 const tutorUser = {
   id: 'tutor-1',
@@ -159,11 +137,9 @@ describe('RoomContext transfer concurrency', () => {
   });
 
   const mountAsTutor = async () => {
-    render(
-      <RoomProvider>
+    renderRoomProvider(
         <RoomProbe onReady={(api) => { room = api; }} />
-      </RoomProvider>
-    );
+      );
     await waitFor(() => expect(room).not.toBeNull());
     await act(async () => {
       await room!.joinRoom(TRANSFER_ROOM_ID);
@@ -175,11 +151,9 @@ describe('RoomContext transfer concurrency', () => {
 
   const mountAsLearner = async () => {
     (useAuth as jest.Mock).mockReturnValue({ user: learnerUser, loading: false });
-    render(
-      <RoomProvider>
+    renderRoomProvider(
         <RoomProbe onReady={(api) => { room = api; }} />
-      </RoomProvider>
-    );
+      );
     await waitFor(() => expect(room).not.toBeNull());
     await act(async () => {
       await room!.joinRoom(TRANSFER_ROOM_ID);
@@ -270,11 +244,9 @@ describe('RoomContext transfer concurrency', () => {
       message: { ...deliveredAnswerRow },
     } as unknown as Record<string, unknown>);
 
-    render(
-      <RoomProvider>
+    renderRoomProvider(
         <RoomProbe onReady={(api) => { room = api; }} />
-      </RoomProvider>
-    );
+      );
     await waitFor(() => expect(room).not.toBeNull());
     await act(async () => {
       await room!.joinRoom(TRANSFER_ROOM_ID);

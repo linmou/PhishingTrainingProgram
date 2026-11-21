@@ -1,3 +1,4 @@
+import { markRoomObserver } from '../utils/roomObserver';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
@@ -252,106 +253,22 @@ const StudentView: React.FC = () => {
                 try {
                     const result = await transferAssessmentService.joinRoom(roomId);
                     if (result?.room_role === 'observer' && typeof window !== 'undefined') {
-                        window.sessionStorage.setItem(`room-observer:${roomId}`, 'true');
+                        markRoomObserver(roomId);
                     }
                 } catch (trustedJoinError) {
                     // The occupancy check already proved this learner cannot take the seat.
                     // Keep observer access usable while a newly deployed RPC propagates.
                     console.warn('Trusted observer join unavailable; entering read-only room:', trustedJoinError);
                     if (typeof window !== 'undefined') {
-                        window.sessionStorage.setItem(`room-observer:${roomId}`, 'true');
+                        markRoomObserver(roomId);
                     }
                 }
                 navigate(`/room/${roomId}`);
                 return;
             }
             
-            // Debug logging
-            console.log('Attempting to join room:', {
-                roomId,
-                tutorId: room.tutor_id,
-                studentId: user.id,
-                userObject: user
-            });
-            
-            // First verify the user exists in the database
-            const { data: userData, error: userError } = await supabase
-                .from('users')
-                .select('*')
-                .eq('id', user.id)
-                .single();
-                
-            if (userError || !userData) {
-                console.error('User not found in database:', userError);
-                setError('User not found. Please log out and log back in.');
-                return;
-            }
-            
-            console.log('User found in database:', userData);
-            
-            try {
-                const roomRole = (await transferAssessmentService.joinRoom(roomId))?.room_role;
-                if (roomRole === 'observer' && typeof window !== 'undefined') {
-                    window.sessionStorage.setItem(`room-observer:${roomId}`, 'true');
-                }
-                navigate(`/room/${roomId}`);
-                return;
-            } catch (trustedJoinError) {
-                console.warn('Trusted room join unavailable; using legacy join path:', trustedJoinError);
-            }
-
-            const { data: sessionData, error: joinError } = await supabase
-                .from('sessions')
-                .insert({ room_id: roomId, tutor_id: room.tutor_id, student_id: user.id, status: 'active' })
-                .select();
-                
-            if (joinError) {
-                console.error('Join error:', joinError);
-
-                // The room owner is never their own room's learner (#112); open the room read-only.
-                if (joinError.code === '23514' && joinError.message === 'OWNER_CANNOT_BE_LEARNER') {
-                    if (typeof window !== 'undefined') {
-                        window.sessionStorage.setItem(`room-observer:${roomId}`, 'true');
-                    }
-                    navigate(`/room/${roomId}`);
-                    return;
-                }
-
-                if (joinError.code === '23505') {
-                    const { data: activeSession, error: activeSessionError } = await activeStudentSessionForRoom(roomId);
-                    if (!activeSessionError && activeSession?.student_id === user.id) {
-                        navigate(`/room/${roomId}`);
-                        return;
-                    }
-                    if (!activeSessionError && activeSession?.student_id) {
-                        setRooms((currentRooms) => currentRooms.map((currentRoom) => currentRoom.id === roomId
-                            ? {
-                                ...currentRoom,
-                                status: 'Room Full',
-                                isJoinDisabled: true,
-                                joinButtonText: 'Join Room',
-                                isCurrentStudentInRoom: false
-                            }
-                            : currentRoom));
-                        setError('This room is full. Another student has joined.');
-                        return;
-                    }
-                    setError('The room changed while joining. Please refresh and try again.');
-                    return;
-                }
-
-                // Provide more specific error messages
-                if (joinError.code === '23503') {
-                    setError('User not found. Please ensure you are properly logged in.');
-                } else if (joinError.code === '42501') {
-                    setError('Permission denied. Please check your access rights.');
-                } else {
-                    setError(`Failed to join the room: ${joinError.message || 'Unknown error'}`);
-                }
-                return;
-            }
-            
-            console.log('Session created successfully:', sessionData);
+            const result = await transferAssessmentService.joinRoom(roomId);
+            if (result?.room_role === 'observer') markRoomObserver(roomId);
             navigate(`/room/${roomId}`);
         } catch (err) {
             console.error('Error joining room:', err);

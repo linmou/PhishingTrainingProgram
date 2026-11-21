@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+import { renderRoomProvider, RoomProbe } from '../../test-support/renderRoomProvider';
 /**
  * Test responsible for src/contexts/RoomContext.tsx room ingress on the transfer path: realtime
  * inserts, polling, reconnect catch-up, and the room participation mode.
@@ -8,29 +8,16 @@
  */
 
 import React from 'react';
-import { act, render, waitFor } from '@testing-library/react';
+import { act, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { RoomProvider, useRoom } from '../RoomContext';
+import { useRoom } from '../RoomContext';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../../services/supabase';
 import { getAIConfig } from '../../services/aiService';
 import { ChecklistService } from '../../services/checklistService';
 import { transferAssessmentService } from '../../services/transferAssessmentService';
 import { MESSAGE_AUDIT_INTERVAL_MS, MESSAGE_RECOVERY_INTERVAL_MS } from '../roomMessageSync';
-import {
-  DELIVERED_ANSWER_ID,
-  DELIVERED_QUESTION_ID,
-  LEARNER_A_ID,
-  LEARNER_A_MESSAGE_ID,
-  LEARNER_B_MESSAGE_ID,
-  TRANSFER_ROOM_ID,
-  deliveredAnswerRow,
-  deliveredQuestionRow,
-  learnerAMessageRow,
-  learnerBMessageRow,
-  transferChecklist,
-  transferRoom,
-} from '../../test-support/transferRoomFixtures';
+import { DELIVERED_ANSWER_ID, DELIVERED_QUESTION_ID, LEARNER_A_ID, LEARNER_A_MESSAGE_ID, LEARNER_B_MESSAGE_ID, TRANSFER_ROOM_ID, deliveredAnswerRow, deliveredQuestionRow, learnerAMessageRow, learnerBMessageRow, transferChecklist, transferRoom,  } from '../../test-support/transferRoomFixtures';
 
 jest.mock('../../services/supabase', () => ({
   supabase: { channel: jest.fn(), from: jest.fn(), storage: { from: jest.fn() } },
@@ -62,13 +49,7 @@ jest.mock('../../services/checklistService', () => ({
 
 type RealtimeHandler = (payload: { new: Record<string, unknown> }) => void;
 
-const RoomProbe: React.FC<{ onReady: (room: ReturnType<typeof useRoom>) => void }> = ({ onReady }) => {
-  const room = useRoom();
-  React.useEffect(() => {
-    onReady(room);
-  }, [onReady, room]);
-  return null;
-};
+
 
 describe('RoomContext transfer ingress', () => {
   let room: ReturnType<typeof useRoom> | null;
@@ -187,11 +168,9 @@ describe('RoomContext transfer ingress', () => {
   });
 
   const mountRoom = async () => {
-    render(
-      <RoomProvider>
+    renderRoomProvider(
         <RoomProbe onReady={(api) => { room = api; }} />
-      </RoomProvider>
-    );
+      );
     await waitFor(() => expect(room).not.toBeNull());
     await act(async () => {
       await room!.joinRoom(TRANSFER_ROOM_ID);

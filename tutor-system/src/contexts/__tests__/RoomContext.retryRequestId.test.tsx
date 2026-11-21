@@ -1,3 +1,4 @@
+import { renderRoomProvider, RoomProbe } from '../../test-support/renderRoomProvider';
 /**
  * Test responsible for src/contexts/RoomContext.tsx and src/services/transferAssessmentService.ts
  * on retried learner posts (issue #111, AD-7, NFR-5, FR-38).
@@ -11,24 +12,15 @@
  */
 
 import React from 'react';
-import { act, render, waitFor } from '@testing-library/react';
+import { act, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { RoomProvider, useRoom } from '../RoomContext';
+import { useRoom } from '../RoomContext';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../../services/supabase';
 import { getAIConfig } from '../../services/aiService';
 import { ChecklistService } from '../../services/checklistService';
 import { transferAssessmentService, type TransferAssessmentApi } from '../../services/transferAssessmentService';
-import {
-  DELIVERED_QUESTION_ID,
-  LEARNER_A_ID,
-  TRANSFER_ROOM_ID,
-  deliveredAnswerRow,
-  deliveredQuestionRow,
-  learnerAMessageRow,
-  transferChecklist,
-  transferRoom,
-} from '../../test-support/transferRoomFixtures';
+import { DELIVERED_QUESTION_ID, LEARNER_A_ID, TRANSFER_ROOM_ID, deliveredAnswerRow, deliveredQuestionRow, learnerAMessageRow, transferChecklist, transferRoom,  } from '../../test-support/transferRoomFixtures';
 
 jest.mock('../../services/supabase', () => ({
   supabase: { channel: jest.fn(), from: jest.fn(), storage: { from: jest.fn() }, functions: { invoke: jest.fn() } },
@@ -58,13 +50,7 @@ jest.mock('../../services/checklistService', () => ({
   },
 }));
 
-const RoomProbe: React.FC<{ onReady: (room: ReturnType<typeof useRoom>) => void }> = ({ onReady }) => {
-  const room = useRoom();
-  React.useEffect(() => {
-    onReady(room);
-  }, [onReady, room]);
-  return null;
-};
+
 
 type StoredRow = Record<string, unknown> & { id: string; assessment_request_id: string };
 
@@ -172,11 +158,9 @@ describe('RoomContext retried learner posts keep their request id', () => {
   });
 
   const mountRoom = async () => {
-    render(
-      <RoomProvider>
+    renderRoomProvider(
         <RoomProbe onReady={(api) => { room = api; }} />
-      </RoomProvider>
-    );
+      );
     await waitFor(() => expect(room).not.toBeNull());
     await act(async () => {
       await room!.joinRoom(TRANSFER_ROOM_ID);

@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+import { transferAssessmentService } from '../services/transferAssessmentService';
 // Binds room_discovery.feature to the student and observer dashboards and room page.
 import React from 'react';
 import { defineFeature, loadFeature } from 'jest-cucumber';
@@ -11,6 +11,7 @@ import ObserverView from '../pages/ObserverView';
 import RoomPagePost from '../pages/RoomPagePost';
 import { BEHAVIOR_TEST_ROOM_MARKER } from '../utils/behaviorTestRooms';
 import { getRoomsByObserver, joinRoomAsObserver, supabase } from '../services/supabase';
+jest.mock('../services/transferAssessmentService', () => ({ transferAssessmentService: { joinRoom: jest.fn() } }));
 
 let mockAuthUser: any = null;
 let mockRoomContextValue: any;
@@ -193,6 +194,7 @@ const assertRoomTable = (roomCard: HTMLElement, title: string, rows: any[]) => {
 
 beforeEach(() => {
   jest.clearAllMocks();
+        (transferAssessmentService.joinRoom as jest.Mock).mockResolvedValue({ room_role: 'student' });
   mockAuthUser = null;
   mockRooms = [];
   mockSessions = [];

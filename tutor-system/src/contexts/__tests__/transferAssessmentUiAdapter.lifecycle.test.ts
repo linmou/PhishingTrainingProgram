@@ -146,7 +146,7 @@ describe('transferAssessmentUiAdapter answer lifecycle', () => {
     const api: TransferAssessmentApi = {
       invoke: jest.fn(async () => ({ data: envelope, error: null })),
     };
-    const service = new TransferAssessmentService({ api, requestId: () => 'adapter-envelope-test' });
+    const service = new TransferAssessmentService({ getApplicationUserId: () => 'teacher-1', api, requestId: () => 'adapter-envelope-test' });
     const sourceBefore = JSON.stringify(processedSecondIncorrectTerminal);
 
     const processed = await service.processMessage(

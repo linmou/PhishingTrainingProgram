@@ -1,3 +1,6 @@
+import RoomLearningStatus from '../components/RoomLearningStatus';
+import { useRoomLearningStatus } from '../hooks/useRoomLearningStatus';
+import { isRoomObserver, clearRoomObserver } from '../utils/roomObserver';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -138,10 +141,9 @@ const RoomPagePost: React.FC = () => {
 
     useEffect(() => {
         if (!roomId || typeof window === 'undefined') return;
-        const key = `room-observer:${roomId}`;
-        if (window.sessionStorage.getItem(key) === 'true') {
+        if (isRoomObserver(roomId)) {
             setRoomObserver(true);
-            window.sessionStorage.removeItem(key);
+            clearRoomObserver(roomId);
         }
     }, [roomId]);
     
@@ -725,6 +727,9 @@ const RoomPagePost: React.FC = () => {
     };
 
     const canSendMessages = user && user.current_role !== 'observer' && !roomObserver;
+    const ownsRoom = user?.current_role === 'tutor' && currentRoom?.tutor_id === user.id
+        && currentRoom.id === roomId && !roomObserver;
+    const learnerStatus = useRoomLearningStatus(ownsRoom && roomId ? [roomId] : [], ownsRoom ? user.id : undefined);
     const canOfferSeat = user?.current_role === 'student' && currentRoom?.tutor_id !== user.id
         && (studentSeat === 'open' || studentSeat === 'unknown');
     const canUseAI = Boolean(user && user.current_role === 'tutor' && currentRoom);
@@ -1002,6 +1007,7 @@ const RoomPagePost: React.FC = () => {
             </div>
 
             <div className="room-post-container">
+                {ownsRoom && <RoomLearningStatus status={learnerStatus.statuses[roomId || '']} error={learnerStatus.error} />}
                 {/* Main Room Post */}
                 <RoomPost
                     room={currentRoom}

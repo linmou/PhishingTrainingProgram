@@ -201,26 +201,15 @@ describe('StudentView room capacity', () => {
     await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith(`/room/${room.id}`));
   });
 
-  it('opens the room read-only when the owner falls back to the legacy insert (#112)', async () => {
-    mockAuthUser = { id: room.tutor_id, display_name: 'Tutor One', current_role: 'student' };
+  it('reports trusted join failure without inserting a legacy session', async () => {
     const { transferAssessmentService } = jest.requireMock('../../services/transferAssessmentService');
     transferAssessmentService.joinRoom.mockRejectedValueOnce(new Error('Edge Function unavailable'));
-    insertSession.mockImplementationOnce(() => ({
-      select: jest.fn().mockResolvedValue({
-        data: null, error: { code: '23514', message: 'OWNER_CANNOT_BE_LEARNER' },
-      }),
-    }));
-    window.sessionStorage.clear();
-
     renderStudent();
-
     await userEvent.click(await screen.findByRole('button', { name: /join room/i }));
-
-    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith(`/room/${room.id}`));
-    expect(window.sessionStorage.getItem(`room-observer:${room.id}`)).toBe('true');
-    expect(screen.queryByText(/failed to join the room/i)).toBeNull();
+    await screen.findByText('Failed to join the room. Please try again.');
+    expect(insertSession).not.toHaveBeenCalled();
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
-
   it('does not count active sessions without a student as room occupancy', async () => {
     activeSessions = [{ room_id: room.id, student_id: null, status: 'active' }];
 

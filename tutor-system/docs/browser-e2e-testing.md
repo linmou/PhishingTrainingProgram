@@ -199,3 +199,10 @@ Earlier staging findings are recorded in [staging runtime evidence](doc_update_r
 ## Assessment switch regression (#100)
 
 Run the opt-in `--workflow=assessment-switch` against the selected project and candidate app. It saves assessment off through the tutor dialog, saves again untouched, verifies the legacy flag is preserved, sends ordinary learner evidence, checks per-message analysis markers and visible target progress, generates ordinary tutoring without `prepare_turn`, and checks explicit preparation/delivery rejection. It restores the fixture assessment setting before the runner cleans its generated rows. Run an assessment-on delivery/answer journey alongside this check.
+
+
+### Tutor learner/target status regression (#118/#119)
+
+`npm run test:e2e:tabs -- --scenario=I` exercises the owner-only persisted learner summary on the room page and dashboard. It covers no learner, saved targets, missing targets for a chatting learner, a quiet learner, a checklist belonging to a different learner, and observer visibility. Add `--dev` to use StrictMode. This uses the local fake backend: status-service pagination and hook event/reconnection/cancellation tests supplement it. It does not establish live Realtime delivery latency.
+
+Owner status uses existing published `sessions`, `session_checklists` and `messages` events for immediate refresh, with a serialized read and a 15-second recovery fallback. It reads plural checklist rows; an empty response means no persisted checklist, while a read failure is unavailable. Live verification must inspect the target policies directly and check the status with the intended project; no new schema is required for this UI change.
