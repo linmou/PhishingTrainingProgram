@@ -2,14 +2,14 @@
 
 Intent: record the release of `20261119000000_guard_grading_and_owner_seat.sql` from local validation through production acceptance.
 
-Updated: 2026-11-19. Base commit: `f5def40` (`origin/no_sign_up`). PR: #114.
+Updated: 2026-11-21. Original base commit: `f5def40` (`origin/no_sign_up`). PR: #114.
 
 | Field | Value |
 | --- | --- |
 | Release owner | Claude agent on branch `fix/110-112-guard-and-owner-seat` (worktree `agent-a14839e543eb429ff`). Owns staging and production SQL, verification, cleanup and archival for this batch. |
 | Batch | #110 + #112. Members: one SQL migration plus a small frontend handler in `StudentView.tsx`. No Edge source change. Other agents' concurrent #109/#111 PRs are frontend-only and deploy no server changes. |
 | Migration | `tutor-system/supabase/migrations/20261119000000_guard_grading_and_owner_seat.sql`, SHA-256 `c9ac43628de4b9768f345c5773dd44bfdcc3b4a802be9a2e7ed4be2bc34a6f0a`. Supersedes the initial candidate `ad88f98e…`, which was never deployed. |
-| Status | Staging: `staging verified` (fixture cleanup pending approval). Production: `production applied`, with SQL acceptance verified; the browser journey is pending approval for its fixtures. The release is **not complete**; see "Release status and handoff". |
+| Status | Staging and production live acceptance and fixture cleanup verified on 2026-11-21. Both leases released. Administrative closeout awaits PR #121 independent review and merge; see "Resumed acceptance results". Earlier pending-approval statements below describe historical state and are superseded by that section. |
 
 ## Changed behavior and contracts
 
@@ -185,3 +185,26 @@ Private run package (outside Git, contains exported rows): `/Users/admin/.transf
 1. With operator approval, run the staging cleanup `DELETE`, verify zero `f1120000-…` rows, then token-release the staging lease with `node scripts/staging-coordination.js release output/staging-release-110-112-f2bf67a/coordination-lease.json`.
 2. Acquire a production lease for `2b0c49a`. Create three tagged temporary production fixture rooms, then run `npm run test:e2e:production -- --workflow=assessment-answer` with `E2E_ROOM_FIXTURES_JSON` (launcher `runs/guard-owner-seat-20261119/browser.cjs`). Delete the fixtures, verify their absence and release the lease.
 3. Move the migration to `supabase/archived_migrations/`, record the result here, and close #110 and #112.
+
+
+## Resumed verification — 2026-11-21
+
+Release owner: Codex successor, following the maintainer instruction to continue after PR #115 merged. Integrated candidate: `956702c204bd72103265d193f9f1b276fdb8686e` (#113 and #115 included).
+
+- Verified the original staging process (PID 84792) had stopped, the remote lease tag still matched `f24ec20155d37a0496f7048ba119fce336aebec9`, and the exact-candidate coordinator accepted borrowing the saved lease from a checkout of `f2bf67a`.
+- Deleted only the recorded temporary `f1120000-…` staging fixtures using Supabase MCP in one transaction. Follow-up counts: sessions 0, rooms 0, users 0. Token-released the old staging lease successfully.
+- Acquired a new staging lease for integrated candidate `956702c`; evidence: `/private/tmp/ptp-integrated-956702c/output/release-resume-20261121/`.
+- Direct staging MCP inspection confirms all five function hashes still match the release fingerprints above.
+- Started the integrated staging `assessment-answer` and `exit-assessment` browser journeys. Results and cleanup remain pending; see `browser.log` in that evidence directory.
+- Production owner-seat data is untouched. Production acceptance and migration archival remain open.
+
+### Resumed acceptance results
+
+- Staging candidate `66b9dd1` is integrated application `956702c` plus a test-only explicit Join as learner click. No application, SQL or Edge behavior changed. The first two failed runs preserve evidence of the obsolete automatic-enrollment assumption; both cleaned their fixtures.
+- Repaired staging journeys passed: `assessment-answer` report `staging-template-20261121060833-6c2cd7a1`; `exit-assessment` report `staging-template-20261121061057-a9bc73d8`. Both report fixture cleanup passed. New staging lease token-released.
+- Production function fingerprints rechecked through MCP: all five match the original release values. The SQL was not reapplied; no Edge deployment occurred. Merged application CI on `956702c` passed.
+- Production `assessment-answer` passed: report `production-template-20261121061259-33560767`, including pass, failure, retry-pass, terminal disclosure, reload/deduplication and cancellation checks. The tested frontend is a local development server built from merged application source `956702c` plus test-only repair `66b9dd1`, targeting the live production database and Edge API; this is not a new verification of Render's served bundle.
+- Production anon PostgREST owner insert returned HTTP 400 / `23514 OWNER_CANNOT_BE_LEARNER`; non-owner control returned 201 with one row. Evidence: `output/production-resume-20261121/owner-check.json`.
+- Three fresh UUID temporary room templates were copied from staging configuration under the production lease and tagged `[release-closeout-20261121]`. Runner-generated data cleanup passed, control session removed, temporary room/config rows deleted. Direct MCP follow-up: 0 rooms, 0 sessions, 0 messages for the three IDs. Existing owner session `0564bc9a…` remains active and untouched. Production lease token-released.
+- Full private evidence is under `/private/tmp/ptp-integrated-956702c/{output,tmp/browser_demo_runs}/`. Release owner: Codex successor.
+- Acceptance status: staging and production live journeys verified. Exact SQL moved to `supabase/archived_migrations/20261119000000_guard_grading_and_owner_seat.sql` without modification. Administrative closeout remains pending PR #121 CI and independent review/merge; keep #110/#112 open until that completes. No new server work should add a pending migration before archival is integrated.
