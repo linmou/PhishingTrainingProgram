@@ -197,3 +197,14 @@ Release owner: Codex successor, following the maintainer instruction to continue
 - Direct staging MCP inspection confirms all five function hashes still match the release fingerprints above.
 - Started the integrated staging `assessment-answer` and `exit-assessment` browser journeys. Results and cleanup remain pending; see `browser.log` in that evidence directory.
 - Production owner-seat data is untouched. Production acceptance and migration archival remain open.
+
+### Resumed acceptance results
+
+- Staging candidate `66b9dd1` is integrated application `956702c` plus a test-only explicit Join as learner click. No application, SQL or Edge behavior changed. The first two failed runs preserve evidence of the obsolete automatic-enrollment assumption; both cleaned their fixtures.
+- Repaired staging journeys passed: `assessment-answer` report `staging-template-20261121060833-6c2cd7a1`; `exit-assessment` report `staging-template-20261121061057-a9bc73d8`. Both report fixture cleanup passed. New staging lease token-released.
+- Production function fingerprints rechecked through MCP: all five match the original release values. The SQL was not reapplied; no Edge deployment occurred. Merged application CI on `956702c` passed.
+- Production `assessment-answer` passed: report `production-template-20261121061259-33560767`, including pass, failure, retry-pass, terminal disclosure, reload/deduplication and cancellation checks. The tested frontend is a local development server built from merged application source `956702c` plus test-only repair `66b9dd1`, targeting the live production database and Edge API; this is not a new verification of Render's served bundle.
+- Production anon PostgREST owner insert returned HTTP 400 / `23514 OWNER_CANNOT_BE_LEARNER`; non-owner control returned 201 with one row. Evidence: `output/production-resume-20261121/owner-check.json`.
+- Three fresh UUID temporary room templates were copied from staging configuration under the production lease and tagged `[release-closeout-20261121]`. Runner-generated data cleanup passed, control session removed, temporary room/config rows deleted. Direct MCP follow-up: 0 rooms, 0 sessions, 0 messages for the three IDs. Existing owner session `0564bc9a…` remains active and untouched. Production lease token-released.
+- Full private evidence is under `/private/tmp/ptp-integrated-956702c/{output,tmp/browser_demo_runs}/`. Release owner: Codex successor.
+- Acceptance status: staging and production live journeys verified. Exact SQL moved to `supabase/archived_migrations/20261119000000_guard_grading_and_owner_seat.sql` without modification. Administrative closeout remains pending PR #121 CI and independent review/merge; keep #110/#112 open until that completes. No new server work should add a pending migration before archival is integrated.
