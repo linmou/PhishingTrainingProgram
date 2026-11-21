@@ -24,6 +24,14 @@ jobs:
           node --test scripts/database/disposable-database.test.js
           node --test scripts/staging-coordination.test.js
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test vendored monitor offline and execution boundary
+        run: |
+          python3 -m unittest discover -s .agents/skills/code-smell-monitor/tests -p 'test_*.py'
+          python3 -m unittest discover -s .agents/skills/code-smell-monitor/scripts -p 'test_*.py'
+
       - name: Test review approval policy (pure logic, no hosted state)
         run: node --test .github/scripts/review-policy.test.cjs .github/scripts/review-decision.test.cjs
 
@@ -67,6 +75,10 @@ jobs:
           cache-dependency-path: tutor-system/package-lock.json
       - run: npm install --global npm@10.9.2
       - run: npm ci --no-audit --no-fund
+      - name: Test monitor TypeScript adapters (offline fixtures)
+        run: |
+          NODE_PATH="$PWD/node_modules" node --test ../.agents/skills/code-smell-monitor/tests/test_behavioral_redundancy.cjs
+          node ../.agents/skills/code-smell-monitor/tests/test_source_inventory.cjs "$PWD/node_modules"
       - name: Assessment audit logic and archive preservation (no hosted access)
         run: npm run test:assessment:audit
       - name: Install Chromium for local HTML harness checks

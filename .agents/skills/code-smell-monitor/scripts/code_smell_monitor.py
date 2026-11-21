@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
 import shutil
@@ -11,7 +12,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 
 PYTHON_TOOLS = {
@@ -37,6 +38,7 @@ NODE_NPX_PACKAGES = {
     "madge": "madge",
     "depcheck": "depcheck",
     "tsc": "typescript",
+    "depcruise": "dependency-cruiser",
 }
 
 PY_EXTENSIONS = {".py"}
@@ -55,6 +57,7 @@ IGNORED_DIRS = {
     ".next",
     ".nuxt",
     "coverage",
+    ".code-smell-monitor",
 }
 
 
@@ -65,17 +68,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--out", default="", help="Output directory. Defaults to .code-smell-monitor/<timestamp>.")
     parser.add_argument("--install", choices=["missing", "never"], default="never", help="Install missing common tools for detected stacks.")
     parser.add_argument("--changed-only", action="store_true", help="Replace scope with git changed files under the repo.")
+    parser.add_argument("--architecture", action="store_true", help="Run optional universal architecture graph checks.")
+    parser.add_argument("--architecture-only", action="store_true", help="Run architecture adapters without unrelated detectors.")
+    parser.add_argument("--requirements", type=Path, help="Optional preauthored JSON evidence mappings (legacy); not required for agent-led interpretation.")
+    parser.add_argument("--workspace-root", type=Path, help="Root for optional requirement document citations; defaults to --repo and must contain it.")
+    parser.add_argument("--architecture-max-degree", type=int, default=12, help="Fan-in/out review threshold.")
     parser.add_argument("--fail-on-tool-error", action="store_true", help="Exit non-zero when any tool cannot run cleanly.")
     parser.add_argument("--allow-project-execution", action="store_true",
-                        help="Allow repository scripts and config-loading analysis tools. ONLY use in an isolated, credential-free sandbox.")
+                        help="Permit project code execution in a caller-provided credential-free sandbox.")
     return parser.parse_args()
-
-
-def text_output(value: str | bytes | None) -> str:
-    """subprocess.TimeoutExpired output may be bytes even when text=True."""
-    if isinstance(value, bytes):
-        return value.decode("utf-8", errors="replace")
-    return value or ""
 
 
 def skipped_result(name: str, reason: str) -> dict[str, Any]:
@@ -91,6 +92,7 @@ def run_command(cmd: list[str], cwd: Path, timeout: int = 300) -> dict[str, Any]
             cmd,
             cwd=str(cwd),
             text=True,
+            errors="replace",
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             timeout=timeout,
@@ -108,11 +110,24 @@ def run_command(cmd: list[str], cwd: Path, timeout: int = 300) -> dict[str, Any]
         return {
             "cmd": cmd,
             "exit_code": 124,
-            "stdout": text_output(exc.stdout),
-            "stderr": text_output(exc.stderr) + f"\nTimed out after {timeout} seconds",
+            "stdout": decode_output(exc.stdout),
+            "stderr": decode_output(exc.stderr) + f"\nTimed out after {timeout} seconds",
             "duration_seconds": round(time.time() - started, 3),
             "timed_out": True,
         }
+
+    except OSError as exc:
+        return {
+            "cmd": cmd, "exit_code": 127 if isinstance(exc, FileNotFoundError) else 126,
+            "stdout": "", "stderr": str(exc),
+            "duration_seconds": round(time.time() - started, 3), "timed_out": False,
+        }
+
+
+def decode_output(value: Any) -> str:
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    return value if isinstance(value, str) else ""
 
 
 def load_json(path: Path) -> Any:
@@ -126,10 +141,6 @@ def repo_files(repo: Path, scope_paths: list[Path]) -> list[Path]:
     files: list[Path] = []
     for scope in scope_paths:
         if scope.is_file():
-            try:
-                scope.relative_to(repo)
-            except ValueError:
-                continue
             files.append(scope)
             continue
         if not scope.exists():
@@ -258,6 +269,9 @@ def node_runner(repo: Path, tool: str, args: list[str], install_mode: str) -> li
         return [tool, *args]
     if install_mode == "never":
         return None
+    if tool == 'depcruise':
+        return ['npx', '--yes', '--package', NODE_NPX_PACKAGES[tool],
+                '--package', 'typescript', tool, *args]
     return [*npx_cmd(NODE_NPX_PACKAGES[tool], tool), *args]
 
 
@@ -285,7 +299,7 @@ def trusted_path_executable(name: str, repo: Path) -> bool:
     if not resolved:
         return False
     try:
-        Path(resolved).resolve().relative_to(repo)
+        Path(resolved).resolve().relative_to(repo.resolve())
     except ValueError:
         return True
     return False
@@ -307,7 +321,7 @@ def run_secret_check(repo: Path, raw_dir: Path) -> dict[str, Any]:
             "cmd": command,
             "exit_code": 127,
             "stdout": "",
-            "stderr": "gitleaks unavailable or resolves inside untrusted repository",
+            "stderr": "gitleaks not found",
             "duration_seconds": 0,
             "timed_out": False,
         }
@@ -345,7 +359,10 @@ def run_js_checks(repo: Path, paths: list[str], raw_dir: Path, has_typescript: b
         commands.append(("eslint", node_runner(repo, "eslint", ["--format", "json", *paths], install_mode), 600))
         commands.append(("jscpd", node_runner(repo, "jscpd", jscpd_args(paths, raw_dir), install_mode), 600))
         commands.append(("knip_dead_code", node_runner(repo, "knip", ["--reporter", "json"], install_mode), 600))
+        commands.append(("knip_production", node_runner(repo, "knip", ["--production", "--reporter", "json"], install_mode), 600))
         commands.append(("madge_circular", node_runner(repo, "madge", ["--circular", "--json", *paths], install_mode), 600))
+    if paths:
+        commands.append(("behavioral_redundancy", ["node", str(Path(__file__).with_name("behavioral_redundancy.cjs")), "--repo", str(repo)], 600))
     commands.append(("depcheck", node_runner(repo, "depcheck", ["--json"], install_mode), 600))
     commands.append(("package_audit", audit_command(repo), 600))
     if "typecheck" in scripts:
@@ -415,7 +432,7 @@ def extract_headlines(raw_dir: Path) -> dict[str, Any]:
         categories = ("files", "dependencies", "devDependencies", "unlisted", "exports", "types", "duplicates")
         issues = knip.get("issues")
         if isinstance(issues, list):
-            findings: dict[str, int] = {}
+            findings = {}
             for issue in issues:
                 if not isinstance(issue, dict):
                     continue
@@ -431,7 +448,63 @@ def extract_headlines(raw_dir: Path) -> dict[str, Any]:
                 if isinstance(knip.get(category), list)
             }
 
+    production = load_json(raw_dir / "knip_production.json")
+    if isinstance(production, dict):
+        headlines["knip_production_findings"] = knip_counts(production)
+        if isinstance(knip, dict):
+            only = sorted(knip_records(production) - knip_records(knip))
+            headlines["knip_production_only_candidates"] = [
+                {"file": file, "category": category, "symbol": symbol}
+                for file, category, symbol in only
+            ]
+            headlines["knip_production_only_note"] = (
+                "Candidates are reported by production-mode Knip but not ordinary Knip; "
+                "this does not prove test-only references or exclude dynamic/public consumers."
+            )
+    behavioral = load_json(raw_dir / "behavioral_redundancy.json")
+    if isinstance(behavioral, dict):
+        findings = behavioral.get("findings", [])
+        headlines["behavioral_redundancy_findings"] = findings if isinstance(findings, list) else []
+        headlines["behavioral_redundancy_status"] = behavioral.get("status", "unknown")
     return headlines
+
+
+def knip_counts(payload: dict[str, Any]) -> dict[str, int]:
+    """Count unused-code categories across supported Knip JSON reporter shapes."""
+    categories = ("files", "exports", "types", "dependencies", "devDependencies", "unlisted", "duplicates")
+    issues = payload.get("issues")
+    groups = issues if isinstance(issues, list) else [payload]
+    counts: dict[str, int] = {}
+    for group in groups:
+        if isinstance(group, dict):
+            for category in categories:
+                entries = group.get(category)
+                if isinstance(entries, list):
+                    counts[category] = counts.get(category, 0) + len(entries)
+    return counts
+
+
+def knip_records(payload: dict[str, Any]) -> set[tuple[str, str, str]]:
+    """Stable exact comparison, not a claim of reachability completeness."""
+    categories = ("files", "exports", "types")
+    issues = payload.get("issues")
+    groups = issues if isinstance(issues, list) else [payload]
+    records: set[tuple[str, str, str]] = set()
+    for group in groups:
+        if not isinstance(group, dict):
+            continue
+        file = str(group.get("file", ""))
+        for category in categories:
+            entries = group.get(category)
+            if not isinstance(entries, list):
+                continue
+            for entry in entries:
+                if isinstance(entry, str):
+                    records.add((file if category != "files" else entry, category, entry if category != "files" else ""))
+                elif isinstance(entry, dict):
+                    symbol = str(entry.get("name", entry.get("file", entry.get("path", ""))))
+                    records.add((file if category != "files" else symbol, category, symbol if category != "files" else ""))
+    return records
 
 
 def top_counts(values: Any) -> list[dict[str, Any]]:
@@ -439,6 +512,72 @@ def top_counts(values: Any) -> list[dict[str, Any]]:
     for value in values:
         counts[str(value)] = counts.get(str(value), 0) + 1
     return [{"name": key, "count": value} for key, value in sorted(counts.items(), key=lambda item: item[1], reverse=True)[:10]]
+
+
+FINDINGS_CODES = {
+    "ruff": {1}, "vulture": {3}, "bandit": {1}, "mypy": {1},
+    "package_lint": {1}, "eslint": {1}, "knip_dead_code": {1}, "knip_production": {1},
+    "depcheck": {1}, "package_audit": {1}, "package_typecheck": {1},
+    "tsc_no_emit": {1}, "gitleaks": {1},
+}
+JSON_RESULTS = {
+    "ruff", "radon_cc", "radon_mi", "bandit", "eslint",
+    "madge_circular", "depcheck", "knip_dead_code", "knip_production", "behavioral_redundancy",
+}
+CATEGORIES = {
+    "ruff": ("complexity", "dead_code", "static_safety"),
+    "radon_cc": ("complexity",), "radon_mi": ("complexity",),
+    "vulture": ("dead_code",), "bandit": ("security",), "mypy": ("static_safety",),
+    "package_lint": ("static_safety",),
+    "eslint": ("complexity", "dead_code", "static_safety"),
+    "jscpd": ("duplication",), "knip_dead_code": ("dead_code",),
+    "knip_production": ("production_reachability",),
+    "behavioral_redundancy": ("behavioral_redundancy",),
+    "madge_circular": ("coupling",), "depcheck": ("dependency_health",),
+    "package_audit": ("dependency_health",), "package_typecheck": ("static_safety",),
+    "tsc_no_emit": ("static_safety",), "gitleaks": ("security",),
+}
+
+
+def detector_status(item: dict[str, Any], raw: Path) -> str:
+    name, code = item["name"], item["exit_code"]
+    if item["timed_out"] or code == 124:
+        return "timed_out"
+    if code in (126, 127):
+        return "unavailable"
+    if code != 0 and code not in FINDINGS_CODES.get(name, set()):
+        return "failed"
+    if name in JSON_RESULTS and load_json(raw / (name + ".json")) is None:
+        return "failed"
+    if name == "behavioral_redundancy":
+        result = load_json(raw / "behavioral_redundancy.json")
+        if not isinstance(result, dict) or result.get("status") == "failed":
+            return "failed"
+        if result.get("status") == "partial":
+            return "partial"
+        if result.get("status") != "covered" or not isinstance(result.get("findings"), list):
+            return "failed"
+        return "findings" if result["findings"] else "clean"
+    if name == "gitleaks" and code == 1 and load_json(raw / "gitleaks.json") is None:
+        return "failed"
+    return "findings" if code else "clean"
+
+
+def coverage_status(results: list[dict[str, Any]]) -> dict[str, Any]:
+    categories: dict[str, list[str]] = {}
+    for result in results:
+        for cat in CATEGORIES.get(result["name"], ()):
+            categories.setdefault(cat, []).append(result["status"])
+    out = {}
+    for cat, statuses in categories.items():
+        covered = sum(status in ("clean", "findings") for status in statuses)
+        out[cat] = (
+            "covered" if covered == len(statuses) else
+            "partial" if covered or "partial" in statuses else
+            "unavailable" if all(v == "unavailable" for v in statuses) else "failed"
+        )
+    return {"complete": bool(out) and all(v == "covered" for v in out.values()),
+            "categories": out}
 
 
 def write_report(out_dir: Path, summary: dict[str, Any], results: list[dict[str, Any]], install_results: list[dict[str, Any]]) -> None:
@@ -449,8 +588,11 @@ def write_report(out_dir: Path, summary: dict[str, Any], results: list[dict[str,
     lines.append(f"- scope: `{', '.join(summary['scope'])}`")
     lines.append(f"- detected stacks: `{', '.join(name for name, enabled in summary['stack'].items() if enabled) or 'none'}`")
     lines.append(f"- output: `{summary['out_dir']}`")
-    lines.append(f"- project execution enabled (caller-provided sandbox): `{summary['project_execution_enabled']}`")
-    lines.append(f"- detector coverage complete: `{summary['coverage_complete']}`")
+    lines.append("")
+    lines.append("## Coverage")
+    lines.append("Complete: " + str(summary["coverage"]["complete"]))
+    for category, status in summary["coverage"]["categories"].items():
+        lines.append("- " + category + ": " + status)
     lines.append("")
     lines.append("## Headline Signals")
     if summary["headlines"]:
@@ -472,15 +614,167 @@ def write_report(out_dir: Path, summary: dict[str, Any], results: list[dict[str,
     lines.append("## Review Prompts")
     lines.append("- Check highest-complexity functions before extracting abstractions.")
     lines.append("- Treat dead-code reports as suspected when routing, decorators, plugins, or dynamic imports exist.")
+    lines.append("- Compare Knip normal vs production-mode candidates without deleting or excluding tests from the repository.")
+    lines.append("- For reachable implementation or repeated-execution overlap, review call paths, event triggers, and resource reads; imports alone are insufficient.")
     lines.append("- Investigate circular dependencies before moving shared code.")
     lines.append("- Keep security/dependency findings separate from maintainability findings.")
     lines.append("- Re-run the same scope after changes and compare this report with the new one.")
+    behavioral = load_json(out_dir / "raw" / "behavioral_redundancy.json")
+    if isinstance(behavioral, dict):
+        lines.append("")
+        lines.append("## Behavioral redundancy candidates (advisory)")
+        lines.append(f"- coverage: `{behavioral.get('status', 'unknown')}`; files analyzed: `{behavioral.get('scanned_files', 0)}`")
+        for finding in behavioral.get("findings", []):
+            if not isinstance(finding, dict):
+                continue
+            location = finding.get("source") or finding.get("at") or {}
+            if not isinstance(location, dict):
+                location = {}
+            lines.append(f"- `{finding.get('type', 'unknown')}`: `{location.get('file', 'unknown')}:{location.get('line', '?')}`; resource `{finding.get('resource', 'unknown')}`; classification `candidate`")
+            lines.append(f"  - details: {json.dumps(finding, ensure_ascii=False)}")
+        if behavioral.get("omissions"):
+            lines.append(f"- omissions: {json.dumps(behavioral['omissions'], ensure_ascii=False)}")
     lines.append("")
     (out_dir / "code_smell_report.md").write_text("\n".join(lines), encoding="utf-8")
 
 
+def run_architecture(repo: Path, raw_dir: Path, install_mode: str, max_degree: int) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Run dependency-cruiser for JS/TS, preserving every result and coverage state."""
+    options = ["--output-type", "json", "--exclude",
+               r"(^|/)(node_modules|\.git|dist|build|coverage|\.code-smell-monitor)(/|$)",
+               "--do-not-follow", r"(^|/)node_modules/"]
+    if not any((repo / name).is_file() for name in (
+        '.dependency-cruiser.js', '.dependency-cruiser.cjs', '.dependency-cruiser.mjs',
+        '.dependency-cruiser.json')):
+        options.append('--no-config')
+    if (repo / 'tsconfig.json').is_file():
+        options.extend(['--ts-config', 'tsconfig.json'])
+    command = node_runner(repo, "depcruise", [*options, "."], install_mode)
+    if command is None:
+        result: dict[str, Any] = {"cmd": ["depcruise"], "exit_code": 127, "stdout": "",
+                  "stderr": "dependency-cruiser is unavailable", "duration_seconds": 0, "timed_out": False}
+    else:
+        result = run_command(command, repo, timeout=600)
+    write_raw(raw_dir, "architecture_depcruise", result)
+    status = ("timed_out" if result["timed_out"] else "unavailable" if result["exit_code"] in (126, 127)
+              else "failed")
+    outcome: dict[str, Any] = {
+        "status": status, "analysis_scope": "package", "detector": "dependency-cruiser",
+        "findings": [], "enforced_violations": 0, "graph": None,
+    }
+    if not result["timed_out"] and result["exit_code"] not in (126, 127, 124):
+        try:
+            payload = json.loads(result["stdout"])
+            spec = importlib.util.spec_from_file_location(
+                "architecture_graph", Path(__file__).with_name("architecture_graph.py"))
+            if spec is None or spec.loader is None:
+                raise ValueError("architecture analyzer not found")
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            analyzed = module.analyze(payload, max_degree=max_degree)
+            if result["exit_code"] in (0, 1):
+                outcome.update(analyzed)
+                unresolved = [{'source': m['source'], 'module': d.get('module')}
+                              for m in payload['modules'] for d in m.get('dependencies', [])
+                              if d.get('couldNotResolve')]
+                outcome['unresolved_imports'] = unresolved
+                expected = {p.relative_to(repo).as_posix() for p in repo_files(repo, [repo])
+                            if p.suffix in JS_EXTENSIONS}
+                represented = {m['source'] for m in payload['modules']}
+                missing = sorted(expected - represented)
+                outcome['files_discovered'] = len(expected)
+                outcome['unrepresented_files'] = missing
+                outcome["status"] = "partial" if unresolved or missing else "covered"
+                outcome['limitations'] = ['Static dependency-cruiser graph; generated/dependency '
+                                          'directories excluded, node_modules not followed. '
+                                          'Project configuration may further restrict coverage; '
+                                          'unrepresented source files are reported. Transpilation '
+                                          'can omit type-only imports.']
+            else:
+                outcome["status"] = "failed"
+        except (ValueError, TypeError, OSError, RecursionError) as exc:
+            outcome["status"] = "failed"
+            outcome["error"] = str(exc)
+    (raw_dir / "architecture_summary.json").write_text(json.dumps(outcome, indent=2))
+    return outcome, {"name": "architecture_depcruise", **result, "status": outcome["status"],
+                     "analysis_scope": "package"}
+
+
+def bundled_module(name: str) -> Any:
+    spec = importlib.util.spec_from_file_location(name, Path(__file__).with_name(name + '.py'))
+    if spec is None or spec.loader is None:
+        raise ValueError(f'{name} is unavailable')
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def analyze_architecture(repo: Path, raw: Path, stack: dict[str, bool],
+                         install_mode: str, max_degree: int) -> dict[str, Any]:
+    adapters = []
+    if stack['javascript']:
+        js, _ = run_architecture(repo, raw, install_mode, max_degree)
+        adapters.append(js)
+    if stack['python']:
+        python: dict[str, Any] = {'detector': 'python-ast', 'analysis_scope': 'repository',
+                  'status': 'failed', 'findings': [], 'graph': None, 'enforced_violations': 0}
+        try:
+            payload, evidence = bundled_module('python_architecture').collect(repo)
+            (raw / 'architecture_python.json').write_text(json.dumps(payload, indent=2), encoding='utf-8')
+            python.update(bundled_module('architecture_graph').analyze(payload, max_degree))
+            python.update(evidence)
+        except (ValueError, TypeError, OSError, RecursionError) as exc:
+            python['error'] = str(exc)
+        (raw / 'architecture_python_summary.json').write_text(json.dumps(python, indent=2), encoding='utf-8')
+        adapters.append(python)
+    statuses = [a['status'] for a in adapters]
+    status = ('covered' if statuses and all(s == 'covered' for s in statuses) else
+              'partial' if any(s in ('covered', 'partial') for s in statuses) else
+              'failed' if 'failed' in statuses else 'unavailable')
+    # Same paths may occur in different language adapters; merge evidence by stable ID.
+    findings = {f['id']: f for a in adapters for f in a['findings']}
+    outcome = {'status': status, 'analysis_scope': 'repository/package (see adapters)',
+               'adapters': adapters, 'findings': sorted(findings.values(), key=lambda f: f['id']),
+               'enforced_violations': sum(a['enforced_violations'] for a in adapters)}
+    (raw / 'architecture_summary.json').write_text(json.dumps(outcome, indent=2), encoding='utf-8')
+    return outcome
+
+
+def write_architecture_report(out: Path, architecture: dict[str, Any], interpretation: dict[str, Any]) -> None:
+    with (out / 'code_smell_report.md').open('a', encoding='utf-8') as report:
+        report.write('\n## Architecture\nStatus: ' + architecture['status'] + '\n')
+        for adapter in architecture['adapters']:
+            report.write(f"- {adapter['detector']}: {adapter['status']}; scope: {adapter['analysis_scope']}; "
+                         f"graph: {json.dumps(adapter['graph'])}\n")
+            report.write(f"  Unresolved imports: {len(adapter.get('unresolved_imports', []))}; "
+                         f"unrepresented files: {len(adapter.get('unrepresented_files', []))}; "
+                         'details: raw/architecture_summary.json\n')
+            for limitation in adapter.get('limitations', []):
+                report.write('- Limitation: ' + limitation + '\n')
+            if adapter.get('error'):
+                report.write('- Error: ' + adapter['error'] + '\n')
+        report.write('Confirmed error-rule violations: ' + str(architecture['enforced_violations']) + '\n')
+        for finding in architecture['findings']:
+            report.write(f"- {finding['id']}: {finding['classification']}, {finding['category']} "
+                         f"at {finding['source']}; evidence: {json.dumps(finding['evidence'], ensure_ascii=False)}\n")
+        report.write('\n## Requirement-aware interpretation\nStatus: ' + interpretation['status'] + '\n')
+        for limitation in interpretation.get('limitations', []):
+            report.write('- ' + limitation + '\n')
+        if interpretation.get('error'):
+            report.write('- Error: ' + interpretation['error'] + '\n')
+        for requirement in interpretation['requirements']:
+            report.write('- Verified source record: ' + json.dumps(requirement, ensure_ascii=False) + '\n')
+        for association in interpretation['associations']:
+            report.write('- Impact hypothesis: ' + json.dumps(association, ensure_ascii=False) + '\n')
+        report.write('Unmapped findings: ' + json.dumps(interpretation['unmapped_findings']) + '\n')
+
+
 def main() -> int:
     args = parse_args()
+    args.architecture = args.architecture or args.architecture_only
+    if args.architecture_max_degree < 1 or (args.requirements and not args.architecture) or (args.workspace_root and not args.requirements):
+        print('positive architecture threshold, --architecture for --requirements, and --requirements for --workspace-root are required', file=sys.stderr)
+        return 2
     repo = Path(args.repo).resolve()
     if not repo.exists():
         print(f"repo does not exist: {repo}", file=sys.stderr)
@@ -491,6 +785,12 @@ def main() -> int:
     else:
         scoped_paths = [(repo / item).resolve() for item in args.scope]
 
+    if any(not path.is_relative_to(repo) for path in scoped_paths):
+        print("scope must stay inside the repository", file=sys.stderr)
+        return 2
+    if not args.changed_only and any(not path.exists() for path in scoped_paths):
+        print("scope path does not exist", file=sys.stderr)
+        return 2
     files = repo_files(repo, scoped_paths)
     if not files:
         print("no files found for scope", file=sys.stderr)
@@ -509,47 +809,93 @@ def main() -> int:
     install_results: list[dict[str, Any]] = []
     results: list[dict[str, Any]] = []
 
-    # Project scripts, executable node_modules/.bin files and dynamic tool config
-    # can run arbitrary PR-controlled code. Never run them on an untrusted checkout.
-    # The opt-in does not create a sandbox: the caller must provide one.
     if not args.allow_project_execution:
         skipped = []
         if stack["python"] and py_paths:
             skipped.extend(["ruff", "radon_cc", "radon_mi", "vulture", "bandit", "mypy"])
         if stack["javascript"]:
             skipped.extend(["package_lint", "eslint", "jscpd", "knip_dead_code",
-                            "madge_circular", "depcheck", "package_audit", "package_typecheck", "tsc_no_emit"])
+                            "knip_production", "madge_circular", "depcheck", "package_audit",
+                            "package_typecheck", "tsc_no_emit", "behavioral_redundancy"])
         for name in skipped:
-            result = skipped_result(name, "Untrusted project execution disabled; run in a credential-free sandbox with --allow-project-execution")
+            result = skipped_result(name, "Project execution disabled; opt in only in a credential-free sandbox")
             write_raw(raw_dir, name, result)
             results.append(result)
     else:
-        if stack["python"] and py_paths:
+        if not args.architecture_only and stack["python"] and py_paths:
             py_install_results, py_results = run_python_checks(repo, py_paths, raw_dir, args.install)
             install_results.extend(py_install_results)
             results.extend(py_results)
-        if stack["javascript"]:
+        if not args.architecture_only and stack["javascript"]:
             results.extend(run_js_checks(repo, js_paths, raw_dir, stack["typescript"], args.install))
-    if stack["javascript"] or stack["python"]:
+    if not args.architecture_only and (stack["javascript"] or stack["python"]):
         results.append(run_secret_check(repo, raw_dir))
+    architecture = None
+    interpretation = None
+    if args.architecture and args.allow_project_execution:
+        architecture = analyze_architecture(repo, raw_dir, stack, args.install, args.architecture_max_degree)
+        try:
+            interpretation = bundled_module('requirement_interpretation').interpret(
+                repo, architecture, args.requirements, workspace_root=args.workspace_root)
+        except (ValueError, TypeError, OSError) as exc:
+            interpretation = {'status': 'failed', 'error': str(exc), 'requirements': [],
+                              'associations': [], 'unmapped_findings': [f['id'] for f in architecture['findings']]}
+        (raw_dir / 'requirement_interpretation.json').write_text(json.dumps(interpretation, indent=2), encoding='utf-8')
 
+
+    package_detectors = {"knip_dead_code", "knip_production", "depcheck", "package_audit",
+                         "package_typecheck", "tsc_no_emit", "package_lint"}
+    for item in results:
+        item["status"] = detector_status(item, raw_dir)
+        item["analysis_scope"] = (
+            "repository" if item["name"] == "gitleaks" else
+            "package" if item["name"] in package_detectors else "requested"
+        )
+    coverage = coverage_status(results)
+    if architecture is not None:
+        coverage['categories']['architecture'] = architecture['status']
+        coverage['complete'] = all(v == 'covered' for v in coverage['categories'].values())
+    headlines = extract_headlines(raw_dir)
+    knip_statuses = {item["name"]: item["status"] for item in results if item["name"] in ("knip_dead_code", "knip_production")}
+    if any(knip_statuses.get(name) not in ("clean", "findings") for name in ("knip_dead_code", "knip_production")):
+        headlines.pop("knip_production_only_candidates", None)
+        headlines.pop("knip_production_only_note", None)
+        headlines["knip_production_comparison"] = "incomplete: both normal and production Knip must run successfully"
     summary = {
+        "project_execution_enabled": args.allow_project_execution,
+        "coverage_complete": coverage["complete"],
+        "coverage": coverage,
+        "behavioral_redundancy": load_json(raw_dir / "behavioral_redundancy.json"),
+        "architecture": architecture,
+        "requirement_interpretation": interpretation,
         "repo": str(repo),
         "scope": scope_args,
         "out_dir": str(out_dir),
         "stack": stack,
         "install_mode": args.install,
-        "project_execution_enabled": args.allow_project_execution,
-        "coverage_complete": all(item["exit_code"] not in (124, 126, 127) and not item.get("timed_out") for item in results),
-        "headlines": extract_headlines(raw_dir),
+        "headlines": headlines,
         "results": [{key: value for key, value in item.items() if key not in {"stdout", "stderr"}} for item in results],
         "install_results": [{key: value for key, value in item.items() if key not in {"stdout", "stderr"}} for item in install_results],
     }
     (out_dir / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     write_report(out_dir, summary, results, install_results)
+    if architecture is not None:
+        write_architecture_report(out_dir, architecture, cast(dict[str, Any], interpretation))
 
     print(str(out_dir))
-    if args.fail_on_tool_error and any(item["exit_code"] not in (0,) for item in results + install_results):
+    if not coverage["complete"]:
+        print("WARNING: incomplete detector coverage", file=sys.stderr)
+    if args.architecture and architecture and architecture["status"] not in ("covered",):
+        print("WARNING: architecture coverage incomplete", file=sys.stderr)
+    if interpretation and interpretation['status'] == 'failed':
+        print('ERROR: requirement interpretation failed: ' + interpretation['error'], file=sys.stderr)
+        return 2
+    if args.architecture and architecture and architecture["enforced_violations"] > 0:
+        return 1
+    if args.fail_on_tool_error and (
+        not coverage["complete"] or any(item["exit_code"] != 0 for item in install_results)
+        or (args.architecture and architecture and architecture["status"] != "covered")
+    ):
         return 1
     return 0
 
