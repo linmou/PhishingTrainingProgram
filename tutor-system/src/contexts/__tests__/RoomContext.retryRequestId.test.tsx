@@ -5,8 +5,8 @@
  * Responsibility: prove that a retry of the same learner action reuses that action's request id,
  * so the server's replay lookup returns the original row instead of storing a second one, and that
  * the id is dropped once the stored row is seen by any route (response, realtime or catch-up), so a
- * later identical message is a new action. The real service runs; only the assessment-api Edge
- * Function is replaced by a fake that, like post_assessment_message_v2, replays a known request id
+ * later identical message is a new action. The real service runs; only its assessment-api transport
+ * is replaced by a fake that, like post_assessment_message_v2, replays a known request id
  * and loses one response on request.
  */
 
@@ -18,6 +18,7 @@ import { useAuth } from '../AuthContext';
 import { supabase } from '../../services/supabase';
 import { getAIConfig } from '../../services/aiService';
 import { ChecklistService } from '../../services/checklistService';
+import { transferAssessmentService, type TransferAssessmentApi } from '../../services/transferAssessmentService';
 import {
   DELIVERED_QUESTION_ID,
   LEARNER_A_ID,
@@ -128,8 +129,10 @@ describe('RoomContext retried learner posts keep their request id', () => {
     jest.clearAllMocks();
     room = null;
     server = createFakeServer();
-    ((supabase as unknown as { functions: { invoke: jest.Mock } }).functions.invoke)
-      .mockImplementation((_name: string, options: { body: Record<string, unknown> }) => server.invoke(options));
+    // Replace only the singleton's transport: the request body (and its request id) is what is under
+    // test, independent of how the transport attaches the tab's identity.
+    const transport = (transferAssessmentService as unknown as { api: TransferAssessmentApi }).api;
+    jest.spyOn(transport, 'invoke').mockImplementation((body) => server.invoke({ body }) as never);
     (ChecklistService.analyzeStudentMessages as jest.Mock).mockResolvedValue(undefined);
     (ChecklistService.getChecklistForStudent as jest.Mock).mockResolvedValue(transferChecklist);
     (ChecklistService.getActiveTransferChecklistForRoom as jest.Mock).mockResolvedValue(transferChecklist);
