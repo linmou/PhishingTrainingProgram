@@ -1,0 +1,16 @@
+interface:
+  display_name: code smell monitor
+  short_description: Build and run objective code quality smell monitoring for a repository.
+    Use when you need scoped, tool-based feedback on complexity, duplication, dead
+    code, dependency coupling, type/static safety, security, dependency health, observability
+    risks, or general maintainability signals for a small module, changed files, a
+    package, or the whole repo.
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true

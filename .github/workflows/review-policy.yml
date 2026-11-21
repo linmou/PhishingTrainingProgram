@@ -1,0 +1,43 @@
+name: Review Policy (trusted base)
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, edited, ready_for_review, converted_to_draft]
+  pull_request_review:
+    types: [submitted, edited, dismissed]
+  pull_request_review_comment:
+    types: [created, edited, deleted]
+  issue_comment:
+    types: [created, edited, deleted]
+  issues:
+    types: [edited, closed, reopened, deleted, transferred]
+  push:
+    branches: [no_sign_up]
+  workflow_dispatch:
+
+# Latest queued event must re-evaluate *all* open PRs, including any issue
+# authorization revoked while an earlier evaluation was running.
+concurrency:
+  group: review-policy-refresh-${{ github.repository }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: read
+  checks: write
+
+jobs:
+  review-policy-evaluation:
+    runs-on: ubuntu-24.04
+    steps:
+      # Never run code from the proposed PR with this workflow's privileged token.
+      - uses: actions/checkout@v4
+        with:
+          ref: no_sign_up
+          persist-credentials: false
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const policy = require('./.github/scripts/review-policy.cjs');
+            await policy.run({github, context, core});
