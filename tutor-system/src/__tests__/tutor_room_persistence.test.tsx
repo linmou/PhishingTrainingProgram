@@ -1,5 +1,4 @@
 // Learner-status reads are exercised in their own component/hook and browser suites.
-jest.mock('../hooks/useRoomLearningStatus', () => ({ useRoomLearningStatus: () => ({ statuses: {}, error: false }) }));
 import React from 'react';
 import { defineFeature, loadFeature } from 'jest-cucumber';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
@@ -45,6 +44,8 @@ jest.mock('../contexts/RoomContext', () => ({
 
 // Import mocked functions
 import { getRoomsByTutor, createRoom, getRoomTemplatesByTutor, getUserProfile, updateUserProfile } from '../services/supabase';
+jest.mock('../hooks/useRoomLearningStatus', () => ({ useRoomLearningStatus: () => ({ statuses: {}, error: false }) }));
+
 
 const mockGetRoomsByTutor = getRoomsByTutor as jest.Mock;
 const mockCreateRoom = createRoom as jest.Mock;

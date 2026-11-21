@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 // Learner-status reads are exercised in their own component/hook and browser suites.
-jest.mock('../hooks/useRoomLearningStatus', () => ({ useRoomLearningStatus: () => ({ statuses: {}, error: false }) }));
 /** File: src/__tests__/ai_suggestion_tracking.bdd.test.tsx; Purpose: bind AI suggestion tracking scenarios to tutor room actions, persisted feedback calls, and chat exports. */
 
 import React from 'react';
@@ -14,6 +13,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase, getRoomFeedbackSummary } from '../services/supabase';
 import { buildAIContextFromExistingData } from '../services/simplifiedAIContext';
 import type { Room, User } from '../types';
+jest.mock('../hooks/useRoomLearningStatus', () => ({ useRoomLearningStatus: () => ({ statuses: {}, error: false }) }));
+
 
 jest.mock('../contexts/AuthContext', () => ({ useAuth: jest.fn() }));
 jest.mock('../services/supabase', () => ({

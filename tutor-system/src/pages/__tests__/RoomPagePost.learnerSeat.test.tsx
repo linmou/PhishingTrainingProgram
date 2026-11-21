@@ -1,5 +1,4 @@
 // Learner-status reads are exercised in their own component/hook and browser suites.
-jest.mock('../../hooks/useRoomLearningStatus', () => ({ useRoomLearningStatus: () => ({ statuses: {}, error: false }) }));
 /**
  * Test responsibility: src/pages/RoomPagePost.tsx room entry. The learner seat is taken only by an
  * explicit Join (FR-12). Opening the room page, including by a direct link, resolves the student's room
@@ -18,6 +17,8 @@ import SessionEndedRedirect from '../../components/SessionEndedRedirect';
 import { useRoom } from '../../contexts/RoomContext';
 import { supabase } from '../../services/supabase';
 import { readRoomLearnerIds } from '../../services/roomSeatService';
+jest.mock('../../hooks/useRoomLearningStatus', () => ({ useRoomLearningStatus: () => ({ statuses: {}, error: false }) }));
+
 
 jest.mock('../../contexts/RoomContext', () => ({ useRoom: jest.fn() }));
 jest.mock('../../services/roomSeatService', () => ({ readRoomLearnerIds: jest.fn() }));
