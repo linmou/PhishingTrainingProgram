@@ -26,6 +26,7 @@ import PublicAssessmentQuestion from '../components/PublicAssessmentQuestion';
 import type { Message } from '../types';
 import { resolveMessagePresentation } from '../utils/messagePresentation';
 import { applyReplyMention, buildReplyMention, isReplyMentionOnly, removeReplyMention } from '../utils/replyMention';
+import { newRequestId } from '../utils/requestId';
 import { findOpenLearnerAssessments, learnerConversationMessages, readAnswerLifecycle, readAssessmentId, readPublicQuestion } from '../contexts/transferAssessmentUiAdapter';
 
 const COMPARISON_PAIR_LABELS = {
@@ -55,7 +56,7 @@ const RoomPagePost: React.FC = () => {
     const { roomId } = useParams<{ roomId: string }>();
     const navigate = useNavigate();
     const visitKey = useRef<string | null>(null);
-    if (visitKey.current === null) visitKey.current = crypto.randomUUID();
+    if (visitKey.current === null) visitKey.current = newRequestId('visit');
     const { user, loading: authLoading } = useAuth();
     const {
         currentRoom,

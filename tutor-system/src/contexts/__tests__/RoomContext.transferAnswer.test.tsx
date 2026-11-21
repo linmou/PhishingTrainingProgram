@@ -211,14 +211,13 @@ describe('RoomContext learner answer path', () => {
       });
     });
 
-    expect(postMessage).toHaveBeenCalledWith({
+    expect(postMessage).toHaveBeenCalledWith(expect.objectContaining({
       roomId: TRANSFER_ROOM_ID,
       content: 'B',
       replyToMessageId: DELIVERED_QUESTION_ID,
       assessmentId: DELIVERED_QUESTION_ID,
       selectedOptionIds: ['B'],
-      requestId: expect.any(String),
-    });
+    }));
     expect(processMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID, DELIVERED_QUESTION_ID);
     expect(analyzeMessage).not.toHaveBeenCalled();
     const answer = room!.messages.find((message) => message.id === DELIVERED_ANSWER_ID);
@@ -254,14 +253,13 @@ describe('RoomContext learner answer path', () => {
       });
     });
 
-    expect(postMessage).toHaveBeenCalledWith({
+    expect(postMessage).toHaveBeenCalledWith(expect.objectContaining({
       roomId: TRANSFER_ROOM_ID,
       content: 'B,D',
       replyToMessageId: DELIVERED_QUESTION_ID,
       assessmentId: DELIVERED_QUESTION_ID,
       selectedOptionIds: ['B', 'D'],
-      requestId: expect.any(String),
-    });
+    }));
     expect(processMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID, DELIVERED_QUESTION_ID);
     const answer = room!.messages.find((message) => message.id === DELIVERED_ANSWER_ID);
     expect(answer?.parent_message_id).toBe(DELIVERED_QUESTION_ID);

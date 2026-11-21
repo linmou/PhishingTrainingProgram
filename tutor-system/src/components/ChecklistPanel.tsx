@@ -24,6 +24,7 @@ import { transferAssessmentService } from '../services/transferAssessmentService
 import { useOptionalAuth } from '../contexts/AuthContext';
 import './ChecklistPanel.css';
 import { CYBERBULLYING_LEARNING_TARGETS } from '../services/detectionTemplates';
+import { newRequestId } from '../utils/requestId';
 
 interface ChecklistPanelProps {
   sharedTargets?: boolean;
@@ -508,10 +509,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
       console.log('Adding custom area:', { areaText, itemType, priority });
       
       if (transferPolicy) {
-        const randomUuid = globalThis.crypto?.randomUUID;
-        const itemId = randomUuid
-          ? randomUuid.call(globalThis.crypto)
-          : `item-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        const itemId = newRequestId('item');
         await transferAssessmentService.editLearningProgress({
           roomId,
           itemId,

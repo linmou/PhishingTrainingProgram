@@ -3,9 +3,11 @@
  * on retried learner posts (issue #111, AD-7, NFR-5, FR-38).
  *
  * Responsibility: prove that a retry of the same learner action reuses that action's request id,
- * so the server's replay lookup returns the original row instead of storing a second one. The
- * real service runs; only the assessment-api Edge Function is replaced by a fake that, like
- * post_assessment_message_v2, replays a known request id and loses one response on request.
+ * so the server's replay lookup returns the original row instead of storing a second one, and that
+ * the id is dropped once the stored row is seen by any route (response, realtime or catch-up), so a
+ * later identical message is a new action. The real service runs; only the assessment-api Edge
+ * Function is replaced by a fake that, like post_assessment_message_v2, replays a known request id
+ * and loses one response on request.
  */
 
 import React from 'react';
@@ -120,6 +122,7 @@ function createFakeServer() {
 describe('RoomContext retried learner posts keep their request id', () => {
   let room: ReturnType<typeof useRoom> | null;
   let server: ReturnType<typeof createFakeServer>;
+  let channel: { on: jest.Mock; subscribe: jest.Mock; unsubscribe: jest.Mock };
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -138,9 +141,8 @@ describe('RoomContext retried learner posts keep their request id', () => {
       loading: false,
     });
     (getAIConfig as jest.Mock).mockResolvedValue(null);
-    (supabase.channel as jest.Mock).mockReturnValue({
-      on: jest.fn().mockReturnThis(), subscribe: jest.fn().mockReturnThis(), unsubscribe: jest.fn(),
-    });
+    channel = { on: jest.fn().mockReturnThis(), subscribe: jest.fn().mockReturnThis(), unsubscribe: jest.fn() };
+    (supabase.channel as jest.Mock).mockReturnValue(channel);
     (supabase.from as jest.Mock).mockImplementation((table: string) => {
       if (table === 'rooms') {
         return { select: jest.fn().mockReturnValue({ eq: jest.fn().mockReturnValue({ eq: jest.fn().mockReturnValue({
@@ -150,7 +152,9 @@ describe('RoomContext retried learner posts keep their request id', () => {
       if (table === 'messages') {
         return { select: jest.fn().mockReturnValue({ eq: jest.fn().mockReturnValue({
           limit: jest.fn().mockReturnThis(), abortSignal: jest.fn().mockReturnThis(), gt: jest.fn().mockReturnThis(),
-          order: jest.fn().mockResolvedValue({ data: [learnerAMessageRow, deliveredQuestionRow], error: null }),
+          // Catch-up reads see every row the server stored, including one whose response was lost.
+          order: jest.fn().mockImplementation(async () => (
+            { data: [learnerAMessageRow, deliveredQuestionRow, ...server.rows], error: null })),
         }) }) };
       }
       if (table === 'users') {
@@ -183,6 +187,21 @@ describe('RoomContext retried learner posts keep their request id', () => {
       await action().catch((error: Error) => { failure = error.message; });
     });
     return failure;
+  };
+
+  /** Delivers a stored row through the room's realtime INSERT/UPDATE subscription. */
+  const realtimeDeliver = async (row: Record<string, unknown>, event: 'INSERT' | 'UPDATE' = 'INSERT') => {
+    const call = channel.on.mock.calls.find(([type, filter]) =>
+      type === 'postgres_changes' && filter.table === 'messages' && filter.event === event);
+    expect(call).toBeDefined();
+    await act(async () => { call![2]({ new: row }); });
+  };
+
+  /** Runs the subscription's catch-up read, as happens when the channel (re)subscribes. */
+  const catchUp = async () => {
+    const onStatus = channel.subscribe.mock.calls[channel.subscribe.mock.calls.length - 1]?.[0];
+    expect(typeof onStatus).toBe('function');
+    await act(async () => { onStatus('SUBSCRIBED'); });
   };
 
   const answer = (selected: Array<'A' | 'B' | 'C' | 'D'>) => room!.sendMessage(selected.join(','), {
@@ -238,6 +257,54 @@ describe('RoomContext retried learner posts keep their request id', () => {
 
     expect(server.postRequestIds).toHaveLength(2);
     expect(server.postRequestIds[0]).not.toBe(server.postRequestIds[1]);
+    expect(server.rows).toHaveLength(2);
+  });
+
+  it('drops the id when a post whose response was lost arrives by realtime, so the next identical message is new', async () => {
+    await mountRoom();
+
+    server.loseNextPostResponse();
+    expect(await attempt(() => room!.sendMessage('ok'))).toMatch(/Edge Function/);
+    await realtimeDeliver(server.rows[0]);
+    await waitFor(() => expect(room!.messages.map((message) => message.id)).toContain(server.rows[0].id));
+
+    // The learner sees the first "ok" and later says "ok" again: a genuinely new message.
+    await act(async () => { await room!.sendMessage('ok'); });
+
+    expect(server.postRequestIds).toHaveLength(2);
+    expect(server.postRequestIds[0]).not.toBe(server.postRequestIds[1]);
+    expect(server.rows).toHaveLength(2);
+  });
+
+  it('drops the id when an answer whose response was lost arrives by catch-up, so attempt 2 is new', async () => {
+    await mountRoom();
+
+    server.loseNextPostResponse();
+    expect(await attempt(() => answer(['A']))).toMatch(/Edge Function/);
+    await catchUp();
+    await waitFor(() => expect(room!.messages.map((message) => message.id)).toContain(server.rows[0].id));
+
+    // Attempt 2 with the same option is a new answer, not a replay of attempt 1.
+    await act(async () => { await answer(['A']); });
+
+    expect(server.postRequestIds).toHaveLength(2);
+    expect(server.postRequestIds[0]).not.toBe(server.postRequestIds[1]);
+    expect(server.rows).toHaveLength(2);
+  });
+
+  it('keeps the id when only an earlier identical message is seen again before the retry', async () => {
+    await mountRoom();
+
+    await act(async () => { await room!.sendMessage('ok'); });
+    server.loseNextPostResponse();
+    expect(await attempt(() => room!.sendMessage('ok'))).toMatch(/Edge Function/);
+    // The first "ok" was already on screen when the second was sent; seeing it again settles nothing.
+    await realtimeDeliver(server.rows[0], 'UPDATE');
+    await act(async () => { await room!.sendMessage('ok'); });
+
+    expect(server.postRequestIds).toHaveLength(3);
+    expect(server.postRequestIds[1]).not.toBe(server.postRequestIds[0]);
+    expect(server.postRequestIds[2]).toBe(server.postRequestIds[1]);
     expect(server.rows).toHaveLength(2);
   });
 });

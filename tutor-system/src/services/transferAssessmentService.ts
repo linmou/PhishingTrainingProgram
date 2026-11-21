@@ -5,6 +5,7 @@ import type { Room } from '../types';
 import type { CoverageEvidence, LearningTargetInput } from '../types/checklist';
 import type { AssessmentEvent, AssessmentHistoryReadiness, AssessmentOption, AssessmentOptionId, PrivateAssessment, TransferAssessmentDraft } from '../types/assessment';
 import { parseAssessmentEvent } from './assessmentRendering';
+import { newRequestId } from '../utils/requestId';
 import {
   PUBLIC_ASSESSMENT_DTO_KEYS,
   type AssessmentApiEnvelope,
@@ -278,11 +279,6 @@ function projectProcessedMessage(value: unknown): ProcessedMessageDTO {
   };
 }
 
-/** A fresh request id. Callers mint one per user action and reuse it on that action's retries (AD-7). */
-export function newRequestId(): string {
-  const randomUuid = globalThis.crypto?.randomUUID;
-  return randomUuid ? randomUuid.call(globalThis.crypto) : `transfer-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}
 
 function storedApplicationUserId(): string | null {
   if (typeof window === 'undefined') return null;
@@ -313,7 +309,7 @@ export class TransferAssessmentService {
 
   constructor(options: TransferAssessmentServiceOptions = {}) {
     this.api = options.api ?? createDefaultApi();
-    this.requestId = options.requestId ?? newRequestId;
+    this.requestId = options.requestId ?? (() => newRequestId('transfer'));
   }
 
   /**
@@ -324,8 +320,7 @@ export class TransferAssessmentService {
   private async request<T>(
     operation: AssessmentApiOperation,
     payload: Record<string, unknown>,
-    applicationUserId?: string,
-    requestId?: string
+    { requestId, applicationUserId }: { requestId?: string; applicationUserId?: string } = {}
   ): Promise<T> {
     const { data, error } = await this.api.invoke(
       { operation, ...payload, request_id: requestId ?? this.requestId() },
@@ -421,7 +416,7 @@ export class TransferAssessmentService {
       parent_message_id: input.replyToMessageId ?? null,
       assessment_id: input.assessmentId ?? null,
       selected_option_ids: input.selectedOptionIds ? [...input.selectedOptionIds] : null,
-    }, undefined, input.requestId);
+    }, { requestId: input.requestId });
   }
 
   prepareAssessment(input: { roomId: string; focusStudentMessageId: string; checklistId: string }): Promise<Record<string, unknown> | null> {
@@ -439,8 +434,6 @@ export class TransferAssessmentService {
     checklistId: string;
     itemId: string;
     focusStudentMessageId: string;
-    /** The delivery action's id; reuse it when retrying the same delivery. */
-    requestId?: string;
   }): Promise<ReviewedDeliveryDTO> {
     const result = await this.request('send_reviewed', {
       reviewed_payload: input.reviewedPayload,
@@ -449,7 +442,7 @@ export class TransferAssessmentService {
       checklist_id: input.checklistId,
       item_id: input.itemId,
       focus_student_message_id: input.focusStudentMessageId,
-    }, undefined, input.requestId);
+    });
     return projectReviewedDelivery(result);
   }
 
@@ -463,7 +456,7 @@ export class TransferAssessmentService {
   }
 
   analyzeMessage(messageId: string, roomId: string, applicationUserId?: string): Promise<Record<string, unknown>> {
-    return this.request('analyze_message', { message_id: messageId, room_id: roomId }, applicationUserId);
+    return this.request('analyze_message', { message_id: messageId, room_id: roomId }, { applicationUserId });
   }
 
   static toPublicAssessment(value: unknown): PublicAssessmentDTO {

@@ -370,7 +370,6 @@ describe('RoomContext teacher transfer review lifecycle', () => {
       checklistId: CHECKLIST_ID,
       itemId: CHECKLIST_ITEM_ID,
       focusStudentMessageId: LEARNER_A_MESSAGE_ID,
-      requestId: expect.any(String),
     });
     expect(room!.messages.map((message) => message.id)).toContain(DELIVERED_QUESTION_ID);
     expect(room!.messages.map((message) => message.id)).toContain('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
@@ -426,7 +425,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     expect(room!.transferDraft).not.toBeNull();
   });
 
-  it('retries a delivery whose response was lost with the same request id (FR-36, AD-7)', async () => {
+  it('retries a delivery whose response was lost as a new request (FR-36; server replay tracked in #117)', async () => {
     sendReviewed
       .mockRejectedValueOnce(new Error('Assessment API request failed: Failed to send a request to the Edge Function'))
       .mockResolvedValueOnce(reviewedDelivery);
@@ -444,10 +443,10 @@ describe('RoomContext teacher transfer review lifecycle', () => {
       await room!.confirmTransferDraft(preparedCandidate);
     });
 
+    // The server rejects a retried delivery before its replay lookup, and a kept id would make a later
+    // edited question replay the cancelled one, so each delivery call gets its own fresh id.
     expect(sendReviewed).toHaveBeenCalledTimes(2);
-    const [first, second] = sendReviewed.mock.calls.map(([input]) => input.requestId);
-    expect(typeof first).toBe('string');
-    expect(second).toBe(first);
+    expect(sendReviewed.mock.calls.map(([input]) => input.requestId)).toEqual([undefined, undefined]);
     expect(room!.messages.filter((message) => message.id === DELIVERED_QUESTION_ID)).toHaveLength(1);
   });
 

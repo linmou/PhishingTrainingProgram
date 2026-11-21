@@ -518,7 +518,6 @@ defineFeature(feature, (test) => {
         checklistId: CHECKLIST_ID,
         itemId: CHECKLIST_ITEM_ID,
         focusStudentMessageId: LEARNER_A_MESSAGE_ID,
-        requestId: expect.any(String),
       });
       expect(state.room!.messages.some((message) => message.id === DELIVERED_QUESTION_ID)).toBe(true);
     });
