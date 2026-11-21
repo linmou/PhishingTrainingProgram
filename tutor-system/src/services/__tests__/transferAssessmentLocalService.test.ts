@@ -23,7 +23,6 @@ describe('transfer assessment browser facade', () => {
   it.each([
     ['learner-1', null, { 'x-application-user-id': 'learner-1' }],
     ['learner-1', JSON.stringify({ id: 'other-user' }), { 'x-application-user-id': 'learner-1' }],
-    [null, JSON.stringify({ id: 'other-user' }), {}],
   ])('forwards the tab session identity %s, never shared storage (%s), leaving authorization to assessment-api', async (sessionUserId, stored, headers) => {
     setApplicationUserId(sessionUserId);
     if (stored) localStorage.setItem('tutor_system_user', stored);
@@ -34,6 +33,16 @@ describe('transfer assessment browser facade', () => {
     expect(invoke).toHaveBeenCalledWith('assessment-api', {
       body: { operation: 'join_room', request_id: 'join-1', room_id: 'room-1' }, headers,
     });
+  });
+
+  it('refuses to send when the tab is signed out, even if shared storage holds another user', async () => {
+    setApplicationUserId(null);
+    localStorage.setItem('tutor_system_user', JSON.stringify({ id: 'other-user' }));
+    const invoke = supabase.functions.invoke as jest.Mock;
+    invoke.mockClear();
+    const service = new TransferAssessmentService({ requestId: () => 'join-1' });
+    await expect(service.joinRoom('room-1')).rejects.toMatchObject({ name: 'AssessmentApiRequestError', code: 'UNAUTHORIZED', retryable: false });
+    expect(invoke).not.toHaveBeenCalled();
   });
 
   it('delegates storage and grading to the trusted API without a browser provider', () => {

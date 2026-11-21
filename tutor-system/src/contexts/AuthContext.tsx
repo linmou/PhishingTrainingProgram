@@ -138,6 +138,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [user]);
 
     useEffect(() => {
+        // React.StrictMode runs this effect twice in development. Each run owns its restore; cleanup
+        // cancels this run so only the latest one restores, and a cancelled run leaves shared refs alone.
+        let cancelled = false;
+        let restoring: User | null = null;
         // Check if user exists in local storage
         const initializeAuth = async () => {
             try {
@@ -151,6 +155,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         displayName: userData.display_name,
                         role: userData.current_role
                     });
+                    restoring = userData;
                     restoringRef.current = userData;
                     const generation = generationRef.current;
 
@@ -160,6 +165,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     } catch (syncError) {
                         console.warn('⚠️ AuthContext: Failed to sync stored user with database, keeping local session:', syncError);
                     }
+                    if (cancelled) return;
+                    // The storage listener clears restoringRef when another tab changes the identity meanwhile.
                     const unchanged = restoringRef.current === userData && stillCurrent(generation, userData);
                     restoringRef.current = null;
                     // Another tab may have signed out or switched account while the profile was read.
@@ -178,11 +185,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             } catch (error) {
                 console.error('💥 AuthContext: Error loading stored user:', error);
             } finally {
-                setLoading(false);
+                if (!cancelled) setLoading(false);
             }
         };
 
         initializeAuth();
+        return () => {
+            cancelled = true;
+            if (restoring && restoringRef.current === restoring) restoringRef.current = null;
+        };
         // stillCurrent reads only refs and storage.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [setUser]);

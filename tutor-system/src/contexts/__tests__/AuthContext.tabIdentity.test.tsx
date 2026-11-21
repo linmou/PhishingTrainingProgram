@@ -12,6 +12,7 @@ import SessionEndedRedirect from '../../components/SessionEndedRedirect';
 import HomePage from '../../pages/HomePage';
 import { supabase } from '../../services/supabase';
 import { transferAssessmentService } from '../../services/transferAssessmentService';
+import { ChecklistService } from '../../services/checklistService';
 import { getApplicationUserId, setApplicationUserId } from '../../services/applicationIdentity';
 
 jest.mock('../../services/supabase', () => ({ supabase: { from: jest.fn(), functions: { invoke: jest.fn() } } }));
@@ -41,18 +42,21 @@ function storageChangedInAnotherTab(key: string | null, newValue: string | null)
   });
 }
 
-function mountTab() {
+function mountTab({ strict = false } = {}) {
+  const Wrapper = strict ? React.StrictMode : React.Fragment;
   return render(
-    <AuthProvider>
-      <MemoryRouter initialEntries={['/room/room-1']}>
-        <SessionEndedRedirect />
-        <Routes>
-          <Route path="/" element={<><HomePage /><Probe /></>} />
-          <Route path="/room/:roomId" element={<Probe />} />
-          <Route path="/tutor" element={<Probe />} />
-        </Routes>
-      </MemoryRouter>
-    </AuthProvider>
+    <Wrapper>
+      <AuthProvider>
+        <MemoryRouter initialEntries={['/room/room-1']}>
+          <SessionEndedRedirect />
+          <Routes>
+            <Route path="/" element={<><HomePage /><Probe /></>} />
+            <Route path="/room/:roomId" element={<Probe />} />
+            <Route path="/tutor" element={<Probe />} />
+          </Routes>
+        </MemoryRouter>
+      </AuthProvider>
+    </Wrapper>
   );
 }
 
@@ -60,6 +64,15 @@ async function signedInTab() {
   localStorage.setItem(USER_KEY, JSON.stringify(tutor));
   mountTab();
   await waitFor(() => expect(screen.getByTestId('user')).toHaveTextContent(`${tutor.id}:tutor`));
+}
+
+/** A tab with no signed-in user refuses to send: no anonymous assessment-api request leaves the browser. */
+async function expectNoRequestSent() {
+  const invoke = supabase.functions.invoke as jest.Mock;
+  invoke.mockClear();
+  await expect(transferAssessmentService.initializeChecklist({ roomId: 'room-1', studentId: 'learner-1', items: [] }))
+    .rejects.toMatchObject({ name: 'AssessmentApiRequestError', code: 'UNAUTHORIZED' });
+  expect(invoke).not.toHaveBeenCalled();
 }
 
 async function sentIdentity(): Promise<Record<string, string>> {
@@ -135,8 +148,8 @@ describe('storage event from another tab', () => {
     change();
     storageChangedInAnotherTab(key, newValue);
     await waitFor(expectSignedOutAtSignIn);
-    // Never adopts the other tab's user: requests carry no identity until this tab signs in again.
-    expect(await sentIdentity()).toEqual({});
+    // Never adopts the other tab's user: no request is sent until this tab signs in again.
+    await expectNoRequestSent();
     // Signing out is local: no user, room or progress record is read or written.
     expect((supabase.from as jest.Mock).mock.calls.length).toBe(reads);
   });
@@ -165,7 +178,7 @@ describe('storage event from another tab', () => {
     localStorage.setItem(USER_KEY, JSON.stringify(otherTutor));
     storageChangedInAnotherTab(USER_KEY, JSON.stringify(otherTutor));
     expect(screen.getByTestId('user')).toHaveTextContent('no-user');
-    expect(await sentIdentity()).toEqual({});
+    await expectNoRequestSent();
   });
 
   it('clears the notice once this tab signs in again', async () => {
@@ -256,5 +269,62 @@ describe('no stale write-back after an await', () => {
     await act(async () => { pendingUpdates[0]({ data: {}, error: null }); await profile.catch(() => undefined); });
     expect(screen.getByTestId('user')).toHaveTextContent('tutor-a:observer');
     expect(JSON.parse(localStorage.getItem(USER_KEY)!).current_role).toBe('observer');
+  });
+});
+
+describe('restore under React.StrictMode (development runs effects twice)', () => {
+  it('restores the stored user on reload or in a new tab', async () => {
+    localStorage.setItem(USER_KEY, JSON.stringify(tutor));
+    mountTab({ strict: true });
+    await waitFor(() => expect(screen.getByTestId('user')).toHaveTextContent(`${tutor.id}:tutor`));
+    expect(getApplicationUserId()).toBe(tutor.id);
+    expect(JSON.parse(localStorage.getItem(USER_KEY)!).id).toBe(tutor.id);
+  });
+
+  it('still does not restore after another tab signed out during the restore', async () => {
+    localStorage.setItem(USER_KEY, JSON.stringify(tutor));
+    const pending: Array<(value: unknown) => void> = [];
+    const query: any = { select: () => query, eq: () => query, single: () => new Promise(resolve => { pending.push(resolve); }) };
+    (supabase.from as jest.Mock).mockReturnValue(query);
+    mountTab({ strict: true });
+    localStorage.removeItem(USER_KEY);
+    storageChangedInAnotherTab(USER_KEY, null);
+    await act(async () => { pending.forEach(resolve => resolve({ data: tutor, error: null })); });
+    await waitFor(() => expect(auth.loading).toBe(false));
+    expect(screen.getByTestId('user')).toHaveTextContent('no-user');
+    expect(localStorage.getItem(USER_KEY)).toBeNull();
+    expect(getApplicationUserId()).toBeNull();
+  });
+});
+
+describe('assessment-api work in flight when another tab signs out', () => {
+  it('sends no follow-up request once this tab is signed out', async () => {
+    await signedInTab();
+    const checklistRow = { id: 'c-1', room_id: 'room-1', student_id: 'learner-1', is_active: true };
+    const query: any = {
+      select: () => query, eq: () => query,
+      maybeSingle: async () => ({ data: checklistRow, error: null }),
+      order: async () => ({ data: [], error: null }),
+    };
+    (supabase.from as jest.Mock).mockReturnValue(query);
+    const invoke = supabase.functions.invoke as jest.Mock;
+    invoke.mockClear();
+    let releaseInitialize!: (value: unknown) => void;
+    invoke.mockImplementationOnce(() => new Promise(resolve => { releaseInitialize = resolve; }));
+
+    const saving = ChecklistService.initializeTransferChecklistForStudent('room-1', 'learner-1', [
+      { area_text: 'Check the sender', item_type: 'detection_area', priority: 'important' },
+    ]);
+    await waitFor(() => expect(invoke).toHaveBeenCalledTimes(1));
+    localStorage.removeItem(USER_KEY);
+    storageChangedInAnotherTab(USER_KEY, null);
+    await waitFor(expectSignedOutAtSignIn);
+    releaseInitialize({ data: { ok: true, data: { checklist_id: 'c-1' } }, error: null });
+
+    await expect(saving).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
+    // Only the save sent before sign-out left the browser, with the tutor it was started by.
+    expect(invoke).toHaveBeenCalledTimes(1);
+    expect(invoke.mock.calls[0][1].body.operation).toBe('initialize_checklist');
+    expect(invoke.mock.calls[0][1].headers).toEqual({ 'x-application-user-id': tutor.id });
   });
 });
