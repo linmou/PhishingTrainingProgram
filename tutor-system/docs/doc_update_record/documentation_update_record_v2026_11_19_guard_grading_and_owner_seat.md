@@ -2,14 +2,14 @@
 
 Intent: record the release of `20261119000000_guard_grading_and_owner_seat.sql` from local validation through production acceptance.
 
-Updated: 2026-11-19. Base commit: `f5def40` (`origin/no_sign_up`). PR: #114.
+Updated: 2026-11-21. Original base commit: `f5def40` (`origin/no_sign_up`). PR: #114.
 
 | Field | Value |
 | --- | --- |
 | Release owner | Claude agent on branch `fix/110-112-guard-and-owner-seat` (worktree `agent-a14839e543eb429ff`). Owns staging and production SQL, verification, cleanup and archival for this batch. |
 | Batch | #110 + #112. Members: one SQL migration plus a small frontend handler in `StudentView.tsx`. No Edge source change. Other agents' concurrent #109/#111 PRs are frontend-only and deploy no server changes. |
 | Migration | `tutor-system/supabase/migrations/20261119000000_guard_grading_and_owner_seat.sql`, SHA-256 `c9ac43628de4b9768f345c5773dd44bfdcc3b4a802be9a2e7ed4be2bc34a6f0a`. Supersedes the initial candidate `ad88f98e…`, which was never deployed. |
-| Status | Staging: `staging verified` (fixture cleanup pending approval). Production: `production applied`, with SQL acceptance verified; the browser journey is pending approval for its fixtures. The release is **not complete**; see "Release status and handoff". |
+| Status | Staging and production live acceptance and fixture cleanup verified on 2026-11-21. Both leases released. Administrative closeout awaits PR #121 independent review and merge; see "Resumed acceptance results". Earlier pending-approval statements below describe historical state and are superseded by that section. |
 
 ## Changed behavior and contracts
 
