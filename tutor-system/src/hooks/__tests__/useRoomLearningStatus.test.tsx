@@ -50,8 +50,8 @@ describe('persisted room status polling', () => {
 
   it('refreshes a committed checklist immediately and reconciles on resubscription', async () => {
     read.mockResolvedValue(saved);
-    renderHook(() => useRoomLearningStatus(['room'], 'owner'));
-    await waitFor(() => expect(read).toHaveBeenCalledTimes(1));
+    const { result } = renderHook(() => useRoomLearningStatus(['room'], 'owner'));
+    await waitFor(() => expect(result.current.statuses).toEqual(saved));
     const channel = (supabase.channel as jest.Mock).mock.results.at(-1).value;
     const checklistCallback = channel.on.mock.calls.find((call: any[]) => call[1].table === 'session_checklists')[2];
     await act(async () => { checklistCallback(); });

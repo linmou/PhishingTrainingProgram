@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// Learner-status reads are exercised in their own component/hook and browser suites.
+jest.mock('../hooks/useRoomLearningStatus', () => ({ useRoomLearningStatus: () => ({ statuses: {}, error: false }) }));
 /** File: src/__tests__/ai_assistant.bdd.test.tsx; Purpose: bind tutor AI assistant feature workflows to RoomPagePost, RoomProvider, persistence, export, and the Qwen boundary. */
 
 import { OAI_MODEL } from '../services/aiModels';

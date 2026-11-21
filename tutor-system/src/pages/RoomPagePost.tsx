@@ -727,7 +727,8 @@ const RoomPagePost: React.FC = () => {
     };
 
     const canSendMessages = user && user.current_role !== 'observer' && !roomObserver;
-    const ownsRoom = user?.current_role === 'tutor' && currentRoom?.tutor_id === user.id;
+    const ownsRoom = user?.current_role === 'tutor' && currentRoom?.tutor_id === user.id
+        && currentRoom.id === roomId && !roomObserver;
     const learnerStatus = useRoomLearningStatus(ownsRoom && roomId ? [roomId] : [], ownsRoom ? user.id : undefined);
     const canOfferSeat = user?.current_role === 'student' && currentRoom?.tutor_id !== user.id
         && (studentSeat === 'open' || studentSeat === 'unknown');

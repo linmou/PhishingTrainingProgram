@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// Learner-status reads are exercised in their own component/hook and browser suites.
+jest.mock('../hooks/useRoomLearningStatus', () => ({ useRoomLearningStatus: () => ({ statuses: {}, error: false }) }));
 // Test responsible for executable bindings to features/chat_history_download.feature through RoomContext exports and RoomPagePost controls.
 
 import React from 'react';

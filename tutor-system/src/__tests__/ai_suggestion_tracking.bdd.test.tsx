@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// Learner-status reads are exercised in their own component/hook and browser suites.
+jest.mock('../hooks/useRoomLearningStatus', () => ({ useRoomLearningStatus: () => ({ statuses: {}, error: false }) }));
 /** File: src/__tests__/ai_suggestion_tracking.bdd.test.tsx; Purpose: bind AI suggestion tracking scenarios to tutor room actions, persisted feedback calls, and chat exports. */
 
 import React from 'react';

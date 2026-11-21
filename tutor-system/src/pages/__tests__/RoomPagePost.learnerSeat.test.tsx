@@ -1,3 +1,5 @@
+// Learner-status reads are exercised in their own component/hook and browser suites.
+jest.mock('../../hooks/useRoomLearningStatus', () => ({ useRoomLearningStatus: () => ({ statuses: {}, error: false }) }));
 /**
  * Test responsibility: src/pages/RoomPagePost.tsx room entry. The learner seat is taken only by an
  * explicit Join (FR-12). Opening the room page, including by a direct link, resolves the student's room

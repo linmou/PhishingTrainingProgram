@@ -1,3 +1,5 @@
+// Learner-status reads are exercised in their own component/hook and browser suites.
+jest.mock('../hooks/useRoomLearningStatus', () => ({ useRoomLearningStatus: () => ({ statuses: {}, error: false }) }));
 import React from 'react';
 import { defineFeature, loadFeature } from 'jest-cucumber';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
