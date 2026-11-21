@@ -1,7 +1,7 @@
 ---
 title: Client identity cleanup and tutor progress visibility
 created: 2026-11-21
-status: in-progress
+status: in-review
 baseline_commit: 244b56f3891ffdb8838ad3a84f2aae96ea3fab78
 context: []
 ---
@@ -45,7 +45,7 @@ Always preserve per-tab request identity, existing retry semantics and trusted j
 - [x] Shared read-only learner/progress model reused on room page/dashboard; name, join time, saved state; tutor-only visibility and query failure handling.
 - [x] Add/extend focused tests for identity, joins, statuses, reads, races and observer visibility.
 - [x] Add requirement consequence for #119; update relevant implementation docs.
-- [ ] Complete final regression/build/browser checks, scoped smell comparison and independent re-review before PR creation.
+- [x] Complete final regression/build/browser checks, scoped smell comparison and independent re-review before PR creation.
 
 Given the current tab is signed out, when any assessment request runs, then no transport invocation occurs. Given a direct room visit, when Join as learner succeeds, then the existing visit/request semantics remain unchanged. Given a tutor views a room/list, when the server learner/checklist data changes, then the UI reflects the current persisted state without interpreting local drafts as saved. Given no authoritative status is available, then UI reports unavailable instead of a false assurance.
 

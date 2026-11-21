@@ -15,3 +15,5 @@ it('imports without frontend database configuration', () => {
     else process.env.REACT_APP_SUPABASE_ANON_KEY = priorKey;
   }
 });
+
+export {};
