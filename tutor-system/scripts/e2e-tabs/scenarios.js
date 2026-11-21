@@ -288,6 +288,61 @@ async function H(h) {
   await h.snap(a, 'signed-out-after-inflight-save');
 }
 
+
+// Persisted learner state is visible to the owner, independently of local target drafts.
+async function I(h) {
+  const page = await h.tab('Owner');
+  const tutor = await signIn(page, h.app, 'Irene Tutor', 'tutor');
+  const empty = seedRoom(h.backend, tutor.id, 'I Empty room');
+  await openRoom(page, h.app, empty.id);
+  await page.getByText('No learner yet', { exact: true }).waitFor();
+  h.check('I empty room identifies that there is no learner', true);
+  await h.snap(page, 'owner-no-learner');
+
+  const saved = seedRoom(h.backend, tutor.id, 'I Saved targets');
+  const unsaved = seedRoom(h.backend, tutor.id, 'I Unsaved targets');
+  const quiet = seedRoom(h.backend, tutor.id, 'I Quiet learner');
+  const learners = ['Sally Saved', 'Uma Unsaved', 'Quinn Quiet'].map(name => userRow(name, 'student'));
+  h.backend.db.users.push(...learners);
+  [saved, unsaved, quiet].forEach((room, index) => {
+    seatLearner(h.backend, room, learners[index]);
+    h.backend.db.sessions.at(-1).started_at = '2026-11-01T12:00:00Z';
+  });
+  h.backend.db.session_checklists.push({ id: 'i-saved-checklist', room_id: saved.id, student_id: learners[0].id });
+  h.backend.db.messages.push({ id: 'i-student-message', room_id: unsaved.id, user_id: learners[1].id,
+    user_role: 'student', content: 'I am learning here.', created_at: new Date().toISOString() });
+  // A checklist for a different learner never establishes that this learner's targets were saved.
+  h.backend.db.session_checklists.push({ id: 'i-other-checklist', room_id: unsaved.id, student_id: learners[0].id });
+  await openRoom(page, h.app, unsaved.id);
+  const warning = 'Targets not saved: learner progress is not being recorded';
+  await page.getByText(warning, { exact: true }).waitFor();
+  h.check('I owner sees current learner, join time and missing-target warning',
+    await page.getByText(/Learner: Uma Unsaved.*Joined/).isVisible());
+  await h.snap(page, 'owner-unsaved-targets');
+  await openRoom(page, h.app, saved.id);
+  await page.getByText('Targets saved', { exact: true }).waitFor();
+  h.check('I only a persisted checklist for this learner shows Targets saved', true);
+  await h.snap(page, 'owner-saved-targets');
+
+  await load(page, `${h.app}/#/tutor`);
+  const card = title => page.getByTestId('room-item').filter({ hasText: title });
+  await card('I Unsaved targets').getByText(warning, { exact: true }).waitFor();
+  h.check('I dashboard warns for the chatting learner with no saved targets',
+    await card('I Unsaved targets').getByText('Learner: Uma Unsaved', { exact: true }).isVisible());
+  await card('I Quiet learner').getByText('Learner: Quinn Quiet', { exact: true }).waitFor();
+  h.check('I dashboard does not warn before the learner has sent a message',
+    await card('I Quiet learner').getByText(warning, { exact: true }).count() === 0);
+  await card('I Saved targets').getByText('Targets saved', { exact: true }).waitFor();
+  await h.snap(page, 'dashboard-learner-status');
+
+  await signOutViaProfile(page, h.app);
+  await signIn(page, h.app, 'I Observer', 'observer');
+  await openRoom(page, h.app, unsaved.id);
+  h.check('I observer does not see tutor learner or target status',
+    await page.getByText(/^Learner:/).count() === 0 && await page.getByText(warning, { exact: true }).count() === 0);
+  await h.snap(page, 'observer-no-tutor-status');
+}
+
 module.exports = {
   A: { title: 'Cross-tab sign-out', run: A },
   B: { title: 'Different user in another tab', run: B },
@@ -297,4 +352,5 @@ module.exports = {
   F: { title: 'Learning-target save carries the tutor id', run: F },
   G: { title: 'Reload and new tab restore the session', run: G },
   H: { title: 'In-flight save sends no headerless follow-up', run: H },
+  I: { title: 'Tutor sees server learner and saved-target status', run: I },
 };

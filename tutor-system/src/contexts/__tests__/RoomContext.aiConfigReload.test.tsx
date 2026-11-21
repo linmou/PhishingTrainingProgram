@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+import { renderRoomProvider, RoomProbe as TestRoomHelper } from '../../test-support/renderRoomProvider';
 /**
  * Test responsible for RoomContext.tsx reloading persisted AI prompt_config from aiService after joining an AI-enabled room.
  */
@@ -38,15 +38,7 @@ jest.mock('../AuthContext', () => ({
   useAuth: jest.fn()
 }));
 
-const TestRoomHelper: React.FC<{ onReady: (roomApi: ReturnType<typeof useRoom>) => void }> = ({ onReady }) => {
-  const roomApi = useRoom();
 
-  React.useEffect(() => {
-    onReady(roomApi);
-  }, [onReady, roomApi]);
-
-  return null;
-};
 
 describe('RoomContext AI config reload', () => {
   beforeEach(() => {
@@ -179,11 +171,9 @@ describe('RoomContext AI config reload', () => {
 
     let roomApi: ReturnType<typeof useRoom> | null = null;
 
-    render(
-      <RoomProvider>
+    renderRoomProvider(
         <TestRoomHelper onReady={(api) => { roomApi = api; }} />
-      </RoomProvider>
-    );
+      );
 
     await waitFor(() => {
       expect(roomApi).not.toBeNull();

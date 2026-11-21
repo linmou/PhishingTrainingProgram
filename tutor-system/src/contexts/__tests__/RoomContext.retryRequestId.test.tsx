@@ -1,3 +1,4 @@
+import { renderRoomProvider, RoomProbe } from '../../test-support/renderRoomProvider';
 /**
  * Test responsible for src/contexts/RoomContext.tsx and src/services/transferAssessmentService.ts
  * on retried learner posts (issue #111, AD-7, NFR-5, FR-38).
@@ -58,13 +59,7 @@ jest.mock('../../services/checklistService', () => ({
   },
 }));
 
-const RoomProbe: React.FC<{ onReady: (room: ReturnType<typeof useRoom>) => void }> = ({ onReady }) => {
-  const room = useRoom();
-  React.useEffect(() => {
-    onReady(room);
-  }, [onReady, room]);
-  return null;
-};
+
 
 type StoredRow = Record<string, unknown> & { id: string; assessment_request_id: string };
 
@@ -172,11 +167,9 @@ describe('RoomContext retried learner posts keep their request id', () => {
   });
 
   const mountRoom = async () => {
-    render(
-      <RoomProvider>
+    renderRoomProvider(
         <RoomProbe onReady={(api) => { room = api; }} />
-      </RoomProvider>
-    );
+      );
     await waitFor(() => expect(room).not.toBeNull());
     await act(async () => {
       await room!.joinRoom(TRANSFER_ROOM_ID);

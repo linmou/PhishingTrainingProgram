@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+import { renderRoomProvider, RoomProbe } from '../../test-support/renderRoomProvider';
 /**
  * Test responsible for src/contexts/RoomContext.tsx under retry and duplicate-tab conditions on
  * the transfer path.
@@ -64,13 +64,7 @@ jest.mock('../../services/checklistService', () => ({
   },
 }));
 
-const RoomProbe: React.FC<{ onReady: (room: ReturnType<typeof useRoom>) => void }> = ({ onReady }) => {
-  const room = useRoom();
-  React.useEffect(() => {
-    onReady(room);
-  }, [onReady, room]);
-  return null;
-};
+
 
 const tutorUser = {
   id: 'tutor-1',
@@ -159,11 +153,9 @@ describe('RoomContext transfer concurrency', () => {
   });
 
   const mountAsTutor = async () => {
-    render(
-      <RoomProvider>
+    renderRoomProvider(
         <RoomProbe onReady={(api) => { room = api; }} />
-      </RoomProvider>
-    );
+      );
     await waitFor(() => expect(room).not.toBeNull());
     await act(async () => {
       await room!.joinRoom(TRANSFER_ROOM_ID);
@@ -175,11 +167,9 @@ describe('RoomContext transfer concurrency', () => {
 
   const mountAsLearner = async () => {
     (useAuth as jest.Mock).mockReturnValue({ user: learnerUser, loading: false });
-    render(
-      <RoomProvider>
+    renderRoomProvider(
         <RoomProbe onReady={(api) => { room = api; }} />
-      </RoomProvider>
-    );
+      );
     await waitFor(() => expect(room).not.toBeNull());
     await act(async () => {
       await room!.joinRoom(TRANSFER_ROOM_ID);
@@ -270,11 +260,9 @@ describe('RoomContext transfer concurrency', () => {
       message: { ...deliveredAnswerRow },
     } as unknown as Record<string, unknown>);
 
-    render(
-      <RoomProvider>
+    renderRoomProvider(
         <RoomProbe onReady={(api) => { room = api; }} />
-      </RoomProvider>
-    );
+      );
     await waitFor(() => expect(room).not.toBeNull());
     await act(async () => {
       await room!.joinRoom(TRANSFER_ROOM_ID);

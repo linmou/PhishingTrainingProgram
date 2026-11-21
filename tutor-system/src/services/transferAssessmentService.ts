@@ -1,6 +1,5 @@
 // Purpose: expose a typed browser facade for the trusted transfer-assessment API.
 
-import { supabase } from './supabase';
 import { getApplicationUserId } from './applicationIdentity';
 import type { Room } from '../types';
 import type { CoverageEvidence, LearningTargetInput } from '../types/checklist';
@@ -128,6 +127,7 @@ export interface TransferAssessmentApi {
 export interface TransferAssessmentServiceOptions {
   api?: TransferAssessmentApi;
   requestId?: () => string;
+  getApplicationUserId?: () => string | null;
 }
 
 export interface LearningEvidenceRow extends Omit<CoverageEvidence, 'timestamp'> {
@@ -284,12 +284,14 @@ function projectProcessedMessage(value: unknown): ProcessedMessageDTO {
 /** Raised without sending a request when this tab has no signed-in user: the server's answer to an anonymous call. */
 export const SIGNED_OUT_ERROR: AssessmentApiError = { code: 'UNAUTHORIZED', message: 'Signed out: sign in to continue.', retryable: false };
 
-function createDefaultApi(): TransferAssessmentApi {
+function createDefaultApi(identity: () => string | null): TransferAssessmentApi {
   return {
-    invoke: async (body, applicationUserId) => {
-      const userId = applicationUserId ?? getApplicationUserId();
+    invoke: async (body, userId) => {
       // Every operation needs a signed-in user; never send an anonymous request after this tab signs out.
       if (!userId) throw new AssessmentApiRequestError(SIGNED_OUT_ERROR);
+      const { supabase } = await import('./supabase');
+      const currentUserId = identity();
+      if (!currentUserId || currentUserId !== userId) throw new AssessmentApiRequestError(SIGNED_OUT_ERROR);
       return (supabase as any).functions.invoke('assessment-api', {
         body,
         headers: { 'x-application-user-id': userId },
@@ -301,9 +303,11 @@ function createDefaultApi(): TransferAssessmentApi {
 export class TransferAssessmentService {
   private readonly api: TransferAssessmentApi;
   private readonly requestId: () => string;
+  private readonly identity: () => string | null;
 
   constructor(options: TransferAssessmentServiceOptions = {}) {
-    this.api = options.api ?? createDefaultApi();
+    this.identity = options.getApplicationUserId ?? getApplicationUserId;
+    this.api = options.api ?? createDefaultApi(this.identity);
     this.requestId = options.requestId ?? (() => newRequestId('transfer'));
   }
 
@@ -315,8 +319,10 @@ export class TransferAssessmentService {
   private async request<T>(
     operation: AssessmentApiOperation,
     payload: Record<string, unknown>,
-    { requestId, applicationUserId }: { requestId?: string; applicationUserId?: string } = {}
+    { requestId }: { requestId?: string } = {}
   ): Promise<T> {
+    const applicationUserId = this.identity();
+    if (!applicationUserId) throw new AssessmentApiRequestError(SIGNED_OUT_ERROR);
     const { data, error } = await this.api.invoke(
       { operation, ...payload, request_id: requestId ?? this.requestId() },
       applicationUserId
@@ -450,8 +456,8 @@ export class TransferAssessmentService {
     return projectProcessedMessage(result);
   }
 
-  analyzeMessage(messageId: string, roomId: string, applicationUserId?: string): Promise<Record<string, unknown>> {
-    return this.request('analyze_message', { message_id: messageId, room_id: roomId }, { applicationUserId });
+  analyzeMessage(messageId: string, roomId: string): Promise<Record<string, unknown>> {
+    return this.request('analyze_message', { message_id: messageId, room_id: roomId });
   }
 
   static toPublicAssessment(value: unknown): PublicAssessmentDTO {

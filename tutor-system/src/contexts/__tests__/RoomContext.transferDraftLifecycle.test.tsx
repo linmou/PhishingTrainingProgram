@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+import { renderRoomProvider, RoomProbe } from '../../test-support/renderRoomProvider';
 /**
  * Test responsible for src/contexts/RoomContext.tsx on the teacher transfer-review path:
  * preparation of a candidate, local refusal of an undeliverable turn, single reviewed delivery,
@@ -67,13 +67,7 @@ jest.mock('../../services/checklistService', () => ({
   },
 }));
 
-const RoomProbe: React.FC<{ onReady: (room: ReturnType<typeof useRoom>) => void }> = ({ onReady }) => {
-  const room = useRoom();
-  React.useEffect(() => {
-    onReady(room);
-  }, [onReady, room]);
-  return null;
-};
+
 
 type RealtimeHandler = (payload: { new: Record<string, unknown> }) => void;
 
@@ -191,11 +185,9 @@ describe('RoomContext teacher transfer review lifecycle', () => {
   });
 
   const mountRoom = async () => {
-    render(
-      <RoomProvider>
+    renderRoomProvider(
         <RoomProbe onReady={(api) => { room = api; }} />
-      </RoomProvider>
-    );
+      );
     await waitFor(() => expect(room).not.toBeNull());
     await act(async () => {
       await room!.joinRoom(TRANSFER_ROOM_ID);
@@ -214,7 +206,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
       focusStudentMessageId: LEARNER_A_MESSAGE_ID,
       checklistId: CHECKLIST_ID,
     });
-    expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(TRANSFER_ROOM_ID, LEARNER_A_ID, LEARNER_A_MESSAGE_ID, 'tutor-1');
+    expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(TRANSFER_ROOM_ID, LEARNER_A_ID, LEARNER_A_MESSAGE_ID);
     expect((ChecklistService.analyzeStudentMessages as jest.Mock).mock.invocationCallOrder[0])
       .toBeLessThan(prepareAssessment.mock.invocationCallOrder[0]);
     expect(room!.transferDraft!.decision).toEqual(preparedCandidate);
@@ -276,7 +268,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     await act(async () => { await room!.generateAIResponse(); });
 
     expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(TRANSFER_ROOM_ID,
-      learnerAMessageRow.user_id, learnerAMessageRow.id, 'tutor-1');
+      learnerAMessageRow.user_id, learnerAMessageRow.id);
     expect(prepareAssessment).toHaveBeenCalledWith(expect.objectContaining({ focusStudentMessageId: learnerAMessageRow.id }));
     expect(room!.transferDraft).toBeNull();
     expect(room!.aiDecision?.instruction).toBe('correction');

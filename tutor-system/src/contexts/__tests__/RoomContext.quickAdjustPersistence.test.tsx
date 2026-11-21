@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+import { renderRoomProvider, RoomProbe as TestRoomHelper } from '../../test-support/renderRoomProvider';
 /**
  * Test responsible for RoomContext.tsx persisting Quick Adjust AI config changes after a tutor regenerates a suggestion.
  */
@@ -39,15 +39,7 @@ jest.mock('../AuthContext', () => ({
     useAuth: jest.fn()
 }));
 
-const TestRoomHelper: React.FC<{ onReady: (roomApi: ReturnType<typeof useRoom>) => void }> = ({ onReady }) => {
-    const roomApi = useRoom();
 
-    React.useEffect(() => {
-        onReady(roomApi);
-    }, [onReady, roomApi]);
-
-    return null;
-};
 
 describe('RoomContext Quick Adjust persistence', () => {
     const mockUser: User = {
@@ -256,11 +248,9 @@ describe('RoomContext Quick Adjust persistence', () => {
 
         let roomApi: ReturnType<typeof useRoom> | undefined;
 
-        render(
-            <RoomProvider>
+        renderRoomProvider(
                 <TestRoomHelper onReady={(api) => { roomApi = api; }} />
-            </RoomProvider>
-        );
+            );
 
         await waitFor(() => {
             expect(roomApi).toBeDefined();
@@ -397,11 +387,9 @@ describe('RoomContext Quick Adjust persistence', () => {
 
         let roomApi: ReturnType<typeof useRoom> | undefined;
 
-        render(
-            <RoomProvider>
+        renderRoomProvider(
                 <TestRoomHelper onReady={(api) => { roomApi = api; }} />
-            </RoomProvider>
-        );
+            );
 
         await waitFor(() => {
             expect(roomApi).toBeDefined();
@@ -528,11 +516,9 @@ describe('RoomContext Quick Adjust persistence', () => {
 
         let roomApi: ReturnType<typeof useRoom> | undefined;
 
-        render(
-            <RoomProvider>
+        renderRoomProvider(
                 <TestRoomHelper onReady={(api) => { roomApi = api; }} />
-            </RoomProvider>
-        );
+            );
 
         await waitFor(() => {
             expect(roomApi).toBeDefined();

@@ -56,7 +56,7 @@ describe('transfer assessment browser facade', () => {
 
   it('sends structured option IDs and never accepts a client attempt number', async () => {
     const { api, invoke } = transport({ message: { id: 'answer-1' }, analysis_pending: true });
-    const service = new TransferAssessmentService({ api, requestId: () => 'request-1' });
+    const service = new TransferAssessmentService({ api, getApplicationUserId: () => 'test-user', requestId: () => 'request-1' });
     await service.postMessage({
       roomId: 'room-1', content: 'B', replyToMessageId: 'question-1',
       assessmentId: 'assessment-1', selectedOptionIds: ['B'],
@@ -64,20 +64,20 @@ describe('transfer assessment browser facade', () => {
     expect(invoke).toHaveBeenCalledWith({
       operation: 'post_message', request_id: 'request-1', room_id: 'room-1', content: 'B',
       parent_message_id: 'question-1', assessment_id: 'assessment-1', selected_option_ids: ['B'],
-    }, undefined);
+    }, 'test-user');
     expect(JSON.stringify(invoke.mock.calls[0][0])).not.toContain('attempt_number');
   });
 
   it('routes processing through the trusted operation with both causal identities', async () => {
     const { message_id, assessment_id } = processedFirstIncorrectRetry;
     const { api, invoke } = transport(processedFirstIncorrectRetry);
-    const service = new TransferAssessmentService({ api, requestId: () => 'request-2' });
+    const service = new TransferAssessmentService({ api, getApplicationUserId: () => 'test-user', requestId: () => 'request-2' });
     const result = await service.processMessage(message_id, assessment_id, 'room-1');
     expect(invoke).toHaveBeenCalledWith({
       operation: 'process_message', request_id: 'request-2',
       message_id, assessment_id,
       room_id: 'room-1',
-    }, undefined);
+    }, 'test-user');
     expect(result.attempts_remaining).toBe(1);
   });
 });

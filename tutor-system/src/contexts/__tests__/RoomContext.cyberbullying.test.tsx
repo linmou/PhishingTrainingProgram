@@ -1,5 +1,5 @@
-// #!/usr/bin/env node
-// Test responsibility: RoomContext.tsx browser drafts, shared review logging, saved comments, and character projection.
+import { renderRoomProvider } from '../../test-support/renderRoomProvider';
+// // Test responsibility: RoomContext.tsx browser drafts, shared review logging, saved comments, and character projection.
 import React from 'react';
 import { act, render, waitFor } from '@testing-library/react';
 import { RoomProvider, useRoom } from '../RoomContext';
@@ -76,7 +76,7 @@ beforeEach(() => {
 afterEach(() => jest.restoreAllMocks());
 
 async function mount() {
-  render(<RoomProvider><Probe /></RoomProvider>);
+  renderRoomProvider(<Probe />);
   await act(async () => { await room.joinRoom(cyberRoom.id); });
   await waitFor(() => expect(room.currentRoom?.id).toBe(cyberRoom.id));
 }
@@ -117,7 +117,7 @@ test('analyzes saved evidence and publishes the edited character through shared 
   const prepare = jest.spyOn(transferAssessmentService, 'prepareAssessment');
   await mount();
   await act(async () => { await room.generateAIResponse(); });
-  expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(cyberRoom.id, learnerAUser.id, learnerMessage.id, tutorUser.id);
+  expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(cyberRoom.id, learnerAUser.id, learnerMessage.id);
   expect(prepare).not.toHaveBeenCalled();
   expect(room.cyberbullyingDraft).toEqual(draft);
   expect(room.messages).toHaveLength(1);
@@ -167,7 +167,7 @@ test('stores a learner comment before analysis and leaves it available when anal
   });
   expect(post).toHaveBeenCalledTimes(1);
   expect(room.messages.some(message => message.id === 'new-comment')).toBe(true);
-  expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(cyberRoom.id, learnerAUser.id, 'new-comment', learnerAUser.id);
+  expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(cyberRoom.id, learnerAUser.id, 'new-comment');
 });
 
 test('realtime/reload projection keeps stored character identity for every viewer', () => {
