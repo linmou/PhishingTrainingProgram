@@ -1,0 +1,20 @@
+{
+  "intent": "Independently review the prospective prerequisite-judge repair after one calibration classification error.",
+  "date": "2026-11-13",
+  "reviewer": "continuity_audit",
+  "verdict": "clear for recalibration; successful calibration and model conformance not yet established",
+  "frozen_fingerprint": "5c3497ebd29191adb701a126636fe297e3e3c1a221bd6f839bc1e853952b9322",
+  "original_calibration": "15/16, preserved; contradiction_ignored_fail__unfinished_prerequisite incorrectly classified a question about what scam texts request as learner behavior.",
+  "expected_label_unchanged": true,
+  "change": "Only unfinished_prerequisite gains a generic clause-classification procedure: recognize other-actor/threat/consequence content separately from learner safe-action content; recognition-only responses pass this metric while other defects remain contextual_progression's responsibility.",
+  "verified_unchanged": [
+    "all54 target messages",
+    "target and judge settings",
+    "cases",
+    "rubric texts",
+    "expected calibration labels",
+    "shared judge system"
+  ],
+  "recalibration": "Rerun all4 prerequisite checks; reuse all12 other checks only with exact requests/settings. Do not select individual previous successes or resample target outputs.",
+  "grounding": "Clarifies the existing observation-before-behavior metric boundary, avoiding overlap with contextual progression; not a new task or relaxed label."
+}

@@ -64,6 +64,37 @@ function dependencies(overrides: Partial<AssessmentApiDependencies> = {}): Asses
   };
 }
 
+Deno.test('evidence read derives actor from verifier and forwards only scoped identifiers', async () => {
+  const calls: unknown[] = [];
+  const rows = [{ id: 'evidence-1', item_id: 'item-1', evidence_text: 'Recorded evidence' }];
+  const handler = createAssessmentApiHandler(dependencies({ featureEnabled: async () => false, rpc: async (name, args) => {
+    calls.push([name, args]);
+    return { data: rows, error: null };
+  } }));
+  const response = await handler(request('read_learning_evidence', {
+    room_id: 'room-1', checklist_id: 'checklist-1', actor_id: 'forged-actor',
+  }));
+  assertEquals(response.status, 200);
+  assertEquals((await response.json()).data, rows);
+  assertEquals(calls, [['read_learning_evidence_v1', {
+    p_room_id: 'room-1', p_checklist_id: 'checklist-1', p_actor_id: 'teacher-1',
+  }]]);
+});
+
+Deno.test('evidence read rejects unauthorized room before RPC and propagates scoped denial', async () => {
+  let calls = 0;
+  const handler = createAssessmentApiHandler(dependencies({ rpc: async () => {
+    calls += 1;
+    return { data: null, error: { message: 'FORBIDDEN' } };
+  } }));
+  const outside = await handler(request('read_learning_evidence', { room_id: 'other-room', checklist_id: 'c' }));
+  assertEquals(outside.status, 403);
+  assertEquals(calls, 0);
+  const denied = await handler(request('read_learning_evidence', { room_id: 'room-1', checklist_id: 'other-checklist' }));
+  assertEquals(denied.status, 403);
+  assertEquals(calls, 1);
+});
+
 // Covers assessment-api/index.ts: stale clients must fail before identity, database or provider access.
 Deno.test('rejects missing and outdated client contracts before assessment side effects', async () => {
   let touched = false;
@@ -186,14 +217,14 @@ Deno.test('Cyberbullying settles all five target analyses before applying progre
     dialogue_history: [character, { id: 'focus-1', user_id: 'learner-1', user_role: 'student', content }],
   };
   const deps = dependencies({
-    env: name => ({ OAI_API_KEY: 'test', OAI_BASE_URL: 'https://provider.invalid/v1' } as Record<string, string>)[name],
+    env: name => ({ OAI_API_KEY: 'test', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'configured-test-model' } as Record<string, string>)[name],
     fetch: async (_input, init) => {
       const input = JSON.parse(JSON.parse(String(init?.body)).messages[1].content);
       providerInputs.push(input);
-      if (failOne && input.items[0].id === 'item-2') return new Response('{}', { status: 503 });
+      if (failOne && providerInputs.length === 2) return new Response('{}', { status: 503 });
       return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
-        events: [{ item_id: input.items[0].id, kind: 'initial_signal', evidence_type: 'action',
-          evidence_message_id: 'focus-1', evidence_quote: content, explanation: 'Current learner evidence.' }],
+        events: input.items.map((item: any) => ({ item_id: item.id, kind: 'initial_signal', evidence_type: 'action',
+          evidence_message_id: 'focus-1', evidence_quote: content, explanation: 'Current learner evidence.' })),
         explanation: 'Recorded target analysis.',
       }) } }] }));
     },
@@ -212,8 +243,8 @@ Deno.test('Cyberbullying settles all five target analyses before applying progre
   const first = await handler(request('analyze_message', { room_id: 'room-1', message_id: 'focus-1' }));
   assert(first.status >= 400);
   assertEquals(applications, 0);
-  assertEquals(providerInputs.length, 5);
-  assertEquals(audits.length, 5);
+  assertEquals(providerInputs.length, 3);
+  assertEquals(audits.length, 3);
   assertEquals(audits.filter(audit => audit.p_error_code !== null).length, 1);
   for (const input of providerInputs) {
     assertEquals(input.practice_type, 'cyberbullying');
@@ -225,8 +256,9 @@ Deno.test('Cyberbullying settles all five target analyses before applying progre
   const retry = await handler(request('analyze_message', { room_id: 'room-1', message_id: 'focus-1' }));
   assertEquals(retry.status, 200);
   assertEquals(applications, 1);
-  assertEquals(audits.length, 10);
-  assert(audits.every(audit => audit.p_max_tokens === 600 && audit.p_request_payload.operation === 'analyze_message'));
+  assertEquals(audits.length, 6);
+  assert(audits.every(audit => audit.p_max_tokens === 2400 && audit.p_request_payload.operation === 'analyze_message'));
+  assert(audits.every(audit => audit.p_provider_model === 'configured-test-model'));
 });
 
 // Covers analyzer format repair: invalid evidence is never applied and both attempts retain their audit identity.
@@ -240,7 +272,7 @@ Deno.test(`${practiceType} bounds evidence quote repair and applies only valid p
   const content = 'First sentence. Second sentence. Third sentence.';
   const message = { id: 'focus-1', room_id: 'room-1', user_id: 'learner-1', user_role: 'student', content };
   const handler = createAssessmentApiHandler({
-    ...dependencies(), env: name => ({ OAI_API_KEY: 'test', OAI_BASE_URL: 'https://provider.invalid/v1' } as Record<string, string>)[name],
+    ...dependencies(), env: name => ({ OAI_API_KEY: 'test', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'configured-test-model' } as Record<string, string>)[name],
     fetch: async (_input, init) => {
       requests.push(JSON.parse(String(init?.body)));
       providerCalls += 1;
@@ -262,15 +294,23 @@ Deno.test(`${practiceType} bounds evidence quote repair and applies only valid p
   });
   const response = await handler(request('analyze_message', { room_id: 'room-1', message_id: 'focus-1' }));
   assertEquals(response.status, repairFails ? 502 : 200);
-  assertEquals(providerCalls, 2);
+  assertEquals(providerCalls, repairFails ? 6 : 4);
   assertEquals(applications, repairFails ? 0 : 1);
   if (practiceType === 'cyberbullying') {
-    assertEquals(audits.map(audit => [audit.p_attempt_ordinal, audit.p_validation_outcome]), [[1, 'invalid'], [2, repairFails ? 'invalid' : 'valid']]);
-    assertEquals(audits[0].p_request_id, audits[1].p_request_id);
+    assertEquals(audits.filter(audit => audit.p_validation_outcome === 'invalid').length, repairFails ? 6 : 1);
+    assert(audits.some(audit => audit.p_attempt_ordinal === 2));
     assertEquals(audits[0].p_error_code, 'AI_OUTPUT_INVALID');
   }
-  const repair = JSON.parse(requests[1].messages.filter((message: { role: string }) => message.role === 'user').at(-1).content);
-  assertEquals(requests.map(providerRequest => providerRequest.model), ['qwen3.8-flash', 'qwen3.8-flash']);
+  for (const providerRequest of requests) {
+    assertEquals(providerRequest.messages.map((message: { role: string }) => message.role), ['system', 'user']);
+    const input = JSON.parse(providerRequest.messages[1].content);
+    assertEquals(input.items[0].eligible_event_kinds, ['initial_signal', 'demonstrated_understanding', 'spontaneous_transfer']);
+    assertEquals(input.items[0].id, 'item-1');
+  }
+  const repairRequest = requests.find(providerRequest => JSON.parse(providerRequest.messages[1].content).previous_response);
+  assert(repairRequest);
+  const repair = JSON.parse(repairRequest.messages.filter((message: { role: string }) => message.role === 'user').at(-1).content);
+  assert(requests.every(providerRequest => providerRequest.model === 'configured-test-model'));
   assertEquals(JSON.parse(repair.previous_response.choices[0].message.content).events[0].evidence_quote, 'First sentence. Third sentence.');
   assertEquals(repair.evidence_message, message);
 });
@@ -354,8 +394,72 @@ for (const scenario of ['ambiguity_then_pass','guard_then_clear','ordered_retry_
   });
 }
 
+// #110: Guard turns on after the context read. process_assessment_message_v2 re-checks Guard under the
+// room lock and returns the guard_deferred record; the edge must project it as held, not as a grade.
+Deno.test('Guard turned on after the context read: server deferral is projected without a grade', async () => {
+  const writes: string[] = [];
+  const handler = createAssessmentApiHandler(dependencies({
+    resolveAnswer: resolveTransferAnswer,
+    rpc: async name => {
+      if (name === 'get_transfer_assessment_processing_context_v1') return { data: { lifecycle: 'open',
+        context: { progress: { status: 'covered', understanding_level: 'good' }, guard_mode: false,
+          progress_snapshot_hash: 'h', feedback_required: false, eligible_assessment_item_ids: ['item-1'],
+          unresolved_assessment: { id: 'a' }, pending_repair_message_id: null,
+          attempt_snapshot: { assessment_id: 'a', accepted_attempt_count: 0, resolution: 'open', processed_answer_message_ids: [] } },
+        assessment: { id: 'a', item_id: 'item-1', selection_type: 'single', progress_snapshot_hash: 'h',
+          options: ['A', 'B', 'C', 'D'].map(id => ({ id, text: `Option ${id}` })),
+          correct_option_ids: ['B'], learner_safe_explanation: 'Use an independent channel.' },
+        answer: { content: 'A', selected_option_ids: ['A'], references_message_id: 'q' } }, error: null };
+      writes.push(name);
+      assertEquals(name, 'process_assessment_message_v2');
+      return { data: { message_id: 'm', assessment_id: 'a', processing_state: 'deferred', answer_outcome: null,
+        attempt_number: null, attempts_used: 0, attempts_remaining: 2, selected_option_ids: null, terminal: false,
+        transition: null, feedback_required: false, code: 'guard_deferred', already_processed: false,
+        terminal_failure_feedback: null, result_message: null }, error: null };
+    },
+  }));
+  const response = await handler(request('process_message', { assessment_id: 'a', message_id: 'm' }));
+  const payload = await response.json();
+  assertEquals(response.status, 200);
+  assertEquals(writes, ['process_assessment_message_v2']);
+  assertEquals(payload.data.processing_state, 'deferred');
+  assertEquals(payload.data.code, 'guard_deferred');
+  assertEquals(payload.data.answer_outcome, null);
+  assertEquals(payload.data.attempts_used, 0);
+  assertEquals(payload.data.attempts_remaining, 2);
+  assertEquals(payload.data.result_message, null);
+});
+
+Deno.test('Guard turned on before an assisted closure commits: server deferral is projected, not a closure', async () => {
+  const writes: string[] = [];
+  const handler = createAssessmentApiHandler(dependencies({
+    resolveAnswer: () => ({ disposition: 'assisted' } as never),
+    rpc: async name => {
+      if (name === 'get_transfer_assessment_processing_context_v1') return { data: { lifecycle: 'open',
+        context: { guard_mode: false, attempt_snapshot: { assessment_id: 'a', accepted_attempt_count: 0, resolution: 'open',
+          processed_answer_message_ids: [] } },
+        assessment: { id: 'a' }, answer: { content: 'Can you help?', selected_option_ids: null, references_message_id: 'q' } }, error: null };
+      writes.push(name);
+      assertEquals(name, 'cancel_transfer_assessment_v1');
+      return { data: { message_id: 'm', assessment_id: 'a', processing_state: 'deferred', answer_outcome: null,
+        attempt_number: null, attempts_used: 0, attempts_remaining: 2, selected_option_ids: null, terminal: false,
+        transition: null, feedback_required: false, code: 'guard_deferred', already_processed: false,
+        terminal_failure_feedback: null, result_message: null }, error: null };
+    },
+  }));
+  const response = await handler(request('process_message', { assessment_id: 'a', message_id: 'm' }));
+  const payload = await response.json();
+  assertEquals(response.status, 200);
+  assertEquals(writes, ['cancel_transfer_assessment_v1']);
+  assertEquals(payload.data.processing_state, 'deferred');
+  assertEquals(payload.data.code, 'guard_deferred');
+  assertEquals(payload.data.terminal, false);
+  assertEquals(payload.data.result_message, null);
+});
+
 Deno.test('accepted retry replay after cancellation keeps its grade and marks it duplicate', async () => {
   const handler = createAssessmentApiHandler(dependencies({
+    featureEnabled: async () => false,
     resolveAnswer: () => { throw new Error('must not grade a replay'); },
     rpc: async name => {
       assertEquals(name, 'get_transfer_assessment_processing_context_v1');
@@ -379,7 +483,8 @@ Deno.test('accepted retry replay after cancellation keeps its grade and marks it
   assertEquals(payload.data.terminal_failure_feedback, null);
 });
 
-Deno.test('private review reads require a tutor and the authorized room', async () => {
+Deno.test('private review and keyless history reads require a tutor and the authorized room', async () => {
+  for (const operation of ['read_review', 'read_history_readiness']) {
   for (const canReview of [false, true]) {
     let calls = 0;
     const handler = createAssessmentApiHandler(dependencies({
@@ -387,9 +492,10 @@ Deno.test('private review reads require a tutor and the authorized room', async 
         allowed_room_ids: ['room-1'], can_review_assessment: canReview }) },
       rpc: async () => { calls += 1; return { data: {}, error: null }; },
     }));
-    const result = await handler(request('read_review', { room_id: canReview ? 'other-room' : 'room-1', assessment_id: 'assessment-1' }));
+    const result = await handler(request(operation, { room_id: canReview ? 'other-room' : 'room-1', assessment_id: 'assessment-1' }));
     assert(result.status >= 400);
     assertEquals(calls, 0);
+  }
   }
 });
 
@@ -480,6 +586,7 @@ Deno.test('room entry reports visit recording failure', async () => {
 Deno.test('tutor status judgment is submitted under the verified actor identity', async () => {
   const calls: Array<{ name: string; args: Record<string, unknown> }> = [];
   const handler = createAssessmentApiHandler(dependencies({
+    featureEnabled: async () => false,
     rpc: async (name, args) => {
       calls.push({ name, args });
       return { data: { item_id: 'item-1', status: 'needs_review' }, error: null };
@@ -577,7 +684,7 @@ Deno.test('approved custom target flows through evidence, assessment delivery, a
   const deps: AssessmentApiDependencies = {
     ...dependencies(),
     env: (name) => ({
-      OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash',
+      OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'configured-test-model',
     } as Record<string, string>)[name],
     rpc: async (name, args) => {
       operations.push(name);
@@ -645,7 +752,7 @@ Deno.test('approved custom target flows through evidence, assessment delivery, a
     fetch: async (_input, init) => {
       providerCalls += 1;
       const prompt = JSON.stringify(JSON.parse(String(init?.body)));
-      if (providerCalls === 1) {
+      if (JSON.parse(JSON.parse(String(init?.body)).messages[1].content).dialogue_history) {
         analysisInput = JSON.parse(JSON.parse(String(init?.body)).messages[1].content);
         assert(prompt.includes('Verify independently'));
         return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
@@ -678,7 +785,7 @@ Deno.test('approved custom target flows through evidence, assessment delivery, a
   assert(!JSON.stringify(sent.data).includes('correct_option_ids'));
   const processed = await (await handler(request('process_message', { room_id: 'room-1', assessment_id: 'question-1', message_id: 'answer-1' }))).json();
   assertEquals(processed.data.answer_outcome, 'passed');
-  assertEquals(providerCalls, 2);
+  assertEquals(providerCalls, 4);
   assert(operations.indexOf('apply_transfer_message_analysis_v1') < operations.indexOf('prepare_transfer_assessment_context_v1'));
 });
 
@@ -687,7 +794,7 @@ Deno.test('accepts direct understanding evidence for the current learner message
   let stored: Record<string, unknown> | null = null;
   const deps = dependencies({
     env: (name) => ({
-      OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash',
+      OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'configured-test-model',
     } as Record<string, string>)[name],
     fetch: async () => new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
       events: [{ item_id: 'item-1', kind: 'demonstrated_understanding', evidence_type: 'action', evidence_message_id: 'focus-1',
@@ -728,10 +835,10 @@ Deno.test('keeps one target evidence from advancing a related target', async () 
   let applied: Record<string, unknown> | null = null;
   const deps = dependencies({
     env: (name) => ({ OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1',
-      OAI_MODEL: 'qwen3.8-flash' } as Record<string, string>)[name],
+      OAI_MODEL: 'configured-test-model' } as Record<string, string>)[name],
     fetch: async (_input, init) => {
       const input = JSON.parse(JSON.parse(String(init?.body)).messages[1].content);
-      assertEquals(input.items.length, 1);
+      assertEquals(input.items.length, 2);
       const itemId = input.items[0].id;
       analyzedIds.push(itemId);
       return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
@@ -765,7 +872,7 @@ Deno.test('keeps one target evidence from advancing a related target', async () 
     room_id: 'room-1', message_id: 'focus-1',
   }));
   assertEquals(response.status, 200);
-  assertEquals(analyzedIds, ['action-1', 'reason-1']);
+  assertEquals(analyzedIds, ['action-1', 'action-1', 'action-1']);
   assertEquals((applied as unknown as { events: Array<{ item_id: string }> }).events.map(event => event.item_id), ['action-1']);
   assertEquals((applied as unknown as { rejected_events: Array<{ item_id: string; rejection_reason: string }> }).rejected_events,
     []);
@@ -775,7 +882,7 @@ Deno.test('keeps one target evidence from advancing a related target', async () 
 Deno.test('accepts action evidence for a detection-area target', async () => {
   let stored: Record<string, any> | null = null;
   const deps = dependencies({
-    env: (name) => ({ OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash' } as Record<string, string>)[name],
+    env: (name) => ({ OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'configured-test-model' } as Record<string, string>)[name],
     fetch: async () => new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
       events: [{ item_id: 'item-1', kind: 'demonstrated_understanding', evidence_type: 'action', evidence_message_id: 'focus-1',
         evidence_quote: 'I will open the official app', explanation: 'The learner chooses a safe action.' }],
@@ -808,7 +915,7 @@ Deno.test('records and omits ineligible transitions for unified targets', async 
     let stored: Record<string, any> | null = null;
     const deps = dependencies({
       env: (name) => ({ OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1',
-        OAI_MODEL: 'qwen3.8-flash' } as Record<string, string>)[name],
+        OAI_MODEL: 'configured-test-model' } as Record<string, string>)[name],
       fetch: async () => new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
         events: [{ item_id: 'item-1', kind, evidence_type: 'action', evidence_message_id: 'focus-1',
           evidence_quote: 'I will check the app', explanation: 'The learner describes a check.' }],
@@ -834,7 +941,7 @@ Deno.test('records and omits ineligible transitions for unified targets', async 
     }));
     assertEquals(response.status, 200);
     assertEquals((stored as unknown as { events: unknown[] }).events, []);
-    assertEquals((stored as unknown as { rejected_events: unknown[] }).rejected_events.length, 1);
+    assertEquals((stored as unknown as { rejected_events: unknown[] }).rejected_events.length, 3);
     assertEquals((stored as unknown as { rejected_events: Array<{ rejection_reason: string }> }).rejected_events[0].rejection_reason,
       'INELIGIBLE_TRANSITION');
     assertEquals(applyCalls, 1);
@@ -847,7 +954,7 @@ Deno.test('rejects historical speaker evidence before updating learner status', 
     let applyCalls = 0;
     const deps = dependencies({
       env: (name) => ({
-        OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash',
+        OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'configured-test-model',
       } as Record<string, string>)[name],
       fetch: async () => new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
         events: [{ item_id: 'item-1', kind: 'initial_signal', evidence_type: 'action', evidence_message_id: evidenceMessageId,
@@ -883,9 +990,9 @@ Deno.test('rejects historical speaker evidence before updating learner status', 
 });
 
 // Test responsibility: verify that the production Edge module passes Deno's type checker.
-Deno.test('default RPC adapter type-checks without remote fetches', async () => {
+Deno.test('default RPC adapter passes the Edge type checker', async () => {
   const checked = await new Deno.Command(Deno.execPath(), {
-    args: ['check', '--cached-only', '--unstable-sloppy-imports', new URL('./index.ts', import.meta.url).pathname],
+    args: ['check', '--sloppy-imports', new URL('./index.ts', import.meta.url).pathname],
   }).output();
   assert(checked.success, new TextDecoder().decode(checked.stderr));
 });
@@ -905,18 +1012,28 @@ Deno.test('fails closed before data access when no principal verifier is wired',
   assertEquals(calls, 0);
 });
 
-// Covers index.ts: disabled configuration must prevent assessment side effects.
-Deno.test('disabled feature makes no assessment storage call', async () => {
-  let calls = 0;
+Deno.test('disabled assessments still permit ordinary messages without reading the flag', async () => {
+  const calls: string[] = [];
   const handler = createAssessmentApiHandler(dependencies({
-    featureEnabled: async () => false,
-    rpc: async () => { calls += 1; return { data: {}, error: null }; },
+    featureEnabled: async () => { throw new Error('must not read assessment flag'); },
+    rpc: async (name) => { calls.push(name); return { data: {}, error: null }; },
   }));
   const response = await handler(request('post_message', { room_id: 'room-1', content: 'Hello' }));
-  const payload = await response.json();
-  assertEquals(response.status, 503);
-  assertEquals(payload.error.code, 'ASSESSMENT_FEATURE_DISABLED');
-  assertEquals(calls, 0);
+  assertEquals(response.status, 200);
+  assertEquals(calls, ['join_room_v1', 'post_assessment_message_v2']);
+});
+
+Deno.test('disabled assessments block new preparation and delivery before storage', async () => {
+  for (const operation of ['prepare_turn', 'send_reviewed']) {
+    let calls = 0;
+    const handler = createAssessmentApiHandler(dependencies({
+      featureEnabled: async () => false,
+      rpc: async () => { calls += 1; return { data: {}, error: null }; },
+    }));
+    const response = await handler(request(operation, { room_id: 'room-1' }));
+    assertEquals((await response.json()).error.code, 'ASSESSMENT_FEATURE_DISABLED');
+    assertEquals(calls, 0);
+  }
 });
 
 Deno.test('owner clear remains available with assessment feature disabled and passes only verified identity',async ()=>{
@@ -930,27 +1047,20 @@ Deno.test('owner clear remains available with assessment feature disabled and pa
 });
 
 // Covers index.ts: the same warm handler must observe administrator flag changes.
-Deno.test('reads current feature configuration for every assessment request', async () => {
+Deno.test('reads current feature configuration for each new assessment request', async () => {
   let enabled = true;
   let reads = 0;
-  let writes = 0;
   const handler = createAssessmentApiHandler(dependencies({
     featureEnabled: async () => { reads += 1; return enabled; },
-    rpc: async (name) => {
-      if (name === 'post_assessment_message_v2') writes += 1;
-      return { data: {}, error: null };
-    },
   }));
-  const post = () => request('post_message', { room_id: 'room-1', content: 'Hello' });
-  assertEquals((await handler(post())).status, 200);
+  // Missing scope fields fail validation after the current feature gate.
+  const prepare = () => request('prepare_turn', { room_id: 'room-1' });
+  assertEquals((await (await handler(prepare())).json()).error.code === 'ASSESSMENT_FEATURE_DISABLED', false);
   enabled = false;
-  const disabled = await handler(post());
-  assertEquals((await disabled.json()).error.code, 'ASSESSMENT_FEATURE_DISABLED');
-  assertEquals(writes, 1);
+  assertEquals((await (await handler(prepare())).json()).error.code, 'ASSESSMENT_FEATURE_DISABLED');
   enabled = true;
-  assertEquals((await handler(post())).status, 200);
+  assertEquals((await (await handler(prepare())).json()).error.code === 'ASSESSMENT_FEATURE_DISABLED', false);
   assertEquals(reads, 3);
-  assertEquals(writes, 2);
 });
 
 // Covers index.ts: unavailable configuration must fail closed without exposing private errors.
@@ -960,7 +1070,7 @@ Deno.test('configuration read failure returns retryable error without assessment
     featureEnabled: async () => { throw new Error('private database diagnostic'); },
     rpc: async () => { writes += 1; return { data: {}, error: null }; },
   }));
-  const result = await handler(request('post_message', { room_id: 'room-1', content: 'Hello' }));
+  const result = await handler(request('prepare_turn', { room_id: 'room-1', focus_student_message_id: 'focus-1', checklist_id: 'checklist-1' }));
   assertEquals(result.status, 503);
   const payload = await result.json();
   assertEquals(payload.error.code, 'ASSESSMENT_CONFIGURATION_UNAVAILABLE');
@@ -1096,13 +1206,14 @@ Deno.test('returns the exact public assessment target and strips private fields'
 
 Deno.test('requires provider credentials before any provider or audit call', async () => {
   const configured = {
-    OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash',
+    OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'configured-test-model',
   };
-  for (const missing of ['OAI_API_KEY', 'OAI_BASE_URL']) {
+  for (const missing of ['OAI_API_KEY', 'OAI_BASE_URL', 'OAI_MODEL', 'blank-model']) {
     let providerCalls = 0;
     let auditCalls = 0;
     const settings = { ...configured } as Record<string, string | undefined>;
-    settings[missing] = undefined;
+    if (missing === 'blank-model') settings.OAI_MODEL = '   ';
+    else settings[missing] = undefined;
     const handler = createAssessmentApiHandler(dependencies({
       env: (name) => settings[name],
       rpc: async (name) => {
@@ -1126,12 +1237,38 @@ Deno.test('requires provider credentials before any provider or audit call', asy
   }
 });
 
-Deno.test('preserves the assessment model despite a different model secret, 1200-token budget, JSON mode, and private audit', async () => {
+for (const model of [undefined, '', '   ']) {
+  Deno.test(`analyze_message rejects absent or blank OAI_MODEL without generation or progress writes: ${JSON.stringify(model)}`, async () => {
+    const message = { id: 'focus-1', room_id: 'room-1', user_id: 'learner-1', user_role: 'student', content: 'Check the official app.' };
+    let providerCalls = 0;
+    const writes: string[] = [];
+    const handler = createAssessmentApiHandler({
+      ...dependencies(),
+      env: name => ({ OAI_API_KEY: 'secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: model } as Record<string, string | undefined>)[name],
+      rpc: async name => {
+        if (name === 'get_transfer_message_analysis_context_v1') return { data: {
+          practice_type: 'cyberbullying', room_id: 'room-1', student_id: 'learner-1', checklist_id: 'checklist-1',
+          message, dialogue_history: [message], items: [{ id: 'item-1', area_text: 'Fixture target', status: 'pending', understanding_level: 'none' }],
+        }, error: null };
+        writes.push(name);
+        return { data: {}, error: null };
+      },
+      fetch: async () => { providerCalls += 1; throw new Error('provider must not be called'); },
+    });
+    const response = await handler(request('analyze_message', { room_id: 'room-1', message_id: 'focus-1' }));
+    assertEquals(response.status, 503);
+    assertEquals((await response.json()).error.code, 'AI_PROVIDER_NOT_CONFIGURED');
+    assertEquals(providerCalls, 0);
+    assertEquals(writes, []);
+  });
+}
+
+Deno.test('uses the configured assessment model, 1200-token budget, JSON mode, and private audit', async () => {
   const requests: Array<{ url: string; body: Record<string, unknown> }> = [];
   const audits: Record<string, unknown>[] = [];
   const handler = createAssessmentApiHandler(dependencies({
     env: (name) => ({
-      OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash',
+      OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'configured-test-model',
     } as Record<string, string>)[name],
     rpc: async (name, args) => {
       if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
@@ -1151,7 +1288,7 @@ Deno.test('preserves the assessment model despite a different model secret, 1200
   assertEquals(payload.data.item_id, 'item-1');
   assertEquals(payload.data.context.progress_snapshot_hash, 'snapshot-1');
   assertEquals(requests[0].url, 'https://provider.invalid/v1/chat/completions');
-  assertEquals(requests[0].body.model, 'qwen3.5-flash');
+  assertEquals(requests[0].body.model, 'configured-test-model');
   assertEquals(requests[0].body.max_tokens, 1200);
   assertEquals(requests[0].body.response_format, { type: 'json_object' });
   assert(JSON.stringify(requests[0].body).includes('learner_safe_explanation'));
@@ -1159,6 +1296,7 @@ Deno.test('preserves the assessment model despite a different model secret, 1200
   assert(!JSON.stringify(payload).includes('server-secret'));
   assert(!JSON.stringify(payload).includes('raw_response'));
   assertEquals(audits[0].p_validation_outcome, 'valid');
+  assertEquals(audits[0].p_provider_model, 'configured-test-model');
 });
 
 Deno.test('returns a valid second response after one format repair', async () => {
@@ -1166,7 +1304,7 @@ Deno.test('returns a valid second response after one format repair', async () =>
   const requests: Record<string, unknown>[] = [];
   const handler = createAssessmentApiHandler(dependencies({
     env: (name) => ({
-      OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash',
+      OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'configured-test-model',
     } as Record<string, string>)[name],
     rpc: async (name, args) => {
       if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
@@ -1204,7 +1342,7 @@ Deno.test('format repair forwards a rendering violation without accepting the in
   draft.assessment.stem = 'There is a new warning. It asks for a response. What should you do?';
   invalid.choices[0].message.content = JSON.stringify(draft);
   const handler = createAssessmentApiHandler(dependencies({
-    env: name => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash' } as Record<string,string>)[name],
+    env: name => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'configured-test-model' } as Record<string,string>)[name],
     rpc: async (name, args) => {
       if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
       if (name === 'record_transfer_provider_attempt_v1') audits.push(args);
@@ -1229,7 +1367,7 @@ Deno.test('performs one format-only repair and rejects a second invalid result',
   let providerCalls = 0;
   const audits: Record<string, unknown>[] = [];
   const handler = createAssessmentApiHandler(dependencies({
-    env: (name) => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash' } as Record<string, string>)[name],
+    env: (name) => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'configured-test-model' } as Record<string, string>)[name],
     rpc: async (name, args) => {
       if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
       if (name === 'record_transfer_provider_attempt_v1') audits.push(args);
@@ -1253,7 +1391,7 @@ Deno.test('does not repair truncation, HTTP failure, or network failure', async 
   for (const scenario of ['truncated', 'http', 'network']) {
     let providerCalls = 0;
     const handler = createAssessmentApiHandler(dependencies({
-      env: (name) => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash' } as Record<string, string>)[name],
+      env: (name) => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'configured-test-model' } as Record<string, string>)[name],
       rpc: async (name) => name === 'prepare_transfer_turn_v1'
         ? { data: providerScope(), error: null }
         : { data: 'audit', error: null },
@@ -1276,7 +1414,7 @@ Deno.test('does not repair truncation, HTTP failure, or network failure', async 
 Deno.test('fails preparation without retry when provider audit persistence fails', async () => {
   let providerCalls = 0;
   const handler = createAssessmentApiHandler(dependencies({
-    env: (name) => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash' } as Record<string, string>)[name],
+    env: (name) => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'configured-test-model' } as Record<string, string>)[name],
     rpc: async (name) => {
       if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
       return { data: null, error: { message: 'audit insert failed' } };
@@ -1300,14 +1438,14 @@ Deno.test('analyzes persisted learner evidence before mandatory assessment prepa
   let assessmentCalls = 0;
   const base = dependencies({
     env: (name) => ({
-      OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash',
+      OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'configured-test-model',
     } as Record<string, string>)[name],
     fetch: async (_input, init) => {
       const body = JSON.parse(String(init?.body));
       if (JSON.parse(body.messages[1].content).dialogue_history !== undefined) {
-        assertEquals(body.model, 'qwen3.8-flash');
+        assertEquals(body.model, 'configured-test-model');
         assertEquals(body.temperature, 0);
-        assertEquals(body.max_tokens, 600);
+        assertEquals(body.max_tokens, 2400);
         assertEquals(body.enable_thinking, false);
         assertEquals(body.response_format, { type: 'json_object' });
         analysisCalls += 1;
@@ -1318,7 +1456,7 @@ Deno.test('analyzes persisted learner evidence before mandatory assessment prepa
         }) } }] }), { status: 200 });
       }
       assessmentCalls += 1;
-      assertEquals(body.model, 'qwen3.5-flash');
+      assertEquals(body.model, 'configured-test-model');
       return new Response(JSON.stringify(validProviderPayload()), { status: 200 });
     },
   });
@@ -1352,7 +1490,7 @@ Deno.test('analyzes persisted learner evidence before mandatory assessment prepa
   const payload = await response.json();
   assertEquals(payload.ok, true);
   assertEquals(payload.data.assessment_draft.target_item_id, 'item-1');
-  assertEquals(analysisCalls, 1);
+  assertEquals(analysisCalls, 3);
   assertEquals(assessmentCalls, 1);
 });
 
@@ -1372,7 +1510,7 @@ Deno.test('explicit no-assessment result avoids the provider, while an eligible 
 
   const failing = dependencies({
     env: (name) => ({
-      OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash',
+      OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'configured-test-model',
     } as Record<string, string>)[name],
     fetch: async () => { calls += 1; throw new Error('offline'); },
   });
@@ -1456,4 +1594,62 @@ Deno.test('retries a stale CAS snapshot and returns the committed authoritative 
   assertEquals(payload.data.answer_outcome, 'passed');
   assertEquals(contextReads, 2);
   assertEquals(commits, 2);
+});
+
+Deno.test('disabled room preparation returns an explicit non-retryable conflict before provider calls', async () => {
+  const deps = dependencies();
+  let providerCalls = 0;
+  deps.rpc = async () => ({ data: null, error: { message: 'IN_ROOM_ASSESSMENT_DISABLED' } });
+  deps.fetch = async () => { providerCalls += 1; throw new Error('unexpected provider'); };
+  const response = await createAssessmentApiHandler(deps)(request('prepare_turn', {
+    room_id: 'room-1', checklist_id: 'checklist-1', focus_student_message_id: 'focus-1',
+  }));
+  const body = await response.json();
+  assertEquals(response.status, 409);
+  assertEquals(body.error.code, 'IN_ROOM_ASSESSMENT_DISABLED');
+  assertEquals(body.error.retryable, false);
+  assertEquals(providerCalls, 0);
+});
+
+Deno.test('assessment configuration uses the verified tutor identity and remains available when rollout is disabled', async () => {
+  const calls: Array<{name:string;args:Record<string,unknown>}> = [];
+  const deps = dependencies({ featureEnabled: async () => false, rpc: async (name,args) => {
+    calls.push({name,args}); return {data:{room:{id:'room-1',in_room_assessment_enabled:false}},error:null};
+  }});
+  const response = await createAssessmentApiHandler(deps)(request('configure_assessment', {
+    room_id:'room-1',enabled:false,actor_id:'forged-user',
+  }));
+  assertEquals(response.status,200);
+  assertEquals(calls,[{name:'set_in_room_assessment_enabled_v1',args:{p_room_id:'room-1',p_enabled:false,p_actor_id:'teacher-1'}}]);
+});
+
+Deno.test('assessment configuration rejects learners, foreign rooms, and non-boolean settings before persistence', async () => {
+  for (const variant of ['learner','foreign-room','invalid-value']) {
+    let writes=0;
+    const deps=dependencies({rpc:async()=>{writes+=1;return {data:{},error:null}}});
+    if(variant==='learner') deps.verifier={verify:async()=>({principal_id:'student',application_user_id:'student-1',allowed_room_ids:['room-1'],can_review_assessment:false})};
+    const response=await createAssessmentApiHandler(deps)(request('configure_assessment',{
+      room_id:variant==='foreign-room'?'other-room':'room-1',enabled:variant==='invalid-value'?'false':false,
+    }));
+    assertEquals(response.status,variant==='invalid-value'?400:403);
+    assertEquals(writes,0);
+  }
+});
+
+Deno.test('disabled assessments deny private review but retain keyless history readiness', async () => {
+  const handler = createAssessmentApiHandler(dependencies({
+    featureEnabled: async () => false,
+    rpc: async () => ({ data: { assessment: { correct_option_ids: ['B'], learner_safe_explanation: 'private' },
+      transfer_basis: { secret: true }, history_readiness: { ready: true, result_message_ids: ['result-1'],
+        pending_answer_message_ids: [], unavailable_assessment_ids: [], handled_answer_message_ids: ['answer-1'],
+        correct_option_ids: ['B'] } }, error: null }),
+  }));
+  const privateResponse = await handler(request('read_review', { room_id: 'room-1', assessment_id: 'assessment-1' }));
+  assertEquals((await privateResponse.json()).error.code, 'ASSESSMENT_FEATURE_DISABLED');
+  const safeResponse = await handler(request('read_history_readiness', { room_id: 'room-1', assessment_id: 'assessment-1' }));
+  const payload = await safeResponse.json();
+  assertEquals(payload.data, { history_readiness: { ready: true, result_message_ids: ['result-1'],
+    pending_answer_message_ids: [], unavailable_assessment_ids: [], handled_answer_message_ids: ['answer-1'] } });
+  assertEquals(JSON.stringify(payload).includes('correct_option_ids'), false);
+  assertEquals(JSON.stringify(payload).includes('transfer_basis'), false);
 });

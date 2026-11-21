@@ -16,6 +16,7 @@ export interface ManualChecklistInputProps {
   initialVerificationSteps?: string[];
   title?: string;
   allowVerificationOnly?: boolean;
+  submitDisabled?: boolean;
 }
 
 export const ManualChecklistInput: React.FC<ManualChecklistInputProps> = ({
@@ -25,7 +26,8 @@ export const ManualChecklistInput: React.FC<ManualChecklistInputProps> = ({
   initialDetectionAreas = [],
   initialVerificationSteps = [],
   title = 'Create Manual Checklist',
-  allowVerificationOnly = false
+  allowVerificationOnly = false,
+  submitDisabled = false
 }) => {
   const [detectionAreasText, setDetectionAreasText] = useState(initialDetectionAreas.join('\n'));
   const [verificationStepsText, setVerificationStepsText] = useState(initialVerificationSteps.join('\n'));
@@ -49,6 +51,7 @@ export const ManualChecklistInput: React.FC<ManualChecklistInputProps> = ({
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (submitDisabled) return;
     setValidationError('');
 
     // Validation: At least one detection area required
@@ -151,7 +154,7 @@ export const ManualChecklistInput: React.FC<ManualChecklistInputProps> = ({
           <button
             type="submit"
             className="submit-button"
-            disabled={isSubmitting}
+            disabled={isSubmitting || submitDisabled}
           >
             <Check size={16} />
             {isSubmitting ? 'Creating...' : 'Create Checklist'}

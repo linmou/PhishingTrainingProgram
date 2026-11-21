@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRoom } from '../contexts/RoomContext';
 import { useAuth } from '../contexts/AuthContext';
-import { AI_MODELS, AIModelName, DEFAULT_AI_MODEL } from '../services/aiService';
+import { AI_MODELS, AIModelName, OAI_MODEL } from '../services/aiService';
 import { ScenarioTemplate, SCENARIO_TEMPLATES, isScenarioTemplate } from '../services/detectionTemplates';
 import { PRESET_CONFIGS, generateSystemPrompt } from '../services/systemPrompts';
 import { SystemPromptConfig } from '../services/prompts/types';
@@ -40,12 +40,14 @@ const getScenarioFromPromptConfig = (
 };
 
 const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) => {
-    const { currentRoom, aiConfig, toggleAIAssistant, setTransferLearningEnabled, loadingAI } = useRoom();
+    const { currentRoom, aiConfig, toggleAIAssistant, setInRoomAssessmentEnabled, loadingAI } = useRoom();
     const { user } = useAuth();
 
     const [isEnabled, setIsEnabled] = useState(false);
     const [transferEnabled, setTransferEnabled] = useState(true);
-    const [selectedModel, setSelectedModel] = useState<AIModelName>(DEFAULT_AI_MODEL);
+    const assessmentEditRoom = useRef<string | null>(null);
+    const assessmentRoom = useRef<string | null>(null);
+    const [selectedModel, setSelectedModel] = useState<AIModelName>(OAI_MODEL);
     const [systemPrompt, setSystemPrompt] = useState('');
     const [temperature, setTemperature] = useState(0.7);
     const [maxTokens, setMaxTokens] = useState(150);
@@ -76,7 +78,7 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
     const [confidenceBuilding, setConfidenceBuilding] = useState<'low' | 'high'>('high');
 
     const getEffectiveScenarioContent = useCallback(() => {
-        const detectionAreas = customDetectionAreas.split('\n').filter(area => area.trim());
+        const detectionAreas = customDetectionAreas.split(/\r?\n[\t ]*\r?\n/).filter(area => area.trim());
         const verificationSteps = customVerificationSteps.split('\n').filter(step => step.trim());
         const scenarioData = selectedScenario ? SCENARIO_TEMPLATES[selectedScenario] : null;
 
@@ -94,7 +96,7 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
         }
 
         const template = SCENARIO_TEMPLATES[scenario];
-        setCustomDetectionAreas(template.detection_areas.join('\n'));
+        setCustomDetectionAreas(template.detection_areas.join('\n\n'));
         setCustomVerificationSteps(template.verification_steps.join('\n'));
     };
 
@@ -114,7 +116,7 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
             setValidationFrequency(promptConfig.emotional_parameters.validation_frequency);
             setMistakeNormalization(promptConfig.emotional_parameters.mistake_normalization);
             setConfidenceBuilding(promptConfig.emotional_parameters.confidence_building);
-            setCustomDetectionAreas(promptConfig.detection_areas.join('\n'));
+            setCustomDetectionAreas(promptConfig.detection_areas.join('\n\n'));
             setCustomVerificationSteps(promptConfig.verification_steps.join('\n'));
             setSelectedScenario(getScenarioFromPromptConfig(promptConfig));
         };
@@ -142,12 +144,19 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
 
         if (currentRoom) {
             setIsEnabled(currentRoom.ai_assistant_enabled);
-            setTransferEnabled(currentRoom.transfer_learning_enabled === true || !currentRoom.ai_assistant_enabled);
+            if (assessmentRoom.current !== currentRoom.id) {
+                assessmentRoom.current = currentRoom.id;
+                assessmentEditRoom.current = null;
+            }
+            // Background room/config updates must not overwrite an explicit unsaved choice.
+            if (assessmentEditRoom.current !== currentRoom.id) {
+                setTransferEnabled(currentRoom.in_room_assessment_enabled === true);
+            }
         }
 
         if (aiConfig) {
-            // Legacy room values (including GPT names) are normalized to the sole Qwen option.
-            setSelectedModel(DEFAULT_AI_MODEL);
+            // Legacy room values (including GPT names) are normalized to the configured model.
+            setSelectedModel(OAI_MODEL);
             setSystemPrompt(aiConfig.system_prompt || '');
             setTemperature(aiConfig.temperature);
             setMaxTokens(aiConfig.max_tokens);
@@ -311,8 +320,8 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
                 max_tokens: maxTokens
             });
 
-            if (currentRoom && transferEnabled !== (currentRoom.transfer_learning_enabled === true)) {
-                await setTransferLearningEnabled(transferEnabled);
+            if (currentRoom && assessmentEditRoom.current === currentRoom.id) {
+                await setInRoomAssessmentEnabled(transferEnabled);
             }
 
             onClose();
@@ -377,7 +386,10 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
                             <input
                                 type="checkbox"
                                 checked={transferEnabled}
-                                onChange={(event) => setTransferEnabled(event.target.checked)}
+                                onChange={(event) => {
+                                    assessmentEditRoom.current = currentRoom?.id ?? null;
+                                    setTransferEnabled(event.target.checked);
+                                }}
                                 disabled={isSaving || loadingAI}
                             />
                             <span className="ai-toggle-text">Enable In-Room Assessment</span>
@@ -487,7 +499,7 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
                                     <div className="ai-setting-group">
                                         <label className="ai-setting-label">
                                             Custom Detection Areas
-                                            <span className="ai-setting-optional">(One per line, optional)</span>
+                                            <span className="ai-setting-optional">(Separate targets with a blank line, optional)</span>
                                         </label>
                                         <textarea
                                             value={customDetectionAreas}

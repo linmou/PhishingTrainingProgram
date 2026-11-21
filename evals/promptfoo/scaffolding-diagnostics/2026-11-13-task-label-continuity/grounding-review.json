@@ -1,0 +1,40 @@
+{
+  "intent": "Independently check the task-label continuity clarification against adopted tutoring requirements and constitutional authority.",
+  "reviewer": "/root/continuity_audit",
+  "date": "2026-11-13",
+  "verdict": "clear",
+  "scope": "Grounding only; candidate, preparation, calibration, output conformance and full acceptance are separate reviews.",
+  "snapshots": {
+    "tutor-system/docs/ai-behaviors/constitution.md": "33ddd10ba3d0c949dbe308d67b9320b6be934f8af09ce07129b02a21dee2dec4",
+    "tutor-system/docs/ai-behaviors/tutor-behavior-specification.md": "faa3ce2e52e5709b05b4dc358e13aed779a722aba7c9761eefbde0d9826adac0",
+    "tutor-system/docs/ai-behaviors/tutor-behavior-evaluation-plan.md": "f1ef1d634251989cb1ff1583a088431f8a07be462b8a75f9089eeaeaf10a2cc8",
+    "tutor-system/docs/ai-behaviors/tutor-response-contract.md": "6896f22902c7b43996272084263233296f9a7aaa694fa57cd23848fc1110aa1a"
+  },
+  "authority": {
+    "existing": "Constitution 1.0 approved principles/priorities; the prior independent grounding-review.json clears T01.1, T02.1 and T02.2 under the user's component-specific clarification.",
+    "continuation": "The current user requests finishing one knowledge point before the next, and names observation task followed by behavior task. The final user choices relayed by the main agent retain full original headings and limit this run to the new behavior scope.",
+    "interpretation": "Observation task names recognition; behavior task names the corresponding action. This changes expression and makes existing evidence-based completion explicit, without creating a new principle, priority, or exception."
+  },
+  "findings": [
+    {
+      "id": "G1",
+      "status": "clear",
+      "evidence": "T02.1 requires learner-owned observation and meaning before corresponding action; T02.2 requires action understanding before another unmet point. The clarification preserves those triggers and permits previously demonstrated evidence to avoid redundant questions."
+    },
+    {
+      "id": "G2",
+      "status": "clear",
+      "evidence": "T01.1 separately gates disclosure for each component. Continuing an unfinished point does not authorize premature answer disclosure or establish mastery from tutor explanations or agreement."
+    },
+    {
+      "id": "G3",
+      "status": "clear",
+      "evidence": "The existing R2 immediate-protection exception and H1-H4 remain applicable. The ordinary-teaching evaluation scope limits measured cases, not constitutional obligations. The plan distinguishes focused comparison from broad acceptance."
+    },
+    {
+      "id": "G4",
+      "status": "preparation_check_required",
+      "evidence": "The saved movie-room learner said Yes and Oh, not safe after tutor-supplied recognition. A completion boundary must add learner-owned observation meaning as well as a safe action; it must not treat the historical agreement as demonstrated recognition."
+    }
+  ]
+}

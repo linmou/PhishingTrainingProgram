@@ -49,17 +49,17 @@ test('gold full understanding traverses actual handler and reducer and excludes 
   const c=fixture();const result=await executeTarget(c,candidate,transport(analysis()));
   assert.equal(result.http_status,200);assert.equal(result.next_state.status,'covered');assert.equal(result.projected_assessment_due,false);
   assert.ok(score(c,result).every(c=>c.status==='pass'));
-  assert.equal(result.calls[0].request.temperature,0);assert.equal(result.calls[0].request.max_tokens,600);assert.equal(result.calls[0].request.enable_thinking,false);
+  assert.equal(result.calls[0].request.temperature,0);assert.equal(result.calls[0].request.max_tokens,2400);assert.equal(result.calls[0].request.enable_thinking,false);
 });
 test('wrong kind fails even with a fluent explanation and valid JSON',async()=>{
   const c=fixture();Object.assign(c.input.items[0],{status:'partially_covered',understanding_level:'basic'});
   const result=await executeTarget(c,candidate,transport(analysis('initial_signal')));
   const checks=score(c,result);assert.equal(checks.find(c=>c.metric==='raw_event').status,'fail');assert.equal(checks.find(c=>c.metric==='assessment_route').status,'fail');
 });
-test('legacy detection-area action filtering is measured separately from raw decision',async()=>{
+test('detection-area targets accept relevant action evidence through the current handler',async()=>{
   const c=fixture('detection_area');const result=await executeTarget(c,candidate,transport(analysis('demonstrated_understanding','action')));
-  assert.equal(result.applied.rejected_events[0].rejection_reason,'EVIDENCE_TYPE_MISMATCH');
-  const checks=score(c,result);assert.equal(checks.find(c=>c.metric==='raw_event').status,'pass');assert.equal(checks.find(c=>c.metric==='applied_state').status,'fail');
+  assert.equal(result.applied.events[0].evidence_type,'action');
+  const checks=score(c,result);assert.equal(checks.find(c=>c.metric==='raw_event').status,'pass');assert.equal(checks.find(c=>c.metric==='applied_state').status,'pass');
 });
 test('invalid JSON, foreign evidence, and truncation stay visible',async()=>{
   const foreign=analysis();foreign.events[0].evidence_message_id='other-message';

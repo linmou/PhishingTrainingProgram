@@ -1,0 +1,20 @@
+{
+  "intent": "Independently verify the additional task-meaning arm against the prior frozen comparison without modifying executed inputs.",
+  "reviewer": "contextual_review; did not author candidate, cases or execution harness",
+  "date": "2026-11-13",
+  "frozen_file": "raw/frozen-v3.json",
+  "fingerprint": "8c5f19e0fb1ecc4fd32daa8d30a3b42aa1ef60cd2055345eb228789bf74f2a43",
+  "verdict": "clear for the focused development comparison; output conformance and final measurement remain separately assessed",
+  "verified": {
+    "snapshot_content_hash_matches_fingerprint": true,
+    "original_54_jobs_exactly_equal_v2": true,
+    "cases_pairs_calibration_settings_metrics_rubrics_judge_system_procedures_equal_v2": true,
+    "new_task_meaning_jobs": 27,
+    "total_jobs": 81,
+    "recipe_replacements_unique_in_each_baseline_system": true,
+    "new_requests_equal_independent_recipe_application": true,
+    "user_messages_unchanged": true
+  },
+  "recipe_sha256": "26d33ea9c1c728837738e67ff805fe08ecf5f47e78e123a9bb39d640f0c66229",
+  "scope": "Nine exposed development cases, three repetitions and three arms. Exact target request equality verified; later source drift is not rewritten into the frozen requests."
+}

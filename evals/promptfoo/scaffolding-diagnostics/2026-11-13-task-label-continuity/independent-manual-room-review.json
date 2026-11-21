@@ -1,0 +1,29 @@
+{
+  "intent": "Assess newly reported repeated tutoring against the actual target's evidence requirement, outside the frozen267-case comparison.",
+  "date": "2026-11-13",
+  "reviewer": "continuity_audit; read-only review of saved room evidence",
+  "source": "raw/manual-room-repetition/evidence.json",
+  "source_sha256": "713972d310221e699f8c32450faa0a7f3737a064e8146d7cfaa2286f00624df5",
+  "room_id": "e48c2016-08f4-4388-8e20-e45f4cba8c8b",
+  "comparison_scope": "New exposed ecological case; not added retrospectively to the frozen267 planned records or scores.",
+  "finding": "Repeated rationale questions exceed the stated task's required evidence. Contextual short answers should be assessed against the target's meaning rather than rejected categorically as too short.",
+  "evidence": {
+    "observation_task": "The post promises a $500 gift card for only five minutes of answering questions.",
+    "behavior_task": "Ask yourself: Would a company really give away so much money for such a small task? Be careful when a reward seems too big.",
+    "learner": ["real ? no", "Not possible"],
+    "context": "The tutor explicitly framed the amount-versus-effort comparison, and Not possible answered that concrete plausibility judgment.",
+    "tracker": "Marked covered/good at11:05:08 based on Not possible, before ordinary tutor repetitions at11:05:45 and11:06:10.",
+    "repeated_prompt": "Would Apple really give $500 for five minutes of work? Why might they not?",
+    "added_requirement": "Think about how much money Apple makes from one person in five minutes. Is it more or less than $500?"
+  },
+  "interpretation": {
+    "target_sufficiency": "The behavior is the plausibility check itself. In this context, rejecting the huge reward for the tiny task expresses that judgment. The target does not require an explanation of Apple's economics or a separate verbal pledge. One contextual answer can satisfy overlapping observation and behavior meanings.",
+    "tracker_role": "The covered label corroborates the interpretation but is not independently authoritative. Completion still follows the actual target and learner history.",
+    "counterevidence": "The tutor's leading wording weakens the evidence for independent generalized mastery. Not possible does not prove transfer or justify the tutor's categorical claim that the offer is certainly fake. These limits do not authorize an unstated causal-rationale requirement or repeated questions until it is met.",
+    "later_okay": "The later ok provides no new mastery evidence, but does not contradict or erase an already demonstrated plausibility judgment.",
+    "assessment_message": "The Mars question is recorded as an assessment with lifecycle delivered, not an ordinary tutor teaching turn or learner evidence.",
+    "causal_limits": "The saved room rows have empty model configuration and null ai_model_used. Exact live model/request identity is not established by this file. The candidate's broad bare-verdict rule is a plausible contributor, not an isolated cause."
+  },
+  "recommendation": "Apply target-specific semantic sufficiency. Accept a brief contextual answer when it performs the required judgment; require a rationale only when the target requires that reasoning or a concrete ambiguity remains. Permit one answer to demonstrate both task meanings. Move to a useful unmet point without contradiction; do not use covered labels alone or impose a universal explanation hurdle.",
+  "policy_status": "This interprets existing short-contextual-evidence and semantic-equivalence requirements. Any broader change to completion criteria should be stated and tested explicitly before acceptance."
+}

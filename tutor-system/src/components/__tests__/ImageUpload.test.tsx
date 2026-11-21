@@ -21,6 +21,103 @@ const mockValidateImageFile = validateImageFile as jest.MockedFunction<typeof va
 const mockUploadAvatarImage = uploadAvatarImage as jest.MockedFunction<typeof uploadAvatarImage>;
 const mockUploadTutorImage = uploadTutorImage as jest.MockedFunction<typeof uploadTutorImage>;
 
+// ImageUpload.tsx: exercise actual upload lifetimes and React commits while simulated progress is capped.
+describe('ImageUpload timer ownership', () => {
+    let finishUpload: (result: Awaited<ReturnType<typeof uploadAvatarImage>>) => void;
+    let rejectUpload: (error: Error) => void;
+
+    beforeEach(() => {
+        jest.useFakeTimers();
+        jest.clearAllMocks();
+        mockValidateImageFile.mockResolvedValue({ isValid: true, errors: [] });
+        const pending = new Promise<Awaited<ReturnType<typeof uploadAvatarImage>>>((resolve, reject) => {
+            finishUpload = resolve;
+            rejectUpload = reject;
+        });
+        mockUploadAvatarImage.mockReturnValue(pending);
+        mockUploadTutorImage.mockReturnValue(pending);
+    });
+
+    afterEach(() => {
+        jest.clearAllTimers();
+        jest.useRealTimers();
+    });
+
+    async function startUpload(uploadType: 'avatar' | 'tutor-image' = 'avatar') {
+        const onSuccess = jest.fn();
+        const onError = jest.fn();
+        const onRender = jest.fn();
+        const view = render(<React.Profiler id="image-upload" onRender={onRender}>
+            <ImageUpload uploadType={uploadType} roomId={uploadType === 'tutor-image' ? 'room-1' : undefined}
+                onUploadSuccess={onSuccess} onUploadError={onError} showPreview={false} />
+        </React.Profiler>);
+        await act(async () => {
+            fireEvent.change(view.container.querySelector('input')!, {
+                target: { files: [new File(['image'], 'photo.jpg', { type: 'image/jpeg' })] },
+            });
+        });
+        fireEvent.click(screen.getByRole('button', { name: uploadType === 'avatar' ? 'Upload Avatar' : 'Upload Image' }));
+        return { ...view, onSuccess, onError, onRender };
+    }
+
+    it.each(['avatar', 'tutor-image'] as const)('caps %s progress without further commits until upload completion', async uploadType => {
+        const view = await startUpload(uploadType);
+        for (let tick = 0; tick < 9; tick += 1) {
+            act(() => { jest.advanceTimersByTime(100); });
+        }
+        expect(screen.getByText('Uploading... 90%')).toBeInTheDocument();
+        // React may render once to bail out the first same-state update after a real update.
+        act(() => { jest.advanceTimersByTime(100); });
+        const commitsAtCap = view.onRender.mock.calls.length;
+        for (let tick = 0; tick < 20; tick += 1) {
+            act(() => { jest.advanceTimersByTime(100); });
+        }
+        expect(screen.getByText('Uploading... 90%')).toBeInTheDocument();
+        expect(view.onRender).toHaveBeenCalledTimes(commitsAtCap);
+        expect(view.onSuccess).not.toHaveBeenCalled();
+        await act(async () => { finishUpload({ success: true, avatarUrl: 'https://example.com/avatar.jpg' }); });
+        expect(view.onSuccess).toHaveBeenCalledTimes(1);
+        expect(screen.queryByText(/Uploading\.\.\./)).not.toBeInTheDocument();
+        expect(jest.getTimerCount()).toBe(1);
+        act(() => { jest.advanceTimersByTime(1000); });
+        expect(jest.getTimerCount()).toBe(0);
+        expect(screen.getByText(/Click to select/)).toBeInTheDocument();
+        view.unmount();
+    });
+
+    it.each(['failure result', 'rejection'])('stops progress and shows errors after an upload %s', async outcome => {
+        const view = await startUpload();
+        act(() => { jest.advanceTimersByTime(2500); });
+        await act(async () => {
+            if (outcome === 'failure result') finishUpload({ success: false, error: 'Upload unavailable' });
+            else rejectUpload(new Error('Upload unavailable'));
+        });
+        expect(view.onError).toHaveBeenCalledWith('Upload unavailable');
+        expect(view.onSuccess).not.toHaveBeenCalled();
+        expect(screen.getByText(/Upload unavailable/)).toBeInTheDocument();
+        expect(jest.getTimerCount()).toBe(0);
+        view.unmount();
+    });
+
+    it('stops pending upload timers on unmount and ignores the eventual result', async () => {
+        const view = await startUpload();
+        expect(jest.getTimerCount()).toBe(1);
+        view.unmount();
+        expect(jest.getTimerCount()).toBe(0);
+        await act(async () => { finishUpload({ success: true }); });
+        expect(view.onSuccess).not.toHaveBeenCalled();
+        expect(jest.getTimerCount()).toBe(0);
+    });
+
+    it('clears the delayed success reset on unmount', async () => {
+        const view = await startUpload();
+        await act(async () => { finishUpload({ success: true }); });
+        expect(jest.getTimerCount()).toBe(1);
+        view.unmount();
+        expect(jest.getTimerCount()).toBe(0);
+    });
+});
+
 // Mock URL.createObjectURL and revokeObjectURL
 global.URL.createObjectURL = jest.fn(() => 'blob:mock-url');
 global.URL.revokeObjectURL = jest.fn();

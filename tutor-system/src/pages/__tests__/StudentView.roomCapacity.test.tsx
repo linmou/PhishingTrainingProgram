@@ -139,6 +139,21 @@ describe('StudentView room capacity', () => {
     expect(insertSession).not.toHaveBeenCalled();
   });
 
+  // FR-12: the learner seat is taken only by this explicit Join, once; the room page itself never claims it.
+  it('claims the empty learner seat once through the explicit Join action', async () => {
+    const { transferAssessmentService } = jest.requireMock('../../services/transferAssessmentService');
+    transferAssessmentService.joinRoom.mockResolvedValueOnce({ room_id: room.id, learner_id: mockAuthUser.id, room_role: 'student' });
+
+    renderStudent();
+    expect(transferAssessmentService.joinRoom).not.toHaveBeenCalled();
+
+    await userEvent.click(await screen.findByRole('button', { name: /join room/i }));
+
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith(`/room/${room.id}`));
+    expect(transferAssessmentService.joinRoom).toHaveBeenCalledTimes(1);
+    expect(transferAssessmentService.joinRoom).toHaveBeenCalledWith(room.id);
+  });
+
   it('allows the current student to rejoin without inserting a duplicate active session', async () => {
     activeSessions = [{ room_id: room.id, student_id: mockAuthUser.id, status: 'active' }];
 
@@ -148,6 +163,9 @@ describe('StudentView room capacity', () => {
 
     expect(mockNavigate).toHaveBeenCalledWith(`/room/${room.id}`);
     expect(insertSession).not.toHaveBeenCalled();
+    // Rejoin re-enters the seat it already holds; the room page records the visit.
+    const { transferAssessmentService } = jest.requireMock('../../services/transferAssessmentService');
+    expect(transferAssessmentService.joinRoom).not.toHaveBeenCalled();
   });
 
   it('enters as observer when another student wins the learner-seat race', async () => {
@@ -181,6 +199,26 @@ describe('StudentView room capacity', () => {
     await userEvent.click(await screen.findByRole('button', { name: /join room/i }));
 
     await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith(`/room/${room.id}`));
+  });
+
+  it('opens the room read-only when the owner falls back to the legacy insert (#112)', async () => {
+    mockAuthUser = { id: room.tutor_id, display_name: 'Tutor One', current_role: 'student' };
+    const { transferAssessmentService } = jest.requireMock('../../services/transferAssessmentService');
+    transferAssessmentService.joinRoom.mockRejectedValueOnce(new Error('Edge Function unavailable'));
+    insertSession.mockImplementationOnce(() => ({
+      select: jest.fn().mockResolvedValue({
+        data: null, error: { code: '23514', message: 'OWNER_CANNOT_BE_LEARNER' },
+      }),
+    }));
+    window.sessionStorage.clear();
+
+    renderStudent();
+
+    await userEvent.click(await screen.findByRole('button', { name: /join room/i }));
+
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith(`/room/${room.id}`));
+    expect(window.sessionStorage.getItem(`room-observer:${room.id}`)).toBe('true');
+    expect(screen.queryByText(/failed to join the room/i)).toBeNull();
   });
 
   it('does not count active sessions without a student as room occupancy', async () => {

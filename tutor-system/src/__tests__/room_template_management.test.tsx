@@ -40,7 +40,7 @@ jest.mock('../services/supabase', () => ({
 }));
 
 jest.mock('../services/aiService', () => ({
-    DEFAULT_AI_MODEL: 'qwen3.5-flash',
+    OAI_MODEL: 'qwen3.5-flash',
     initializeAIAssistant: jest.fn().mockResolvedValue('room-ai-id'),
     updateAIConfig: jest.fn().mockResolvedValue({}),
     getAIConfig: jest.fn().mockResolvedValue({

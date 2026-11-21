@@ -2,7 +2,7 @@
 
 Intent: document browser and trusted Supabase service boundaries.
 
-Updated: 2026-10-27
+Updated: 2026-11-08. Maintenance baseline commit: `a69b836`.
 Integrated release commit: `dc83330`
 
 ## Purpose
@@ -164,18 +164,33 @@ export const validateRoomPassword = async (roomId: string, password: string)
 - **Duplicate handling**: Replaces existing avatars
 - **Profile integration**: Automatic profile URL updates
 
-### Tutor Image Management (Lines 469-602)
-**Operations**:
-- `uploadTutorImage(file, roomId)`: Room-specific image uploads
-- `deleteTutorImage(imageId)`: Soft delete with storage cleanup
-- `getTutorImages(roomId?)`: Retrieve tutor's uploaded images
+### Tutor Image Management
 
-**Security**: Ownership verification for all operations
-**Storage Model**: User-scoped directories with timestamp prefixes
+`imageUpload.ts` owns tutor-image upload and deletion. `ImageUpload.tsx` imports that
+module directly; the duplicate `supabase.ts` upload/delete exports have been retired.
+This private frontend package has no published library entrypoint. The repository
+consumer inventory and decision are recorded in the [maintenance record](doc_update_record/documentation_update_record_v2026_11_08_image_timers.md).
+
+- `uploadTutorImage(file, roomId)` returns `ImageUploadResult`, requires an
+  authenticated user with the current tutor role and ownership of the room, and
+  validates image MIME type, extension and the 5 MB limit before storage upload.
+  Files use `tutor-images/<user-id>/<timestamp>-<original-filename>`; metadata is
+  inserted into `tutor_images`. A database insert failure triggers storage cleanup.
+- `deleteTutorImage(imageId)` returns `ImageUploadResult`, verifies authenticated
+  image ownership, removes the stored object, then marks `is_active: false`.
+  Deletion keeps its existing ownership contract even if the owner's current role
+  changed; it does not hard-delete metadata. Storage failure prevents the metadata
+  update. A database failure after storage removal is reported as a failure.
+- `getTutorImages(roomId?)` remains in `supabase.ts` and retrieves the tutor's images.
+
+The upload UI caps simulated progress at 90% until success, retaining the same
+state for capped ticks. Completion sets 100%; failure resets progress and reports
+the error. Progress intervals and the delayed success reset belong to the mounted
+upload component and are cleared on settlement or unmount as applicable.
 
 ## Feedback System
 
-### Message Feedback (Lines 605-793)
+### Message Feedback
 **Core Operations**:
 ```typescript
 submitMessageFeedback(messageId, userId, roomId, feedbackType, rating)

@@ -29,9 +29,9 @@ For the people who plan and build the platform: before a new feature is built, t
 - R4 (prd FR-4, FR-5, FR-6, FR-7, FR-8, FR-9): A tutor creates a room of one practice type, fixed at creation, from a template of that practice type; test rooms stay out of teaching lists; the owner sees the rooms they own and can delete one after confirming.
 - R5 (prd FR-14, FR-15, FR-16, NFR-8): Every participant sees the same live conversation within about 2 seconds, and the learner rates every tutor reply before writing again.
 - R6 (prd FR-18, FR-19, FR-20, FR-44, NFR-9): Every learner has learner-owned learning targets; each learner message is judged against each target on the server; the quality of that judging is governed by the AI behavior specifications.
-- R7 (prd FR-21, FR-22, FR-23, FR-53): Learning progress moves only through the defined states and events, is shown to the room owner, can be corrected by hand by the room owner, and pauses while Guard is on.
+- R7 (prd FR-21, FR-22, FR-23, FR-53, NFR-8): Learning progress moves only through the defined states and events, updates automatically for the room owner and learner without interrupting edits, can be corrected by hand by the room owner, and pauses while Guard is on.
 - R8 (prd FR-24 to FR-29, NFR-9, NFR-10): The room owner requests an AI suggestion, reviews, edits and sends it, and sets the AI role; a change of AI model or prompt is re-evaluated before release.
-- R9 (prd FR-31 to FR-43, NFR-3): When a learner moves a learning target from Partial to Covered, a transfer assessment becomes due; the room owner reviews and sends or rejects it; the learner answers with option controls; the server grades up to two attempts and saves result messages, publishing the correct answer only after the second wrong attempt.
+- R9 (prd FR-31 to FR-43, FR-54, NFR-3): When a learner moves a learning target from Partial to Covered, a transfer assessment becomes due; the room owner reviews and sends or rejects it; the learner answers with option controls; the server grades up to two attempts and saves result messages, publishing the correct answer only after the second wrong attempt. While the temporary exit assessment is in force, a transfer assessment becomes due for every learning target the learner's own learning event makes Covered, whether from Pending, from Partial or by spontaneous transfer, and the learner answers open transfer assessments in a pop-up when leaving the room instead of in the conversation.
 - R10 (prd FR-7, FR-44 to FR-49): In a cyberbullying room the learner writes about a scenario from a cyberbullying template, the server judges against five shared learning targets, and the room owner replies through reviewed character drafts that every participant sees under the same character.
 - R11 (prd FR-50, FR-51): Every participant can download the room's export, and the room owner's reviews of AI drafts are recorded for later analysis.
 - R12 (prd NFR-2, NFR-5, NFR-6, NFR-7, NFR-11): Grading and progress are decided on the server, repeating a request has no duplicate effect, state survives reloads and several tabs, failures are visible, and an outdated client is told to reload.
@@ -39,7 +39,7 @@ For the people who plan and build the platform: before a new feature is built, t
 
 ## Constraints
 
-- The product constitution binds every epic: no AI text reaches a learner without the room owner's send (constitution C1); progress changes only from the learner's contributions or the owner's recorded edit (C2); the server decides grades and progress (C3); data is deleted only by an owner's confirmed room deletion (C4); private assessment material appears only at its publication point (C5); AI provider credentials never reach the browser (C6).
+- The product constitution binds every epic: no AI text reaches a learner without the room owner's send (constitution C1); progress and assessment results change only from the learner's recorded contributions, judged by the product's rules, or the owner's recorded edit (C2); data is deleted only by an owner's confirmed room deletion (C4); AI provider credentials never reach the browser (C6).
 - Conflicts between principles are decided by the constitution's priority rules R1 to R8, not inside an epic.
 - Every epic that touches shared state follows the architecture spine (AD-1 to AD-14), in particular one writer per progress and assessment entity (AD-1), the trusted judging path (AD-2), derived assessment due (AD-3), Guard defers progress (AD-5), roles from the room (AD-8) and no secrets in public tables (AD-12).
 
@@ -67,3 +67,5 @@ This initiative covers the platform as built; it does not change behavior. Out: 
 ## Notes
 
 - Assumption: A tutor who is not the room owner takes part as an observer (prd section 12).
+
+- Approved extension 2026-11-12 (#75): R7 includes automatic progress visibility under FR-23/NFR-8. Its implementation and hosted acceptance are tracked separately from this baseline.

@@ -4,17 +4,23 @@
  */
 
 import { supabase } from './supabase';
-import { ConversationMessage } from '../types';
+import { ConversationMessage, PrePopulatedMessage, Room, TutorBehaviorDecision } from '../types';
 import {
     formatRoomScenarioContext,
     prePopulatedToContextMessages
 } from './ecologicalTutorCall';
-import { DEFAULT_AI_MODEL } from './aiModels';
+import { OAI_MODEL } from './aiModels';
 import { orderAssessmentMessages, parseAssessmentEvent, renderAssessment } from './assessmentRendering';
 import type { AssessmentEvent, AssessmentOption } from '../types/assessment';
 import { transferAssessmentService } from './transferAssessmentService';
+import { parseTutorDecision } from './tutorDecisionContract';
+import { formatTutorResponseHistory } from './tutorResponseHistory';
 
 const HISTORY_COLUMNS='id, content, user_role, user_id, parent_message_id, response_mode, character, persona_id, persona_name, created_at, assessment_id, assessment_options, assessment_selection_type, assessment_student_id, assessment_event';
+
+export type AIContextRoom = Pick<Room, 'title' | 'description' | 'created_at'> & {
+    pre_populated_dialogue?: PrePopulatedMessage[] | { posts?: any[] } | null;
+};
 
 /**
  * Build AI conversation context directly from existing tables
@@ -24,17 +30,22 @@ const HISTORY_COLUMNS='id, content, user_role, user_id, parent_message_id, respo
  * rows are not yet in `messages`. Include it so the model sees the same
  * discussion the tutor sees when pressing ✨ AI.
  */
-export async function buildAIContextFromExistingData(roomId: string, expectedAssessmentResultIds: ReadonlyArray<string> = [], focusStudentId?:string): Promise<ConversationMessage[]> {
+export async function buildAIContextFromExistingData(roomId: string, expectedAssessmentResultIds: ReadonlyArray<string> = [], focusStudentId?:string, roomSnapshot?: AIContextRoom, includeTutorOutputs = false): Promise<ConversationMessage[]> {
     try {
         console.log('🔄 Building AI context from existing room and message data');
 
-        // Get room context (the phishing scenario being discussed)
-        const { data: room, error: roomError } = await supabase
-            .from('rooms')
-            .select('title, description, pre_populated_dialogue, created_at')
-            .eq('id', roomId)
-            .single();
-        if (roomError) throw roomError;
+        // Suggestion generation supplies its request snapshot; standalone callers
+        // acquire their own room context at this boundary.
+        let room = roomSnapshot;
+        if (!room) {
+            const { data, error } = await supabase
+                .from('rooms')
+                .select('title, description, pre_populated_dialogue, created_at')
+                .eq('id', roomId)
+                .single();
+            if (error) throw error;
+            room = data;
+        }
 
         // Read the full discussion in pages, including rooms beyond the server row cap.
         const pageSize = 1000;
@@ -81,7 +92,7 @@ export async function buildAIContextFromExistingData(roomId: string, expectedAss
         let handledAnswerIds: string[]=[];
         if (latestQuestion?.assessment_id) {
             // This common boundary applies to initial, focused and regenerated calls, including disabled transfer rooms.
-            const review=await transferAssessmentService.readReview(roomId,latestQuestion.assessment_id);
+            const review=await transferAssessmentService.readAssessmentHistory(roomId,latestQuestion.assessment_id);
             const readiness=review?.history_readiness;
             if (!readiness || !readiness.ready || !Array.isArray(readiness.result_message_ids) ||
                 !Array.isArray(readiness.pending_answer_message_ids) || readiness.pending_answer_message_ids.length ||
@@ -120,6 +131,45 @@ export async function buildAIContextFromExistingData(roomId: string, expectedAss
             if (event && (!messages.some(candidate => candidate.id===event.question_message_id && candidate.assessment_options) ||
                 (event.kind==='result' && !messages.some(candidate => candidate.id===event.answer_message_id && candidate.user_id===event.student_id)))) {
                 throw new Error('ASSESSMENT_RESULT_UNAVAILABLE: Assessment dialogue is incomplete.');
+            }
+        }
+        const tutorOutputs = new Map<string, TutorBehaviorDecision>();
+        const tutorMessages = new Map(messages.filter(message => message.user_role === 'tutor' &&
+            !message.assessment_id && !message.assessment_event && !message.persona_id).map(message => [message.id, message]));
+        // Only tutor-generation callers request private model metadata. Other context
+        // consumers retain the public discussion. Existing reviewed-send records own it.
+        if (includeTutorOutputs && tutorMessages.size) {
+            let feedbackCursor: { id: string; created_at: string } | null = null;
+            while (true) {
+                const query = supabase.from('ai_suggestion_feedback')
+                    .select('id, created_at, tutor_message_id, tutor_id, tutor_action, ai_suggestion, raw_guard_mode, raw_instruction, guard_reason')
+                    .eq('room_id', roomId)
+                    .in('tutor_action', ['accepted', 'modified'])
+                    .order('created_at', { ascending: true }).order('id', { ascending: true });
+                if (feedbackCursor) {
+                    query.or(`created_at.gt.${feedbackCursor.created_at},and(created_at.eq.${feedbackCursor.created_at},id.gt.${feedbackCursor.id})`);
+                }
+                const { data: page, error } = await query.range(0, pageSize - 1);
+                if (error) throw new Error(`Tutor response history unavailable: ${error.message}`);
+                if (!page || !page.length) break;
+                for (const feedback of page) {
+                    const message = tutorMessages.get(feedback.tutor_message_id);
+                    if (!message || feedback.tutor_id !== message.user_id ||
+                        !['accepted', 'modified'].includes(feedback.tutor_action)) continue;
+                    // Older/manual records have no complete model contract. Keep their
+                    // posted text rather than inventing a reason or instructional decision.
+                    if (feedback.raw_guard_mode == null || feedback.raw_instruction === undefined ||
+                        !feedback.guard_reason || !feedback.ai_suggestion ||
+                        (feedback.raw_instruction === null && !feedback.raw_guard_mode)) continue;
+                    const output = parseTutorDecision(JSON.stringify({
+                        reason: feedback.guard_reason,
+                        decision: { guard_mode: feedback.raw_guard_mode, instruction: feedback.raw_instruction },
+                        response: feedback.ai_suggestion
+                    }));
+                    if (tutorOutputs.has(message.id)) throw new Error(`Ambiguous tutor response history for ${message.id}`);
+                    tutorOutputs.set(message.id, output);
+                }
+                feedbackCursor = page[page.length - 1];
             }
         }
         const context: ConversationMessage[] = [];
@@ -187,7 +237,9 @@ export async function buildAIContextFromExistingData(roomId: string, expectedAss
                 
                 context.push({
                     role,
-                    content: prefix + msg.content,
+                    content: tutorOutputs.has(msg.id)
+                        ? formatTutorResponseHistory(tutorOutputs.get(msg.id)!, msg.content, msg.response_mode === 'guard')
+                        : prefix + msg.content,
                     timestamp: new Date(msg.created_at).getTime() / 1000
                 });
             });
@@ -214,7 +266,7 @@ export async function getAIConfigFromRoom(roomId: string) {
 
     if (!room?.ai_assistant_enabled) {
         return {
-            model_name: DEFAULT_AI_MODEL,
+            model_name: OAI_MODEL,
             system_prompt: 'You are a helpful AI assistant in a phishing training session.',
             temperature: 0.7,
             max_tokens: 150
@@ -222,7 +274,7 @@ export async function getAIConfigFromRoom(roomId: string) {
     }
 
     return {
-        model_name: DEFAULT_AI_MODEL,
+        model_name: OAI_MODEL,
         system_prompt: room.ai_assistant_prompt || 'You are a helpful AI assistant in a phishing training session.',
         temperature: 0.7,
         max_tokens: 150

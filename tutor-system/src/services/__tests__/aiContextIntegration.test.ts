@@ -6,7 +6,7 @@
 import { buildAIContextFromExistingData } from '../simplifiedAIContext';
 import { generateSystemPrompt } from '../systemPrompts';
 import { getAIConfig } from '../aiService';
-import { DEFAULT_AI_MODEL } from '../aiModels';
+import { OAI_MODEL } from '../aiModels';
 
 // Mock the supabase client
 jest.mock('../supabase', () => ({
@@ -342,7 +342,7 @@ describe('AI config loading edge cases', () => {
     await expect(getAIConfig(roomId)).resolves.toMatchObject({
       id: roomId,
       room_id: roomId,
-      model_name: DEFAULT_AI_MODEL,
+      model_name: OAI_MODEL,
       system_prompt: 'Use the room-level tutor guidance.',
       is_active: true
     });

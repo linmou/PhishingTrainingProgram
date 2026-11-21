@@ -51,7 +51,7 @@ jest.mock('../../services/aiService', () => ({
   recordAISuggestionFeedback: jest.fn(),
   updateAIConfig: jest.fn(),
   getAIConfig: jest.fn(),
-  DEFAULT_AI_MODEL: 'qwen3.5-flash',
+  OAI_MODEL: 'qwen3.5-flash',
 }));
 
 jest.mock('../AuthContext', () => ({ useAuth: jest.fn() }));

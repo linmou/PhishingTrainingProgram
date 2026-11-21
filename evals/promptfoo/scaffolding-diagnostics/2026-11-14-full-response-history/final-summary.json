@@ -1,0 +1,690 @@
+{
+  "intent": "Compact machine results; independent interpretation is recorded separately.",
+  "fingerprint": "0f6e1f0a5c7758bfac33e24f28d82409b73d74210c1bd3e9b0b9c6c09fbc5296",
+  "summary_source": "raw/summary-1794694892759.json",
+  "summary_sha256": "030b0dd2926c737c8b2a5d5761785a3b8177a278d9b7ef09498c7edd5ad39a2b",
+  "overall": {
+    "baseline": {
+      "expected": 36,
+      "valid": 36,
+      "metrics": {
+        "contextual_progression": {
+          "pass": 23,
+          "fail": 13,
+          "error": 0,
+          "missing": 0
+        },
+        "unfinished_prerequisite": {
+          "pass": 34,
+          "fail": 2,
+          "error": 0,
+          "missing": 0
+        },
+        "component_disclosure": {
+          "pass": 32,
+          "fail": 4,
+          "error": 0,
+          "missing": 0
+        }
+      },
+      "joint": 21
+    },
+    "full_history": {
+      "expected": 36,
+      "valid": 36,
+      "metrics": {
+        "contextual_progression": {
+          "pass": 22,
+          "fail": 14,
+          "error": 0,
+          "missing": 0
+        },
+        "unfinished_prerequisite": {
+          "pass": 33,
+          "fail": 2,
+          "error": 1,
+          "missing": 0
+        },
+        "component_disclosure": {
+          "pass": 31,
+          "fail": 5,
+          "error": 0,
+          "missing": 0
+        }
+      },
+      "joint": 18
+    }
+  },
+  "by_turn": {
+    "1": {
+      "baseline": {
+        "expected": 18,
+        "valid": 18,
+        "metrics": {
+          "contextual_progression": {
+            "pass": 14,
+            "fail": 4,
+            "error": 0,
+            "missing": 0
+          },
+          "unfinished_prerequisite": {
+            "pass": 18,
+            "fail": 0,
+            "error": 0,
+            "missing": 0
+          },
+          "component_disclosure": {
+            "pass": 18,
+            "fail": 0,
+            "error": 0,
+            "missing": 0
+          }
+        },
+        "joint": 14
+      },
+      "full_history": {
+        "expected": 18,
+        "valid": 18,
+        "metrics": {
+          "contextual_progression": {
+            "pass": 12,
+            "fail": 6,
+            "error": 0,
+            "missing": 0
+          },
+          "unfinished_prerequisite": {
+            "pass": 18,
+            "fail": 0,
+            "error": 0,
+            "missing": 0
+          },
+          "component_disclosure": {
+            "pass": 17,
+            "fail": 1,
+            "error": 0,
+            "missing": 0
+          }
+        },
+        "joint": 11
+      }
+    },
+    "2": {
+      "baseline": {
+        "expected": 18,
+        "valid": 18,
+        "metrics": {
+          "contextual_progression": {
+            "pass": 9,
+            "fail": 9,
+            "error": 0,
+            "missing": 0
+          },
+          "unfinished_prerequisite": {
+            "pass": 16,
+            "fail": 2,
+            "error": 0,
+            "missing": 0
+          },
+          "component_disclosure": {
+            "pass": 14,
+            "fail": 4,
+            "error": 0,
+            "missing": 0
+          }
+        },
+        "joint": 7
+      },
+      "full_history": {
+        "expected": 18,
+        "valid": 18,
+        "metrics": {
+          "contextual_progression": {
+            "pass": 10,
+            "fail": 8,
+            "error": 0,
+            "missing": 0
+          },
+          "unfinished_prerequisite": {
+            "pass": 15,
+            "fail": 2,
+            "error": 1,
+            "missing": 0
+          },
+          "component_disclosure": {
+            "pass": 14,
+            "fail": 4,
+            "error": 0,
+            "missing": 0
+          }
+        },
+        "joint": 7
+      }
+    }
+  },
+  "by_case": {
+    "gift_card_contextual_judgment_real": {
+      "baseline": {
+        "expected": 6,
+        "valid": 6,
+        "metrics": {
+          "contextual_progression": {
+            "pass": 5,
+            "fail": 1,
+            "error": 0,
+            "missing": 0
+          },
+          "unfinished_prerequisite": {
+            "pass": 5,
+            "fail": 1,
+            "error": 0,
+            "missing": 0
+          },
+          "component_disclosure": {
+            "pass": 4,
+            "fail": 2,
+            "error": 0,
+            "missing": 0
+          }
+        },
+        "joint": 4
+      },
+      "full_history": {
+        "expected": 6,
+        "valid": 6,
+        "metrics": {
+          "contextual_progression": {
+            "pass": 3,
+            "fail": 3,
+            "error": 0,
+            "missing": 0
+          },
+          "unfinished_prerequisite": {
+            "pass": 5,
+            "fail": 0,
+            "error": 1,
+            "missing": 0
+          },
+          "component_disclosure": {
+            "pass": 3,
+            "fail": 3,
+            "error": 0,
+            "missing": 0
+          }
+        },
+        "joint": 0
+      }
+    },
+    "library_contextual_judgment": {
+      "baseline": {
+        "expected": 6,
+        "valid": 6,
+        "metrics": {
+          "contextual_progression": {
+            "pass": 3,
+            "fail": 3,
+            "error": 0,
+            "missing": 0
+          },
+          "unfinished_prerequisite": {
+            "pass": 5,
+            "fail": 1,
+            "error": 0,
+            "missing": 0
+          },
+          "component_disclosure": {
+            "pass": 4,
+            "fail": 2,
+            "error": 0,
+            "missing": 0
+          }
+        },
+        "joint": 2
+      },
+      "full_history": {
+        "expected": 6,
+        "valid": 6,
+        "metrics": {
+          "contextual_progression": {
+            "pass": 3,
+            "fail": 3,
+            "error": 0,
+            "missing": 0
+          },
+          "unfinished_prerequisite": {
+            "pass": 4,
+            "fail": 2,
+            "error": 0,
+            "missing": 0
+          },
+          "component_disclosure": {
+            "pass": 6,
+            "fail": 0,
+            "error": 0,
+            "missing": 0
+          }
+        },
+        "joint": 2
+      }
+    },
+    "library_agreement_only": {
+      "baseline": {
+        "expected": 6,
+        "valid": 6,
+        "metrics": {
+          "contextual_progression": {
+            "pass": 6,
+            "fail": 0,
+            "error": 0,
+            "missing": 0
+          },
+          "unfinished_prerequisite": {
+            "pass": 6,
+            "fail": 0,
+            "error": 0,
+            "missing": 0
+          },
+          "component_disclosure": {
+            "pass": 6,
+            "fail": 0,
+            "error": 0,
+            "missing": 0
+          }
+        },
+        "joint": 6
+      },
+      "full_history": {
+        "expected": 6,
+        "valid": 6,
+        "metrics": {
+          "contextual_progression": {
+            "pass": 6,
+            "fail": 0,
+            "error": 0,
+            "missing": 0
+          },
+          "unfinished_prerequisite": {
+            "pass": 6,
+            "fail": 0,
+            "error": 0,
+            "missing": 0
+          },
+          "component_disclosure": {
+            "pass": 6,
+            "fail": 0,
+            "error": 0,
+            "missing": 0
+          }
+        },
+        "joint": 6
+      }
+    },
+    "event_one_answer_covers_overlapping_points": {
+      "baseline": {
+        "expected": 6,
+        "valid": 6,
+        "metrics": {
+          "contextual_progression": {
+            "pass": 0,
+            "fail": 6,
+            "error": 0,
+            "missing": 0
+          },
+          "unfinished_prerequisite": {
+            "pass": 6,
+            "fail": 0,
+            "error": 0,
+            "missing": 0
+          },
+          "component_disclosure": {
+            "pass": 6,
+            "fail": 0,
+            "error": 0,
+            "missing": 0
+          }
+        },
+        "joint": 0
+      },
+      "full_history": {
+        "expected": 6,
+        "valid": 6,
+        "metrics": {
+          "contextual_progression": {
+            "pass": 0,
+            "fail": 6,
+            "error": 0,
+            "missing": 0
+          },
+          "unfinished_prerequisite": {
+            "pass": 6,
+            "fail": 0,
+            "error": 0,
+            "missing": 0
+          },
+          "component_disclosure": {
+            "pass": 5,
+            "fail": 1,
+            "error": 0,
+            "missing": 0
+          }
+        },
+        "joint": 0
+      }
+    },
+    "phone_contradiction_after_completed_task": {
+      "baseline": {
+        "expected": 6,
+        "valid": 6,
+        "metrics": {
+          "contextual_progression": {
+            "pass": 3,
+            "fail": 3,
+            "error": 0,
+            "missing": 0
+          },
+          "unfinished_prerequisite": {
+            "pass": 6,
+            "fail": 0,
+            "error": 0,
+            "missing": 0
+          },
+          "component_disclosure": {
+            "pass": 6,
+            "fail": 0,
+            "error": 0,
+            "missing": 0
+          }
+        },
+        "joint": 3
+      },
+      "full_history": {
+        "expected": 6,
+        "valid": 6,
+        "metrics": {
+          "contextual_progression": {
+            "pass": 4,
+            "fail": 2,
+            "error": 0,
+            "missing": 0
+          },
+          "unfinished_prerequisite": {
+            "pass": 6,
+            "fail": 0,
+            "error": 0,
+            "missing": 0
+          },
+          "component_disclosure": {
+            "pass": 5,
+            "fail": 1,
+            "error": 0,
+            "missing": 0
+          }
+        },
+        "joint": 4
+      }
+    },
+    "library_all_tasks_completed": {
+      "baseline": {
+        "expected": 6,
+        "valid": 6,
+        "metrics": {
+          "contextual_progression": {
+            "pass": 6,
+            "fail": 0,
+            "error": 0,
+            "missing": 0
+          },
+          "unfinished_prerequisite": {
+            "pass": 6,
+            "fail": 0,
+            "error": 0,
+            "missing": 0
+          },
+          "component_disclosure": {
+            "pass": 6,
+            "fail": 0,
+            "error": 0,
+            "missing": 0
+          }
+        },
+        "joint": 6
+      },
+      "full_history": {
+        "expected": 6,
+        "valid": 6,
+        "metrics": {
+          "contextual_progression": {
+            "pass": 6,
+            "fail": 0,
+            "error": 0,
+            "missing": 0
+          },
+          "unfinished_prerequisite": {
+            "pass": 6,
+            "fail": 0,
+            "error": 0,
+            "missing": 0
+          },
+          "component_disclosure": {
+            "pass": 6,
+            "fail": 0,
+            "error": 0,
+            "missing": 0
+          }
+        },
+        "joint": 6
+      }
+    }
+  },
+  "transitions": {
+    "contextual_progression": [
+      {
+        "baseline": "gift_card_contextual_judgment_real__baseline__r1__t1",
+        "candidate": "gift_card_contextual_judgment_real__full_history__r1__t1",
+        "from": "pass",
+        "to": "fail"
+      },
+      {
+        "baseline": "gift_card_contextual_judgment_real__baseline__r1__t2",
+        "candidate": "gift_card_contextual_judgment_real__full_history__r1__t2",
+        "from": "pass",
+        "to": "fail"
+      },
+      {
+        "baseline": "gift_card_contextual_judgment_real__baseline__r2__t2",
+        "candidate": "gift_card_contextual_judgment_real__full_history__r2__t2",
+        "from": "fail",
+        "to": "pass"
+      },
+      {
+        "baseline": "gift_card_contextual_judgment_real__baseline__r3__t1",
+        "candidate": "gift_card_contextual_judgment_real__full_history__r3__t1",
+        "from": "pass",
+        "to": "fail"
+      },
+      {
+        "baseline": "library_contextual_judgment__baseline__r2__t2",
+        "candidate": "library_contextual_judgment__full_history__r2__t2",
+        "from": "pass",
+        "to": "fail"
+      },
+      {
+        "baseline": "library_contextual_judgment__baseline__r3__t2",
+        "candidate": "library_contextual_judgment__full_history__r3__t2",
+        "from": "fail",
+        "to": "pass"
+      },
+      {
+        "baseline": "phone_contradiction_after_completed_task__baseline__r2__t2",
+        "candidate": "phone_contradiction_after_completed_task__full_history__r2__t2",
+        "from": "fail",
+        "to": "pass"
+      }
+    ],
+    "unfinished_prerequisite": [
+      {
+        "baseline": "gift_card_contextual_judgment_real__baseline__r2__t2",
+        "candidate": "gift_card_contextual_judgment_real__full_history__r2__t2",
+        "from": "fail",
+        "to": "error"
+      },
+      {
+        "baseline": "library_contextual_judgment__baseline__r1__t2",
+        "candidate": "library_contextual_judgment__full_history__r1__t2",
+        "from": "pass",
+        "to": "fail"
+      },
+      {
+        "baseline": "library_contextual_judgment__baseline__r2__t2",
+        "candidate": "library_contextual_judgment__full_history__r2__t2",
+        "from": "fail",
+        "to": "pass"
+      },
+      {
+        "baseline": "library_contextual_judgment__baseline__r3__t2",
+        "candidate": "library_contextual_judgment__full_history__r3__t2",
+        "from": "pass",
+        "to": "fail"
+      }
+    ],
+    "component_disclosure": [
+      {
+        "baseline": "gift_card_contextual_judgment_real__baseline__r1__t2",
+        "candidate": "gift_card_contextual_judgment_real__full_history__r1__t2",
+        "from": "pass",
+        "to": "fail"
+      },
+      {
+        "baseline": "gift_card_contextual_judgment_real__baseline__r2__t1",
+        "candidate": "gift_card_contextual_judgment_real__full_history__r2__t1",
+        "from": "pass",
+        "to": "fail"
+      },
+      {
+        "baseline": "gift_card_contextual_judgment_real__baseline__r2__t2",
+        "candidate": "gift_card_contextual_judgment_real__full_history__r2__t2",
+        "from": "fail",
+        "to": "pass"
+      },
+      {
+        "baseline": "library_contextual_judgment__baseline__r1__t2",
+        "candidate": "library_contextual_judgment__full_history__r1__t2",
+        "from": "fail",
+        "to": "pass"
+      },
+      {
+        "baseline": "library_contextual_judgment__baseline__r2__t2",
+        "candidate": "library_contextual_judgment__full_history__r2__t2",
+        "from": "fail",
+        "to": "pass"
+      },
+      {
+        "baseline": "event_one_answer_covers_overlapping_points__baseline__r1__t2",
+        "candidate": "event_one_answer_covers_overlapping_points__full_history__r1__t2",
+        "from": "pass",
+        "to": "fail"
+      },
+      {
+        "baseline": "phone_contradiction_after_completed_task__baseline__r1__t2",
+        "candidate": "phone_contradiction_after_completed_task__full_history__r1__t2",
+        "from": "pass",
+        "to": "fail"
+      }
+    ]
+  },
+  "length_and_repetition": {
+    "baseline": {
+      "reason_words_mean": 21.333333333333332,
+      "reason_words_max": 33,
+      "reason_over_40": 0,
+      "verbatim_followup_repeats": []
+    },
+    "full_history": {
+      "reason_words_mean": 36.69444444444444,
+      "reason_words_max": 197,
+      "reason_over_40": 7,
+      "verbatim_followup_repeats": [
+        "library_agreement_only__full_history__r1__t2",
+        "library_agreement_only__full_history__r3__t2",
+        "library_all_tasks_completed__full_history__r1__t2"
+      ]
+    }
+  },
+  "joint_pairs": {
+    "baseline": {
+      "1": {
+        "contextual_progression__unfinished_prerequisite": {
+          "both_pass": 14,
+          "only_first": 0,
+          "only_second": 4,
+          "both_fail": 0,
+          "unevaluable": 0,
+          "expected": 18
+        },
+        "contextual_progression__component_disclosure": {
+          "both_pass": 14,
+          "only_first": 0,
+          "only_second": 4,
+          "both_fail": 0,
+          "unevaluable": 0,
+          "expected": 18
+        }
+      },
+      "2": {
+        "contextual_progression__unfinished_prerequisite": {
+          "both_pass": 8,
+          "only_first": 1,
+          "only_second": 8,
+          "both_fail": 1,
+          "unevaluable": 0,
+          "expected": 18
+        },
+        "contextual_progression__component_disclosure": {
+          "both_pass": 7,
+          "only_first": 2,
+          "only_second": 7,
+          "both_fail": 2,
+          "unevaluable": 0,
+          "expected": 18
+        }
+      }
+    },
+    "full_history": {
+      "1": {
+        "contextual_progression__unfinished_prerequisite": {
+          "both_pass": 12,
+          "only_first": 0,
+          "only_second": 6,
+          "both_fail": 0,
+          "unevaluable": 0,
+          "expected": 18
+        },
+        "contextual_progression__component_disclosure": {
+          "both_pass": 11,
+          "only_first": 1,
+          "only_second": 6,
+          "both_fail": 0,
+          "unevaluable": 0,
+          "expected": 18
+        }
+      },
+      "2": {
+        "contextual_progression__unfinished_prerequisite": {
+          "both_pass": 8,
+          "only_first": 1,
+          "only_second": 7,
+          "both_fail": 1,
+          "unevaluable": 1,
+          "expected": 18
+        },
+        "contextual_progression__component_disclosure": {
+          "both_pass": 9,
+          "only_first": 1,
+          "only_second": 5,
+          "both_fail": 3,
+          "unevaluable": 0,
+          "expected": 18
+        }
+      }
+    }
+  }
+}

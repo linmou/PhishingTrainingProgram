@@ -1,0 +1,1585 @@
+{
+  "intent": "Retain locally saved immutable raw evidence by hash.",
+  "fingerprint": "0f6e1f0a5c7758bfac33e24f28d82409b73d74210c1bd3e9b0b9c6c09fbc5296",
+  "directory": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/tutor-stage-scaffolding/evals/promptfoo/scaffolding-diagnostics/2026-11-14-full-response-history/raw",
+  "files": 315,
+  "bytes": 16378340,
+  "manifest_sha256": "a79b415ecd9d5a158ab55f26a433feaeaf0bafc3c57aa4ad4654937551dc8a94",
+  "records": [
+    {
+      "path": "raw/calibration-summary-1794694010409.json",
+      "bytes": 2473,
+      "sha256": "af81deba7a0edfd3f13d1db460aae299649a03846fb8e1be223fa8ec8bf9fcd7"
+    },
+    {
+      "path": "raw/calibration-summary-1794694311467.json",
+      "bytes": 2473,
+      "sha256": "f73c02b07af4b5770a1f5df7fb8306feac90ae145dc5070311197cedde9d9607"
+    },
+    {
+      "path": "raw/calibration/agreement_premature_next_fail__component_disclosure__component_disclosure.json",
+      "bytes": 28716,
+      "sha256": "5597d33aedaa650263ab98a67c3e4c0369e9a6a87111c8a9becac142b8def52c"
+    },
+    {
+      "path": "raw/calibration/agreement_premature_next_fail__contextual_progression__contextual_progression.json",
+      "bytes": 26858,
+      "sha256": "2533916fe947de9a090495576a0897a9b3d1bc791076252052537ea519959986"
+    },
+    {
+      "path": "raw/calibration/agreement_premature_next_fail__unfinished_prerequisite__unfinished_prerequisite.json",
+      "bytes": 41088,
+      "sha256": "f0af6b93d6b6dea9b113e731c547b41b99a39e0629cb0029ed6c1f9d8814d00c"
+    },
+    {
+      "path": "raw/calibration/all_completed_consolidation_pass__contextual_progression__contextual_progression.json",
+      "bytes": 25961,
+      "sha256": "66b060c0afd9546bc71069de532a4ca6cf57c8addb3d030535baecc3f4320feb"
+    },
+    {
+      "path": "raw/calibration/all_completed_extra_test_fail__contextual_progression__contextual_progression.json",
+      "bytes": 27548,
+      "sha256": "688ee3351deb29085428ce2c4fbdfceff08414ebf40171ec5ddd90471e2a4415"
+    },
+    {
+      "path": "raw/calibration/contextual_gift_advance_pass__contextual_progression__contextual_progression.json",
+      "bytes": 36342,
+      "sha256": "f468f57d1e1e9ff99f9cf883fe4e264f723ad627ae54dae5d9149146374a96cf"
+    },
+    {
+      "path": "raw/calibration/contextual_gift_extra_rationale_fail__contextual_progression__contextual_progression.json",
+      "bytes": 32533,
+      "sha256": "a9953d5fd3553d6b5b023b114b4a2395802434192fb9ae2bc423fd4866dbc039"
+    },
+    {
+      "path": "raw/calibration/contradiction_ignored_fail__component_disclosure__component_disclosure.json",
+      "bytes": 66595,
+      "sha256": "374b3712886598068c3356b137b68806a110f65e4cfa63b25d29add1545f1320"
+    },
+    {
+      "path": "raw/calibration/contradiction_ignored_fail__contextual_progression__contextual_progression.json",
+      "bytes": 33675,
+      "sha256": "d0be3441f924c5d4ed673c875da241299f260ab86199c3b0422963dec845a7cb"
+    },
+    {
+      "path": "raw/calibration/contradiction_ignored_fail__unfinished_prerequisite__unfinished_prerequisite.json",
+      "bytes": 39615,
+      "sha256": "f0c9f770de0a7a64c9d8a4389350db4a9add10afeb98fcae833f6689fa0cfe84"
+    },
+    {
+      "path": "raw/calibration/overlapping_headings_retest_fail__component_disclosure__component_disclosure.json",
+      "bytes": 66501,
+      "sha256": "c00034491e171851f14f2d6b087bfd919c5c25bb017da608608767ab51f2e5e9"
+    },
+    {
+      "path": "raw/calibration/overlapping_headings_retest_fail__contextual_progression__contextual_progression.json",
+      "bytes": 30938,
+      "sha256": "76a9202b6103bbc85a7de40737b0cecec8f410373f9d2e7f000fc50a046b7644"
+    },
+    {
+      "path": "raw/calibration/overlapping_headings_retest_fail__unfinished_prerequisite__unfinished_prerequisite.json",
+      "bytes": 24421,
+      "sha256": "d090cc6af4f307116cc2b251c2fd1c46950fb3ec6f6836222b671126931494de"
+    },
+    {
+      "path": "raw/calibration/risk_verdict_continue_behavior_pass__component_disclosure__component_disclosure.json",
+      "bytes": 32114,
+      "sha256": "ba2436dbe4de647fc6cc19ad2b58e1598c7db362f3a4ef9417e2f6b844edff8f"
+    },
+    {
+      "path": "raw/calibration/risk_verdict_continue_behavior_pass__contextual_progression__contextual_progression.json",
+      "bytes": 30923,
+      "sha256": "2a793e40b3c77562aa84bdc15e2babd84833d0e6429ddd447f41dd541a070a06"
+    },
+    {
+      "path": "raw/calibration/risk_verdict_continue_behavior_pass__unfinished_prerequisite__unfinished_prerequisite.json",
+      "bytes": 28170,
+      "sha256": "cbbd6f21507d2d1202dcf6be02576e7e9a1bf762c9a86dbfe81ef92d68dd05ea"
+    },
+    {
+      "path": "raw/execution-end-1794694311467.json",
+      "bytes": 783,
+      "sha256": "0fbd6e3c795d25d3546fc6a5593a0403595dd08821435d214807cca0f913a023"
+    },
+    {
+      "path": "raw/execution-start-1794694010409.json",
+      "bytes": 687,
+      "sha256": "796672d0236d4356f838df9c56dc1c39ddc462559ef173f1db49e2df72340e50"
+    },
+    {
+      "path": "raw/execution-start-1794694311467.json",
+      "bytes": 689,
+      "sha256": "441aee8d950d07e21173bcf35df5c395ae1ed15ad3e500799664936254e19faf"
+    },
+    {
+      "path": "raw/frozen-v2.json",
+      "bytes": 575602,
+      "sha256": "9d1ed41d9dc4b3c138455604a488f4b104ce31cd2e12fd75798c160f6c99f2ef"
+    },
+    {
+      "path": "raw/frozen.json",
+      "bytes": 554351,
+      "sha256": "d58b4d06fe8b79e7d4ad406081e28bb51944bafa7c27c3aa3e5b79c5dd96687a"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__baseline__r1__t1__component_disclosure.json",
+      "bytes": 79598,
+      "sha256": "3633fdf5fda6e75c43b6327d40f2d91be2a009c4995a37003050cd8610297f6c"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__baseline__r1__t1__contextual_progression.json",
+      "bytes": 39674,
+      "sha256": "62b8be7a9a0e298246d61978f4a9226d26233dbbcccce30b607534ffb578bf43"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__baseline__r1__t1__unfinished_prerequisite.json",
+      "bytes": 38258,
+      "sha256": "5e1ff085a75698b9a9b72bf8331863d16bb34cde7e25ab1caa9ac5df2e888d40"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__baseline__r1__t2__component_disclosure.json",
+      "bytes": 97786,
+      "sha256": "fea1c30612e3331c559bfc822a7a7187d3849942663bd7f7775c7b4b382d98ee"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__baseline__r1__t2__contextual_progression.json",
+      "bytes": 37263,
+      "sha256": "ce1114ab5f3ae52553ca3ac3c7a1ac63fd66f3d25d351a41839628036cc9a51e"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__baseline__r1__t2__unfinished_prerequisite.json",
+      "bytes": 47573,
+      "sha256": "bc79a930f83b5bf0b4834e90a56235e81cddb55273562216a3eb1f6a4b121ecf"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__baseline__r2__t1__component_disclosure.json",
+      "bytes": 72079,
+      "sha256": "868dc8bc4f3e6256478f6471ac9ade17002ec904565f88e2a27596b39aac4b8c"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__baseline__r2__t1__contextual_progression.json",
+      "bytes": 38448,
+      "sha256": "dcc890da000e5a76579733fda93595664a47855e03f0ce40b5f9590426b5f6da"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__baseline__r2__t1__unfinished_prerequisite.json",
+      "bytes": 42671,
+      "sha256": "80538b0e2505b9df3dc1cf0b8ab49d97acec0df07fccc6eb17a02122826ddf65"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__baseline__r2__t2__component_disclosure.json",
+      "bytes": 62534,
+      "sha256": "4988d07afe0c9ab2a98494777b924b9c4022efb2797bf9b0a00122acfa3559ab"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__baseline__r2__t2__contextual_progression.json",
+      "bytes": 61935,
+      "sha256": "7ee63681046967b14756d1e493872c71a00060b2808e448576afa91e194aa7ef"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__baseline__r2__t2__unfinished_prerequisite.json",
+      "bytes": 28010,
+      "sha256": "ae5b4175fa6baf3b3037f454092c4d91d6fa478385c92d4162a397027b46126c"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__baseline__r3__t1__component_disclosure.json",
+      "bytes": 54617,
+      "sha256": "c8ff11fcdfa9c6632588a80ebd0fc9809876f30ecf18d55f9b8b8160d1804048"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__baseline__r3__t1__contextual_progression.json",
+      "bytes": 38060,
+      "sha256": "ea2f3fb7aa3f18c2c9b593c9269582523aefa1444c09e9e46cc3989f7602803f"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__baseline__r3__t1__unfinished_prerequisite.json",
+      "bytes": 65129,
+      "sha256": "43b87b32477f3495e28a6d5ff902cd0abd34077781306a4012c957b054eae912"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__baseline__r3__t2__component_disclosure.json",
+      "bytes": 115783,
+      "sha256": "1f923ea90e49db84b10232cd90156f1f546e14fc93645af57da301deaaf2cb5a"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__baseline__r3__t2__contextual_progression.json",
+      "bytes": 36095,
+      "sha256": "772c82a0ec6d8a9845b53134f745ce496126e7fc421a8d7c9c119ec743460ec7"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__baseline__r3__t2__unfinished_prerequisite.json",
+      "bytes": 34707,
+      "sha256": "8417240577fab565284dac875e9bbdfa355092f0d787e71b8c2251b3cdaf2813"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__full_history__r1__t1__component_disclosure.json",
+      "bytes": 61800,
+      "sha256": "ab70c7402b61526765e7a179d6aadac8358d0e3265618f270c2a9cff38296248"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__full_history__r1__t1__contextual_progression.json",
+      "bytes": 47598,
+      "sha256": "df68e96b1a505cb28df933109ea787c4093a0858147c36868e52b7c4d755d537"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__full_history__r1__t1__unfinished_prerequisite.json",
+      "bytes": 38218,
+      "sha256": "11cfdbb9f8e257ece9687c5e9a04bc47afeafbf86bf1d62191604c9021ebd3ce"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__full_history__r1__t2__component_disclosure.json",
+      "bytes": 42964,
+      "sha256": "aadca5905b98627680ce8f9cc9605cdc51aa3f7dcf020d6322f649df1ae4bf69"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__full_history__r1__t2__contextual_progression.json",
+      "bytes": 75524,
+      "sha256": "15e1fafcb7fa24e4a64aa1edbee7ea8fbc962d454caf4611dbdac7da32ee7f86"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__full_history__r1__t2__unfinished_prerequisite.json",
+      "bytes": 65074,
+      "sha256": "4113b0a4e59ea16517c6bb92dfb79ff60c2ec83c03a7bb52838edd238687d937"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__full_history__r2__t1__component_disclosure.json",
+      "bytes": 64967,
+      "sha256": "f9f1053afe8ddabd15aa12caf88539b9b9c41715800c7800cd5630fc433f6a26"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__full_history__r2__t1__contextual_progression.json",
+      "bytes": 43097,
+      "sha256": "85507f8fe18f2d9c89ab3aab35e9d8afe8fdf96403d4d0a149816351d5f52859"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__full_history__r2__t1__unfinished_prerequisite.json",
+      "bytes": 77213,
+      "sha256": "7cfd5d81adf182c23eb03a3f9662060903b70456d96be6820e1d164e46104893"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__full_history__r2__t2__component_disclosure.json",
+      "bytes": 184955,
+      "sha256": "1e0727a05e6368acec57e8dc6fff227959f60356c8109042d1495457069b94ed"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__full_history__r2__t2__contextual_progression.json",
+      "bytes": 37257,
+      "sha256": "cac4d375b47df979802e519b7749738e1ed0bf9110f0107da92e51d53e5caccc"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__full_history__r2__t2__unfinished_prerequisite.json",
+      "bytes": 31048,
+      "sha256": "b571ae00d592d3124da1e96d2a61a4aa56d196c6695c6bd432bcf0d27afa0302"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__full_history__r3__t1__component_disclosure.json",
+      "bytes": 80605,
+      "sha256": "c978d3e3f9bda54c928ecf82988d5e1773a2a579a4c5ab0ce04d041e2e348088"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__full_history__r3__t1__contextual_progression.json",
+      "bytes": 44004,
+      "sha256": "c0300cc1b5879a59ff8c01ad490b1ea5c3a240d96a3cc6e43fd64ec4159b03d3"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__full_history__r3__t1__unfinished_prerequisite.json",
+      "bytes": 65574,
+      "sha256": "807033bd54bf304f855756948d8cfb4b3f294a952785e191f706ae58dbaa7c04"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__full_history__r3__t2__component_disclosure.json",
+      "bytes": 68507,
+      "sha256": "7cce864a685565027f7bee7743bd27eeeb90e99d0b8e6bf8a71862317b294c90"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__full_history__r3__t2__contextual_progression.json",
+      "bytes": 50294,
+      "sha256": "c7b65299bbc0114753c717f33bb31eb6dd3c612c04e073e2706b0c8ded25d75b"
+    },
+    {
+      "path": "raw/judgments/event_one_answer_covers_overlapping_points__full_history__r3__t2__unfinished_prerequisite.json",
+      "bytes": 34157,
+      "sha256": "72ba83946d15f976a0397bf7f3ba0347944a893b144bfad1afd8c490b8c13ed8"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__baseline__r1__t1__component_disclosure.json",
+      "bytes": 40437,
+      "sha256": "6aceabd5b25ed49dfc63df188854bab6904c2772b554307eff976c0e24f501f4"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__baseline__r1__t1__contextual_progression.json",
+      "bytes": 41171,
+      "sha256": "4da52863c0667b20e10e4f749ccad0454827ad627d1f43bed45cedb3a07f3a60"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__baseline__r1__t1__unfinished_prerequisite.json",
+      "bytes": 48217,
+      "sha256": "0226af8a6e60fe8527d9476556d9f153306f0af339aaa936cf45f588a0c8f5bd"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__baseline__r1__t2__component_disclosure.json",
+      "bytes": 48942,
+      "sha256": "0cadeff70dca59500503087584155816a6f4c322c7ef01928b5fa7e25bc4711c"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__baseline__r1__t2__contextual_progression.json",
+      "bytes": 46148,
+      "sha256": "8b068c50850033d675808bbf6ea0f763b2226d8cc3c53a115a5ea1b9d31be382"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__baseline__r1__t2__unfinished_prerequisite.json",
+      "bytes": 38337,
+      "sha256": "4e643ca880e1209167a1d158268927e40b65d73c5d9a1511c2c681b155d78d4e"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__baseline__r2__t1__component_disclosure.json",
+      "bytes": 57728,
+      "sha256": "a88a92254a52af02768de097bb634b04f96f7b4b4be061122d28046fdcfcb863"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__baseline__r2__t1__contextual_progression.json",
+      "bytes": 46305,
+      "sha256": "3ff73b0f97bdcb6eadcf066c71cf9412f7a9699811bfa19363fbf91b718b4efc"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__baseline__r2__t1__unfinished_prerequisite.json",
+      "bytes": 44824,
+      "sha256": "3c308d1754eb21f6b1c29d620b8f1d67737f67f74c1cdca2cbe64a679c36bac5"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__baseline__r2__t2__component_disclosure.json",
+      "bytes": 51729,
+      "sha256": "be743f346ddc9066732642c6244c706c46571ec32a4872db96068198a4c40591"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__baseline__r2__t2__contextual_progression.json",
+      "bytes": 61024,
+      "sha256": "4df336ba4d59a110c6a323f1afb9240c5ef88894cae3b4923a24d4ca36b650ed"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__baseline__r2__t2__unfinished_prerequisite.json",
+      "bytes": 42898,
+      "sha256": "c80c3c9be5e332095981ce0fba9cd2611e2781e5b2dae35fe74c51d87f3d33d2"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__baseline__r3__t1__component_disclosure.json",
+      "bytes": 43008,
+      "sha256": "dc111374085545e928ed7355746c65cca3f5e84a27d271b6b320f2b3ea629076"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__baseline__r3__t1__contextual_progression.json",
+      "bytes": 30209,
+      "sha256": "922b47d705504e77ad38617c3692ebdf4328c289a4859234bef1d053ff64b3cb"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__baseline__r3__t1__unfinished_prerequisite.json",
+      "bytes": 41382,
+      "sha256": "252a46d975294e43a42b159124ef9f0bbfb8c7f203074895de1ce32a52d619ef"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__baseline__r3__t2__component_disclosure.json",
+      "bytes": 53532,
+      "sha256": "2adaf4b680c7e884eb94ba412d9d59a12496e9eecf750d34c987f2e936fdce82"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__baseline__r3__t2__contextual_progression.json",
+      "bytes": 51002,
+      "sha256": "e4180cf7dc5fca7cc9a778958c94a3c075cff88664ed6e092b240c10883b4b1a"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__baseline__r3__t2__unfinished_prerequisite.json",
+      "bytes": 74663,
+      "sha256": "22a16eef29ff70e4cac064dccd3b8bcd15347f4c6872abbfd37bfd8f46ee0f8a"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__full_history__r1__t1__component_disclosure.json",
+      "bytes": 54064,
+      "sha256": "61baa816d7a58497c561c3d04bae0399de132db9dd35823ad447838a394c97ea"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__full_history__r1__t1__contextual_progression.json",
+      "bytes": 50312,
+      "sha256": "19dc5918b9b9d8cd6b864f1c8f0bb7fd7e01f9a78993079c4e729a4412fe4322"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__full_history__r1__t1__unfinished_prerequisite.json",
+      "bytes": 31778,
+      "sha256": "bb5f2cbb9cb4843698a96bb3803dce40f5f31de0304e09c8af96e9d4cb58bf0d"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__full_history__r1__t2__component_disclosure.json",
+      "bytes": 49255,
+      "sha256": "b41080de8df0a52fe45a7beaaa2d9789d7e86d7d940f6ce98f895f716749d49b"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__full_history__r1__t2__contextual_progression.json",
+      "bytes": 113768,
+      "sha256": "a1e7e47b3b6ddad5925fa7252484a74e52a2ef8324171e8b708826e21a5297f0"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__full_history__r1__t2__unfinished_prerequisite.json",
+      "bytes": 52826,
+      "sha256": "21c81a730dbacf6cf8f494cb5b98c8030e68cad75eeea3496ef5622b054d88cb"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__full_history__r2__t1__component_disclosure.json",
+      "bytes": 58317,
+      "sha256": "f050bb9fe82a77c4be9649f509e75bf953f669bcbaa4ea46d41c81eccc06ee28"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__full_history__r2__t1__contextual_progression.json",
+      "bytes": 44755,
+      "sha256": "87d0f5d06cf4f1c62d2bd00ad3aab563ea6eecbb11e1efa28e23d4a5c3616627"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__full_history__r2__t1__unfinished_prerequisite.json",
+      "bytes": 27968,
+      "sha256": "536247c108e423791df39a8b2caa309aaefb115952a661eb162ffc8255809a56"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__full_history__r2__t2__component_disclosure.json",
+      "bytes": 114577,
+      "sha256": "05ea6c7dc6ce77925dc191efd27a2133a0b4dff34f047e85dcff55c9739694ad"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__full_history__r2__t2__contextual_progression.json",
+      "bytes": 34112,
+      "sha256": "5d31cbc38af1a7d4d0aa025f27ca346c660906b98fd5c79f60b526fcd7a838bc"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__full_history__r2__t2__unfinished_prerequisite.json",
+      "bytes": 58845,
+      "sha256": "854e0c9addc7227c88a58305fc3878fad2a0c0df77fd6b2d3ffcb2cf8ae05693"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__full_history__r3__t1__component_disclosure.json",
+      "bytes": 54890,
+      "sha256": "8f3ffeff76c3fa8f4e2981ccd175de1f0abf501f94f744a527ed69f9c5cdd878"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__full_history__r3__t1__contextual_progression.json",
+      "bytes": 31378,
+      "sha256": "66de06ce31f41caf961c9559b1ad1248268e3ff6d930c339e160f368c0249769"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__full_history__r3__t1__unfinished_prerequisite.json",
+      "bytes": 35037,
+      "sha256": "b657c0d3605014986b9403c2323f700a255d7ca94eb51614468905319c62d751"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__full_history__r3__t2__component_disclosure.json",
+      "bytes": 47692,
+      "sha256": "229b74f4b024aca18a401ff7aae7885ab83cd7d17b1c6b856ccd7eee881e2421"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__full_history__r3__t2__contextual_progression.json",
+      "bytes": 77888,
+      "sha256": "d19f61961eb3e1593817f6187e7cb62fc6fb9bfef0bea33cc3c5b79aedacbc91"
+    },
+    {
+      "path": "raw/judgments/gift_card_contextual_judgment_real__full_history__r3__t2__unfinished_prerequisite.json",
+      "bytes": 44820,
+      "sha256": "834cbf8a5adf222140b66c21769b0b386ea28fc73bde5a5f8bbc273076e4573a"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__baseline__r1__t1__component_disclosure.json",
+      "bytes": 34679,
+      "sha256": "c29c9226752cf4b4de8d0d9d87f86704b5bf43d321c535384db442467329e212"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__baseline__r1__t1__contextual_progression.json",
+      "bytes": 35282,
+      "sha256": "6e3f916af6034eb089b14b0516d1193b68ab1984daef1dab697ccec383ab4508"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__baseline__r1__t1__unfinished_prerequisite.json",
+      "bytes": 28944,
+      "sha256": "c511d82b4bb51b95aa93239ed49f337b25e0fbff28d314bcdfe0d59c59a9c15b"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__baseline__r1__t2__component_disclosure.json",
+      "bytes": 29040,
+      "sha256": "8e4b6e29fc0c3d5343241489a494245f8146e1d4ef792d20f1c442b214b74d75"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__baseline__r1__t2__contextual_progression.json",
+      "bytes": 34170,
+      "sha256": "4e2ece96236d316a8f4f7697cbd898f2325307e6fe32f5d2a7af5332cb024a0f"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__baseline__r1__t2__unfinished_prerequisite.json",
+      "bytes": 23702,
+      "sha256": "5c797c62715d1503e6689617f15adf20cfcd60d467d70d533d28b0418e8fc63f"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__baseline__r2__t1__component_disclosure.json",
+      "bytes": 29355,
+      "sha256": "b69d717dd680438282189ca9597aa27c05292ed685d2b86640526869ca94ffec"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__baseline__r2__t1__contextual_progression.json",
+      "bytes": 28021,
+      "sha256": "c81b2b0f15289cd5439d35ccdef1d01ac190f96605c741cd7acf29e039c297f3"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__baseline__r2__t1__unfinished_prerequisite.json",
+      "bytes": 21438,
+      "sha256": "e863ef6dccdc703e9e27f76f256f9d2496d2d00da429735fcd3adc1f0415b8e2"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__baseline__r2__t2__component_disclosure.json",
+      "bytes": 35405,
+      "sha256": "78cb6434a84926b1f6e3a154c12c7ce83c4f35fa99cfcfb69d48fa10e4745c75"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__baseline__r2__t2__contextual_progression.json",
+      "bytes": 29667,
+      "sha256": "e93bc1717de8a3b8513c7126c61079bef1988356c0c1dcf1501873e6dd99244f"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__baseline__r2__t2__unfinished_prerequisite.json",
+      "bytes": 26516,
+      "sha256": "c4955bbe6632dc9272571195a37c5c2d98ea6216643717ebed0eaaa85f486fbf"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__baseline__r3__t1__component_disclosure.json",
+      "bytes": 34953,
+      "sha256": "41142a1419a80ad306220622607e911b3f32fff99fffa1f6ace54484271f98e8"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__baseline__r3__t1__contextual_progression.json",
+      "bytes": 29445,
+      "sha256": "2e57941f097e0af682bf3c77d0e62b00a4263950ae5b4b5c40356ad062de09f6"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__baseline__r3__t1__unfinished_prerequisite.json",
+      "bytes": 23018,
+      "sha256": "fcfe0b8eceefeb98089a77c9d36f78f821d73683da998e02465db350df646322"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__baseline__r3__t2__component_disclosure.json",
+      "bytes": 29949,
+      "sha256": "b3171e2123b39f54d29870b23a63c09cc9d64cddbf4d707026479337e23f938a"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__baseline__r3__t2__contextual_progression.json",
+      "bytes": 28061,
+      "sha256": "b3007589e8584f7342f5447ec3bbbf2de734ecd0e82ba088bf42526ccfe32439"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__baseline__r3__t2__unfinished_prerequisite.json",
+      "bytes": 36035,
+      "sha256": "b635a4c44487695943ae9b0af296922d5591d1230f833a5294ea798501ebca19"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__full_history__r1__t1__component_disclosure.json",
+      "bytes": 28795,
+      "sha256": "9665cf365144af6a99eaeadf67d4dbe5e68eaf8a91fcf30844527156846c9f2f"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__full_history__r1__t1__contextual_progression.json",
+      "bytes": 28312,
+      "sha256": "db7b9251ce673f39f15eadc482dde09917eff36b0c7e2fba2bbb17c5b6a90e92"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__full_history__r1__t1__unfinished_prerequisite.json",
+      "bytes": 28574,
+      "sha256": "9fe6cd884538d9f538d99f4ff2d97a4e68dee2167d9c6eac05536795980a0904"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__full_history__r1__t2__component_disclosure.json",
+      "bytes": 35946,
+      "sha256": "b49cd67473c3818db3bf8e134193be447d1e8455a1be4507d93d12ebf02360c1"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__full_history__r1__t2__contextual_progression.json",
+      "bytes": 43767,
+      "sha256": "26a81dfd02407be7a6ccf5fad7a28606cdffbea13e994402d4ebebe22c2aaf51"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__full_history__r1__t2__unfinished_prerequisite.json",
+      "bytes": 22951,
+      "sha256": "0ca7de31cdb46c44d16ea0a7b77756ee38dc1d38226cead785a7cb6c5536390d"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__full_history__r2__t1__component_disclosure.json",
+      "bytes": 34648,
+      "sha256": "f9a17e5d0f6bdd475f349e148567d464fb7d238979f7e676e21fa0ba37fe4bc1"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__full_history__r2__t1__contextual_progression.json",
+      "bytes": 26465,
+      "sha256": "3ba0e049d2d956439f43ec042210858231401b7a00ac5ef4e461429e2e75062f"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__full_history__r2__t1__unfinished_prerequisite.json",
+      "bytes": 63813,
+      "sha256": "0f2ae79fcc046d509d90fa97c80fe0d8ca04e97867d512c4b5b26438f512ea19"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__full_history__r2__t2__component_disclosure.json",
+      "bytes": 29851,
+      "sha256": "6d1f8c47b67a657d7e8d63f37f4cf7f5137fa576b811a6a885de49bceb3394c7"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__full_history__r2__t2__contextual_progression.json",
+      "bytes": 52880,
+      "sha256": "b69a237b08a2c6da60c3c115f2111716e28f84738db85cfdd362fed465c17ceb"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__full_history__r2__t2__unfinished_prerequisite.json",
+      "bytes": 36254,
+      "sha256": "a8f56631d89732f3d7943b68da91ee7b13bec9ce91f2e9f85c003248c24af43e"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__full_history__r3__t1__component_disclosure.json",
+      "bytes": 34217,
+      "sha256": "5b029dd0434c3be5056bff9f21a9b49f70dced6286c4dd76861bc5efbbbd85e3"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__full_history__r3__t1__contextual_progression.json",
+      "bytes": 28843,
+      "sha256": "8e16966e9304d08cfed47f0440c085979c20dfe856f4d180400d9d6e35e8cea2"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__full_history__r3__t1__unfinished_prerequisite.json",
+      "bytes": 67653,
+      "sha256": "d8ed2aec336c6f29747578e529f824dd4814bd84c2570aaae3422eb51bfbf16b"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__full_history__r3__t2__component_disclosure.json",
+      "bytes": 38670,
+      "sha256": "f0aab9f3757849c0abc13cc9829bbc4f8970bda63e3209d465761d6acd715419"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__full_history__r3__t2__contextual_progression.json",
+      "bytes": 34925,
+      "sha256": "124e7e4a6cf77d02026a9832d9ca0b9a37dde91f5666f4503b1ddbe48f4a0165"
+    },
+    {
+      "path": "raw/judgments/library_agreement_only__full_history__r3__t2__unfinished_prerequisite.json",
+      "bytes": 42592,
+      "sha256": "7ad45b3713b948bace802100daaa5d7ed86b22349a3bd6d1c7ce6ecd048dc681"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__baseline__r1__t1__component_disclosure.json",
+      "bytes": 32189,
+      "sha256": "80b553a84008f86fe49ebe910be429eff543b5c49e71fa1aeb44358a5f64c99e"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__baseline__r1__t1__contextual_progression.json",
+      "bytes": 34422,
+      "sha256": "217a92baabde1afa4fae6cb3ff1d2dc0a8c643ed0eaee88cc038506607731dc9"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__baseline__r1__t1__unfinished_prerequisite.json",
+      "bytes": 30815,
+      "sha256": "a3528e08bb7f4f11ce1c9d3c1d46f19a7f8d0bde811b29ea2f0c737872a14388"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__baseline__r1__t2__component_disclosure.json",
+      "bytes": 42214,
+      "sha256": "35470c57e00521f09a6d83293f04a388b0c667ddb385ce3e24b96ede6397d446"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__baseline__r1__t2__contextual_progression.json",
+      "bytes": 43093,
+      "sha256": "723d47b3a80a0d07b31055fbbb3afb54ce0d54667c3f35621efa19bb9d242228"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__baseline__r1__t2__unfinished_prerequisite.json",
+      "bytes": 27604,
+      "sha256": "a8f2b23a065c32836470dac35e0a19ca53873f66d875ea216a6873ae91f6d432"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__baseline__r2__t1__component_disclosure.json",
+      "bytes": 35608,
+      "sha256": "e74c08c324bc5dd9ee514e99fc24689a06231c2ef56ad8b915297352fcc3b179"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__baseline__r2__t1__contextual_progression.json",
+      "bytes": 30358,
+      "sha256": "7421e63f06b3f00daeda51e83d847b974d94d27a5e8b243552a0299712612d12"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__baseline__r2__t1__unfinished_prerequisite.json",
+      "bytes": 31868,
+      "sha256": "640e128f94c038a7b61d1f239f3218f68fdfa2eb2855c567a4116608abde8432"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__baseline__r2__t2__component_disclosure.json",
+      "bytes": 34247,
+      "sha256": "b3cf15de7312a64b47970a3747e3bd3cd6ebecb310d314d1d8d0b1980980d680"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__baseline__r2__t2__contextual_progression.json",
+      "bytes": 50561,
+      "sha256": "7ed7ba1dce31b3ed460ab83b5983045a6b0b9328069f04fd3690a80bd17cefdd"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__baseline__r2__t2__unfinished_prerequisite.json",
+      "bytes": 37005,
+      "sha256": "7819f6d4f7b8f5b43d226e713f07396aff4b87b531a79b40281c3763b40fca0e"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__baseline__r3__t1__component_disclosure.json",
+      "bytes": 41744,
+      "sha256": "2a858be1315b23f6e983dedcc725ef2d9de8286a92e4dc703a479b5db917ca75"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__baseline__r3__t1__contextual_progression.json",
+      "bytes": 26932,
+      "sha256": "358c70a7cf714f5e007ffa91c529d0e08adde1a548acbe23d080b20fe2b92123"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__baseline__r3__t1__unfinished_prerequisite.json",
+      "bytes": 36583,
+      "sha256": "1691c304877d2cc727f6e1801fd2a9acc2531e9efa3f5a83aa2bd60eb9b9245a"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__baseline__r3__t2__component_disclosure.json",
+      "bytes": 65102,
+      "sha256": "1089c10ba5d4c4c8158afcab9840ecf2b8ad765fd6e194500f0f6d6a9fefb0db"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__baseline__r3__t2__contextual_progression.json",
+      "bytes": 37183,
+      "sha256": "893ae5d4948fa6239af7c82fe655eb87c7fb5c382d47c311adc5bcfaab851bf9"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__baseline__r3__t2__unfinished_prerequisite.json",
+      "bytes": 37954,
+      "sha256": "6bed1d0a368d30d89206756ca9c903169794e9d53124a49a34101f8ef37c0abc"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__full_history__r1__t1__component_disclosure.json",
+      "bytes": 42657,
+      "sha256": "adefa0ed690e04a1076774b309187a5b33a5ef71aa52296f497aebf5243cdf5d"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__full_history__r1__t1__contextual_progression.json",
+      "bytes": 34100,
+      "sha256": "1682a5b4aacb68c6fac033995b1fd05e276345d8ca8947a533f93ba22876f59a"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__full_history__r1__t1__unfinished_prerequisite.json",
+      "bytes": 28445,
+      "sha256": "48a37894343d6732a8843c3f570f32166ad91a7ee8c0b1a5230754c4bef9217c"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__full_history__r1__t2__component_disclosure.json",
+      "bytes": 59302,
+      "sha256": "170ced51c9dc3ca293c0e688f2570d5d220a303ef28e534a6338c55d94f435d9"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__full_history__r1__t2__contextual_progression.json",
+      "bytes": 84051,
+      "sha256": "0937a39eee8cc90c2cf273e59752a5c5fe88a04a417d020b50958f8051959341"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__full_history__r1__t2__unfinished_prerequisite.json",
+      "bytes": 31281,
+      "sha256": "25743cf2473ad6bbe53fd307de95f2f8549eecd4fc35c7d54148540fd9154328"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__full_history__r2__t1__component_disclosure.json",
+      "bytes": 49679,
+      "sha256": "9991cecad95d8307414c651cec0dba50df37fb2948238a6e1cdc82e128593a6a"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__full_history__r2__t1__contextual_progression.json",
+      "bytes": 28605,
+      "sha256": "97908023c6cea05e5d5ab458e23145513e4b8b15e72d62c8dce67fd747bc8e91"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__full_history__r2__t1__unfinished_prerequisite.json",
+      "bytes": 31823,
+      "sha256": "f7bf82d5be53f4e530c5e463c26e7fe5ba06ebbc42f8b5ff1cbe6b6b8db349c3"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__full_history__r2__t2__component_disclosure.json",
+      "bytes": 35855,
+      "sha256": "1046c06e4203c8b2d75fdc6d597d5a0acec2dd1883b65d0082cb8ec24b2c4332"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__full_history__r2__t2__contextual_progression.json",
+      "bytes": 73034,
+      "sha256": "4394644f4b6544bec1a424f38cc467fb47a40d1f0e81a233a9def368b6dba32f"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__full_history__r2__t2__unfinished_prerequisite.json",
+      "bytes": 37932,
+      "sha256": "6b3d07edc98380390ea261242e83869937dcaa92dd8b358689fb1321bfed743f"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__full_history__r3__t1__component_disclosure.json",
+      "bytes": 36020,
+      "sha256": "5ae137a7983690c86ab208e5d9dd7ac3ba99405e641d0d34f7de6b379e2f020b"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__full_history__r3__t1__contextual_progression.json",
+      "bytes": 39281,
+      "sha256": "2c8001999040e5c567d063964c9c1f522f14eafc78389f1679aa361a126f16b0"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__full_history__r3__t1__unfinished_prerequisite.json",
+      "bytes": 33506,
+      "sha256": "a6c7974af949cae9c6ae291fb31dcbdd7fb6b5470813bee82648c8c79141f44f"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__full_history__r3__t2__component_disclosure.json",
+      "bytes": 43251,
+      "sha256": "af38042a46afed78adfb9ffc394dac7b7b4b2b3c1169cfd2dabcb17a6a355e7f"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__full_history__r3__t2__contextual_progression.json",
+      "bytes": 40485,
+      "sha256": "d468bc478c702a1aa29310cb0133ae131c0be43951bdf6ad82a83a3cb15625b2"
+    },
+    {
+      "path": "raw/judgments/library_all_tasks_completed__full_history__r3__t2__unfinished_prerequisite.json",
+      "bytes": 30251,
+      "sha256": "8718db64defe6ba82def8367b737f450083899cccff66c2599c3a3c1b94fe3b8"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__baseline__r1__t1__component_disclosure.json",
+      "bytes": 41574,
+      "sha256": "d4a6c888f31f77af234f6b88aa34c505bf0b4b4f832cf246e8a6d3564d910d93"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__baseline__r1__t1__contextual_progression.json",
+      "bytes": 27819,
+      "sha256": "bf565128d840fd73000e5ee2cf4f202734ed783e7bf2c9c2c457f2b4861b1cbc"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__baseline__r1__t1__unfinished_prerequisite.json",
+      "bytes": 26032,
+      "sha256": "b0016daceab8d0b3cdcadaab56b3d527f48422b50e08b27a98014f8c36f60647"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__baseline__r1__t2__component_disclosure.json",
+      "bytes": 79563,
+      "sha256": "64f367cea5d9c95ac2da611c11bbd46b59908c291660baa494d8da902913ed14"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__baseline__r1__t2__contextual_progression.json",
+      "bytes": 37166,
+      "sha256": "d5c0e6b184576235d3a11a868ea3f4fc4bb562f7ea2c030de78ac104652f835b"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__baseline__r1__t2__unfinished_prerequisite.json",
+      "bytes": 68539,
+      "sha256": "892416eb3496044c5c8ba8518b0d3b224ab42cd946aa54789c63677b6ada31b5"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__baseline__r2__t1__component_disclosure.json",
+      "bytes": 45093,
+      "sha256": "8d713a4dc30d50ae47a9a6258abe4942f00450012dadddd3ea67c90e1dd2393e"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__baseline__r2__t1__contextual_progression.json",
+      "bytes": 43370,
+      "sha256": "2a1a9e07e72a78368568f29987de02afc018a25f32f51711051bf0e8a000da08"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__baseline__r2__t1__unfinished_prerequisite.json",
+      "bytes": 61768,
+      "sha256": "310a49c8b52c37c0effe2917910d620620bc70b7ea7635a2a6cd0920d543d3e9"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__baseline__r2__t2__component_disclosure.json",
+      "bytes": 49247,
+      "sha256": "c7b38510bdafe32be52fa54b00e1c891e8d8deff1147c1108f68928dc602f40b"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__baseline__r2__t2__contextual_progression.json",
+      "bytes": 31531,
+      "sha256": "05a756b1fb6e17d57d28135cf931b7029bfc27f213b002a84385e0ddff4d123b"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__baseline__r2__t2__unfinished_prerequisite.json",
+      "bytes": 36816,
+      "sha256": "c027891ea5b7d85e3e828d64c001df6408a27aa9348b93fbeec3355e48b27927"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__baseline__r3__t1__component_disclosure.json",
+      "bytes": 39563,
+      "sha256": "dad3b22eeeee8a0ed92b2322e7b1354bcdc56b071b2ccce879f0b8d177b73b98"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__baseline__r3__t1__contextual_progression.json",
+      "bytes": 95295,
+      "sha256": "3b85a1d021f42c3c82844f48c2a0edc8c5633214c3158f5618a66ec202524f64"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__baseline__r3__t1__unfinished_prerequisite.json",
+      "bytes": 44846,
+      "sha256": "3f704765839c6eee04d868b25990bb428e028e1ecbb2e568536884212cf752f3"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__baseline__r3__t2__component_disclosure.json",
+      "bytes": 93334,
+      "sha256": "6ce541182ff071dbec40de78cec8ad24ce7afd64613c0c3f9c38362e98bf28a9"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__baseline__r3__t2__contextual_progression.json",
+      "bytes": 64106,
+      "sha256": "77d9c09318e40aa843685260d5254140329c9031ca9b35ba92bed917c2fe9897"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__baseline__r3__t2__unfinished_prerequisite.json",
+      "bytes": 85781,
+      "sha256": "228a56e14c123c41609417eb98266ee374c108cb32eb5eb5b1d078e5788d73a1"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__full_history__r1__t1__component_disclosure.json",
+      "bytes": 33498,
+      "sha256": "584c1dba8acf20c7af7dfa057a4fcdae2a7874c56fcb231d817f621fddbe1d81"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__full_history__r1__t1__contextual_progression.json",
+      "bytes": 35036,
+      "sha256": "34080de30276afecd523e725b1a34fefe95e3f98bfe737409bcbf5c5c59de389"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__full_history__r1__t1__unfinished_prerequisite.json",
+      "bytes": 41056,
+      "sha256": "90bce0ac5f25727882e9fe72f21688be852c45aea3256669d2211d4980cb1d5c"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__full_history__r1__t2__component_disclosure.json",
+      "bytes": 109278,
+      "sha256": "36771389014d985d610995064037eeb6a8571f145b2a8e6716bab74bfc28efb3"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__full_history__r1__t2__contextual_progression.json",
+      "bytes": 98638,
+      "sha256": "6487cb48dae8231705776aebd7782059680e990533793bdcf7d9b35254af4d7b"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__full_history__r1__t2__unfinished_prerequisite.json",
+      "bytes": 48141,
+      "sha256": "94f2577f7f2e6724f26b0d3059cd88e61bfb53bd5fb3243c061cc3299caaeb64"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__full_history__r2__t1__component_disclosure.json",
+      "bytes": 49820,
+      "sha256": "dec3a4e94d9c80d152934da385d1194c4af98e5ac47e945528261f9c15b7a170"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__full_history__r2__t1__contextual_progression.json",
+      "bytes": 29914,
+      "sha256": "c422a7c3167989616e925394f2389711ac51b4b6e50e17a6927ff599f35bc56e"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__full_history__r2__t1__unfinished_prerequisite.json",
+      "bytes": 28169,
+      "sha256": "43fe2797af845833d79f94da74a19903d4b5513aaa19c7c7468720f7ef94eba0"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__full_history__r2__t2__component_disclosure.json",
+      "bytes": 55606,
+      "sha256": "dcaa7df41d3583ad4caaee49fe0f15736aa66f3ef0cce9da6f570a852e1a804f"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__full_history__r2__t2__contextual_progression.json",
+      "bytes": 43124,
+      "sha256": "c11348b386bc55a8305b4f21ece04489c91e3fa4a73b07666ae129fb5e06c0be"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__full_history__r2__t2__unfinished_prerequisite.json",
+      "bytes": 30799,
+      "sha256": "9b6625b251c12cce56c8ef7ffd6bfbc98b8c31788c06a530cd491ab1b7e8d989"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__full_history__r3__t1__component_disclosure.json",
+      "bytes": 45042,
+      "sha256": "4e0431634ad70acf1432c1c56ac7aa538cf9b026f2fbe1409b7271a099539c7d"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__full_history__r3__t1__contextual_progression.json",
+      "bytes": 23030,
+      "sha256": "264afecdfb240cfb6bee6fdc9983f3188da8da2ffbd5fcfe77fc0cdb5c7bb28d"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__full_history__r3__t1__unfinished_prerequisite.json",
+      "bytes": 28705,
+      "sha256": "74445d313ef153dfc97fe04971fbe55bb75ab1391a99e7bd64271b879841a0bb"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__full_history__r3__t2__component_disclosure.json",
+      "bytes": 87038,
+      "sha256": "abe38f34215db5af473cb4248dd471fc9f42e7c69af6afdd084a79b67a9b91f4"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__full_history__r3__t2__contextual_progression.json",
+      "bytes": 29350,
+      "sha256": "7fa58a91b18a4e87f336b1449cf3184036f7b3206046c16496b2255c99b82dd1"
+    },
+    {
+      "path": "raw/judgments/library_contextual_judgment__full_history__r3__t2__unfinished_prerequisite.json",
+      "bytes": 42265,
+      "sha256": "d5aaf90168d635ca0877e5e0d5b2e3f05ff91b4d9fcd35b1067450c5ff0811f0"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__baseline__r1__t1__component_disclosure.json",
+      "bytes": 48874,
+      "sha256": "2e01e4b1bb9051510a2e66b98734be11323116b2b1db2711d424993ba35f24cd"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__baseline__r1__t1__contextual_progression.json",
+      "bytes": 36590,
+      "sha256": "85235f155d5dc9b3055c4f46bf063394db3c393bcfa1a7ea45691d013858d274"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__baseline__r1__t1__unfinished_prerequisite.json",
+      "bytes": 34084,
+      "sha256": "e7a2b13913f26f7f2d9f893af202c59fbca608b0f2b7481d164a19e63cb27867"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__baseline__r1__t2__component_disclosure.json",
+      "bytes": 48624,
+      "sha256": "8d58e2c3ff7293b2d269b95219cca0e233623d17c7cd6d2d134a49416310f5e7"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__baseline__r1__t2__contextual_progression.json",
+      "bytes": 65552,
+      "sha256": "b8c5a595ee0ca1355ffa779a7d8b08ec12a10768536b3808b460cd9ba6427ce9"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__baseline__r1__t2__unfinished_prerequisite.json",
+      "bytes": 40372,
+      "sha256": "067da0c4e3ef1814106571f748ab1c650ffbdc2191524f730a335b14b6cf70f5"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__baseline__r2__t1__component_disclosure.json",
+      "bytes": 32086,
+      "sha256": "2c83fbb8b89b7296313e3049c054d2d6e0f5caef6857cb95c5ec24fafa0eb0a7"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__baseline__r2__t1__contextual_progression.json",
+      "bytes": 79878,
+      "sha256": "a2bc34cce789935b96d1d976bf782290b197e23924263c16630dd572d84228fb"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__baseline__r2__t1__unfinished_prerequisite.json",
+      "bytes": 39590,
+      "sha256": "7dc1bb6347e6a030569914ff745cad111fb6d168969edf2a9f521af52461c4d2"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__baseline__r2__t2__component_disclosure.json",
+      "bytes": 63530,
+      "sha256": "8f904949e18e08ffa989ae3696a7a428d5fe80ded49b3a724a960a1726f1fb40"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__baseline__r2__t2__contextual_progression.json",
+      "bytes": 41557,
+      "sha256": "219c9f3b1113b37ad20319c97a238deb83aed024979955bac13cde1d7564c10c"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__baseline__r2__t2__unfinished_prerequisite.json",
+      "bytes": 30290,
+      "sha256": "27716c2411fc87f100c249a5e14da3ce9e98b8d0fd13d6b820bcfe40f25b9089"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__baseline__r3__t1__component_disclosure.json",
+      "bytes": 29277,
+      "sha256": "9f06318bdf8d25bbe8b60ce39870b938da6a7af2850da5ad944e24827ba854b3"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__baseline__r3__t1__contextual_progression.json",
+      "bytes": 43244,
+      "sha256": "1c812bcf090fb51e3c7935975b415e0b4b004344733fae7e43fd71a06819e879"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__baseline__r3__t1__unfinished_prerequisite.json",
+      "bytes": 26190,
+      "sha256": "678921bf405ef0942e8c91f258a22a67e5ffbbd8491772d20c5c37f75e042ee5"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__baseline__r3__t2__component_disclosure.json",
+      "bytes": 70250,
+      "sha256": "953cfbd6950a23c6691d2d0e75a420e904ab8d9cde17d4bad7c0db62863c2e5d"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__baseline__r3__t2__contextual_progression.json",
+      "bytes": 49114,
+      "sha256": "1c1cef82f71f9d15091c8e36008e063fcdf93a98871a67fa73e6836042d924fa"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__baseline__r3__t2__unfinished_prerequisite.json",
+      "bytes": 39989,
+      "sha256": "803121ee2f9992748768884ed1a640d6c2df1132978f8bd901bad567ff93ed7d"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__full_history__r1__t1__component_disclosure.json",
+      "bytes": 32047,
+      "sha256": "3d1dd22903644b12e10840b394bc4e9a2ce8186f88ab2d9bf31737223a208107"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__full_history__r1__t1__contextual_progression.json",
+      "bytes": 46172,
+      "sha256": "92d6ec74c61c0e8bfc28852a4bd78d1c0c3bc60952f3f6f962c56c843f99d4ef"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__full_history__r1__t1__unfinished_prerequisite.json",
+      "bytes": 38287,
+      "sha256": "3dd24b2cb420ab7126b5f68bad22ec2f6f6e4a28369d9f629ed617b1958a8a68"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__full_history__r1__t2__component_disclosure.json",
+      "bytes": 63361,
+      "sha256": "23e0be68d9e065f8ed4f151c8162fee1de54483220a6f45d6c7fd64d2bbab50f"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__full_history__r1__t2__contextual_progression.json",
+      "bytes": 44509,
+      "sha256": "5cbc8216cb5ed1fab2c15aa7ff4680a1684cc45210ab19fd63529f468e0d3c84"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__full_history__r1__t2__unfinished_prerequisite.json",
+      "bytes": 35687,
+      "sha256": "622f49208a22fc1b908ee9e1b8df3521e7d10a075ff96325d5a13930df3d3b61"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__full_history__r2__t1__component_disclosure.json",
+      "bytes": 39337,
+      "sha256": "52da3c8abe3fabf0ffb6e28e3c78e5c69cc718b5fca5de4bebeb0f2afc689a48"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__full_history__r2__t1__contextual_progression.json",
+      "bytes": 38749,
+      "sha256": "36ee5586ab208ce5c3454146cbddc98bb4efa8024d4749311de6ac498a8d4aee"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__full_history__r2__t1__unfinished_prerequisite.json",
+      "bytes": 28148,
+      "sha256": "df5963db476af251acdc7b6f9c963dd4212955b006c81598b7c5c5272847515f"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__full_history__r2__t2__component_disclosure.json",
+      "bytes": 52965,
+      "sha256": "e69e0aa6ec2bedb5189c9a86810fbeb676579279948af85f7c048a22087e1b9d"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__full_history__r2__t2__contextual_progression.json",
+      "bytes": 107866,
+      "sha256": "4b93437c168649bb986a39b5a4714c61614bbe864c425b74687ab769a0b695eb"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__full_history__r2__t2__unfinished_prerequisite.json",
+      "bytes": 31764,
+      "sha256": "f6141e90fc6f5d28683f8fe04c70d80de9d13b98daf373c0bfb04c21ba452126"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__full_history__r3__t1__component_disclosure.json",
+      "bytes": 87124,
+      "sha256": "2ce3887f99ce64f3d1cbe01e6c4003a070269547c280ca47a5c5f151ca1f5d25"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__full_history__r3__t1__contextual_progression.json",
+      "bytes": 87820,
+      "sha256": "d10c1ed966b04712bf0304a2fd56fc1beeff3dcf1c3a77aec92c9e86fea27237"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__full_history__r3__t1__unfinished_prerequisite.json",
+      "bytes": 44697,
+      "sha256": "54d9dd619f31eaa0b4202269699d57890f5973002f356ae3df0ea5517aeffd78"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__full_history__r3__t2__component_disclosure.json",
+      "bytes": 54145,
+      "sha256": "19865adc524cd7294f74d9760b048adb007cd192b1be4ccc9f3b68a58b4bb4f3"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__full_history__r3__t2__contextual_progression.json",
+      "bytes": 46930,
+      "sha256": "4b68f3889b7c354a3ffa7da2ff5cfc259546afbaa086d07200885556e171aeba"
+    },
+    {
+      "path": "raw/judgments/phone_contradiction_after_completed_task__full_history__r3__t2__unfinished_prerequisite.json",
+      "bytes": 45389,
+      "sha256": "6167d3e43e9babe2e97024ff1bca97a205da4b767c3a31e37e6a82564c6b3db1"
+    },
+    {
+      "path": "raw/reason-cap-only.patch",
+      "bytes": 1121,
+      "sha256": "b06a0ad8726e1209fd4675b47824197ba8a94f4255455cb091d190a11047b3d2"
+    },
+    {
+      "path": "raw/scheduling-amendment.json",
+      "bytes": 855,
+      "sha256": "467229a31706aa6be8e5d0058943ab1b95474d9eb2a7cb6809644b23ae0bff08"
+    },
+    {
+      "path": "raw/summary-1794694878778.json",
+      "bytes": 72716,
+      "sha256": "1789e5827794c418ae3fa33d5d6294c31aca1a27719c09a3511a1deaa0aa2ab0"
+    },
+    {
+      "path": "raw/summary-1794694892759.json",
+      "bytes": 72716,
+      "sha256": "030b0dd2926c737c8b2a5d5761785a3b8177a278d9b7ef09498c7edd5ad39a2b"
+    },
+    {
+      "path": "raw/targets/event_one_answer_covers_overlapping_points__baseline__r1__t1.json",
+      "bytes": 59879,
+      "sha256": "a16989772f8422728d7c60b8b1741d4e208d143d2f075f3c2abc96d615fbf4ec"
+    },
+    {
+      "path": "raw/targets/event_one_answer_covers_overlapping_points__baseline__r1__t2.json",
+      "bytes": 59869,
+      "sha256": "a5caa02f7d3744a596ef28636c11b9567bceed6e559b86fccd43a74f446409c8"
+    },
+    {
+      "path": "raw/targets/event_one_answer_covers_overlapping_points__baseline__r2__t1.json",
+      "bytes": 59995,
+      "sha256": "efab17ee9cbd1049b9e8e6b95ea19400d4b66069c588bcfe5445bb6cf5ba03a0"
+    },
+    {
+      "path": "raw/targets/event_one_answer_covers_overlapping_points__baseline__r2__t2.json",
+      "bytes": 59893,
+      "sha256": "90709521a9271ea47f3925fe5bca7cc6db1d03c374e4f7bfaaf29c70562cdbf6"
+    },
+    {
+      "path": "raw/targets/event_one_answer_covers_overlapping_points__baseline__r3__t1.json",
+      "bytes": 59967,
+      "sha256": "d96cd1e6b6f6aa593e5448936f5de4a4639c168c32b678a8470c54b62a9f9616"
+    },
+    {
+      "path": "raw/targets/event_one_answer_covers_overlapping_points__baseline__r3__t2.json",
+      "bytes": 59977,
+      "sha256": "1061c94aa253fae5d7a7280bccff6668679a0ebc6145612c7e076e21ace671a7"
+    },
+    {
+      "path": "raw/targets/event_one_answer_covers_overlapping_points__full_history__r1__t1.json",
+      "bytes": 64313,
+      "sha256": "e6ae56440e63b87119202a2c04a3b27d98e9bc59a921daad549088458ed81338"
+    },
+    {
+      "path": "raw/targets/event_one_answer_covers_overlapping_points__full_history__r1__t2.json",
+      "bytes": 63171,
+      "sha256": "9ee9f13efb0acd352d47a6508518edf9074c3634a85add5ce9d7f245f5bdadcc"
+    },
+    {
+      "path": "raw/targets/event_one_answer_covers_overlapping_points__full_history__r2__t1.json",
+      "bytes": 60225,
+      "sha256": "d85751a33352cbe36e0dfb6c32b602ccf7c2147d26b482fac279c9cf08446f4c"
+    },
+    {
+      "path": "raw/targets/event_one_answer_covers_overlapping_points__full_history__r2__t2.json",
+      "bytes": 60771,
+      "sha256": "a71e838f975b5111ce3c9764ef0b3ae8890b1a004d45bf39e3662547ded7a85b"
+    },
+    {
+      "path": "raw/targets/event_one_answer_covers_overlapping_points__full_history__r3__t1.json",
+      "bytes": 59959,
+      "sha256": "b97575053671f2a996971d43282a144cfbe9ec888c5fa6568e1c1263675de873"
+    },
+    {
+      "path": "raw/targets/event_one_answer_covers_overlapping_points__full_history__r3__t2.json",
+      "bytes": 60683,
+      "sha256": "e3e01365866de91383c646ca003556bfac35f0bda864ca243b7661142e36d772"
+    },
+    {
+      "path": "raw/targets/gift_card_contextual_judgment_real__baseline__r1__t1.json",
+      "bytes": 60969,
+      "sha256": "bb09279002c0c106b0a3783cf50ddff7e116bdd8d1d9ed3a72bf90ca93ceffc3"
+    },
+    {
+      "path": "raw/targets/gift_card_contextual_judgment_real__baseline__r1__t2.json",
+      "bytes": 61107,
+      "sha256": "232eb35caf6c6311d0f4d914641a647f0ac3b8fa095b84095bfc684ff1de3f5c"
+    },
+    {
+      "path": "raw/targets/gift_card_contextual_judgment_real__baseline__r2__t1.json",
+      "bytes": 61055,
+      "sha256": "331c1a22441aae9363ff94d03a5dc85ec9cc20f91978be90f8a248bc0408cdda"
+    },
+    {
+      "path": "raw/targets/gift_card_contextual_judgment_real__baseline__r2__t2.json",
+      "bytes": 61659,
+      "sha256": "bef3910efc575f0c16b0432ca857f3eed9aed563ae255f02cd1783446cc04087"
+    },
+    {
+      "path": "raw/targets/gift_card_contextual_judgment_real__baseline__r3__t1.json",
+      "bytes": 60947,
+      "sha256": "5af98d1eb6a91c46c1dca567309f9b8b676e96a4b1c81d9798b1e478a208e657"
+    },
+    {
+      "path": "raw/targets/gift_card_contextual_judgment_real__baseline__r3__t2.json",
+      "bytes": 61251,
+      "sha256": "d9eda6846718660761648533fe6f0e5db1b48eda137af9b111836433477cc0ae"
+    },
+    {
+      "path": "raw/targets/gift_card_contextual_judgment_real__full_history__r1__t1.json",
+      "bytes": 61363,
+      "sha256": "54688dc071477f2fab7d78ba94eb7a33c7bc25b86a8bfa875165114aa2500638"
+    },
+    {
+      "path": "raw/targets/gift_card_contextual_judgment_real__full_history__r1__t2.json",
+      "bytes": 62451,
+      "sha256": "d70e7a60c7fe71c76a50da548edbeb548551244dedf884f0db074f50abb9d839"
+    },
+    {
+      "path": "raw/targets/gift_card_contextual_judgment_real__full_history__r2__t1.json",
+      "bytes": 61039,
+      "sha256": "55b6b9b7709cd16ca702af9e82b5b6daa7765b9638864c1d770b5c4b29364e28"
+    },
+    {
+      "path": "raw/targets/gift_card_contextual_judgment_real__full_history__r2__t2.json",
+      "bytes": 61877,
+      "sha256": "fa64c42b04f010b34a16e8f00bb9a2e5fc49108eb761f344a1e165eb411e44d5"
+    },
+    {
+      "path": "raw/targets/gift_card_contextual_judgment_real__full_history__r3__t1.json",
+      "bytes": 61291,
+      "sha256": "9a2636fa8d050e9671f71b063da600b0a1086d5dafa35a8b80210c2f89461cdb"
+    },
+    {
+      "path": "raw/targets/gift_card_contextual_judgment_real__full_history__r3__t2.json",
+      "bytes": 62563,
+      "sha256": "ce73d88a9d7f9d57dd59acf7d77ae7f06b3a5199eaf7ff22a191cf280e6d3c60"
+    },
+    {
+      "path": "raw/targets/library_agreement_only__baseline__r1__t1.json",
+      "bytes": 58653,
+      "sha256": "40b758b6505e2efe6112ec1619005efa13ab42a14afd49a48aa1c9ee5a437141"
+    },
+    {
+      "path": "raw/targets/library_agreement_only__baseline__r1__t2.json",
+      "bytes": 58895,
+      "sha256": "503e152f44d0720cf4c67efbb5ae34200b1cdefbbe16cf3bd73763dec4a02164"
+    },
+    {
+      "path": "raw/targets/library_agreement_only__baseline__r2__t1.json",
+      "bytes": 58681,
+      "sha256": "53fabd4b8a0289dbd5b13fd4a060f5b419ae95360894f705874b0e31e09532ec"
+    },
+    {
+      "path": "raw/targets/library_agreement_only__baseline__r2__t2.json",
+      "bytes": 58939,
+      "sha256": "b1cf78485db497f3b4ce936b05162724673687094695901c717fd70d36114c9c"
+    },
+    {
+      "path": "raw/targets/library_agreement_only__baseline__r3__t1.json",
+      "bytes": 58395,
+      "sha256": "f4cff8ddeb42d18064ed7617e7c46ccb2859aee23b07c44b02f539ac3e549944"
+    },
+    {
+      "path": "raw/targets/library_agreement_only__baseline__r3__t2.json",
+      "bytes": 58665,
+      "sha256": "2359a8f65e7902fabb3d63dc49a3cd5921c4998e4c9edd8f18666d0a5d4cc22a"
+    },
+    {
+      "path": "raw/targets/library_agreement_only__full_history__r1__t1.json",
+      "bytes": 58295,
+      "sha256": "b2c27b00199258df0d8848e4049c31fd24f28652091c849aa7a060e11ed70090"
+    },
+    {
+      "path": "raw/targets/library_agreement_only__full_history__r1__t2.json",
+      "bytes": 59123,
+      "sha256": "2cbcd1cec1f26b97fa6c9d4b753cf7080fe306d788edd03a8d1eda1f76d1dff6"
+    },
+    {
+      "path": "raw/targets/library_agreement_only__full_history__r2__t1.json",
+      "bytes": 58467,
+      "sha256": "6baf0c1f2db331d7b54d748c8f296a1f21f596f73c26be001eb04aac7a946788"
+    },
+    {
+      "path": "raw/targets/library_agreement_only__full_history__r2__t2.json",
+      "bytes": 59433,
+      "sha256": "b039bad163ff0414ae8a5bcc2ab9e562fa70f009d725b6b4d39a789fbe71dd2e"
+    },
+    {
+      "path": "raw/targets/library_agreement_only__full_history__r3__t1.json",
+      "bytes": 58391,
+      "sha256": "74f1a1963df934d5288165a250123c4c2317bccc5c489c07b17d3d0df70db9b7"
+    },
+    {
+      "path": "raw/targets/library_agreement_only__full_history__r3__t2.json",
+      "bytes": 59267,
+      "sha256": "5728c08b9b39809f90eb2a83b51c8f6d5e68b2d4d1ed11cec080681e361b86c2"
+    },
+    {
+      "path": "raw/targets/library_all_tasks_completed__baseline__r1__t1.json",
+      "bytes": 59232,
+      "sha256": "5215c1810126c04f4a3059296876464b7e9cf35103ecbceb2575235de45cafb7"
+    },
+    {
+      "path": "raw/targets/library_all_tasks_completed__baseline__r1__t2.json",
+      "bytes": 59832,
+      "sha256": "4730c9b3bcfd70f8624d8a1aa51a9be57e2ba5f4f91ba98d1cddd6f99e87a150"
+    },
+    {
+      "path": "raw/targets/library_all_tasks_completed__baseline__r2__t1.json",
+      "bytes": 59384,
+      "sha256": "948345cd39dfdb421dd9d0017f48ec82c8e0e17473dcd904e761d989728d6ab8"
+    },
+    {
+      "path": "raw/targets/library_all_tasks_completed__baseline__r2__t2.json",
+      "bytes": 59510,
+      "sha256": "c77783f8455528554e65c6fe032505c309b734ac2e0b82bc33c2faf73b006d14"
+    },
+    {
+      "path": "raw/targets/library_all_tasks_completed__baseline__r3__t1.json",
+      "bytes": 59412,
+      "sha256": "3fec3e89ad7651a7b8a89f37ad8914af74453920bf655cfb8dbe7dcee227d8f5"
+    },
+    {
+      "path": "raw/targets/library_all_tasks_completed__baseline__r3__t2.json",
+      "bytes": 59742,
+      "sha256": "1efef40df0b1ef3bbd4d33f1dd64d07d9144190d73c06e62083e6d1a46a91e59"
+    },
+    {
+      "path": "raw/targets/library_all_tasks_completed__full_history__r1__t1.json",
+      "bytes": 59636,
+      "sha256": "17819a56c27585b4971f981587f423085b2ce7fc571930a9269a70895cb18004"
+    },
+    {
+      "path": "raw/targets/library_all_tasks_completed__full_history__r1__t2.json",
+      "bytes": 60742,
+      "sha256": "9a4403e518edc7e5bf68c3e312dcb7055944f80001dc20f4f18c45cd2f05406e"
+    },
+    {
+      "path": "raw/targets/library_all_tasks_completed__full_history__r2__t1.json",
+      "bytes": 60074,
+      "sha256": "00326ffd5880d09e628e8f0b1ddaca4acf534b177f20cae9a1bf83229b30038e"
+    },
+    {
+      "path": "raw/targets/library_all_tasks_completed__full_history__r2__t2.json",
+      "bytes": 60856,
+      "sha256": "3ad3a6931564ed71019bf09bc81650d85fa812da8d72aae13863033fe1adbe33"
+    },
+    {
+      "path": "raw/targets/library_all_tasks_completed__full_history__r3__t1.json",
+      "bytes": 60166,
+      "sha256": "5c0fc957c7d346c8d80fca8e5edfa2ae364a02e1556974f6db032e45e0980765"
+    },
+    {
+      "path": "raw/targets/library_all_tasks_completed__full_history__r3__t2.json",
+      "bytes": 92314,
+      "sha256": "bc957ee9791b845eef8e98a26a92b7fc6c9c2e9b47d869394ffa0fcc9287f7d9"
+    },
+    {
+      "path": "raw/targets/library_contextual_judgment__baseline__r1__t1.json",
+      "bytes": 58832,
+      "sha256": "d82cb6b7166e13b74de0477fa2aeea7d7d47e3510227377e26cbf9040fa680db"
+    },
+    {
+      "path": "raw/targets/library_contextual_judgment__baseline__r1__t2.json",
+      "bytes": 58652,
+      "sha256": "bf7e1b9304468fe766d5339f0b0b98d3cd7685c9305767c016dc8d92d9b2777a"
+    },
+    {
+      "path": "raw/targets/library_contextual_judgment__baseline__r2__t1.json",
+      "bytes": 58558,
+      "sha256": "70f057637c3178af058cc45eba4dfd70d5f70009a9a272f2a52cc269e8ed2eee"
+    },
+    {
+      "path": "raw/targets/library_contextual_judgment__baseline__r2__t2.json",
+      "bytes": 58830,
+      "sha256": "8be4e9e7a871e86faf24a664caa59862fe1da35615751a3f78c9028e9ad71bbe"
+    },
+    {
+      "path": "raw/targets/library_contextual_judgment__baseline__r3__t1.json",
+      "bytes": 58624,
+      "sha256": "0f349d03e3e27c95011b33ee6e2348aab8ecc92426313fb95c9dcb5df4c73f73"
+    },
+    {
+      "path": "raw/targets/library_contextual_judgment__baseline__r3__t2.json",
+      "bytes": 58698,
+      "sha256": "50983abb58c96308e6f93d3639688384651d10e621ba109018f4cb6f1f249669"
+    },
+    {
+      "path": "raw/targets/library_contextual_judgment__full_history__r1__t1.json",
+      "bytes": 59274,
+      "sha256": "b97dd72fbc6b83eec3ee7a07ca45a943ea982e88d8fa838a8a8efc0ab2e0b522"
+    },
+    {
+      "path": "raw/targets/library_contextual_judgment__full_history__r1__t2.json",
+      "bytes": 60150,
+      "sha256": "ff9097edef65ab2027ff4f5edf67118c889ae3c4d30d09dc6e08c277206e9160"
+    },
+    {
+      "path": "raw/targets/library_contextual_judgment__full_history__r2__t1.json",
+      "bytes": 58844,
+      "sha256": "3ea5eedce3af92c86bb12adef4d534846116b2c76199de0d9ca28fa76039b014"
+    },
+    {
+      "path": "raw/targets/library_contextual_judgment__full_history__r2__t2.json",
+      "bytes": 59596,
+      "sha256": "70ad9abefa4873a251205bf0a43c0b540ff8319a210888d00bab8f4f2809782b"
+    },
+    {
+      "path": "raw/targets/library_contextual_judgment__full_history__r3__t1.json",
+      "bytes": 58832,
+      "sha256": "21e5b7cbc443f48f353e1eeaf63c4fae4a1a2fc6a1cb234cf533e9c1b91f8f85"
+    },
+    {
+      "path": "raw/targets/library_contextual_judgment__full_history__r3__t2.json",
+      "bytes": 59474,
+      "sha256": "bb528668ac56924991a1089125b5ed02eb827baa66c0840e3cf50e012893d995"
+    },
+    {
+      "path": "raw/targets/phone_contradiction_after_completed_task__baseline__r1__t1.json",
+      "bytes": 59389,
+      "sha256": "8b315a4f8335857adce68544496ce7c713aff21e5ff50d05dd2dfa73d9415cee"
+    },
+    {
+      "path": "raw/targets/phone_contradiction_after_completed_task__baseline__r1__t2.json",
+      "bytes": 59443,
+      "sha256": "215fa05bd0470159dd997ed7f87ac48644e826e706890d96adc53ecc9eeeed2b"
+    },
+    {
+      "path": "raw/targets/phone_contradiction_after_completed_task__baseline__r2__t1.json",
+      "bytes": 59761,
+      "sha256": "e0e4ffb0d4a3e56f9183d3d64874834354cce54c81d074d80e310948f28115c5"
+    },
+    {
+      "path": "raw/targets/phone_contradiction_after_completed_task__baseline__r2__t2.json",
+      "bytes": 59673,
+      "sha256": "c3fa81ac109d38574896274b16d9c9c9389c252895059660fdced9427f2f6f59"
+    },
+    {
+      "path": "raw/targets/phone_contradiction_after_completed_task__baseline__r3__t1.json",
+      "bytes": 59577,
+      "sha256": "01c52c5db9dcb8b2fcf457502059073bb9e15e6109654d395fd7afae790af069"
+    },
+    {
+      "path": "raw/targets/phone_contradiction_after_completed_task__baseline__r3__t2.json",
+      "bytes": 59473,
+      "sha256": "99a7d361a46bd012839c06f998885fd0679100fc76fa5b45d4e19ef3ef5ef475"
+    },
+    {
+      "path": "raw/targets/phone_contradiction_after_completed_task__full_history__r1__t1.json",
+      "bytes": 59697,
+      "sha256": "d6c838d573864b43961632b49c8051f81068f6eb1c57b203cdef9d6de4341320"
+    },
+    {
+      "path": "raw/targets/phone_contradiction_after_completed_task__full_history__r1__t2.json",
+      "bytes": 60661,
+      "sha256": "0153a90c0b902260b8ebd56c9afa77e3d5fef9c1524475056aad728c0332e238"
+    },
+    {
+      "path": "raw/targets/phone_contradiction_after_completed_task__full_history__r2__t1.json",
+      "bytes": 59701,
+      "sha256": "f9d31d02a6aaf2a1990ce3e0a80d88b33a5bf7c0482f29550e42340f80e97cc8"
+    },
+    {
+      "path": "raw/targets/phone_contradiction_after_completed_task__full_history__r2__t2.json",
+      "bytes": 60975,
+      "sha256": "a65adad5cddea63832a6b018684610ea252b77350b8df2faa114b2fb4268c14c"
+    },
+    {
+      "path": "raw/targets/phone_contradiction_after_completed_task__full_history__r3__t1.json",
+      "bytes": 59505,
+      "sha256": "ba14e36296ec19f3d2e1546714e719284f52e4db9dc7f2212a0f85a5b0dc38fb"
+    },
+    {
+      "path": "raw/targets/phone_contradiction_after_completed_task__full_history__r3__t2.json",
+      "bytes": 60449,
+      "sha256": "7290224408d0fa63950dd0c7beb1fcbfaef32126f0724a0f8a8fc31f7d482ec7"
+    }
+  ]
+}

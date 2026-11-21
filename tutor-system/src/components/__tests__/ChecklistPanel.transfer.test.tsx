@@ -11,6 +11,8 @@ import React from 'react';
 import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ChecklistPanel from '../ChecklistPanel';
+jest.mock('../../hooks/useRealtimeInvalidation', () => ({ useRealtimeInvalidation: () => null }));
+
 import { useChecklist } from '../../hooks/useChecklist';
 import { useOptionalAuth } from '../../contexts/AuthContext';
 import { RoomFeaturesService } from '../../services/roomFeaturesService';
@@ -144,7 +146,7 @@ describe('useChecklist transfer progress ownership', () => {
     expect(checklistApi.getActiveTransferChecklistForRoom).toHaveBeenCalledWith(TRANSFER_ROOM_ID);
     expect(result.current.checklist!.progress_policy_version).toBe('transfer_v1');
     expect(result.current.checklist!.student_id).toBe(LEARNER_A_ID);
-    expect(checklistApi.read).not.toHaveBeenCalled();
+
   });
 
   // useChecklist.ts: a room draft is promoted when the tutor observes the learner seat.
@@ -313,6 +315,8 @@ describe('useChecklist transfer progress ownership', () => {
 
     expect(await screen.findByText('Check the sender')).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText(/saved locally/i)).toBeInTheDocument());
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Learning targets are not saved. Learner progress is not being recorded.');
     expect(screen.getByRole('button', { name: 'Retry sync' })).toBeInTheDocument();
     checklistApi.initializeTransferChecklistForStudent.mockResolvedValueOnce(transferChecklist);
     fireEvent.click(screen.getByRole('button', { name: 'Retry sync' }));
@@ -335,7 +339,7 @@ describe('useChecklist transfer progress ownership', () => {
     expect(result.current.checklist).toBeNull();
     expect(result.current.progress).toBeNull();
     expect(result.current.error).toMatch(/different learner/i);
-    expect(checklistApi.read).not.toHaveBeenCalled();
+
     // The caller identity is checked against the returned server-owned projection.
     expect(checklistApi.getChecklistForStudent.mock.calls[0][1]).toBe(LEARNER_A_ID);
   });
@@ -423,23 +427,17 @@ describe('useChecklist transfer progress ownership', () => {
     expect(checklistApi.update).not.toHaveBeenCalled();
   });
 
-  it('leaves legacy room-shared progress writes unchanged', async () => {
+  it('retains historical progress separately and does not expose it for current writes', async () => {
     checklistApi.getActiveTransferChecklistForRoom.mockResolvedValue(null);
     checklistApi.getChecklistForStudent.mockResolvedValue(null);
     checklistApi.read.mockResolvedValue(legacyChecklist);
-
     const { result } = renderHook(() => useChecklist(TRANSFER_ROOM_ID));
-    await act(async () => {
-      await result.current.refreshChecklist();
-    });
-    expect(result.current.checklist!.progress_policy_version).toBe('legacy_v1');
-
-    await act(async () => {
-      await result.current.updateItem(CHECKLIST_ITEM_ID, { status: 'covered' });
-    });
-
-    expect(checklistApi.update).toHaveBeenCalledWith(CHECKLIST_ITEM_ID, { status: 'covered' });
+    await act(async () => { await result.current.refreshChecklist(); });
+    expect(result.current.checklist).toBeNull();
+    expect(result.current.priorChecklist).toEqual(legacyChecklist);
+    expect(checklistApi.update).not.toHaveBeenCalled();
   });
+
 });
 
 describe('ChecklistPanel transfer presentation', () => {
@@ -512,14 +510,7 @@ describe('ChecklistPanel transfer presentation', () => {
   });
 
   // ChecklistPanel.tsx: ordinary checklist understanding retains its existing excellent option.
-  it('retains excellent understanding for ordinary targets', async () => {
-    checklistApi.getActiveTransferChecklistForRoom.mockResolvedValue(null);
-    checklistApi.read.mockResolvedValue(legacyChecklist);
-    renderPanel();
-    await expandFirstItem();
-    const control = screen.getByRole('combobox', { name: 'Understanding:' }) as HTMLSelectElement;
-    expect(Array.from(control.options, option => option.value)).toEqual(['none', 'basic', 'good', 'excellent']);
-  });
+
 
   it('lets the tutor edit and reprioritize a shared assessment target', async () => {
     checklistApi.getActiveTransferChecklistForRoom.mockResolvedValue(transferChecklist);
@@ -548,26 +539,9 @@ describe('ChecklistPanel transfer presentation', () => {
     }));
   });
 
-  it('keeps the legacy status control for a legacy checklist', async () => {
-    checklistApi.getActiveTransferChecklistForRoom.mockResolvedValue(null);
-    checklistApi.read.mockResolvedValue(legacyChecklist);
 
-    renderPanel();
-    await expandFirstItem();
 
-    expect(document.querySelector('.status-select')).not.toBeNull();
-    expect(screen.queryByText('Ready for transfer check')).not.toBeInTheDocument();
-  });
 
-  it('locks legacy progress controls while the room progression lock is on', async () => {
-    checklistApi.getActiveTransferChecklistForRoom.mockResolvedValue(null);
-    checklistApi.read.mockResolvedValue(legacyChecklist);
-
-    render(<ChecklistPanel roomId={TRANSFER_ROOM_ID} isVisible onToggleVisibility={jest.fn()} progressLocked />);
-    await expandFirstItem();
-
-    expect(document.querySelector('.status-select')).toBeDisabled();
-  });
 
   it('shows Guard protection while keeping the shared assessment targets visible', async () => {
     checklistApi.getActiveTransferChecklistForRoom.mockResolvedValue(transferChecklist);
@@ -615,7 +589,7 @@ describe('ChecklistPanel transfer presentation', () => {
   });
 
   // ChecklistPanel.tsx and useChecklist.ts: enabling assessment must keep prior room progress visible.
-  it('shows earlier learning progress as the current checklist while assessment targets are being set up', async () => {
+  it('shows historical preservation notice while new learner targets need setup', async () => {
     checklistApi.getActiveTransferChecklistForRoom.mockResolvedValue(null);
     checklistApi.read.mockResolvedValue(buildChecklist({
       progress_policy_version: 'legacy_v1', student_id: null,
@@ -630,8 +604,8 @@ describe('ChecklistPanel transfer presentation', () => {
 
     expect(await screen.findByText('Learning Progress')).toBeInTheDocument();
     expect(screen.queryByText('Previous Learning Progress')).not.toBeInTheDocument();
-    expect(await screen.findByText('Verify payment requests')).toBeInTheDocument();
-    expect(screen.getByText(/Partially covered/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Historical learning records are preserved/)).toBeInTheDocument();
+    expect(screen.queryByText('Verify payment requests')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Generate Learning Targets' })).toBeEnabled();
   });
 

@@ -1,0 +1,30 @@
+{
+  "intent": "Audit uniform thinking-judge remeasurement after observed metric defects while preserving every target response and candidate.",
+  "reviewer": "/root/continuity_audit",
+  "date": "2026-11-13",
+  "verdict": "clear",
+  "scope": "Measurement correction and execution integrity; calibrated accuracy and candidate conformance require subsequent evidence.",
+  "snapshot_fingerprint": "37ba6038c6ebefb8cecb61eae7522429169c940b245b945358d34fedb377a8fe",
+  "runner_sha256": "20245c2e6ca2a1cbcdfb744f621e146e8817d7cfe316c0d0f8a03944d00dd341",
+  "calibration_selection_script_sha256": "8d8d378be957e5ccc1c9e70ec007ea674ee3f25c09d26ab7673a97a1230bbd45",
+  "boundary_annotations_sha256": "fe15eff966630031ba4907dd786b81f3f1a602fe2e14c7dadd303c51388a46ab",
+  "evaluation_plan_sha256": "ec6df286616a27c7e1c721db82ccdd9a6605c7b76790ef7ea336ab1cb66761f8",
+  "independent_verification": {
+    "source_hashes": 33,
+    "deep_equal_to_v8": ["judge_system", "judge_steps", "rubrics", "shells", "jobs", "cases", "prepared_cases", "selection", "trajectories", "thresholds", "partitions"],
+    "target_settings_unchanged": ["model", "endpoint", "target_temperature", "target_max_tokens", "target_enable_thinking", "repetitions"],
+    "all_judge_metrics": "Qwen3.8-flash, temperature 0, thinking enabled, 8000 tokens",
+    "target": "Qwen3.8-flash, temperature 0.3, thinking disabled, 600 tokens",
+    "judge_timeout_ms": 180000,
+    "worker_bound": 16,
+    "active_budget_ms": 3600000,
+    "prior_active_time_retained": true,
+    "expected_generations": 207,
+    "calibration_checks": 39
+  },
+  "calibration_review": "All 32 original checks reuse the complete v5 thinking calibration only after message/model/temperature/thinking/token-limit equality checks. Seven observed-boundary checks use the auditor-authored exact targets and hashes. Their annotations are evaluator-only; target requests receive none of them. The new judgment version requires all 39 checks to pass.",
+  "reuse_review": "Existing tutor records are retained, including exhausted invalid targets. Runtime checks frozen messages and actual target request settings before reuse. Every successful existing ordering judgment, passing or failing, is reused only after exact request/settings comparison and source hashing; earlier ordering errors may be repaired under the declared longer timeout while retaining their original evidence. Progression and disclosure are rejudged uniformly in judgments-v9. No selected-score overwrite or favorable target resampling is introduced.",
+  "authority": "The user permits judge thinking and explicitly requested 16 workers for the next run. The main agent records the expanded 60-minute execution cap and evaluator-only changes before this phase. Tutor configuration and the already selected cases are unchanged.",
+  "execution_condition": "Run all seven new boundary checks and verify the combined 39-check provenance. On successful calibration, remeasure all references before comparing candidates. Preserve new errors and original v8 judgments. Independent output review remains required because calibration success does not establish error-free measurement.",
+  "phase_order_clarification": "The main agent subsequently schedules candidate generation/scoring before reference regrading for visible progress. All 87 reference targets already exist and all candidate hashes are frozen, so this does not change the baseline-before-refinement comparison. Final comparative scores remain pending until the references have the same v9 evaluator."
+}

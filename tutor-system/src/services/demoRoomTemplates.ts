@@ -17,7 +17,7 @@ import {
   buildEcologicalCaseVarsFromRoomDialogue,
   EcologicalCaseVars
 } from './ecologicalTutorCall';
-import { DEFAULT_AI_MODEL } from './aiModels';
+import { OAI_MODEL } from './aiModels';
 
 export const GLOBAL_TEMPLATE_TUTOR_ID = '00000000-0000-0000-0000-000000000000';
 
@@ -70,7 +70,7 @@ export function buildCasualPeerAIConfig(
 
   return {
     enabled: true,
-    model_name: options?.model_name || DEFAULT_AI_MODEL,
+    model_name: options?.model_name || OAI_MODEL,
     temperature: options?.temperature ?? 0.3,
     max_tokens: options?.max_tokens ?? 100,
     preset: 'casual_peer',
@@ -478,7 +478,7 @@ export function getPromptComparisonTemplateSeeds(): DemoRoomTemplateSeed[] {
     }
 
     const refinedBase = buildCasualPeerAIConfig('Account Security Alert', {
-      model_name: DEFAULT_AI_MODEL,
+      model_name: OAI_MODEL,
       temperature: 0,
       max_tokens: 100
     });

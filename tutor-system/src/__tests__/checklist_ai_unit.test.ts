@@ -7,10 +7,9 @@ import { ChecklistIntegration, generateChecklistFromSystemPrompt } from '../serv
 import { extractDetectionAreasFromPromptAsync } from '../services/promptDetectionExtractor';
 import { LLMExtractionService } from '../services/llmExtractionService';
 import { QwenService } from '../services/aiService';
-import { CoverageDetectionService } from '../services/coverageDetectionService';
 import { ChecklistItem } from '../types/checklist';
 import { ConversationMessage } from '../types';
-import { DEFAULT_AI_MODEL } from '../services/aiModels';
+import { OAI_MODEL } from '../services/aiModels';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -32,7 +31,7 @@ describe('Single-list LLM extraction', () => {
     const [prompt, history, config] = generateResponse.mock.calls[0];
     expect(prompt).toContain('Source learning content');
     expect(history).toEqual([]);
-    expect(config.model_name).toBe(DEFAULT_AI_MODEL);
+    expect(config.model_name).toBe(OAI_MODEL);
   });
 
   it('accepts a custom target inventory larger than five', async () => {
@@ -112,177 +111,3 @@ describe('Single-list LLM extraction', () => {
     expect(typeof result.userPrompt).toBe('string');
   });
 });
-
-const describeLiveQwen = process.env.RUN_LIVE_QWEN_TESTS === 'true' ? describe : describe.skip;
-
-describeLiveQwen('AI Checklist Coverage Integration', () => {
-  jest.setTimeout(15000);
-
-  describe('Coverage Detection', () => {
-    
-    describe('Direct Coverage', () => {
-      const testData = loadTestCases('test-data/ai-coverage/direct-coverage.json');
-      
-      testData.testCases.forEach((testCase: any) => {
-        it(`should detect direct coverage: ${testCase.name}`, async () => {
-          const checklistItems: ChecklistItem[] = testData.checklistItems;
-          const conversationHistory: ConversationMessage[] = testCase.conversationHistory || [];
-          
-          // Use real API call - no mocking
-          
-          // Run coverage detection
-          const detectionResult = await CoverageDetectionService.analyzeStudentResponse(
-            testCase.studentResponse,
-            checklistItems,
-            conversationHistory
-          );
-          
-          // Verify detection result structure (flexible for real API responses)
-          expect(detectionResult).toHaveProperty('detected_coverage');
-          expect(detectionResult).toHaveProperty('analysis_confidence');
-          expect(Array.isArray(detectionResult.detected_coverage)).toBe(true);
-          expect(typeof detectionResult.analysis_confidence).toBe('number');
-          
-          // Log actual results for debugging
-          console.log(`Test: ${testCase.name}`);
-          console.log('Student Response:', testCase.studentResponse);
-          console.log('Detection Results:', JSON.stringify(detectionResult, null, 2));
-        });
-      });
-    });
-    
-    describe('Partial Understanding', () => {
-      const testData = loadTestCases('test-data/ai-coverage/partial-understanding.json');
-      
-      testData.testCases.forEach((testCase: any) => {
-        it(`should detect partial understanding: ${testCase.name}`, async () => {
-          const checklistItems: ChecklistItem[] = testData.checklistItems;
-          
-          // Use real API call - no mocking
-          
-          const detectionResult = await CoverageDetectionService.analyzeStudentResponse(
-            testCase.studentResponse,
-            checklistItems,
-            testCase.conversationHistory || []
-          );
-          
-          // Verify detection result structure (flexible for real API responses)
-          expect(detectionResult).toHaveProperty('detected_coverage');
-          expect(detectionResult).toHaveProperty('analysis_confidence');
-          expect(Array.isArray(detectionResult.detected_coverage)).toBe(true);
-          
-          console.log(`Partial Understanding Test: ${testCase.name}`);
-          console.log('Student Response:', testCase.studentResponse);
-          console.log('Detection Results:', JSON.stringify(detectionResult, null, 2));
-        });
-      });
-    });
-    
-    describe('False Positive Prevention', () => {
-      const testData = loadTestCases('test-data/ai-coverage/false-positives.json');
-      
-      testData.testCases.forEach((testCase: any) => {
-        it(`should not detect false positive: ${testCase.name}`, async () => {
-          const checklistItems: ChecklistItem[] = testData.checklistItems;
-          
-          // Use real API call - no mocking
-          
-          const detectionResult = await CoverageDetectionService.analyzeStudentResponse(
-            testCase.studentResponse,
-            checklistItems,
-            testCase.conversationHistory || []
-          );
-          
-          // Verify detection result structure
-          expect(detectionResult).toHaveProperty('detected_coverage');
-          expect(Array.isArray(detectionResult.detected_coverage)).toBe(true);
-          
-          console.log(`False Positive Test: ${testCase.name}`);
-          console.log('Student Response:', testCase.studentResponse);
-          console.log('Detection Results:', JSON.stringify(detectionResult, null, 2));
-        });
-      });
-    });
-    
-    describe('Progressive Learning', () => {
-      const testData = loadTestCases('test-data/ai-coverage/progressive-learning.json');
-      
-      testData.testCases.forEach((testCase: any) => {
-        it(`should track progressive learning: ${testCase.name}`, async () => {
-          const checklistItems: ChecklistItem[] = testData.checklistItems;
-          let currentItems = [...checklistItems];
-          
-          // Process each interaction in sequence
-          for (const interaction of testCase.interactions) {
-            // Use real API call - no mocking
-            
-            const detectionResult = await CoverageDetectionService.analyzeStudentResponse(
-              interaction.studentResponse,
-              currentItems,
-              interaction.conversationHistory || []
-            );
-            
-            // Verify detection result structure
-            expect(detectionResult).toHaveProperty('detected_coverage');
-            expect(Array.isArray(detectionResult.detected_coverage)).toBe(true);
-            
-            console.log(`Progressive Learning - Interaction ${testCase.interactions.indexOf(interaction) + 1}:`);
-            console.log('Student Response:', interaction.studentResponse);
-            console.log('Detection Results:', JSON.stringify(detectionResult, null, 2));
-            
-            // Update items based on detection for next interaction
-            detectionResult.detected_coverage.forEach((detection: any) => {
-              const itemIndex = currentItems.findIndex(item => item.id === detection.item_id);
-              if (itemIndex !== -1) {
-                currentItems[itemIndex] = {
-                  ...currentItems[itemIndex],
-                  status: detection.new_status
-                };
-              }
-            });
-          }
-        });
-      });
-    });
-  });
-  
-  describe('Integration Scenarios', () => {
-    
-    it('should handle extraction failure gracefully', async () => {
-      const malformedPrompt = 'This is a prompt without proper sections';
-      const areas = await extractDetectionAreasFromPromptAsync(malformedPrompt);
-      
-      // LLM might extract something even from malformed prompts
-      expect(Array.isArray(areas)).toBe(true);
-      console.log('Extraction failure test - extracted:', areas);
-    });
-    
-    it('should validate detection results before applying', async () => {
-      const items: ChecklistItem[] = [{
-        id: '1',
-        area_text: '[understanding] Test concept',
-        item_type: 'detection_area',
-        status: 'pending',
-        priority: 'important',
-        understanding_level: 'none',
-        coverage_evidence: [],
-        tutor_notes: '',
-        last_addressed: null,
-        attempts_count: 0,
-        original_template_area: true,
-        created_at: new Date(),
-        updated_at: new Date()
-      }];
-      
-      // Test with empty response - should return valid structure
-      const result = await CoverageDetectionService.analyzeStudentResponse('', items, []);
-      expect(result).toHaveProperty('detected_coverage');
-      expect(Array.isArray(result.detected_coverage)).toBe(true);
-      
-      console.log('Empty Response Test Results:', JSON.stringify(result, null, 2));
-    });
-  });
-});
-
-// Export test utilities for use in other test files
-export { loadTestCases };

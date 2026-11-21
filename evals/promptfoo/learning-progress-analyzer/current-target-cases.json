@@ -1,0 +1,3595 @@
+{
+  "label_review": "Agent-authored provisional gold; human review pending. All real cases previously exposed, some included in few-shot examples. No independent holdout claim.",
+  "cases": [
+    {
+      "id": "REAL-1-KP1",
+      "scenario": "iTunes Gift Card Survey ($500)",
+      "partition": "example_exposed",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "Oh i see, the poster is suspiscous"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 1: Check if the reward makes sense. (Easiest)\nObservation task: The post promises a $500 gift card for only five minutes of answering questions.\nBehavior task: Ask yourself: \"Would a company really give away so much money for such a small task?\" Be careful when a reward seems too big.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "yeah , that is so real.."
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "A professional photo does not prove a site is real; scammers use them too. Do not click the link; open the real iTunes app to check for offers."
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "I understand ."
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "You understand what ?"
+          },
+          {
+            "id": "id-6",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "I should not click a link"
+          },
+          {
+            "id": "id-7",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "That is a correct safety step. What does the name 'Emma Garcia' tell you about who posted this?"
+          },
+          {
+            "id": "id-8",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "where is 'Emma Garcia'  ? i did not see this name"
+          },
+          {
+            "id": "id-9",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Look at the text above the message; it says 'Others (Emma Garcia)'. Does this name match Apple or iTunes?"
+          },
+          {
+            "id": "id-10",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Emma Garcia?"
+          },
+          {
+            "id": "id-11",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "You found the name 'Emma Garcia'. Does this name match an official Apple or iTunes account?"
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Oh i see, the poster is suspiscous"
+          }
+        ]
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-1-KP2",
+      "scenario": "iTunes Gift Card Survey ($500)",
+      "partition": "example_exposed",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "Oh i see, the poster is suspiscous"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 2: Watch out for exciting promises.\nObservation task: Words like \"CRAZY DEAL!!\" and \"got instantly\" make the offer sound exciting and encourage people to act quickly.\nBehavior task: Don't let exciting words or promises make you forget to check whether something is real.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "yeah , that is so real.."
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "A professional photo does not prove a site is real; scammers use them too. Do not click the link; open the real iTunes app to check for offers."
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "I understand ."
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "You understand what ?"
+          },
+          {
+            "id": "id-6",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "I should not click a link"
+          },
+          {
+            "id": "id-7",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "That is a correct safety step. What does the name 'Emma Garcia' tell you about who posted this?"
+          },
+          {
+            "id": "id-8",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "where is 'Emma Garcia'  ? i did not see this name"
+          },
+          {
+            "id": "id-9",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Look at the text above the message; it says 'Others (Emma Garcia)'. Does this name match Apple or iTunes?"
+          },
+          {
+            "id": "id-10",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Emma Garcia?"
+          },
+          {
+            "id": "id-11",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "You found the name 'Emma Garcia'. Does this name match an official Apple or iTunes account?"
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Oh i see, the poster is suspiscous"
+          }
+        ]
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-1-KP3",
+      "scenario": "iTunes Gift Card Survey ($500)",
+      "partition": "example_exposed",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "Oh i see, the poster is suspiscous"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 3: Check who is sharing the reward.\nObservation task: Emma Garcia is sharing the offer, but there is no proof that she works for Apple or iTunes.\nBehavior task: Look at her profile and past posts. Be careful if the account often shares free gifts or amazing offers.",
+            "status": "partially_covered",
+            "understanding_level": "basic"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "yeah , that is so real.."
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "A professional photo does not prove a site is real; scammers use them too. Do not click the link; open the real iTunes app to check for offers."
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "I understand ."
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "You understand what ?"
+          },
+          {
+            "id": "id-6",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "I should not click a link"
+          },
+          {
+            "id": "id-7",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "That is a correct safety step. What does the name 'Emma Garcia' tell you about who posted this?"
+          },
+          {
+            "id": "id-8",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "where is 'Emma Garcia'  ? i did not see this name"
+          },
+          {
+            "id": "id-9",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Look at the text above the message; it says 'Others (Emma Garcia)'. Does this name match Apple or iTunes?"
+          },
+          {
+            "id": "id-10",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Emma Garcia?"
+          },
+          {
+            "id": "id-11",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "You found the name 'Emma Garcia'. Does this name match an official Apple or iTunes account?"
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Oh i see, the poster is suspiscous"
+          }
+        ]
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-1-KP4",
+      "scenario": "iTunes Gift Card Survey ($500)",
+      "partition": "example_exposed",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "Oh i see, the poster is suspiscous"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 4: Look carefully at the website link. (Harder)\nObservation task: The link uses \"bit.ly,\" which hides the real website address.\nBehavior task: Don't click the link. Go to Apple's official website yourself to check whether the offer is real.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "yeah , that is so real.."
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "A professional photo does not prove a site is real; scammers use them too. Do not click the link; open the real iTunes app to check for offers."
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "I understand ."
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "You understand what ?"
+          },
+          {
+            "id": "id-6",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "I should not click a link"
+          },
+          {
+            "id": "id-7",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "That is a correct safety step. What does the name 'Emma Garcia' tell you about who posted this?"
+          },
+          {
+            "id": "id-8",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "where is 'Emma Garcia'  ? i did not see this name"
+          },
+          {
+            "id": "id-9",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Look at the text above the message; it says 'Others (Emma Garcia)'. Does this name match Apple or iTunes?"
+          },
+          {
+            "id": "id-10",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Emma Garcia?"
+          },
+          {
+            "id": "id-11",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "You found the name 'Emma Garcia'. Does this name match an official Apple or iTunes account?"
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Oh i see, the poster is suspiscous"
+          }
+        ]
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-1-KP5",
+      "scenario": "iTunes Gift Card Survey ($500)",
+      "partition": "example_exposed",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "Oh i see, the poster is suspiscous"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 5: Check whether the company really offers the reward. (Most advanced)\nObservation task: The post has a gift card picture, but it does not show an official Apple announcement or explain the rules of the giveaway.\nBehavior task: Check Apple's official website and social media pages for the giveaway. Ask a trusted adult to help you check before sharing information or answering a survey.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "yeah , that is so real.."
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "A professional photo does not prove a site is real; scammers use them too. Do not click the link; open the real iTunes app to check for offers."
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "I understand ."
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "You understand what ?"
+          },
+          {
+            "id": "id-6",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "I should not click a link"
+          },
+          {
+            "id": "id-7",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "That is a correct safety step. What does the name 'Emma Garcia' tell you about who posted this?"
+          },
+          {
+            "id": "id-8",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "where is 'Emma Garcia'  ? i did not see this name"
+          },
+          {
+            "id": "id-9",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Look at the text above the message; it says 'Others (Emma Garcia)'. Does this name match Apple or iTunes?"
+          },
+          {
+            "id": "id-10",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Emma Garcia?"
+          },
+          {
+            "id": "id-11",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "You found the name 'Emma Garcia'. Does this name match an official Apple or iTunes account?"
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Oh i see, the poster is suspiscous"
+          }
+        ]
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-2-KP1",
+      "scenario": "Location Sharing Risks",
+      "partition": "example_exposed",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "oh , house numbers and street signs !"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 1: Never share your home address publicly. (Easiest)\nObservation task: Jasmine shares her full home address: 321 Jefferson Ave.\nBehavior task: Never post your full home address online. If you see a friend sharing theirs, let them know and encourage them to delete the post.",
+            "status": "partially_covered",
+            "understanding_level": "basic"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Can i join ?"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Before joining, consider who can see this post. Why might sharing your exact home address publicly be risky?"
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "ohh , any strangers can , i will not post my info in a public post"
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Good catch on the audience. Now, how would you rewrite that message to invite friends safely without listing your home address?"
+          },
+          {
+            "id": "id-6",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "i will dm them"
+          },
+          {
+            "id": "id-7",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "You need to share your meeting spot with three friends. Which method is safest?"
+          },
+          {
+            "id": "id-8",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Direct messages are safer. Public posts expose your address to strangers, risking safety. Rewrite the invite to say 'DM me for details' instead."
+          },
+          {
+            "id": "id-9",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "ok"
+          },
+          {
+            "id": "id-10",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Why might a stranger misuse your address if they see it? Also, what specific details in a photo could reveal your home location?"
+          },
+          {
+            "id": "id-11",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "since a stranger will understand my location"
+          },
+          {
+            "id": "id-12",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Correct, strangers can track you. What specific items in a photo, like house numbers or street signs, could reveal your home location?"
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "oh , house numbers and street signs !"
+          }
+        ]
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-2-KP2",
+      "scenario": "Location Sharing Risks",
+      "partition": "example_exposed",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "oh , house numbers and street signs !"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 2: Remember that photos can reveal where you live.\nObservation task: The picture shows Jasmine's actual house. Details like the house color, design, and nearby places can help people find it.\nBehavior task: Before posting a photo, check the background. Make sure it does not show your house, street, address, or other clues about where you live.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Can i join ?"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Before joining, consider who can see this post. Why might sharing your exact home address publicly be risky?"
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "ohh , any strangers can , i will not post my info in a public post"
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Good catch on the audience. Now, how would you rewrite that message to invite friends safely without listing your home address?"
+          },
+          {
+            "id": "id-6",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "i will dm them"
+          },
+          {
+            "id": "id-7",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "You need to share your meeting spot with three friends. Which method is safest?"
+          },
+          {
+            "id": "id-8",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Direct messages are safer. Public posts expose your address to strangers, risking safety. Rewrite the invite to say 'DM me for details' instead."
+          },
+          {
+            "id": "id-9",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "ok"
+          },
+          {
+            "id": "id-10",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Why might a stranger misuse your address if they see it? Also, what specific details in a photo could reveal your home location?"
+          },
+          {
+            "id": "id-11",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "since a stranger will understand my location"
+          },
+          {
+            "id": "id-12",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Correct, strangers can track you. What specific items in a photo, like house numbers or street signs, could reveal your home location?"
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "oh , house numbers and street signs !"
+          }
+        ]
+      },
+      "expected": {
+        "kind": "initial_signal"
+      },
+      "rationale": "Current contribution supplies the indicated component(s) of this complete target."
+    },
+    {
+      "id": "REAL-2-KP3",
+      "scenario": "Location Sharing Risks",
+      "partition": "example_exposed",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "oh , house numbers and street signs !"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 3: Don't invite strangers to your home. (Harder)\nObservation task: Jasmine's public post invites people to come over. Anyone who sees it might try to visit.\nBehavior task: Never invite people you don't know to your home. Share invitations only with trusted friends through private messages or group chats.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Can i join ?"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Before joining, consider who can see this post. Why might sharing your exact home address publicly be risky?"
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "ohh , any strangers can , i will not post my info in a public post"
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Good catch on the audience. Now, how would you rewrite that message to invite friends safely without listing your home address?"
+          },
+          {
+            "id": "id-6",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "i will dm them"
+          },
+          {
+            "id": "id-7",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "You need to share your meeting spot with three friends. Which method is safest?"
+          },
+          {
+            "id": "id-8",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Direct messages are safer. Public posts expose your address to strangers, risking safety. Rewrite the invite to say 'DM me for details' instead."
+          },
+          {
+            "id": "id-9",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "ok"
+          },
+          {
+            "id": "id-10",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Why might a stranger misuse your address if they see it? Also, what specific details in a photo could reveal your home location?"
+          },
+          {
+            "id": "id-11",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "since a stranger will understand my location"
+          },
+          {
+            "id": "id-12",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Correct, strangers can track you. What specific items in a photo, like house numbers or street signs, could reveal your home location?"
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "oh , house numbers and street signs !"
+          }
+        ]
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-2-KP4",
+      "scenario": "Location Sharing Risks",
+      "partition": "example_exposed",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "oh , house numbers and street signs !"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 4: Share general places instead of exact locations. (Most advanced)\nObservation task: An exact street address tells people exactly where to find Jasmine.\nBehavior task: Use general words like \"my neighborhood\" or \"downtown\" instead of sharing your full address. Check your privacy settings so only people you trust can see your posts.",
+            "status": "partially_covered",
+            "understanding_level": "basic"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Can i join ?"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Before joining, consider who can see this post. Why might sharing your exact home address publicly be risky?"
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "ohh , any strangers can , i will not post my info in a public post"
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Good catch on the audience. Now, how would you rewrite that message to invite friends safely without listing your home address?"
+          },
+          {
+            "id": "id-6",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "i will dm them"
+          },
+          {
+            "id": "id-7",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "You need to share your meeting spot with three friends. Which method is safest?"
+          },
+          {
+            "id": "id-8",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Direct messages are safer. Public posts expose your address to strangers, risking safety. Rewrite the invite to say 'DM me for details' instead."
+          },
+          {
+            "id": "id-9",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "ok"
+          },
+          {
+            "id": "id-10",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Why might a stranger misuse your address if they see it? Also, what specific details in a photo could reveal your home location?"
+          },
+          {
+            "id": "id-11",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "since a stranger will understand my location"
+          },
+          {
+            "id": "id-12",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Correct, strangers can track you. What specific items in a photo, like house numbers or street signs, could reveal your home location?"
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "oh , house numbers and street signs !"
+          }
+        ]
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-3-KP1",
+      "scenario": "Cyberbullying",
+      "partition": "example_exposed",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "sad"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 1: Recognize cyberbullying. (Easiest)\nWhat to understand: Online bullying can hurt people's feelings, make them feel scared or lonely, and make them not want to go online.\nBehavior task: Recognize that these actions are not okay. Don't dismiss them as just a joke if someone is being hurt.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "dang,that reaaly smells"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Yo, that's kinda mean though. 🚫 How would you feel if someone posted that about you?"
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "sad"
+          }
+        ],
+        "practice_type": "cyberbullying"
+      },
+      "expected": {
+        "kind": "initial_signal"
+      },
+      "rationale": "Current contribution supplies the indicated component(s) of this complete target."
+    },
+    {
+      "id": "REAL-3-KP2",
+      "scenario": "Cyberbullying",
+      "partition": "example_exposed",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "sad"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 2: Show kindness and support the person being bullied.\nWhat to understand: The person being bullied may feel sad, embarrassed, scared, or alone.\nBehavior task: Send them a kind private message, such as \"I'm sorry this happened. Are you okay?\" Let them know they are not alone. Offer to help them find a trusted adult.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "dang,that reaaly smells"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Yo, that's kinda mean though. 🚫 How would you feel if someone posted that about you?"
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "sad"
+          }
+        ],
+        "practice_type": "cyberbullying"
+      },
+      "expected": {
+        "kind": "initial_signal"
+      },
+      "rationale": "Current contribution supplies the indicated component(s) of this complete target."
+    },
+    {
+      "id": "REAL-3-KP3",
+      "scenario": "Cyberbullying",
+      "partition": "example_exposed",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "sad"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 3: Don't join in or help spread bullying.\nWhat to understand: Even if you don't write the mean message, sharing it or laughing at it can make the bullying worse.\nBehavior task: Don't like, share, forward, or comment on hurtful posts. Don't laugh along or encourage the bully. If it is safe, show that you don't support the behavior.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "dang,that reaaly smells"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Yo, that's kinda mean though. 🚫 How would you feel if someone posted that about you?"
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "sad"
+          }
+        ],
+        "practice_type": "cyberbullying"
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-3-KP4",
+      "scenario": "Cyberbullying",
+      "partition": "example_exposed",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "sad"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 4: Speak up calmly without making things worse. (Harder)\nWhat to understand: Fighting back with mean words or starting an online argument can make the situation worse.\nBehavior task: If it is safe, respond calmly with a short message, such as \"That's not okay. Please stop.\" Don't insult, threaten, or argue with the bully. If you think speaking up could put you or someone else in danger, don't confront them. Get help from a trusted adult instead.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "dang,that reaaly smells"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Yo, that's kinda mean though. 🚫 How would you feel if someone posted that about you?"
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "sad"
+          }
+        ],
+        "practice_type": "cyberbullying"
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-3-KP5",
+      "scenario": "Cyberbullying",
+      "partition": "example_exposed",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "sad"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 5: Choose a safe next step and get help. (Most advanced)\nWhat to understand: You don't have to solve cyberbullying by yourself. There are safe ways to protect the person being bullied.\nBehavior task:\nSave evidence: Take screenshots of hurtful messages or posts before they disappear. Don't forward or repost them.\nReport: Use the platform's report button to tell the social media company about the bullying.\nBlock: Block the person who is bullying so they cannot keep contacting you.\nGet trusted help: Tell a parent, teacher, school counselor, or another trusted adult. Ask them to help decide what to do next.\nSupport the victim: Continue checking on the person being bullied and remind them that they are not alone.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "dang,that reaaly smells"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Yo, that's kinda mean though. 🚫 How would you feel if someone posted that about you?"
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "sad"
+          }
+        ],
+        "practice_type": "cyberbullying"
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-4-KP1",
+      "scenario": "Location Sharing Risks",
+      "partition": "example_exposed",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "You put your address out like this?"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 1: Never share your home address publicly. (Easiest)\nObservation task: Jasmine shares her full home address: 321 Jefferson Ave.\nBehavior task: Never post your full home address online. If you see a friend sharing theirs, let them know and encourage them to delete the post.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "You put your address out like this?"
+          }
+        ]
+      },
+      "expected": {
+        "kind": "initial_signal"
+      },
+      "rationale": "Current contribution supplies the indicated component(s) of this complete target."
+    },
+    {
+      "id": "REAL-4-KP2",
+      "scenario": "Location Sharing Risks",
+      "partition": "example_exposed",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "You put your address out like this?"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 2: Remember that photos can reveal where you live.\nObservation task: The picture shows Jasmine's actual house. Details like the house color, design, and nearby places can help people find it.\nBehavior task: Before posting a photo, check the background. Make sure it does not show your house, street, address, or other clues about where you live.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "You put your address out like this?"
+          }
+        ]
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-4-KP3",
+      "scenario": "Location Sharing Risks",
+      "partition": "example_exposed",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "You put your address out like this?"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 3: Don't invite strangers to your home. (Harder)\nObservation task: Jasmine's public post invites people to come over. Anyone who sees it might try to visit.\nBehavior task: Never invite people you don't know to your home. Share invitations only with trusted friends through private messages or group chats.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "You put your address out like this?"
+          }
+        ]
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-4-KP4",
+      "scenario": "Location Sharing Risks",
+      "partition": "example_exposed",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "You put your address out like this?"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 4: Share general places instead of exact locations. (Most advanced)\nObservation task: An exact street address tells people exactly where to find Jasmine.\nBehavior task: Use general words like \"my neighborhood\" or \"downtown\" instead of sharing your full address. Check your privacy settings so only people you trust can see your posts.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "You put your address out like this?"
+          }
+        ]
+      },
+      "expected": {
+        "kind": "initial_signal"
+      },
+      "rationale": "Current contribution supplies the indicated component(s) of this complete target."
+    },
+    {
+      "id": "REAL-5-KP1",
+      "scenario": "Movie Meetup Social Engineering",
+      "partition": "other_exposed_regression",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "Let’s say someone they have been avoiding…gets to turn up💁‍♀️"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 1: Be careful about sharing where you are going. (Easiest)\nObservation task: Ethan tells everyone which movie theater he plans to visit.\nBehavior task: Avoid sharing your exact location in public posts. You can say, \"I'm excited to watch the new Marvel movie!\" without saying where you will be.",
+            "status": "partially_covered",
+            "understanding_level": "basic"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "It’s best to post where you are when you have already left."
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Good point on timing. Before meeting, how can you check if this person is really who they say they are?"
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Maybe show up there but disguised 🤙🏿"
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "how would you safety schedule to meet with a friend?"
+          },
+          {
+            "id": "id-6",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Text them directly."
+          },
+          {
+            "id": "id-7",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "That is smart! what is the worst that could happen if someone just post their schedule like that in public?"
+          },
+          {
+            "id": "id-8",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "It’s might get ruined"
+          },
+          {
+            "id": "id-9",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "How would it get ruined?"
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Let’s say someone they have been avoiding…gets to turn up💁‍♀️"
+          }
+        ]
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-5-KP2",
+      "scenario": "Movie Meetup Social Engineering",
+      "partition": "other_exposed_regression",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "Let’s say someone they have been avoiding…gets to turn up💁‍♀️"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 2: Don't share your plans too early.\nObservation task: Ethan says he will be at the theater THIS FRIDAY. This tells strangers where he plans to go in the future.\nBehavior task: Share photos or stories after you have left the place, instead of posting your plans ahead of time.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "It’s best to post where you are when you have already left."
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Good point on timing. Before meeting, how can you check if this person is really who they say they are?"
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Maybe show up there but disguised 🤙🏿"
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "how would you safety schedule to meet with a friend?"
+          },
+          {
+            "id": "id-6",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Text them directly."
+          },
+          {
+            "id": "id-7",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "That is smart! what is the worst that could happen if someone just post their schedule like that in public?"
+          },
+          {
+            "id": "id-8",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "It’s might get ruined"
+          },
+          {
+            "id": "id-9",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "How would it get ruined?"
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Let’s say someone they have been avoiding…gets to turn up💁‍♀️"
+          }
+        ]
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-5-KP3",
+      "scenario": "Movie Meetup Social Engineering",
+      "partition": "other_exposed_regression",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "Let’s say someone they have been avoiding…gets to turn up💁‍♀️"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 3: Don't share your exact schedule. (Harder)\nObservation task: Ethan shares the exact time (8 p.m.) and place. Someone could use this information to find him.\nBehavior task: Keep your exact plans and times private. If you need to make plans with friends, use a private message or group chat.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "It’s best to post where you are when you have already left."
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Good point on timing. Before meeting, how can you check if this person is really who they say they are?"
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Maybe show up there but disguised 🤙🏿"
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "how would you safety schedule to meet with a friend?"
+          },
+          {
+            "id": "id-6",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Text them directly."
+          },
+          {
+            "id": "id-7",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "That is smart! what is the worst that could happen if someone just post their schedule like that in public?"
+          },
+          {
+            "id": "id-8",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "It’s might get ruined"
+          },
+          {
+            "id": "id-9",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "How would it get ruined?"
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Let’s say someone they have been avoiding…gets to turn up💁‍♀️"
+          }
+        ]
+      },
+      "expected": {
+        "kind": "initial_signal"
+      },
+      "rationale": "Current contribution supplies the indicated component(s) of this complete target."
+    },
+    {
+      "id": "REAL-5-KP4",
+      "scenario": "Movie Meetup Social Engineering",
+      "partition": "other_exposed_regression",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "Let’s say someone they have been avoiding…gets to turn up💁‍♀️"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 4: Think about who can see your posts. (Most advanced)\nObservation task: A public post can be seen by people Ethan does not know. They may also learn when he is away from home.\nBehavior task: Check your privacy settings. Share plans only with people you trust, and avoid posting information that tells strangers when you are away.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "It’s best to post where you are when you have already left."
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Good point on timing. Before meeting, how can you check if this person is really who they say they are?"
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Maybe show up there but disguised 🤙🏿"
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "how would you safety schedule to meet with a friend?"
+          },
+          {
+            "id": "id-6",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Text them directly."
+          },
+          {
+            "id": "id-7",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "That is smart! what is the worst that could happen if someone just post their schedule like that in public?"
+          },
+          {
+            "id": "id-8",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "It’s might get ruined"
+          },
+          {
+            "id": "id-9",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "How would it get ruined?"
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Let’s say someone they have been avoiding…gets to turn up💁‍♀️"
+          }
+        ]
+      },
+      "expected": {
+        "kind": "initial_signal"
+      },
+      "rationale": "Current contribution supplies the indicated component(s) of this complete target."
+    },
+    {
+      "id": "REAL-6-KP1",
+      "scenario": "Account Security Alert",
+      "partition": "other_exposed_regression",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "maybe no ?"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 1: Be careful when a message tries to scare you. (Easiest)\nObservation task: The message says \"YOUR ACCOUNT IS AT RISK\" and uses lots of warning symbols to make you feel scared.\nBehavior task: Stay calm. Don't click anything just because a message says something bad will happen.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "idk"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Look at the sender's name: 'Socail Media Testdrive.' Does that spelling look correct for a real company?"
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "oh , that is incorrect"
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Good catch on the spelling. Now look at the link: testdrive.info. Does that match a real social media company?"
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "maybe no ?"
+          }
+        ]
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-6-KP2",
+      "scenario": "Account Security Alert",
+      "partition": "other_exposed_regression",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "maybe no ?"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 2: Check who sent the warning.\nObservation task: The message comes from \"Socail Media Testdrive,\" which is not the name of a social media company. It also has a spelling mistake in \"Social.\"\nBehavior task: Check the sender's name carefully. Be suspicious of messages from unknown people or companies.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "idk"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Look at the sender's name: 'Socail Media Testdrive.' Does that spelling look correct for a real company?"
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "oh , that is incorrect"
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Good catch on the spelling. Now look at the link: testdrive.info. Does that match a real social media company?"
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "maybe no ?"
+          }
+        ]
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-6-KP3",
+      "scenario": "Account Security Alert",
+      "partition": "other_exposed_regression",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "maybe no ?"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 3: Check whether the warning tells you which account is in danger.\nObservation task: The message says your account is at risk but does not say whether it means Instagram, TikTok, Snapchat, or another account.\nBehavior task: Ask yourself: \"Which account are they talking about?\" A vague warning from an unknown sender is suspicious.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "idk"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Look at the sender's name: 'Socail Media Testdrive.' Does that spelling look correct for a real company?"
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "oh , that is incorrect"
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Good catch on the spelling. Now look at the link: testdrive.info. Does that match a real social media company?"
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "maybe no ?"
+          }
+        ]
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-6-KP4",
+      "scenario": "Account Security Alert",
+      "partition": "other_exposed_regression",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "maybe no ?"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 4: Check the website address before trusting it. (Harder)\nObservation task: The link goes to \"testdrive.info,\" not the official website of a social media company.\nBehavior task: Never click a link in a scary security message. Open the real app or type its official website address yourself.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "idk"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Look at the sender's name: 'Socail Media Testdrive.' Does that spelling look correct for a real company?"
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "oh , that is incorrect"
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Good catch on the spelling. Now look at the link: testdrive.info. Does that match a real social media company?"
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "maybe no ?"
+          }
+        ]
+      },
+      "expected": {
+        "kind": "initial_signal"
+      },
+      "rationale": "Current contribution supplies the indicated component(s) of this complete target."
+    },
+    {
+      "id": "REAL-6-KP5",
+      "scenario": "Account Security Alert",
+      "partition": "other_exposed_regression",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "maybe no ?"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 5: Check your account safely. (Most advanced)\nObservation task: A real account problem should be checked through the social media company itself, not through a random message.\nBehavior task: Log in through the official app or website. Check your account's security notifications and recent login activity. If you are still worried, ask a trusted adult for help or contact the platform through its official help center.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "idk"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Look at the sender's name: 'Socail Media Testdrive.' Does that spelling look correct for a real company?"
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "oh , that is incorrect"
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Good catch on the spelling. Now look at the link: testdrive.info. Does that match a real social media company?"
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "maybe no ?"
+          }
+        ]
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-7-KP1",
+      "scenario": "iTunes Gift Card Survey ($500)",
+      "partition": "other_exposed_regression",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "Ah , it is not official apple link"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 1: Check if the reward makes sense. (Easiest)\nObservation task: The post promises a $500 gift card for only five minutes of answering questions.\nBehavior task: Ask yourself: \"Would a company really give away so much money for such a small task?\" Be careful when a reward seems too big.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "yes it is real"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Professional photos are not proof; scammers use them too. Verify this offer by checking Apple's official website directly instead of clicking the link."
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Oh , how to check"
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Open your browser and type apple.com directly. Do not click the link in the message."
+          },
+          {
+            "id": "id-6",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "i see , i will do that"
+          },
+          {
+            "id": "id-7",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Good. Now, does a $500 gift for a five-minute survey seem like a realistic business offer? Consider why they use excitement to push you."
+          },
+          {
+            "id": "id-8",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "No, i think it is a big number"
+          },
+          {
+            "id": "id-9",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "You spotted the unrealistic price. Now check the sender's claimed Apple affiliation and the exact link destination; a shortened URL does not prove authenticity."
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Ah , it is not official apple link"
+          }
+        ]
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-7-KP2",
+      "scenario": "iTunes Gift Card Survey ($500)",
+      "partition": "other_exposed_regression",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "Ah , it is not official apple link"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 2: Watch out for exciting promises.\nObservation task: Words like \"CRAZY DEAL!!\" and \"got instantly\" make the offer sound exciting and encourage people to act quickly.\nBehavior task: Don't let exciting words or promises make you forget to check whether something is real.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "yes it is real"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Professional photos are not proof; scammers use them too. Verify this offer by checking Apple's official website directly instead of clicking the link."
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Oh , how to check"
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Open your browser and type apple.com directly. Do not click the link in the message."
+          },
+          {
+            "id": "id-6",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "i see , i will do that"
+          },
+          {
+            "id": "id-7",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Good. Now, does a $500 gift for a five-minute survey seem like a realistic business offer? Consider why they use excitement to push you."
+          },
+          {
+            "id": "id-8",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "No, i think it is a big number"
+          },
+          {
+            "id": "id-9",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "You spotted the unrealistic price. Now check the sender's claimed Apple affiliation and the exact link destination; a shortened URL does not prove authenticity."
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Ah , it is not official apple link"
+          }
+        ]
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-7-KP3",
+      "scenario": "iTunes Gift Card Survey ($500)",
+      "partition": "other_exposed_regression",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "Ah , it is not official apple link"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 3: Check who is sharing the reward.\nObservation task: Emma Garcia is sharing the offer, but there is no proof that she works for Apple or iTunes.\nBehavior task: Look at her profile and past posts. Be careful if the account often shares free gifts or amazing offers.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "yes it is real"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Professional photos are not proof; scammers use them too. Verify this offer by checking Apple's official website directly instead of clicking the link."
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Oh , how to check"
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Open your browser and type apple.com directly. Do not click the link in the message."
+          },
+          {
+            "id": "id-6",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "i see , i will do that"
+          },
+          {
+            "id": "id-7",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Good. Now, does a $500 gift for a five-minute survey seem like a realistic business offer? Consider why they use excitement to push you."
+          },
+          {
+            "id": "id-8",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "No, i think it is a big number"
+          },
+          {
+            "id": "id-9",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "You spotted the unrealistic price. Now check the sender's claimed Apple affiliation and the exact link destination; a shortened URL does not prove authenticity."
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Ah , it is not official apple link"
+          }
+        ]
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-7-KP4",
+      "scenario": "iTunes Gift Card Survey ($500)",
+      "partition": "other_exposed_regression",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "Ah , it is not official apple link"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 4: Look carefully at the website link. (Harder)\nObservation task: The link uses \"bit.ly,\" which hides the real website address.\nBehavior task: Don't click the link. Go to Apple's official website yourself to check whether the offer is real.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "yes it is real"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Professional photos are not proof; scammers use them too. Verify this offer by checking Apple's official website directly instead of clicking the link."
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Oh , how to check"
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Open your browser and type apple.com directly. Do not click the link in the message."
+          },
+          {
+            "id": "id-6",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "i see , i will do that"
+          },
+          {
+            "id": "id-7",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Good. Now, does a $500 gift for a five-minute survey seem like a realistic business offer? Consider why they use excitement to push you."
+          },
+          {
+            "id": "id-8",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "No, i think it is a big number"
+          },
+          {
+            "id": "id-9",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "You spotted the unrealistic price. Now check the sender's claimed Apple affiliation and the exact link destination; a shortened URL does not prove authenticity."
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Ah , it is not official apple link"
+          }
+        ]
+      },
+      "expected": {
+        "kind": "initial_signal"
+      },
+      "rationale": "Current contribution supplies the indicated component(s) of this complete target."
+    },
+    {
+      "id": "REAL-7-KP5",
+      "scenario": "iTunes Gift Card Survey ($500)",
+      "partition": "other_exposed_regression",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "Ah , it is not official apple link"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 5: Check whether the company really offers the reward. (Most advanced)\nObservation task: The post has a gift card picture, but it does not show an official Apple announcement or explain the rules of the giveaway.\nBehavior task: Check Apple's official website and social media pages for the giveaway. Ask a trusted adult to help you check before sharing information or answering a survey.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "yes it is real"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Professional photos are not proof; scammers use them too. Verify this offer by checking Apple's official website directly instead of clicking the link."
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Oh , how to check"
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Open your browser and type apple.com directly. Do not click the link in the message."
+          },
+          {
+            "id": "id-6",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "i see , i will do that"
+          },
+          {
+            "id": "id-7",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Good. Now, does a $500 gift for a five-minute survey seem like a realistic business offer? Consider why they use excitement to push you."
+          },
+          {
+            "id": "id-8",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "No, i think it is a big number"
+          },
+          {
+            "id": "id-9",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "You spotted the unrealistic price. Now check the sender's claimed Apple affiliation and the exact link destination; a shortened URL does not prove authenticity."
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Ah , it is not official apple link"
+          }
+        ]
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-8-KP1",
+      "scenario": "Account Security Alert",
+      "partition": "example_exposed",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "it is not a real company"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 1: Be careful when a message tries to scare you. (Easiest)\nObservation task: The message says \"YOUR ACCOUNT IS AT RISK\" and uses lots of warning symbols to make you feel scared.\nBehavior task: Stay calm. Don't click anything just because a message says something bad will happen.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "idk"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Look at the sender's name: 'Socail Media Testdrive.' Does that spelling look correct for a real company?"
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "oh , that is incorrect"
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Good catch on the spelling. Now look at the link: testdrive.info. Does that match a real social media company?"
+          },
+          {
+            "id": "id-6",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "maybe no ?"
+          },
+          {
+            "id": "id-7",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "You are right. That link is fake. Never click scary links. Instead, open the real app yourself. Now, look at who sent it: 'Socail Media Testdrive'. Is that a real company?"
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "it is not a real company"
+          }
+        ]
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-8-KP2",
+      "scenario": "Account Security Alert",
+      "partition": "example_exposed",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "it is not a real company"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 2: Check who sent the warning.\nObservation task: The message comes from \"Socail Media Testdrive,\" which is not the name of a social media company. It also has a spelling mistake in \"Social.\"\nBehavior task: Check the sender's name carefully. Be suspicious of messages from unknown people or companies.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "idk"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Look at the sender's name: 'Socail Media Testdrive.' Does that spelling look correct for a real company?"
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "oh , that is incorrect"
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Good catch on the spelling. Now look at the link: testdrive.info. Does that match a real social media company?"
+          },
+          {
+            "id": "id-6",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "maybe no ?"
+          },
+          {
+            "id": "id-7",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "You are right. That link is fake. Never click scary links. Instead, open the real app yourself. Now, look at who sent it: 'Socail Media Testdrive'. Is that a real company?"
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "it is not a real company"
+          }
+        ]
+      },
+      "expected": {
+        "kind": "demonstrated_understanding"
+      },
+      "rationale": "Current contribution supplies the indicated component(s) of this complete target."
+    },
+    {
+      "id": "REAL-8-KP3",
+      "scenario": "Account Security Alert",
+      "partition": "example_exposed",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "it is not a real company"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 3: Check whether the warning tells you which account is in danger.\nObservation task: The message says your account is at risk but does not say whether it means Instagram, TikTok, Snapchat, or another account.\nBehavior task: Ask yourself: \"Which account are they talking about?\" A vague warning from an unknown sender is suspicious.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "idk"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Look at the sender's name: 'Socail Media Testdrive.' Does that spelling look correct for a real company?"
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "oh , that is incorrect"
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Good catch on the spelling. Now look at the link: testdrive.info. Does that match a real social media company?"
+          },
+          {
+            "id": "id-6",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "maybe no ?"
+          },
+          {
+            "id": "id-7",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "You are right. That link is fake. Never click scary links. Instead, open the real app yourself. Now, look at who sent it: 'Socail Media Testdrive'. Is that a real company?"
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "it is not a real company"
+          }
+        ]
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-8-KP4",
+      "scenario": "Account Security Alert",
+      "partition": "example_exposed",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "it is not a real company"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 4: Check the website address before trusting it. (Harder)\nObservation task: The link goes to \"testdrive.info,\" not the official website of a social media company.\nBehavior task: Never click a link in a scary security message. Open the real app or type its official website address yourself.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "idk"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Look at the sender's name: 'Socail Media Testdrive.' Does that spelling look correct for a real company?"
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "oh , that is incorrect"
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Good catch on the spelling. Now look at the link: testdrive.info. Does that match a real social media company?"
+          },
+          {
+            "id": "id-6",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "maybe no ?"
+          },
+          {
+            "id": "id-7",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "You are right. That link is fake. Never click scary links. Instead, open the real app yourself. Now, look at who sent it: 'Socail Media Testdrive'. Is that a real company?"
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "it is not a real company"
+          }
+        ]
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-8-KP5",
+      "scenario": "Account Security Alert",
+      "partition": "example_exposed",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "it is not a real company"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 5: Check your account safely. (Most advanced)\nObservation task: A real account problem should be checked through the social media company itself, not through a random message.\nBehavior task: Log in through the official app or website. Check your account's security notifications and recent login activity. If you are still worried, ask a trusted adult for help or contact the platform through its official help center.",
+            "status": "partially_covered",
+            "understanding_level": "basic"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "idk"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Look at the sender's name: 'Socail Media Testdrive.' Does that spelling look correct for a real company?"
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "oh , that is incorrect"
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Good catch on the spelling. Now look at the link: testdrive.info. Does that match a real social media company?"
+          },
+          {
+            "id": "id-6",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "maybe no ?"
+          },
+          {
+            "id": "id-7",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "You are right. That link is fake. Never click scary links. Instead, open the real app yourself. Now, look at who sent it: 'Socail Media Testdrive'. Is that a real company?"
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "it is not a real company"
+          }
+        ]
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-9-KP1",
+      "scenario": "Cyberbullying",
+      "partition": "other_exposed_regression",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "Please leave Dylan along !"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 1: Recognize cyberbullying. (Easiest)\nWhat to understand: Online bullying can hurt people's feelings, make them feel scared or lonely, and make them not want to go online.\nBehavior task: Recognize that these actions are not okay. Don't dismiss them as just a joke if someone is being hurt.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Please leave Dylan along !"
+          }
+        ],
+        "practice_type": "cyberbullying"
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-9-KP2",
+      "scenario": "Cyberbullying",
+      "partition": "other_exposed_regression",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "Please leave Dylan along !"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 2: Show kindness and support the person being bullied.\nWhat to understand: The person being bullied may feel sad, embarrassed, scared, or alone.\nBehavior task: Send them a kind private message, such as \"I'm sorry this happened. Are you okay?\" Let them know they are not alone. Offer to help them find a trusted adult.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Please leave Dylan along !"
+          }
+        ],
+        "practice_type": "cyberbullying"
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-9-KP3",
+      "scenario": "Cyberbullying",
+      "partition": "other_exposed_regression",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "Please leave Dylan along !"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 3: Don't join in or help spread bullying.\nWhat to understand: Even if you don't write the mean message, sharing it or laughing at it can make the bullying worse.\nBehavior task: Don't like, share, forward, or comment on hurtful posts. Don't laugh along or encourage the bully. If it is safe, show that you don't support the behavior.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Please leave Dylan along !"
+          }
+        ],
+        "practice_type": "cyberbullying"
+      },
+      "expected": {
+        "kind": "demonstrated_understanding"
+      },
+      "rationale": "Current contribution supplies the indicated component(s) of this complete target."
+    },
+    {
+      "id": "REAL-9-KP4",
+      "scenario": "Cyberbullying",
+      "partition": "other_exposed_regression",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "Please leave Dylan along !"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 4: Speak up calmly without making things worse. (Harder)\nWhat to understand: Fighting back with mean words or starting an online argument can make the situation worse.\nBehavior task: If it is safe, respond calmly with a short message, such as \"That's not okay. Please stop.\" Don't insult, threaten, or argue with the bully. If you think speaking up could put you or someone else in danger, don't confront them. Get help from a trusted adult instead.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Please leave Dylan along !"
+          }
+        ],
+        "practice_type": "cyberbullying"
+      },
+      "expected": {
+        "kind": "demonstrated_understanding"
+      },
+      "rationale": "Current contribution supplies the indicated component(s) of this complete target."
+    },
+    {
+      "id": "REAL-9-KP5",
+      "scenario": "Cyberbullying",
+      "partition": "other_exposed_regression",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "Please leave Dylan along !"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 5: Choose a safe next step and get help. (Most advanced)\nWhat to understand: You don't have to solve cyberbullying by yourself. There are safe ways to protect the person being bullied.\nBehavior task:\nSave evidence: Take screenshots of hurtful messages or posts before they disappear. Don't forward or repost them.\nReport: Use the platform's report button to tell the social media company about the bullying.\nBlock: Block the person who is bullying so they cannot keep contacting you.\nGet trusted help: Tell a parent, teacher, school counselor, or another trusted adult. Ask them to help decide what to do next.\nSupport the victim: Continue checking on the person being bullied and remind them that they are not alone.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Please leave Dylan along !"
+          }
+        ],
+        "practice_type": "cyberbullying"
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-10-KP1",
+      "scenario": "iTunes Gift Card Survey ($500)",
+      "partition": "other_exposed_regression",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "No, i think it is a big number"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 1: Check if the reward makes sense. (Easiest)\nObservation task: The post promises a $500 gift card for only five minutes of answering questions.\nBehavior task: Ask yourself: \"Would a company really give away so much money for such a small task?\" Be careful when a reward seems too big.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "yes it is real"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Professional photos are not proof; scammers use them too. Verify this offer by checking Apple's official website directly instead of clicking the link."
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Oh , how to check"
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Open your browser and type apple.com directly. Do not click the link in the message."
+          },
+          {
+            "id": "id-6",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "i see , i will do that"
+          },
+          {
+            "id": "id-7",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Good. Now, does a $500 gift for a five-minute survey seem like a realistic business offer? Consider why they use excitement to push you."
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "No, i think it is a big number"
+          }
+        ]
+      },
+      "expected": {
+        "kind": "initial_signal"
+      },
+      "rationale": "Current contribution supplies the indicated component(s) of this complete target."
+    },
+    {
+      "id": "REAL-10-KP2",
+      "scenario": "iTunes Gift Card Survey ($500)",
+      "partition": "other_exposed_regression",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "No, i think it is a big number"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 2: Watch out for exciting promises.\nObservation task: Words like \"CRAZY DEAL!!\" and \"got instantly\" make the offer sound exciting and encourage people to act quickly.\nBehavior task: Don't let exciting words or promises make you forget to check whether something is real.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "yes it is real"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Professional photos are not proof; scammers use them too. Verify this offer by checking Apple's official website directly instead of clicking the link."
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Oh , how to check"
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Open your browser and type apple.com directly. Do not click the link in the message."
+          },
+          {
+            "id": "id-6",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "i see , i will do that"
+          },
+          {
+            "id": "id-7",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Good. Now, does a $500 gift for a five-minute survey seem like a realistic business offer? Consider why they use excitement to push you."
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "No, i think it is a big number"
+          }
+        ]
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-10-KP3",
+      "scenario": "iTunes Gift Card Survey ($500)",
+      "partition": "other_exposed_regression",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "No, i think it is a big number"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 3: Check who is sharing the reward.\nObservation task: Emma Garcia is sharing the offer, but there is no proof that she works for Apple or iTunes.\nBehavior task: Look at her profile and past posts. Be careful if the account often shares free gifts or amazing offers.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "yes it is real"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Professional photos are not proof; scammers use them too. Verify this offer by checking Apple's official website directly instead of clicking the link."
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Oh , how to check"
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Open your browser and type apple.com directly. Do not click the link in the message."
+          },
+          {
+            "id": "id-6",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "i see , i will do that"
+          },
+          {
+            "id": "id-7",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Good. Now, does a $500 gift for a five-minute survey seem like a realistic business offer? Consider why they use excitement to push you."
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "No, i think it is a big number"
+          }
+        ]
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-10-KP4",
+      "scenario": "iTunes Gift Card Survey ($500)",
+      "partition": "other_exposed_regression",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "No, i think it is a big number"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 4: Look carefully at the website link. (Harder)\nObservation task: The link uses \"bit.ly,\" which hides the real website address.\nBehavior task: Don't click the link. Go to Apple's official website yourself to check whether the offer is real.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "yes it is real"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Professional photos are not proof; scammers use them too. Verify this offer by checking Apple's official website directly instead of clicking the link."
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Oh , how to check"
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Open your browser and type apple.com directly. Do not click the link in the message."
+          },
+          {
+            "id": "id-6",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "i see , i will do that"
+          },
+          {
+            "id": "id-7",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Good. Now, does a $500 gift for a five-minute survey seem like a realistic business offer? Consider why they use excitement to push you."
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "No, i think it is a big number"
+          }
+        ]
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "REAL-10-KP5",
+      "scenario": "iTunes Gift Card Survey ($500)",
+      "partition": "other_exposed_regression",
+      "provenance": "Historical learner response; current full catalog target substituted; agent-authored expected event, not historical AI judgment.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "No, i think it is a big number"
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 5: Check whether the company really offers the reward. (Most advanced)\nObservation task: The post has a gift card picture, but it does not show an official Apple announcement or explain the rules of the giveaway.\nBehavior task: Check Apple's official website and social media pages for the giveaway. Ask a trusted adult to help you check before sharing information or answering a survey.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "id-1",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "yes it is real"
+          },
+          {
+            "id": "id-2",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Professional photos are not proof; scammers use them too. Verify this offer by checking Apple's official website directly instead of clicking the link."
+          },
+          {
+            "id": "id-4",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Oh , how to check"
+          },
+          {
+            "id": "id-5",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Open your browser and type apple.com directly. Do not click the link in the message."
+          },
+          {
+            "id": "id-6",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "i see , i will do that"
+          },
+          {
+            "id": "id-7",
+            "user_id": "id-3",
+            "user_role": "tutor",
+            "content": "Good. Now, does a $500 gift for a five-minute survey seem like a realistic business offer? Consider why they use excitement to push you."
+          },
+          {
+            "id": "focus",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "No, i think it is a big number"
+          }
+        ]
+      },
+      "expected": {
+        "kind": null
+      },
+      "rationale": "No new sufficient target-specific evidence for an eligible update."
+    },
+    {
+      "id": "CONTROL-1",
+      "scenario": "Nintendo Switch Deal ($19.99)",
+      "partition": "synthetic_positive_control",
+      "provenance": "Agent-authored control, not independent holdout.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "A new Switch normally costs hundreds, so $19.99 makes no sense. I would stop and question why it is so cheap instead of buying."
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 1: Check if the deal is too good to be true. (Easiest)\nObservation task: A Nintendo Switch usually costs hundreds of dollars, but this post offers one for only $19.99.\nBehavior task: Stop and ask yourself: \"Why is this so cheap?\" If a deal seems too good to be true, be careful.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "focus",
+            "room_id": "room",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "A new Switch normally costs hundreds, so $19.99 makes no sense. I would stop and question why it is so cheap instead of buying."
+          }
+        ]
+      },
+      "expected": {
+        "kind": "demonstrated_understanding"
+      },
+      "rationale": "Explicitly supplies the current target requirements."
+    },
+    {
+      "id": "CONTROL-2",
+      "scenario": "iTunes Gift Card Survey ($500)",
+      "partition": "synthetic_positive_control",
+      "provenance": "Agent-authored control, not independent holdout.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "The bit.ly address hides its destination. I will not click it; I will open Apple's website myself to check whether the offer is real."
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 4: Look carefully at the website link. (Harder)\nObservation task: The link uses \"bit.ly,\" which hides the real website address.\nBehavior task: Don't click the link. Go to Apple's official website yourself to check whether the offer is real.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "focus",
+            "room_id": "room",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "The bit.ly address hides its destination. I will not click it; I will open Apple's website myself to check whether the offer is real."
+          }
+        ]
+      },
+      "expected": {
+        "kind": "demonstrated_understanding"
+      },
+      "rationale": "Explicitly supplies the current target requirements."
+    },
+    {
+      "id": "CONTROL-3",
+      "scenario": "Account Security Alert",
+      "partition": "synthetic_positive_control",
+      "provenance": "Agent-authored control, not independent holdout.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "I would open the official app myself, log in there, and review security notifications and recent logins. If worried, I would ask a trusted adult or use official support."
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 5: Check your account safely. (Most advanced)\nObservation task: A real account problem should be checked through the social media company itself, not through a random message.\nBehavior task: Log in through the official app or website. Check your account's security notifications and recent login activity. If you are still worried, ask a trusted adult for help or contact the platform through its official help center.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "focus",
+            "room_id": "room",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "I would open the official app myself, log in there, and review security notifications and recent logins. If worried, I would ask a trusted adult or use official support."
+          }
+        ]
+      },
+      "expected": {
+        "kind": "demonstrated_understanding"
+      },
+      "rationale": "Explicitly supplies the current target requirements."
+    },
+    {
+      "id": "CONTROL-4",
+      "scenario": "Location Sharing Risks",
+      "partition": "synthetic_positive_control",
+      "provenance": "Agent-authored control, not independent holdout.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "The house photo can reveal the home through its design and surroundings. Before posting I would check and remove backgrounds showing my house, street, address or nearby identifying clues."
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 2: Remember that photos can reveal where you live.\nObservation task: The picture shows Jasmine's actual house. Details like the house color, design, and nearby places can help people find it.\nBehavior task: Before posting a photo, check the background. Make sure it does not show your house, street, address, or other clues about where you live.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "focus",
+            "room_id": "room",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "The house photo can reveal the home through its design and surroundings. Before posting I would check and remove backgrounds showing my house, street, address or nearby identifying clues."
+          }
+        ]
+      },
+      "expected": {
+        "kind": "demonstrated_understanding"
+      },
+      "rationale": "Explicitly supplies the current target requirements."
+    },
+    {
+      "id": "CONTROL-5",
+      "scenario": "Movie Meetup Social Engineering",
+      "partition": "synthetic_positive_control",
+      "provenance": "Agent-authored control, not independent holdout.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "Posting THIS FRIDAY tells strangers my plans ahead of time. I would share photos only after leaving the theater."
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 2: Don't share your plans too early.\nObservation task: Ethan says he will be at the theater THIS FRIDAY. This tells strangers where he plans to go in the future.\nBehavior task: Share photos or stories after you have left the place, instead of posting your plans ahead of time.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "focus",
+            "room_id": "room",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Posting THIS FRIDAY tells strangers my plans ahead of time. I would share photos only after leaving the theater."
+          }
+        ]
+      },
+      "expected": {
+        "kind": "demonstrated_understanding"
+      },
+      "rationale": "Explicitly supplies the current target requirements."
+    },
+    {
+      "id": "CONTROL-6",
+      "scenario": "Contact Information Exposure",
+      "partition": "synthetic_positive_control",
+      "provenance": "Agent-authored control, not independent holdout.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "A phone number can be used to recover accounts. I would never give anyone a login code, and I would tell a trusted adult if I got a code I had not requested."
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 4: Know that phone numbers can be used to access accounts. (Most advanced)\nObservation task: Some websites use phone numbers to help people log in or prove who they are. Scammers may try to use your number to get into your accounts.\nBehavior task: Never share a login or verification code with anyone. If you receive a code you did not ask for, tell a trusted adult.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "focus",
+            "room_id": "room",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "A phone number can be used to recover accounts. I would never give anyone a login code, and I would tell a trusted adult if I got a code I had not requested."
+          }
+        ]
+      },
+      "expected": {
+        "kind": "demonstrated_understanding"
+      },
+      "rationale": "Explicitly supplies the current target requirements."
+    },
+    {
+      "id": "CONTROL-7",
+      "scenario": "Cyberbullying",
+      "partition": "synthetic_positive_control",
+      "provenance": "Agent-authored control, not independent holdout.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "I would save screenshots without forwarding them, report the bullying, block the bully, and tell a teacher so they can help choose what to do. I would keep checking on the bullied person."
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Knowledge Point 5: Choose a safe next step and get help. (Most advanced)\nWhat to understand: You don't have to solve cyberbullying by yourself. There are safe ways to protect the person being bullied.\nBehavior task:\nSave evidence: Take screenshots of hurtful messages or posts before they disappear. Don't forward or repost them.\nReport: Use the platform's report button to tell the social media company about the bullying.\nBlock: Block the person who is bullying so they cannot keep contacting you.\nGet trusted help: Tell a parent, teacher, school counselor, or another trusted adult. Ask them to help decide what to do next.\nSupport the victim: Continue checking on the person being bullied and remind them that they are not alone.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "focus",
+            "room_id": "room",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "I would save screenshots without forwarding them, report the bullying, block the bully, and tell a teacher so they can help choose what to do. I would keep checking on the bullied person."
+          }
+        ],
+        "practice_type": "cyberbullying"
+      },
+      "expected": {
+        "kind": "demonstrated_understanding"
+      },
+      "rationale": "Explicitly supplies the current target requirements."
+    },
+    {
+      "id": "CONTROL-8",
+      "scenario": "General Scam Indicators",
+      "partition": "synthetic_positive_control",
+      "provenance": "Agent-authored control, not independent holdout.",
+      "input": {
+        "focus_student_id": "learner",
+        "evidence_message_id": "focus",
+        "message": {
+          "id": "focus",
+          "room_id": "room",
+          "user_id": "learner",
+          "user_role": "student",
+          "content": "Hurry up and WILL NOT LAST pressure me to act before I check the offer."
+        },
+        "items": [
+          {
+            "id": "target",
+            "area_text": "Identify urgent or pressuring language designed to push quick action before the offer can be checked.",
+            "status": "pending",
+            "understanding_level": "none"
+          }
+        ],
+        "dialogue_history": [
+          {
+            "id": "focus",
+            "room_id": "room",
+            "user_id": "learner",
+            "user_role": "student",
+            "content": "Hurry up and WILL NOT LAST pressure me to act before I check the offer."
+          }
+        ]
+      },
+      "expected": {
+        "kind": "demonstrated_understanding"
+      },
+      "rationale": "Explicitly supplies the current target requirements."
+    }
+  ]
+}

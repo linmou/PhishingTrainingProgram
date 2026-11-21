@@ -1,0 +1,163 @@
+{
+  "intent": "Independent semantic diagnostic audit of unfinished-target continuity and experiment integrity.",
+  "reviewer": "/root/continuity_review",
+  "date": "2026-11-13",
+  "frozen_sha256": "9515fe9bc28ccb680d0c7442950d104c5b327ce20f945eef018cc32c8bdc8372",
+  "source_commit": "fd88c5c6373427f0f7b00de9f4c7c81c6a2bd1d9",
+  "integrity_verdict": "clear_for_bounded_diagnostic",
+  "behavior_verdict": "The original immediate abandonment of the private-sharing action for post-after-leaving was not reproduced. One later continuation mixes that other target into an answer-revealing choice. Target continuity is therefore not established as robust, and repetitive scaffolding plus unsupported recognition credit remain visible.",
+  "method": "Manual semantic review by an independent agent; student-facing response assessed first against preceding learner/tutor turns and complete target inventory. Supervisor reason is corroboration only. No calibrated rubric or population pass-rate claim.",
+  "counts": {
+    "expected_outputs": 12,
+    "reviewed_outputs": 12,
+    "fixed_replays": 3,
+    "trajectory_turns": 9,
+    "distinct_trajectories": 3,
+    "unambiguous_target_abandonment": 0,
+    "retains_unfinished_action_without_other_target": 11,
+    "overlapping_target_mix": 1,
+    "premature_action_disclosure": 1,
+    "repetitive_followup_scaffolding": 5,
+    "api_errors": 0,
+    "parsing_errors": 0,
+    "missing_outputs": 0
+  },
+  "per_output": [
+    {
+      "id": "fixed-r1",
+      "continuity": "retains_unfinished_action",
+      "repetitive_followup": false,
+      "premature_action_disclosure": false,
+      "evidence": "Asks what to use instead of a public post; leaves a private-sharing action for the learner."
+    },
+    {
+      "id": "fixed-r2",
+      "continuity": "retains_unfinished_action",
+      "repetitive_followup": false,
+      "premature_action_disclosure": false,
+      "evidence": "Asks how to tell just friends without posting for everyone; no new temporal-sharing target."
+    },
+    {
+      "id": "fixed-r3",
+      "continuity": "retains_unfinished_action",
+      "repetitive_followup": false,
+      "premature_action_disclosure": false,
+      "evidence": "Asks how to tell friends plans without posting for everyone; retains the outstanding action."
+    },
+    {
+      "id": "journey-r1-t1",
+      "continuity": "retains_unfinished_action",
+      "repetitive_followup": false,
+      "premature_action_disclosure": false,
+      "evidence": "Asks how to share plans so strangers cannot see details."
+    },
+    {
+      "id": "journey-r1-t2",
+      "continuity": "retains_unfinished_action",
+      "repetitive_followup": true,
+      "premature_action_disclosure": false,
+      "evidence": "After Yes, repeats the same private-sharing problem with little additional support."
+    },
+    {
+      "id": "journey-r1-t3",
+      "continuity": "overlapping_target_mix",
+      "repetitive_followup": false,
+      "premature_action_disclosure": true,
+      "evidence": "Supplies private message and post-after-getting-home actions as a choice. The latter introduces KP2 while KP3 remains unfinished, but KP3 is still present, so this is not an unambiguous abandonment."
+    },
+    {
+      "id": "journey-r2-t1",
+      "continuity": "retains_unfinished_action",
+      "repetitive_followup": false,
+      "premature_action_disclosure": false,
+      "evidence": "Asks what Ethan could do to share plans with friends only."
+    },
+    {
+      "id": "journey-r2-t2",
+      "continuity": "retains_unfinished_action",
+      "repetitive_followup": true,
+      "premature_action_disclosure": false,
+      "evidence": "After Yes, reformulates the same invitation/privacy question without materially new support."
+    },
+    {
+      "id": "journey-r2-t3",
+      "continuity": "retains_unfinished_action",
+      "repetitive_followup": true,
+      "premature_action_disclosure": false,
+      "evidence": "After Okay, repeats the immediately preceding tutor response verbatim."
+    },
+    {
+      "id": "journey-r3-t1",
+      "continuity": "retains_unfinished_action",
+      "repetitive_followup": false,
+      "premature_action_disclosure": false,
+      "evidence": "Asks how to share plans without public time and place."
+    },
+    {
+      "id": "journey-r3-t2",
+      "continuity": "retains_unfinished_action",
+      "repetitive_followup": true,
+      "premature_action_disclosure": false,
+      "evidence": "After Yes, repeats how to tell only friends the time and place."
+    },
+    {
+      "id": "journey-r3-t3",
+      "continuity": "retains_unfinished_action",
+      "repetitive_followup": true,
+      "premature_action_disclosure": false,
+      "evidence": "After Okay, repeats the same friends-only time/place question with minor wording changes."
+    }
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "requirement": "T02/T02.2",
+      "observation": "All three fixed replays and all three trajectory first turns preserve the unanswered safer-sharing question.",
+      "evidence": "fixed-r1: What could you use instead of a public post?"
+    },
+    {
+      "id": "F2",
+      "requirement": "T02/T01.1",
+      "observation": "journey-r1-t3 mixes KP3 private messaging and KP2 delayed posting and discloses both actions although learner replies contain no action attempt or explicit action confusion.",
+      "evidence": "Now pick one: tell friends in a private message, or post about the movie after you get home.",
+      "interpretation": "Direct disclosure is clear. A full target switch is ambiguous because the original private-sharing action remains in the choice; report target mixing rather than count a full abandonment."
+    },
+    {
+      "id": "F3",
+      "requirement": "T02.2",
+      "observation": "Repeated Yes/Okay produces largely the same question in five followup outputs. journey-r2-t3 exactly repeats journey-r2-t2.",
+      "interpretation": "Staying on target does not imply responsive scaffolding."
+    },
+    {
+      "id": "F4",
+      "requirement": "T02.1",
+      "observation": "The learner only confirmed displayed details and said not safe; the tutor supplied the strangers consequence. All new outputs proceed with action rather than establish why the detail matters in the learner's own meaning.",
+      "interpretation": "Recognition completion is unsupported under the specification. This is a separate inherited component-progression problem; this experiment starts after the historical move to action and cannot establish when DeepSeek would have made that initial move.",
+      "supervisor_corroboration": "Reasons repeatedly treat recognition as shown; this does not establish learner understanding."
+    }
+  ],
+  "verification": {
+    "raw_manifest_hashes_verified": 15,
+    "source_snapshot_hashes_verified": 24,
+    "runner_hash_matches_frozen": true,
+    "all_models_returned": "deepseek-flash",
+    "all_http_statuses": 200,
+    "all_finish_reasons": "stop",
+    "request_settings": {
+      "temperature": 0.3,
+      "max_tokens": 600,
+      "thinking": "disabled"
+    },
+    "fixed_and_first_trajectory_inputs_equal_frozen": true,
+    "execution_exit_status": 0,
+    "elapsed_ms": 6756
+  },
+  "limits": [
+    "One exposed real-room branch point with 3 fixed repetitions and 3 short scripted continuations; not 12 independent scenarios.",
+    "Current local prompt reconstruction and normalized learner label; historical request/model provenance is incomplete, so causal model superiority is not established.",
+    "Checklist state is frozen; no analyzer updates or browser product execution were exercised.",
+    "The sampled state has incomplete recognition evidence as well as an unanswered action question; continuity alone is not full behavior conformance.",
+    "No full regression, independent holdout or calibrated acceptance gate was run.",
+    "Raw data retained locally under ignored raw/; manifest hashes establish available evidence integrity but do not establish external durability."
+  ]
+}

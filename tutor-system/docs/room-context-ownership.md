@@ -2,7 +2,7 @@
 
 Intent: identify the state and side-effect owner for room behavior so changes can be verified without expanding the provider's responsibilities.
 
-Updated: 2026-10-24. Source baseline: `79496b6`.
+Updated: 2026-11-08. Maintenance baseline: `a69b836`. Extraction baseline: `79496b6`.
 
 ## Boundaries
 
@@ -21,6 +21,11 @@ The hooks keep existing React state setters and functional merges. No second sto
 ## Invariants
 
 Membership cancellation prevents an older join or an unmounted history read from publishing state. Realtime cleanup stops reconciliation and unsubscribes before adopting a new room. Late old-channel callbacks are ignored. Participant/avatar and feedback callback changes update presentation without channel churn. Database rows still pass through `projectRoomMessage` before entering message state, including assessment restoration and reviewed delivery.
+
+Typing expiry runs once per second and removes indicators aged five seconds or
+more. Empty ticks and ticks with no expiry retain the previous array reference.
+Unmount clears both the expiry interval and the owned three-second typing-stop
+timeout. This is a state-update cleanup, with no measured latency claim.
 
 A successful channel join does not guarantee its Postgres Changes extension is active. A `system` event with `extension: postgres_changes` and `status: error` downgrades message synchronization to immediate reconciliation and five-second recovery scans. That failure remains latched through duplicate `SUBSCRIBED` notifications from the same join. A transport disconnect followed by `SUBSCRIBED` starts a new subscription attempt and restores sixty-second healthy audits unless that attempt also reports a system error. Unrelated system events and late callbacks after cleanup have no effect. The existing single channel retains its message, room and feedback listeners; all three tables must have the intended live publication configuration for healthy delivery.
 

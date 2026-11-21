@@ -13,7 +13,7 @@ async function waitForTemplateSettings(page, promptConfig) {
     const detection = document.querySelector('textarea[placeholder="Red flags to watch for (optional - will use template if empty)"]');
     const verification = document.querySelector('textarea[placeholder="Steps students should take to verify content (optional)"]');
     return detection && verification && !detection.disabled && !verification.disabled &&
-      detection.value === expected.detection_areas.join('\n') &&
+      detection.value === expected.detection_areas.join('\n\n') &&
       verification.value === expected.verification_steps.join('\n');
   }, promptConfig, { timeout: TIMEOUT });
 }
@@ -103,15 +103,17 @@ module.exports = async function roomAssessmentSetup(ctx) {
   await tutorPage.getByLabel('Enable In-Room Assessment').uncheck();
   await tutorPage.getByRole('button', { name: 'Save Settings' }).click();
   await waitForMatch(
-    () => query(client, 'rooms', 'transfer_learning_enabled', 'id', room.id),
-    rows => rows[0]?.transfer_learning_enabled === false, 'ordinary-room target setup'
+    () => query(client, 'rooms', 'in_room_assessment_enabled', 'id', room.id),
+    rows => rows[0]?.in_room_assessment_enabled === false, 'ordinary-room target setup'
   );
   await tutorPage.locator('button[title="Learning Progress Checklist"]').click();
-  await tutorPage.getByRole('button', { name: 'Smart Generate' }).click();
+  await tutorPage.getByRole('button', { name: 'Generate Learning Targets', exact: true }).click();
   const checklist = (await waitForMatch(
-    () => query(client, 'session_checklists', 'id,room_id,is_active', 'room_id', room.id),
+    () => query(client, 'session_checklists', 'id,room_id,student_id,progress_policy_version,is_active', 'room_id', room.id),
     rows => rows.length === 1 && rows[0].is_active, 'one initial checklist'
   ))[0];
+  assert.equal(checklist.student_id, ctx.student.id, 'Assessment-off setup did not bind the active learner');
+  assert.equal(checklist.progress_policy_version, 'transfer_v1', 'Assessment-off setup used a historical policy');
   const inheritedItems = await waitForMatch(
     () => query(client, 'checklist_items', 'id,area_text,item_type,status', 'checklist_id', checklist.id),
     rows => rows.length === 5, 'five inherited learning targets'
@@ -123,6 +125,10 @@ module.exports = async function roomAssessmentSetup(ctx) {
   const item = inheritedItems.find(row => row.area_text === actionText);
   assert(item, 'Initial target was not stored');
   assert.equal(item.item_type, 'detection_area', 'Action target must use the unified type');
+  await waitForMatch(
+    () => tutorPage.getByRole('button', { name: 'Refresh', exact: true }).isEnabled(),
+    ready => ready, 'owner-scoped target synchronization and initial replay'
+  );
   const target = tutorPage.locator('.checklist-item').filter({ hasText: actionText });
   await target.locator('.checklist-item-header').click();
   await target.locator('.status-select').selectOption('partially_covered');
@@ -137,14 +143,14 @@ module.exports = async function roomAssessmentSetup(ctx) {
   await tutorPage.getByLabel('Enable In-Room Assessment').check();
   await tutorPage.getByRole('button', { name: 'Save Settings' }).click();
   await waitForMatch(
-    () => query(client, 'rooms', 'transfer_learning_enabled', 'id', room.id),
-    rows => rows[0]?.transfer_learning_enabled === true, 'assessment setting on existing room'
+    () => query(client, 'rooms', 'in_room_assessment_enabled', 'id', room.id),
+    rows => rows[0]?.in_room_assessment_enabled === true, 'assessment setting on existing room'
   );
   await waitForMatch(
     () => query(client, 'session_checklists', 'id,student_id,progress_policy_version,is_active', 'room_id', room.id),
     rows => rows.some(row => row.id === checklist.id && row.is_active &&
       row.student_id === ctx.student.id && row.progress_policy_version === 'transfer_v1'),
-    'existing checklist promoted to shared assessment policy'
+    'same learner-owned policy preserved after enabling assessment'
   );
   await tutorPage.reload({ waitUntil: 'domcontentloaded' });
   await tutorPage.locator('button[title="Learning Progress Checklist"]').click();
@@ -231,6 +237,9 @@ module.exports = async function roomAssessmentSetup(ctx) {
     room, checklist, items: [item], focus,
   });
   const priorMessageIds = (await query(client, 'messages', 'id', 'room_id', room.id)).map(row => row.id);
+  // Reload after out-of-browser fixture delivery so this setup journey starts
+  // from persisted question history; assessment-replay verifies live arrival.
+  await openRoom(studentPage, appUrl, room.id);
   const question = await openExitAssessment(studentPage, delivered.assessment_id);
   await question.locator('input[value="B"]').check();
   await question.getByRole('button', { name: 'Submit answer' }).click();

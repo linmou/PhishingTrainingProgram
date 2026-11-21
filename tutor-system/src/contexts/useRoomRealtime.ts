@@ -204,10 +204,17 @@ export function useRoomRealtime({
     useEffect(() => {
         const interval = setInterval(() => {
             const now = Date.now();
-            setTypingUsers(prev => prev.filter(t => now - t.timestamp < 5000)); // 5 second timeout
+            setTypingUsers(prev => {
+                if (prev.length === 0) return prev;
+                const active = prev.filter(t => now - t.timestamp < 5000);
+                return active.length === prev.length ? prev : active;
+            });
         }, 1000);
 
-        return () => clearInterval(interval);
+        return () => {
+            clearInterval(interval);
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        };
     }, []);
 
     const startTyping = () => {

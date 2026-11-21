@@ -5,7 +5,7 @@
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const {
-  openRoom, query, waitForMatch, captureResponses,
+  openRoom, query, waitForMatch, captureResponses, sendStudentMessage,
   writeJson, screenshot, TIMEOUT
 } = require('../browser-e2e-support');
 
@@ -60,20 +60,7 @@ module.exports = async function guardMode(ctx) {
 
   const turns = [];
   async function reviewedTurn(studentText, expectedMode) {
-    await studentPage.locator('textarea.comment-input-field').fill(studentText);
-    await studentPage.locator('form.comment-input-form button[type="submit"]').click();
-    await studentPage.waitForFunction(() =>
-      document.querySelector('textarea.comment-input-field')?.value === '' ||
-      document.querySelector('[data-testid="rating-reminder-backdrop"]') !== null);
-    const reminder = studentPage.getByRole('alertdialog', { name: 'Rate the previous response' });
-    if (await reminder.isVisible()) {
-      await reminder.getByRole('button', { name: 'Helpful', exact: true }).click();
-      await reminder.getByRole('button', { name: '4 stars' }).click();
-      await reminder.getByRole('button', { name: 'Submit rating' }).click();
-      await reminder.waitFor({ state: 'hidden', timeout: TIMEOUT });
-      await studentPage.locator('form.comment-input-form button[type="submit"]').click();
-    }
-    await studentPage.waitForFunction(() => document.querySelector('textarea.comment-input-field')?.value === '');
+    await sendStudentMessage(studentPage, studentText);
     const studentMessage = (await waitForMatch(
       () => query(client, 'messages', 'id,content,user_id', 'room_id', room.id),
       (rows) => rows.some((row) => row.user_id === ctx.student.id && row.content === studentText),

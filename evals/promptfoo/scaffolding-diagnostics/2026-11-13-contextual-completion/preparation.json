@@ -1,0 +1,32 @@
+{
+  "fingerprint": "e3c526e5e407c7b53eedd29af6ad56831e2bb543cd8560add6cb943fb429d2a6",
+  "settings": {
+    "model": "qwen3.8-flash",
+    "endpoint": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+    "target_enable_thinking": false,
+    "target_temperature": 0.3,
+    "target_max_tokens": 600,
+    "judge_enable_thinking": true,
+    "judge_temperature": 0,
+    "judge_max_tokens": 8000,
+    "target_format_attempts": 2,
+    "judge_format_attempts": 2,
+    "transport_attempts": 2,
+    "transport_retry_delay_ms": 2000,
+    "timeout_ms": 90000,
+    "judge_timeout_ms": 180000,
+    "repetitions": 3,
+    "max_workers": 32,
+    "max_active_ms": 900000,
+    "timeout_budget_policy": "Per-transport timeout is bounded by remaining active allowance divided by transport attempts, reserving retry delay."
+  },
+  "cases": 9,
+  "target_slots": 54,
+  "calibration_checks": 16,
+  "candidate_sha256": "5117b007acf02e1a5b75f46ffca5ae928fcff7dcbf1b454f6fb44a287b1cf0ec",
+  "inherited_disclosure_sha256": "edeadd2bc43860da52f41bddf153b2d177fab79f429ef03ea85dcaae74a229eb",
+  "arm_system_hashes": {
+    "baseline": "6f22b42cc71d721df469b328a49fb6fd03d837f28b94f0643ba7d12ae9386775",
+    "candidate": "851522b8579f089bef539d2ca9c7e3d2f9a9968895018ed355327b90861a2d24"
+  }
+}

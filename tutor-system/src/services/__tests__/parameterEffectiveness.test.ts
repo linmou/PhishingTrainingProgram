@@ -1,10 +1,14 @@
 import { generateSystemPrompt } from '../systemPrompts';
-import { RESPONSE_POLICY } from '../prompts/responsePolicy';
+import { ACTIVE_TUTOR_AGENT_PROMPT } from '../prompts/activeTutorAgentPrompt';
 import { ROLE_PARAMETERS } from '../prompts/pedagogy/parameters/roleParameters';
 import { EMOTIONAL_PARAMETERS } from '../prompts/pedagogy/parameters/emotionalParameters';
+import { ACTIVATE_STYLE_PARAMETER } from '../prompts/index';
+
+// Style sections are temporarily deactivated; their composition tests run again when the switch is turned on.
+const styleDescribe = ACTIVATE_STYLE_PARAMETER ? describe : describe.skip;
 
 describe('Parameter Effectiveness Tests', () => {
-    describe('Communication Style Parameters', () => {
+    styleDescribe('Communication Style Parameters', () => {
         it('should include different language patterns based on teen slang setting', () => {
             const lowSlangConfig = {
                 role: { role: 'low' as const },
@@ -52,7 +56,7 @@ describe('Parameter Effectiveness Tests', () => {
         });
     });
 
-    describe('Cognitive Parameters', () => {
+    styleDescribe('Cognitive Parameters', () => {
         it('should handle concept density differences', () => {
             const lowDensityConfig = {
                 role: { role: 'high' as const },
@@ -96,7 +100,7 @@ describe('Parameter Effectiveness Tests', () => {
         });
     });
 
-    describe('Emotional Parameters', () => {
+    styleDescribe('Emotional Parameters', () => {
         it('should include different enthusiasm levels', () => {
             const lowEnthusiasmConfig = {
                 role: { role: 'high' as const },
@@ -195,11 +199,30 @@ describe('Parameter Effectiveness Tests', () => {
             });
 
             expect(prompt).toContain(ROLE_PARAMETERS.role.low);
-            expect(prompt).toContain(RESPONSE_POLICY);
-            expect(prompt).toContain(EMOTIONAL_PARAMETERS.mistake_normalization.low);
+            expect(prompt).not.toContain(ACTIVE_TUTOR_AGENT_PROMPT);
+            expect(prompt.includes(EMOTIONAL_PARAMETERS.mistake_normalization.low)).toBe(ACTIVATE_STYLE_PARAMETER);
             expect(prompt).toContain('Do not claim personal memories');
             expect(prompt).not.toContain('Honestly, I fall for stuff like this too sometimes');
             expect(prompt).not.toContain('YES! Absolutely nailed it!');
+        });
+    });
+
+    describe('Style parameter switch', () => {
+        it('emits communication, cognitive and emotional sections only when style parameters are activated', () => {
+            const prompt = generateSystemPrompt({
+                role: { role: 'high' as const },
+                communication_style: { teen_slang: 'high' as const, conversational_markers: 'high' as const, uncertainty_expression: 'high' as const },
+                cognitive_parameters: { concept_density: 'high' as const, perspective_taking: 'high' as const, personal_examples: 'high' as const, consequence_highlighting: 'high' as const },
+                emotional_parameters: { enthusiasm_level: 'high' as const, validation_frequency: 'high' as const, mistake_normalization: 'high' as const, confidence_building: 'high' as const },
+                detection_areas: ['Area'],
+                verification_steps: ['Step']
+            });
+
+            for (const heading of ['## Communication Style:', '## Cognitive Approach:', '## Emotional Approach:']) {
+                expect(prompt.includes(heading)).toBe(ACTIVATE_STYLE_PARAMETER);
+            }
+            expect(prompt).toContain(ROLE_PARAMETERS.role.high);
+            expect(prompt).not.toContain(ACTIVE_TUTOR_AGENT_PROMPT);
         });
     });
 
@@ -229,28 +252,12 @@ describe('Parameter Effectiveness Tests', () => {
         });
     });
 
-    describe('Scaffolding Techniques', () => {
-        it('should always include scaffolding techniques in the prompt', () => {
-            const config = {
-                role: { role: 'low' as const },
-                communication_style: { teen_slang: 'low' as const, conversational_markers: 'low' as const, uncertainty_expression: 'low' as const },
-                cognitive_parameters: { concept_density: 'low' as const, perspective_taking: 'low' as const, personal_examples: 'low' as const, consequence_highlighting: 'low' as const },
-                emotional_parameters: { enthusiasm_level: 'low' as const, validation_frequency: 'low' as const, mistake_normalization: 'low' as const, confidence_building: 'low' as const },
-                detection_areas: [], verification_steps: []
-            };
-
-            const prompt = generateSystemPrompt(config);
-
-            // Should include all scaffolding techniques
-            expect(prompt).toContain('Questioning');
-            expect(prompt).toContain('Explaining');
-            expect(prompt).toContain('Modeling');
-            expect(prompt).toContain('Feeding_back');
-            expect(prompt).toContain('Hinting');
-            expect(prompt).toContain('Instructing');
-
-            // The same shared policy accompanies the technique inventory.
-            expect(prompt).toContain(RESPONSE_POLICY);
+    describe('Teaching methods glossary', () => {
+        it('keeps the teaching methods as a glossary inside the single tutor policy', () => {
+            for (const method of ['questioning', 'hinting', 'feeding back', 'explaining', 'modeling', 'instructing']) {
+                expect(ACTIVE_TUTOR_AGENT_PROMPT).toContain(method);
+            }
+            expect(ACTIVE_TUTOR_AGENT_PROMPT).toContain('Teaching methods glossary');
         });
     });
 });

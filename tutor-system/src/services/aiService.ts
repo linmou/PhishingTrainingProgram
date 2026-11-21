@@ -8,23 +8,23 @@
  * 4. Public API - clean interface for external usage
  */
 
-import { AIConfigChangeLog, AIResponse, ConversationMessage, AIAssistantConfig, AIAssistantConfigSnapshot, InteractionMode, TutorActionDecision, TutorDecisionMode, TutorInstruction, TutorResponseMode } from '../types';
+import { AIConfigChangeLog, AIResponse, ConversationMessage, AIAssistantConfig, AIAssistantConfigSnapshot, InteractionMode, Room, TutorActionDecision, TutorDecisionMode, TutorInstruction, TutorResponseMode } from '../types';
 import { supabase } from './supabase';
 import { generateSystemPrompt, PRESET_CONFIGS } from './systemPrompts';
 import { SCENARIO_TEMPLATES, ScenarioTemplate, requireScenarioTemplate } from './detectionTemplates';
-import { buildAIContextFromExistingData } from './simplifiedAIContext';
+import { buildAIContextFromExistingData, type AIContextRoom } from './simplifiedAIContext';
 import {
     buildPhase0ChatCompletionMessages,
     buildEcologicalChatCompletionMessages,
     conversationMessagesToHistoryText,
     formatRoomScenarioContext
 } from './ecologicalTutorCall';
-import { AI_MODELS, DEFAULT_AI_MODEL, type AIModelName } from './aiModels';
+import { AI_MODELS, OAI_MODEL, type AIModelName } from './aiModels';
 import { parseTutorDecision } from './tutorDecisionContract';
 import { ChecklistService } from './checklistService';
 import type { CyberbullyingCharacter, CyberbullyingSuggestion } from '../types';
 
-export { AI_MODELS, DEFAULT_AI_MODEL };
+export { AI_MODELS, OAI_MODEL };
 export type { AIModelName };
 
 export const parseTutorActionDecision = (
@@ -65,7 +65,6 @@ const appendTutorDecisionRepairInstruction = (
 // CONSTANTS AND TYPES
 // ============================================================================
 
-const QWEN_MODEL: AIModelName = DEFAULT_AI_MODEL;
 const MAX_TUTOR_DECISION_ATTEMPTS = 2;
 const TUTOR_GENERATION_SETTINGS = {
     temperature: 0.3,
@@ -169,7 +168,7 @@ const stripWrappedQuotes = (value: string): string => {
     return innerContent.trim();
 };
 
-export const normalizeAIModel = (_modelName: unknown): AIModelName => DEFAULT_AI_MODEL;
+export const normalizeAIModel = (_modelName: unknown): AIModelName => OAI_MODEL;
 
 export const resolveTutorPriorMode = (roomData: {
     guard_mode?: boolean | null;
@@ -400,12 +399,15 @@ const persistExtendedAIConfig = async (
 // 1. AI CONFIGURATION MANAGEMENT
 // ============================================================================
 
+type AIConfigRoom = Pick<Room, 'id' | 'ai_assistant_enabled' | 'ai_assistant_model' | 'ai_assistant_prompt' | 'created_at' | 'updated_at'>;
+type TutorSuggestionRoom = AIConfigRoom & AIContextRoom & Pick<Room, 'guard_mode' | 'guard_mode_changed_at' | 'practice_type'>;
+
 class AIConfigurationManager {
     /**
      * Load AI configuration for a room, handling various edge cases
      */
-    static async loadConfig(roomId: string, roomData: any): Promise<ProcessedAIConfig> {
-        const config = await getAIConfig(roomId);
+    static async loadConfig(roomId: string, roomData: TutorSuggestionRoom): Promise<ProcessedAIConfig> {
+        const config = await getAIConfigForRoom(roomData);
         
         if (!config) {
             console.log('⚠️ No AI config found for room, creating default configuration');
@@ -619,7 +621,7 @@ export class QwenService {
 
             return {
                 content: responseContent,
-                model_used: data.model || QWEN_MODEL,
+                model_used: data.model || OAI_MODEL,
                 response_time_ms: responseTime,
                 success: true
             };
@@ -629,7 +631,7 @@ export class QwenService {
 
             return {
                 content: '',
-                model_used: QWEN_MODEL,
+                model_used: OAI_MODEL,
                 response_time_ms: responseTime,
                 success: false,
                 error: error instanceof Error ? error.message : 'Unknown error occurred'
@@ -663,12 +665,6 @@ export class TutorSuggestionService {
                 studentMessage = lastUser?.content || 'What should I look for in this post?';
             }
 
-            const historyWithoutLastStudent = conversationHistory.filter((m) => {
-                if (!options?.focusStudentMessage) return true;
-                // Keep full history; ecological turn re-states the latest student line explicitly.
-                return true;
-            });
-
             const scenarioContext =
                 options?.scenarioContext ||
                 conversationHistory.find((m) => m.role === 'system')?.content ||
@@ -676,19 +672,18 @@ export class TutorSuggestionService {
 
             const comparison = config.prompt_config?.prompt_comparison;
             const comparisonScenario = comparison?.shared_scenario_context || scenarioContext;
-            const historyText = conversationMessagesToHistoryText(historyWithoutLastStudent);
-            const phase0HistoryText = historyWithoutLastStudent
-                .map((message) => `${message.role}: ${message.content}`)
-                .join('\n');
             const interactionMode: InteractionMode = 'single_agent';
+            // Each format deliberately keeps its own role/system-message policy.
+            // Serialize only the selected branch and retain the full input history.
             const messages = comparison?.version === 'phase0'
                 ? buildPhase0ChatCompletionMessages(
                     systemPrompt,
-                    [`Scenario context: ${comparisonScenario}`, phase0HistoryText].filter(Boolean).join('\n')
+                    [`Scenario context: ${comparisonScenario}`, conversationHistory
+                        .map((message) => `${message.role}: ${message.content}`).join('\n')].filter(Boolean).join('\n')
                 )
                 : buildEcologicalChatCompletionMessages(systemPrompt, {
                     scenario_context: comparisonScenario,
-                    conversation_history: historyText,
+                    conversation_history: conversationMessagesToHistoryText(conversationHistory),
                     student_message: studentMessage,
                     prior_guard_mode: options?.priorMode ?? 'unknown',
                     interaction_mode: interactionMode
@@ -878,7 +873,8 @@ export const generateTutorSuggestion = async (
     cyberbullyingDraft?: CyberbullyingSuggestion;
 }> => {
     try {
-        // 1. Validate room and get basic data
+        // One room snapshot owns configuration, scenario and prior mode for this
+        // request. Later reads load their own extended config/history/readiness.
         const roomData = await validateRoom(roomId);
         if (roomData.practice_type === 'cyberbullying') {
             if (parameterOverrides && Object.keys(parameterOverrides).length) throw new Error('Quick Adjust is unavailable for this practice');
@@ -902,8 +898,15 @@ export const generateTutorSuggestion = async (
         // 3. Apply parameter overrides if provided
         aiConfig = SystemPromptProcessor.processOverrides(aiConfig, parameterOverrides);
 
+        // Learner-owned progress is independent of whether transfer quizzes are enabled.
+        // An ambiguous or failed transfer read must not substitute another learner's state.
+        const transferChecklist = options?.focusStudentId
+            ? await ChecklistService.getChecklistForStudent(roomId, options.focusStudentId)
+            : await ChecklistService.getActiveTransferChecklistForRoom(roomId);
         try {
-            const checklist = await ChecklistService.getChecklistByRoom(roomId);
+            const checklist = transferChecklist ?? (options?.focusStudentId
+                ? null
+                : await ChecklistService.getChecklistByRoom(roomId));
             if (checklist) {
                 const items = [...checklist.detection_areas, ...checklist.verification_steps];
                 const progress = items.map(item => `- ${item.area_text}: ${item.status}`).join('\n');
@@ -920,18 +923,12 @@ export const generateTutorSuggestion = async (
         console.log('📋 Using AI config with system prompt:', aiConfig.system_prompt?.substring(0, 100) + '...');
         
         // 5. Get conversation history (includes pre-populated discussion for ecology)
-        const conversationHistory = await buildAIContextFromExistingData(roomId,options?.expectedAssessmentResultIds,options?.focusStudentId);
+        const conversationHistory = await buildAIContextFromExistingData(roomId,options?.expectedAssessmentResultIds,options?.focusStudentId,roomData,true);
         console.log(`📚 Conversation history length: ${conversationHistory.length} messages`);
 
-        // Scenario string from room fields when available
-        const { data: roomMeta } = await supabase
-            .from('rooms')
-            .select('title, description')
-            .eq('id', roomId)
-            .single();
         const scenarioContext = formatRoomScenarioContext(
-            roomMeta?.title,
-            roomMeta?.description
+            roomData.title,
+            roomData.description
         );
         
         // 6. Generate suggestion using appropriate service
@@ -981,10 +978,10 @@ export const generateTutorSuggestion = async (
 /**
  * Validate room and check AI assistant status
  */
-async function validateRoom(roomId: string) {
+async function validateRoom(roomId: string): Promise<TutorSuggestionRoom> {
     const { data: roomData, error: roomError } = await supabase
         .from('rooms')
-        .select('ai_assistant_enabled, ai_assistant_model, guard_mode, guard_mode_changed_at, practice_type')
+        .select('id, ai_assistant_enabled, ai_assistant_model, ai_assistant_prompt, guard_mode, guard_mode_changed_at, practice_type, title, description, pre_populated_dialogue, created_at, updated_at')
         .eq('id', roomId)
         .single();
 
@@ -1065,11 +1062,16 @@ export const getAIConfig = async (roomId: string): Promise<AIAssistantConfig | n
         throw new Error(`Failed to get AI config: ${error.message}`);
     }
 
+    return getAIConfigForRoom(room);
+};
+
+/** Merge separately stored extended settings with the caller's room snapshot. */
+const getAIConfigForRoom = async (room: AIConfigRoom | null): Promise<AIAssistantConfig | null> => {
     if (!room?.ai_assistant_enabled) {
         return null;
     }
 
-    const extendedConfig = await getExtendedAIConfig(roomId);
+    const extendedConfig = await getExtendedAIConfig(room.id);
     const effectiveSystemPrompt = getEffectiveSystemPrompt(
         room.ai_assistant_prompt,
         extendedConfig?.prompt_config ?? null
@@ -1094,7 +1096,7 @@ export const getAIConfig = async (roomId: string): Promise<AIAssistantConfig | n
  */
 export const initializeAIAssistant = async (
     roomId: string,
-    modelName: string = DEFAULT_AI_MODEL,
+    modelName: string = OAI_MODEL,
     systemPrompt?: string,
     userId?: string,
     promptConfig?: {
@@ -1141,7 +1143,7 @@ export const initializeAIAssistant = async (
         'Provide clear, educational responses to help students learn. ' +
         'Be encouraging, patient, and focus on building understanding.';
 
-    return await initializeAIAssistantFallback(roomId, DEFAULT_AI_MODEL, defaultPrompt, userId, finalPromptConfig);
+    return await initializeAIAssistantFallback(roomId, OAI_MODEL, defaultPrompt, userId, finalPromptConfig);
 };
 
 /**
@@ -1180,7 +1182,7 @@ const initializeAIAssistantFallback = async (
         .from('rooms')
         .update({
             ai_assistant_enabled: true,
-            ai_assistant_model: DEFAULT_AI_MODEL,
+            ai_assistant_model: OAI_MODEL,
             ai_assistant_prompt: systemPrompt,
             updated_at: new Date().toISOString()
         })
@@ -1193,7 +1195,7 @@ const initializeAIAssistantFallback = async (
     }
 
     await persistExtendedAIConfig(roomId, {
-        model_name: DEFAULT_AI_MODEL,
+        model_name: OAI_MODEL,
         system_prompt: systemPrompt,
         prompt_config: promptConfig ?? null,
         temperature: 0.7,

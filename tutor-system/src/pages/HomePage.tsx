@@ -6,7 +6,7 @@ import RoleSelection from '../components/RoleSelection';
 
 const HomePage: React.FC = () => {
     const navigate = useNavigate();
-    const { user, loading } = useAuth();
+    const { user, loading, sessionNotice } = useAuth();
 
     // Redirect based on user role
     useEffect(() => {
@@ -32,7 +32,16 @@ const HomePage: React.FC = () => {
 
     // Show simple login for unauthenticated users
     if (!user) {
-        return <SimpleLogin />;
+        return (
+            <>
+                {sessionNotice && (
+                    <div className="container">
+                        <div className="error-banner" role="alert">{sessionNotice}</div>
+                    </div>
+                )}
+                <SimpleLogin />
+            </>
+        );
     }
 
     // Users with roles are redirected above

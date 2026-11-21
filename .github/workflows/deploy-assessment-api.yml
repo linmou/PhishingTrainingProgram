@@ -33,6 +33,7 @@ jobs:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       OAI_API_KEY: ${{ secrets.OAI_API_KEY }}
       OAI_BASE_URL: ${{ secrets.OAI_BASE_URL }}
+      OAI_MODEL: ${{ secrets.OAI_MODEL }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -50,6 +51,7 @@ jobs:
           test -n "$SUPABASE_ACCESS_TOKEN"
           test -n "$OAI_API_KEY"
           test -n "$OAI_BASE_URL"
+          test -n "$OAI_MODEL"
 
       - name: Install Supabase CLI
         uses: supabase/setup-cli@v1
@@ -76,6 +78,7 @@ jobs:
           {
             printf 'OAI_API_KEY=%s\n' "$OAI_API_KEY"
             printf 'OAI_BASE_URL=%s\n' "$OAI_BASE_URL"
+            printf 'OAI_MODEL=%s\n' "$OAI_MODEL"
           } > "$secrets_file"
           supabase secrets set --project-ref "$PROJECT_REF" --env-file "$secrets_file"
 

@@ -1,0 +1,902 @@
+{
+  "fingerprint": "f309a132a1ac900562b6f8678650f58639e3d37679a94f245a2c8698a43f48b7",
+  "source_analysis": "analysis-1794561128064.json",
+  "metrics": {
+    "recognition_before_action": {
+      "qwen": {
+        "all": {
+          "expected": 105,
+          "pass": 104,
+          "fail": 1,
+          "error": 0,
+          "failures": [
+            "component_1_recognition_done__cleanup_full__r1"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "pass": 80,
+          "fail": 1,
+          "error": 0,
+          "failures": [
+            "component_1_recognition_done__cleanup_full__r1"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "pass": 24,
+          "fail": 0,
+          "error": 0,
+          "failures": []
+        }
+      },
+      "deepseek": {
+        "all": {
+          "expected": 105,
+          "pass": 100,
+          "fail": 5,
+          "error": 0,
+          "failures": [
+            "component_1_no_attempt__cleanup_full__r1",
+            "component_1_no_attempt__cleanup_full__r2",
+            "component_1_no_attempt__cleanup_full__r3",
+            "component_1_recognition_done__cleanup_full__r1",
+            "component_1_recognition_done__cleanup_full__r3"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "pass": 76,
+          "fail": 5,
+          "error": 0,
+          "failures": [
+            "component_1_no_attempt__cleanup_full__r1",
+            "component_1_no_attempt__cleanup_full__r2",
+            "component_1_no_attempt__cleanup_full__r3",
+            "component_1_recognition_done__cleanup_full__r1",
+            "component_1_recognition_done__cleanup_full__r3"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "pass": 24,
+          "fail": 0,
+          "error": 0,
+          "failures": []
+        }
+      }
+    },
+    "component_disclosure": {
+      "qwen": {
+        "all": {
+          "expected": 105,
+          "pass": 97,
+          "fail": 8,
+          "error": 0,
+          "failures": [
+            "component_1_recognition_done__cleanup_full__r1",
+            "component_5_bare_agreement__cleanup_full__r1",
+            "component_5_bare_agreement__cleanup_full__r3",
+            "component_5_failed_focused__cleanup_full__r2",
+            "component_5_later_contradiction__cleanup_full__r2",
+            "component_5_recognition_done__cleanup_full__r3",
+            "component_5_unrelated_attempt__cleanup_full__r3",
+            "journey_5__cleanup_full__r1__t2"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "pass": 74,
+          "fail": 7,
+          "error": 0,
+          "failures": [
+            "component_1_recognition_done__cleanup_full__r1",
+            "component_5_bare_agreement__cleanup_full__r1",
+            "component_5_bare_agreement__cleanup_full__r3",
+            "component_5_failed_focused__cleanup_full__r2",
+            "component_5_later_contradiction__cleanup_full__r2",
+            "component_5_recognition_done__cleanup_full__r3",
+            "component_5_unrelated_attempt__cleanup_full__r3"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "pass": 23,
+          "fail": 1,
+          "error": 0,
+          "failures": [
+            "journey_5__cleanup_full__r1__t2"
+          ]
+        }
+      },
+      "deepseek": {
+        "all": {
+          "expected": 105,
+          "pass": 97,
+          "fail": 8,
+          "error": 0,
+          "failures": [
+            "component_0_protection_return__cleanup_full__r1",
+            "component_0_protection_return__cleanup_full__r3",
+            "component_1_no_attempt__cleanup_full__r1",
+            "component_1_no_attempt__cleanup_full__r2",
+            "component_1_no_attempt__cleanup_full__r3",
+            "component_1_recognition_done__cleanup_full__r1",
+            "component_1_recognition_done__cleanup_full__r3",
+            "component_5_failed_focused__cleanup_full__r2"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "pass": 73,
+          "fail": 8,
+          "error": 0,
+          "failures": [
+            "component_0_protection_return__cleanup_full__r1",
+            "component_0_protection_return__cleanup_full__r3",
+            "component_1_no_attempt__cleanup_full__r1",
+            "component_1_no_attempt__cleanup_full__r2",
+            "component_1_no_attempt__cleanup_full__r3",
+            "component_1_recognition_done__cleanup_full__r1",
+            "component_1_recognition_done__cleanup_full__r3",
+            "component_5_failed_focused__cleanup_full__r2"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "pass": 24,
+          "fail": 0,
+          "error": 0,
+          "failures": []
+        }
+      }
+    },
+    "responsive_progression": {
+      "qwen": {
+        "all": {
+          "expected": 105,
+          "pass": 90,
+          "fail": 15,
+          "error": 0,
+          "failures": [
+            "component_0_recognition_done__cleanup_full__r1",
+            "component_0_recognition_done__cleanup_full__r2",
+            "component_0_recognition_done__cleanup_full__r3",
+            "component_1_recognition_done__cleanup_full__r1",
+            "component_1_recognition_done__cleanup_full__r2",
+            "component_1_recognition_done__cleanup_full__r3",
+            "component_2_recognition_done__cleanup_full__r3",
+            "component_4_recognition_done__cleanup_full__r1",
+            "component_4_recognition_done__cleanup_full__r2",
+            "component_4_recognition_done__cleanup_full__r3",
+            "component_5_recognition_done__cleanup_full__r1",
+            "component_5_recognition_done__cleanup_full__r2",
+            "component_5_recognition_done__cleanup_full__r3",
+            "journey_3__cleanup_full__r1__t2",
+            "journey_5__cleanup_full__r1__t2"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "pass": 68,
+          "fail": 13,
+          "error": 0,
+          "failures": [
+            "component_0_recognition_done__cleanup_full__r1",
+            "component_0_recognition_done__cleanup_full__r2",
+            "component_0_recognition_done__cleanup_full__r3",
+            "component_1_recognition_done__cleanup_full__r1",
+            "component_1_recognition_done__cleanup_full__r2",
+            "component_1_recognition_done__cleanup_full__r3",
+            "component_2_recognition_done__cleanup_full__r3",
+            "component_4_recognition_done__cleanup_full__r1",
+            "component_4_recognition_done__cleanup_full__r2",
+            "component_4_recognition_done__cleanup_full__r3",
+            "component_5_recognition_done__cleanup_full__r1",
+            "component_5_recognition_done__cleanup_full__r2",
+            "component_5_recognition_done__cleanup_full__r3"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "pass": 22,
+          "fail": 2,
+          "error": 0,
+          "failures": [
+            "journey_3__cleanup_full__r1__t2",
+            "journey_5__cleanup_full__r1__t2"
+          ]
+        }
+      },
+      "deepseek": {
+        "all": {
+          "expected": 105,
+          "pass": 92,
+          "fail": 13,
+          "error": 0,
+          "failures": [
+            "component_0_recognition_done__cleanup_full__r1",
+            "component_0_recognition_done__cleanup_full__r2",
+            "component_0_recognition_done__cleanup_full__r3",
+            "component_1_no_attempt__cleanup_full__r1",
+            "component_1_no_attempt__cleanup_full__r2",
+            "component_1_no_attempt__cleanup_full__r3",
+            "component_1_recognition_done__cleanup_full__r1",
+            "component_1_recognition_done__cleanup_full__r2",
+            "component_1_recognition_done__cleanup_full__r3",
+            "component_2_recognition_done__cleanup_full__r1",
+            "component_2_recognition_done__cleanup_full__r2",
+            "component_2_recognition_done__cleanup_full__r3",
+            "component_4_recognition_done__cleanup_full__r3"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "pass": 68,
+          "fail": 13,
+          "error": 0,
+          "failures": [
+            "component_0_recognition_done__cleanup_full__r1",
+            "component_0_recognition_done__cleanup_full__r2",
+            "component_0_recognition_done__cleanup_full__r3",
+            "component_1_no_attempt__cleanup_full__r1",
+            "component_1_no_attempt__cleanup_full__r2",
+            "component_1_no_attempt__cleanup_full__r3",
+            "component_1_recognition_done__cleanup_full__r1",
+            "component_1_recognition_done__cleanup_full__r2",
+            "component_1_recognition_done__cleanup_full__r3",
+            "component_2_recognition_done__cleanup_full__r1",
+            "component_2_recognition_done__cleanup_full__r2",
+            "component_2_recognition_done__cleanup_full__r3",
+            "component_4_recognition_done__cleanup_full__r3"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "pass": 24,
+          "fail": 0,
+          "error": 0,
+          "failures": []
+        }
+      }
+    },
+    "factual_accuracy": {
+      "qwen": {
+        "all": {
+          "expected": 105,
+          "pass": 104,
+          "fail": 1,
+          "error": 0,
+          "failures": [
+            "component_0_recognition_confusion__cleanup_full__r1"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "pass": 80,
+          "fail": 1,
+          "error": 0,
+          "failures": [
+            "component_0_recognition_confusion__cleanup_full__r1"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "pass": 24,
+          "fail": 0,
+          "error": 0,
+          "failures": []
+        }
+      },
+      "deepseek": {
+        "all": {
+          "expected": 105,
+          "pass": 104,
+          "fail": 1,
+          "error": 0,
+          "failures": [
+            "component_0_recognition_confusion__cleanup_full__r3"
+          ]
+        },
+        "fixed": {
+          "expected": 81,
+          "pass": 80,
+          "fail": 1,
+          "error": 0,
+          "failures": [
+            "component_0_recognition_confusion__cleanup_full__r3"
+          ]
+        },
+        "trajectory": {
+          "expected": 24,
+          "pass": 24,
+          "fail": 0,
+          "error": 0,
+          "failures": []
+        }
+      }
+    }
+  },
+  "calibration": {
+    "metrics": {
+      "component_disclosure": {
+        "agreed": 12,
+        "total": 14,
+        "errors": 0,
+        "disagreements": [
+          "disclosure_action_confusion",
+          "earlier_action_attempt_retained"
+        ]
+      },
+      "recognition_before_action": {
+        "agreed": 13,
+        "total": 13,
+        "errors": 0,
+        "disagreements": []
+      },
+      "responsive_progression": {
+        "agreed": 5,
+        "total": 5,
+        "errors": 0,
+        "disagreements": []
+      },
+      "factual_accuracy": {
+        "agreed": 10,
+        "total": 10,
+        "errors": 0,
+        "disagreements": []
+      }
+    },
+    "passed": false
+  },
+  "joint": {
+    "qwen": {
+      "all": {
+        "expected": 105,
+        "all_pass": 84,
+        "error": 0,
+        "combinations": {
+          "all_pass": 84,
+          "factual_accuracy": 1,
+          "responsive_progression": 12,
+          "recognition_before_action+component_disclosure+responsive_progression": 1,
+          "component_disclosure": 5,
+          "component_disclosure+responsive_progression": 2
+        }
+      },
+      "fixed": {
+        "expected": 81,
+        "all_pass": 62,
+        "error": 0,
+        "combinations": {
+          "all_pass": 62,
+          "factual_accuracy": 1,
+          "responsive_progression": 11,
+          "recognition_before_action+component_disclosure+responsive_progression": 1,
+          "component_disclosure": 5,
+          "component_disclosure+responsive_progression": 1
+        }
+      },
+      "trajectory": {
+        "expected": 24,
+        "all_pass": 22,
+        "error": 0,
+        "combinations": {
+          "all_pass": 22,
+          "responsive_progression": 1,
+          "component_disclosure+responsive_progression": 1
+        }
+      }
+    },
+    "deepseek": {
+      "all": {
+        "expected": 105,
+        "all_pass": 88,
+        "error": 0,
+        "combinations": {
+          "all_pass": 88,
+          "component_disclosure": 3,
+          "factual_accuracy": 1,
+          "responsive_progression": 8,
+          "recognition_before_action+component_disclosure+responsive_progression": 5
+        }
+      },
+      "fixed": {
+        "expected": 81,
+        "all_pass": 64,
+        "error": 0,
+        "combinations": {
+          "all_pass": 64,
+          "component_disclosure": 3,
+          "factual_accuracy": 1,
+          "responsive_progression": 8,
+          "recognition_before_action+component_disclosure+responsive_progression": 5
+        }
+      },
+      "trajectory": {
+        "expected": 24,
+        "all_pass": 24,
+        "error": 0,
+        "combinations": {
+          "all_pass": 24
+        }
+      }
+    }
+  },
+  "target_counts": {
+    "qwen": {
+      "expected": 105,
+      "complete": 105,
+      "errors": []
+    },
+    "deepseek": {
+      "expected": 105,
+      "complete": 105,
+      "errors": []
+    }
+  },
+  "fixed_transitions": {
+    "recognition_before_action": {
+      "expected": 81,
+      "both_pass": 76,
+      "qwen_only": 4,
+      "deepseek_only": 0,
+      "both_fail": 1,
+      "error": 0,
+      "changes": [
+        {
+          "id": "component_1_no_attempt__cleanup_full__r1",
+          "direction": "pass_to_fail"
+        },
+        {
+          "id": "component_1_no_attempt__cleanup_full__r2",
+          "direction": "pass_to_fail"
+        },
+        {
+          "id": "component_1_no_attempt__cleanup_full__r3",
+          "direction": "pass_to_fail"
+        },
+        {
+          "id": "component_1_recognition_done__cleanup_full__r3",
+          "direction": "pass_to_fail"
+        }
+      ]
+    },
+    "component_disclosure": {
+      "expected": 81,
+      "both_pass": 68,
+      "qwen_only": 6,
+      "deepseek_only": 5,
+      "both_fail": 2,
+      "error": 0,
+      "changes": [
+        {
+          "id": "component_0_protection_return__cleanup_full__r1",
+          "direction": "pass_to_fail"
+        },
+        {
+          "id": "component_0_protection_return__cleanup_full__r3",
+          "direction": "pass_to_fail"
+        },
+        {
+          "id": "component_1_no_attempt__cleanup_full__r1",
+          "direction": "pass_to_fail"
+        },
+        {
+          "id": "component_1_no_attempt__cleanup_full__r2",
+          "direction": "pass_to_fail"
+        },
+        {
+          "id": "component_1_no_attempt__cleanup_full__r3",
+          "direction": "pass_to_fail"
+        },
+        {
+          "id": "component_1_recognition_done__cleanup_full__r3",
+          "direction": "pass_to_fail"
+        },
+        {
+          "id": "component_5_bare_agreement__cleanup_full__r1",
+          "direction": "fail_to_pass"
+        },
+        {
+          "id": "component_5_bare_agreement__cleanup_full__r3",
+          "direction": "fail_to_pass"
+        },
+        {
+          "id": "component_5_later_contradiction__cleanup_full__r2",
+          "direction": "fail_to_pass"
+        },
+        {
+          "id": "component_5_recognition_done__cleanup_full__r3",
+          "direction": "fail_to_pass"
+        },
+        {
+          "id": "component_5_unrelated_attempt__cleanup_full__r3",
+          "direction": "fail_to_pass"
+        }
+      ]
+    },
+    "responsive_progression": {
+      "expected": 81,
+      "both_pass": 63,
+      "qwen_only": 5,
+      "deepseek_only": 5,
+      "both_fail": 8,
+      "error": 0,
+      "changes": [
+        {
+          "id": "component_1_no_attempt__cleanup_full__r1",
+          "direction": "pass_to_fail"
+        },
+        {
+          "id": "component_1_no_attempt__cleanup_full__r2",
+          "direction": "pass_to_fail"
+        },
+        {
+          "id": "component_1_no_attempt__cleanup_full__r3",
+          "direction": "pass_to_fail"
+        },
+        {
+          "id": "component_2_recognition_done__cleanup_full__r1",
+          "direction": "pass_to_fail"
+        },
+        {
+          "id": "component_2_recognition_done__cleanup_full__r2",
+          "direction": "pass_to_fail"
+        },
+        {
+          "id": "component_4_recognition_done__cleanup_full__r1",
+          "direction": "fail_to_pass"
+        },
+        {
+          "id": "component_4_recognition_done__cleanup_full__r2",
+          "direction": "fail_to_pass"
+        },
+        {
+          "id": "component_5_recognition_done__cleanup_full__r1",
+          "direction": "fail_to_pass"
+        },
+        {
+          "id": "component_5_recognition_done__cleanup_full__r2",
+          "direction": "fail_to_pass"
+        },
+        {
+          "id": "component_5_recognition_done__cleanup_full__r3",
+          "direction": "fail_to_pass"
+        }
+      ]
+    },
+    "factual_accuracy": {
+      "expected": 81,
+      "both_pass": 79,
+      "qwen_only": 1,
+      "deepseek_only": 1,
+      "both_fail": 0,
+      "error": 0,
+      "changes": [
+        {
+          "id": "component_0_recognition_confusion__cleanup_full__r1",
+          "direction": "fail_to_pass"
+        },
+        {
+          "id": "component_0_recognition_confusion__cleanup_full__r3",
+          "direction": "pass_to_fail"
+        }
+      ]
+    }
+  },
+  "component_partitions": {
+    "recognition_before_action": {
+      "qwen": {
+        "fixed:action": {
+          "expected": 30,
+          "pass": 29,
+          "fail": 1,
+          "error": 0
+        },
+        "fixed:recognition": {
+          "expected": 45,
+          "pass": 45,
+          "fail": 0,
+          "error": 0
+        },
+        "fixed:protection": {
+          "expected": 6,
+          "pass": 6,
+          "fail": 0,
+          "error": 0
+        },
+        "trajectory:recognition": {
+          "expected": 6,
+          "pass": 6,
+          "fail": 0,
+          "error": 0
+        },
+        "trajectory:action": {
+          "expected": 12,
+          "pass": 12,
+          "fail": 0,
+          "error": 0
+        },
+        "trajectory:next": {
+          "expected": 6,
+          "pass": 6,
+          "fail": 0,
+          "error": 0
+        }
+      },
+      "deepseek": {
+        "fixed:action": {
+          "expected": 30,
+          "pass": 28,
+          "fail": 2,
+          "error": 0
+        },
+        "fixed:recognition": {
+          "expected": 45,
+          "pass": 42,
+          "fail": 3,
+          "error": 0
+        },
+        "fixed:protection": {
+          "expected": 6,
+          "pass": 6,
+          "fail": 0,
+          "error": 0
+        },
+        "trajectory:recognition": {
+          "expected": 6,
+          "pass": 6,
+          "fail": 0,
+          "error": 0
+        },
+        "trajectory:action": {
+          "expected": 12,
+          "pass": 12,
+          "fail": 0,
+          "error": 0
+        },
+        "trajectory:next": {
+          "expected": 6,
+          "pass": 6,
+          "fail": 0,
+          "error": 0
+        }
+      }
+    },
+    "component_disclosure": {
+      "qwen": {
+        "fixed:action": {
+          "expected": 30,
+          "pass": 28,
+          "fail": 2,
+          "error": 0
+        },
+        "fixed:recognition": {
+          "expected": 45,
+          "pass": 40,
+          "fail": 5,
+          "error": 0
+        },
+        "fixed:protection": {
+          "expected": 6,
+          "pass": 6,
+          "fail": 0,
+          "error": 0
+        },
+        "trajectory:recognition": {
+          "expected": 6,
+          "pass": 6,
+          "fail": 0,
+          "error": 0
+        },
+        "trajectory:action": {
+          "expected": 12,
+          "pass": 11,
+          "fail": 1,
+          "error": 0
+        },
+        "trajectory:next": {
+          "expected": 6,
+          "pass": 6,
+          "fail": 0,
+          "error": 0
+        }
+      },
+      "deepseek": {
+        "fixed:action": {
+          "expected": 30,
+          "pass": 28,
+          "fail": 2,
+          "error": 0
+        },
+        "fixed:recognition": {
+          "expected": 45,
+          "pass": 39,
+          "fail": 6,
+          "error": 0
+        },
+        "fixed:protection": {
+          "expected": 6,
+          "pass": 6,
+          "fail": 0,
+          "error": 0
+        },
+        "trajectory:recognition": {
+          "expected": 6,
+          "pass": 6,
+          "fail": 0,
+          "error": 0
+        },
+        "trajectory:action": {
+          "expected": 12,
+          "pass": 12,
+          "fail": 0,
+          "error": 0
+        },
+        "trajectory:next": {
+          "expected": 6,
+          "pass": 6,
+          "fail": 0,
+          "error": 0
+        }
+      }
+    },
+    "responsive_progression": {
+      "qwen": {
+        "fixed:action": {
+          "expected": 30,
+          "pass": 17,
+          "fail": 13,
+          "error": 0
+        },
+        "fixed:recognition": {
+          "expected": 45,
+          "pass": 45,
+          "fail": 0,
+          "error": 0
+        },
+        "fixed:protection": {
+          "expected": 6,
+          "pass": 6,
+          "fail": 0,
+          "error": 0
+        },
+        "trajectory:recognition": {
+          "expected": 6,
+          "pass": 6,
+          "fail": 0,
+          "error": 0
+        },
+        "trajectory:action": {
+          "expected": 12,
+          "pass": 10,
+          "fail": 2,
+          "error": 0
+        },
+        "trajectory:next": {
+          "expected": 6,
+          "pass": 6,
+          "fail": 0,
+          "error": 0
+        }
+      },
+      "deepseek": {
+        "fixed:action": {
+          "expected": 30,
+          "pass": 20,
+          "fail": 10,
+          "error": 0
+        },
+        "fixed:recognition": {
+          "expected": 45,
+          "pass": 42,
+          "fail": 3,
+          "error": 0
+        },
+        "fixed:protection": {
+          "expected": 6,
+          "pass": 6,
+          "fail": 0,
+          "error": 0
+        },
+        "trajectory:recognition": {
+          "expected": 6,
+          "pass": 6,
+          "fail": 0,
+          "error": 0
+        },
+        "trajectory:action": {
+          "expected": 12,
+          "pass": 12,
+          "fail": 0,
+          "error": 0
+        },
+        "trajectory:next": {
+          "expected": 6,
+          "pass": 6,
+          "fail": 0,
+          "error": 0
+        }
+      }
+    },
+    "factual_accuracy": {
+      "qwen": {
+        "fixed:action": {
+          "expected": 30,
+          "pass": 30,
+          "fail": 0,
+          "error": 0
+        },
+        "fixed:recognition": {
+          "expected": 45,
+          "pass": 44,
+          "fail": 1,
+          "error": 0
+        },
+        "fixed:protection": {
+          "expected": 6,
+          "pass": 6,
+          "fail": 0,
+          "error": 0
+        },
+        "trajectory:recognition": {
+          "expected": 6,
+          "pass": 6,
+          "fail": 0,
+          "error": 0
+        },
+        "trajectory:action": {
+          "expected": 12,
+          "pass": 12,
+          "fail": 0,
+          "error": 0
+        },
+        "trajectory:next": {
+          "expected": 6,
+          "pass": 6,
+          "fail": 0,
+          "error": 0
+        }
+      },
+      "deepseek": {
+        "fixed:action": {
+          "expected": 30,
+          "pass": 30,
+          "fail": 0,
+          "error": 0
+        },
+        "fixed:recognition": {
+          "expected": 45,
+          "pass": 44,
+          "fail": 1,
+          "error": 0
+        },
+        "fixed:protection": {
+          "expected": 6,
+          "pass": 6,
+          "fail": 0,
+          "error": 0
+        },
+        "trajectory:recognition": {
+          "expected": 6,
+          "pass": 6,
+          "fail": 0,
+          "error": 0
+        },
+        "trajectory:action": {
+          "expected": 12,
+          "pass": 12,
+          "fail": 0,
+          "error": 0
+        },
+        "trajectory:next": {
+          "expected": 6,
+          "pass": 6,
+          "fail": 0,
+          "error": 0
+        }
+      }
+    }
+  }
+}

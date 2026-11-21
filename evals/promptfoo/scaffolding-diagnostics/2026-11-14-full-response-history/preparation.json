@@ -1,0 +1,77 @@
+{
+  "fingerprint": "4338233cfdf2767438c9b96061085af53ba56fe32d5e89a31a83a60e28ab7632",
+  "cases": [
+    "gift_card_contextual_judgment_real",
+    "library_contextual_judgment",
+    "library_agreement_only",
+    "event_one_answer_covers_overlapping_points",
+    "phone_contradiction_after_completed_task",
+    "library_all_tasks_completed"
+  ],
+  "targets": 72,
+  "judgments": 216,
+  "calibration": 16,
+  "settings": {
+    "model": "qwen3.8-flash",
+    "endpoint": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+    "target_enable_thinking": false,
+    "target_temperature": 0.3,
+    "target_max_tokens": 600,
+    "judge_enable_thinking": true,
+    "judge_temperature": 0,
+    "judge_max_tokens": 8000,
+    "target_format_attempts": 2,
+    "judge_format_attempts": 2,
+    "transport_attempts": 2,
+    "transport_retry_delay_ms": 2000,
+    "timeout_ms": 90000,
+    "judge_timeout_ms": 180000,
+    "repetitions": 3
+  },
+  "sources": [
+    {
+      "path": "evals/promptfoo/scaffolding-diagnostics/2026-11-14-full-response-history/run.cjs",
+      "sha256": "95dd558305a60d4081725c5426989091286395acea3f46e5d3f2dee4d1bfc977"
+    },
+    {
+      "path": "evals/promptfoo/scaffolding-diagnostics/2026-11-14-full-response-history/plan.md",
+      "sha256": "4efa282b91d15677b62e6106ba80cc2811ad87127426218ce5359f01b36d7441"
+    },
+    {
+      "path": "tutor-system/docs/ai-behaviors/constitution.md",
+      "sha256": "33ddd10ba3d0c949dbe308d67b9320b6be934f8af09ce07129b02a21dee2dec4"
+    },
+    {
+      "path": "tutor-system/docs/ai-behaviors/tutor-behavior-specification.md",
+      "sha256": "2514086b2cf350d149a167d32ed1473aa2642dcd685c2f44575be21aa3738986"
+    },
+    {
+      "path": "tutor-system/docs/ai-behaviors/tutor-response-contract.md",
+      "sha256": "6896f22902c7b43996272084263233296f9a7aaa694fa57cd23848fc1110aa1a"
+    },
+    {
+      "path": "tutor-system/src/services/prompts/activeTutorAgentPrompt.ts",
+      "sha256": "a115907897525df3f343c0e977ccb96f48694f22052c3a347a0702c32bb2548d"
+    },
+    {
+      "path": "tutor-system/src/services/ecologicalTutorCall.ts",
+      "sha256": "0917d9ab90efe32f7fdf772cdf46b10e2ffe9d9fc64921cc9d2fd5cd01875c09"
+    },
+    {
+      "path": "tutor-system/src/services/tutorDecisionContract.ts",
+      "sha256": "043eed15069567ecb2d7f59e1bdc2f7a0bcbb5c755ab38a2c35b8dbeb26beff3"
+    },
+    {
+      "path": "tutor-system/src/services/tutorResponseHistory.ts",
+      "sha256": "a0e45effe44e0d5302ffad9b9bcf4ae1d87ae062c674b2cd4d720ecd7ee54123"
+    },
+    {
+      "path": "evals/promptfoo/v1/runner.js",
+      "sha256": "5f5c6f7da9b04358c43f1bf5f09469773fbb032931038ee3cdf582d8fd05d5fe"
+    },
+    {
+      "path": "evals/promptfoo/v1/product-adapter.js",
+      "sha256": "a1e40694d3bea21995febe66787ba313232e325357f154bd17f47f00eec608eb"
+    }
+  ]
+}

@@ -125,7 +125,14 @@ async function joinAs(page, appUrl, name, role) {
   await page.locator('#displayName').fill(name);
   await page.locator(`input[name="role"][value="${role}"]`).check();
   await page.locator('button[type="submit"]').click();
-  await page.waitForURL(new RegExp(`#/${role === 'tutor' ? 'tutor' : 'student'}`), { timeout: TIMEOUT });
+  try {
+    await page.waitForURL(new RegExp(`#/${role === 'tutor' ? 'tutor' : 'student'}`), {
+      timeout: TIMEOUT, waitUntil: 'domcontentloaded'
+    });
+  } catch (error) {
+    const messages = await page.locator('.error-message').allTextContents();
+    throw new Error(`${error.message}\nObserved route: ${page.url()}; login errors: ${JSON.stringify(messages)}`);
+  }
 }
 
 async function openRoom(page, appUrl, roomId) {

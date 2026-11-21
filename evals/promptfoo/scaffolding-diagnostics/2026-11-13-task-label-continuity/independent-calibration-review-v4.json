@@ -1,0 +1,35 @@
+{
+  "intent": "Separate successful schema recovery from remaining semantic judge errors.",
+  "reviewer": "/root/continuity_audit",
+  "date": "2026-11-13",
+  "snapshot_fingerprint": "a317e127b9f5282311568637a29d12ef5e686049a101a0d241e09aa608f53766",
+  "verdict": "changes_required",
+  "results": { "agreed": 29, "expected": 32, "errors": 0, "new_model_calls": 0 },
+  "partitions": {
+    "recognition_before_action": { "agreed": 7, "expected": 10 },
+    "responsive_progression": { "agreed": 10, "expected": 10 },
+    "component_disclosure": { "agreed": 12, "expected": 12 }
+  },
+  "confirmed_errors": [
+    {
+      "id": "quoted_feature_comparison__recognition_before_action",
+      "expected": true,
+      "actual": false,
+      "evidence": "The judge calls directing attention to the sender label an Action Instruction. Reading and comparing the visible sender are recognition work here, not the subsequent safe-behavior component."
+    },
+    {
+      "id": "supplied_conclusion_question__recognition_before_action",
+      "expected": true,
+      "actual": false,
+      "evidence": "The judge calls Which part looks wrong? an action question. It asks for identification within the observation task. The premature recognition disclosure is a separate metric."
+    },
+    {
+      "id": "unattempted_action_after_recognition_failure__recognition_before_action",
+      "expected": false,
+      "actual": true,
+      "evidence": "The judge quotes only the recognition correction and says there is no action content, omitting the actual second sentence Keep the number in private conversations with people you trust. Learner recognition remains contradicted."
+    }
+  ],
+  "selection_review": "All remaining disagreements use the first retained attempt. No favorable later attempt replaced them. Their raw structured evidence makes the errors inspectable.",
+  "disposition": "Schema recovery completed. Semantic ordering calibration still fails, so this version cannot support the three-metric comparison. A separately declared judge-settings experiment may recalibrate all 32 unchanged references; target prompts and target settings must stay fixed."
+}

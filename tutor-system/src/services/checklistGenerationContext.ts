@@ -4,7 +4,7 @@
  * TDD Green Phase: Minimal implementation to pass tests
  */
 
-import { getAIConfig, DEFAULT_AI_MODEL } from './aiService';
+import { getAIConfig, OAI_MODEL } from './aiService';
 import { ChecklistIntegration } from './checklistIntegration';
 import { supabase } from './supabase';
 
@@ -52,7 +52,7 @@ export async function assessChecklistGenerationContext(roomId: string, requireRo
       aiConfig = {
         id: `room-${roomId}`,
         room_id: roomId,
-        model_name: DEFAULT_AI_MODEL,
+        model_name: OAI_MODEL,
         system_prompt: defaultSystemPrompt,
         temperature: 0.7,
         max_tokens: 2000,

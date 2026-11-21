@@ -24,7 +24,9 @@ function loadProduction(snapshot) {
     if (!files.has(name)) throw new Error(`Missing frozen dependency ${name}`);
     const module = { exports: {} }; cache.set(name, module);
     let source = files.get(name).replace('if (import.meta.main)', 'if (false)');
-    if (name.endsWith('assessment-api/index.ts')) source += '\nexport const evaluationPrompt = TRANSFER_ANALYSIS_SYSTEM_PROMPT;';
+    if (name.endsWith('assessment-api/index.ts')) source += source.includes('learningAnalysisPrompt.ts')
+      ? '\nexport { TRANSFER_ANALYSIS_SYSTEM_PROMPT as evaluationPrompt } from \'../../../src/services/learningAnalysisPrompt.ts\';'
+      : '\nexport const evaluationPrompt = TRANSFER_ANALYSIS_SYSTEM_PROMPT;';
     const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
     const requireSnapshot = specifier => {
       if (specifier.startsWith('https://')) return { createClient: () => { throw new Error('Live database client prohibited in offline evaluation'); } };
@@ -163,6 +165,10 @@ function freeze(runDir, comparisonMode = 'prompt', freshHoldouts = null) {
   const retained = buildCases(exported, development, holdouts);
   const cases = buildRevisionCases(retained, freshHoldouts);
   const candidateSnapshot = { ...snapshot, files: snapshot.files.map(f => ({ ...f, content: fs.readFileSync(path.join(root, 'tutor-system', f.name), 'utf8') })) };
+  const promptModule = 'src/services/learningAnalysisPrompt.ts';
+  if (!candidateSnapshot.files.some(f => f.name === promptModule) && fs.existsSync(path.join(root, 'tutor-system', promptModule))) {
+    candidateSnapshot.files.push({ name: promptModule, content: fs.readFileSync(path.join(root, 'tutor-system', promptModule), 'utf8') });
+  }
   const candidate = loadProduction(candidateSnapshot);
   if (comparisonMode === 'routing' && candidate.evaluationPrompt !== production.evaluationPrompt) throw new Error('This routing-only comparison requires an unchanged analysis prompt');
   const settings = { model: 'qwen3.5-flash', temperature: 0, max_tokens: 600, enable_thinking: false, response_format: { type: 'json_object' }, repetitions: 2, seed: null, timeout_ms: 90000, target_attempts: 1, num_workers: 4, evaluator: 'deterministic gold-label comparison', human_label_review: 'pending', model_judge: null };
@@ -186,22 +192,23 @@ function freeze(runDir, comparisonMode = 'prompt', freshHoldouts = null) {
   console.log(JSON.stringify({ frozen: runDir, cases: cases.length, generations: frozen.expected_generations, prompt_sha256: frozen.prompt_sha256, label_review: 'pending' }));
 }
 
-async function executeTarget(c, production, transport, state, route = eligible) {
+async function executeTarget(c, production, transport, state, route = eligible, settings = {}) {
   const input = structuredClone(c.input);
   if (state) Object.assign(input.items[0], state);
   let applied = null;
   const calls = [];
-  const handler = production.createAssessmentApiHandler({ featureEnabled: true,
+  const handler = production.createAssessmentApiHandler({ featureEnabled: async () => true,
     verifier: { verify: async () => ({ principal_id: 'evaluation', application_user_id: input.focus_student_id, allowed_room_ids: [input.message.room_id], can_review_assessment: false }) },
-    env: name => ({ OAI_API_KEY: 'injected-transport-key', OAI_BASE_URL: 'https://evaluation.invalid/v1', OAI_MODEL: 'qwen3.5-flash' })[name],
+    env: name => ({ OAI_API_KEY: 'injected-transport-key', OAI_BASE_URL: 'https://evaluation.invalid/v1', OAI_MODEL: settings.model || 'qwen3.5-flash' })[name],
     fetch: async (_url, options) => { const request = JSON.parse(options.body); const result = await transport(request); calls.push(result); if (result.error) throw new Error(result.error); return new Response(JSON.stringify(result.response), { status: result.status }); },
     rpc: async (name, args) => {
+      if (name === 'record_transfer_provider_attempt_v1') return { data: 'evaluation-audit', error: null };
       if (name === 'get_transfer_message_analysis_context_v1') return { data: { room_id: input.message.room_id, student_id: input.focus_student_id, checklist_id: 'evaluation-checklist', message: input.message, items: input.items, dialogue_history: input.dialogue_history, analysis_complete: false, analysis_deferred: false }, error: null };
       if (name === 'apply_transfer_message_analysis_v1') { applied = args.p_analysis; return { data: { applied: args.p_analysis.events }, error: null }; }
       throw new Error(`Unexpected live operation ${name}`);
     }, resolveAnswer: () => { throw new Error('Assessment answer path outside scope'); },
   });
-  const response = await handler(new Request('http://localhost/evaluation', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ operation: 'analyze_message', request_id: crypto.randomUUID(), room_id: input.message.room_id, message_id: input.evidence_message_id }) }));
+  const response = await handler(new Request('http://localhost/evaluation', { method: 'POST', headers: { 'content-type': 'application/json', 'x-practice-contract': 'cyberbullying-v2' }, body: JSON.stringify({ operation: 'analyze_message', request_id: crypto.randomUUID(), room_id: input.message.room_id, message_id: input.evidence_message_id }) }));
   const envelope = await response.json();
   let parsed = null;
   try { parsed = JSON.parse(calls[0]?.response?.choices?.[0]?.message?.content); } catch {}

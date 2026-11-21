@@ -1,0 +1,488 @@
+{
+  "fingerprint": "8900d7eb5dba07a2ff6950263c017582ad49fc46420d305b7f042e8785225e53",
+  "fixed_cases": 12,
+  "prepared_fixed_cases": 25,
+  "selection": [
+    {
+      "id": "component_0_no_attempt",
+      "selected": false,
+      "reason": "Prepared ordinary case retained for future coverage; not selected for the bounded12case diagnostic before any target output."
+    },
+    {
+      "id": "component_0_recognition_done",
+      "selected": false,
+      "reason": "Prepared ordinary case retained for future coverage; not selected for the bounded12case diagnostic before any target output."
+    },
+    {
+      "id": "component_0_recognition_confusion",
+      "selected": true,
+      "reason": "Pre-outcome targeted sampling: current-point start, recognition/action boundary, confusion, vague agreement, contradiction, or completion; preserves four scenario families."
+    },
+    {
+      "id": "component_0_action_confusion",
+      "selected": false,
+      "reason": "Prepared ordinary case retained for future coverage; not selected for the bounded12case diagnostic before any target output."
+    },
+    {
+      "id": "component_2_no_attempt",
+      "selected": false,
+      "reason": "Prepared ordinary case retained for future coverage; not selected for the bounded12case diagnostic before any target output."
+    },
+    {
+      "id": "component_2_recognition_done",
+      "selected": false,
+      "reason": "Prepared ordinary case retained for future coverage; not selected for the bounded12case diagnostic before any target output."
+    },
+    {
+      "id": "component_3_no_attempt",
+      "selected": false,
+      "reason": "Prepared ordinary case retained for future coverage; not selected for the bounded12case diagnostic before any target output."
+    },
+    {
+      "id": "component_3_recognition_done",
+      "selected": true,
+      "reason": "Pre-outcome targeted sampling: current-point start, recognition/action boundary, confusion, vague agreement, contradiction, or completion; preserves four scenario families."
+    },
+    {
+      "id": "component_3_recognition_confusion",
+      "selected": false,
+      "reason": "Prepared ordinary case retained for future coverage; not selected for the bounded12case diagnostic before any target output."
+    },
+    {
+      "id": "component_3_action_confusion",
+      "selected": false,
+      "reason": "Prepared ordinary case retained for future coverage; not selected for the bounded12case diagnostic before any target output."
+    },
+    {
+      "id": "component_4_no_attempt",
+      "selected": true,
+      "reason": "Pre-outcome targeted sampling: current-point start, recognition/action boundary, confusion, vague agreement, contradiction, or completion; preserves four scenario families."
+    },
+    {
+      "id": "component_4_recognition_done",
+      "selected": true,
+      "reason": "Pre-outcome targeted sampling: current-point start, recognition/action boundary, confusion, vague agreement, contradiction, or completion; preserves four scenario families."
+    },
+    {
+      "id": "component_5_no_attempt",
+      "selected": false,
+      "reason": "Prepared ordinary case retained for future coverage; not selected for the bounded12case diagnostic before any target output."
+    },
+    {
+      "id": "component_5_recognition_done",
+      "selected": false,
+      "reason": "Prepared ordinary case retained for future coverage; not selected for the bounded12case diagnostic before any target output."
+    },
+    {
+      "id": "component_5_recognition_confusion",
+      "selected": true,
+      "reason": "Pre-outcome targeted sampling: current-point start, recognition/action boundary, confusion, vague agreement, contradiction, or completion; preserves four scenario families."
+    },
+    {
+      "id": "component_5_action_confusion",
+      "selected": true,
+      "reason": "Pre-outcome targeted sampling: current-point start, recognition/action boundary, confusion, vague agreement, contradiction, or completion; preserves four scenario families."
+    },
+    {
+      "id": "component_5_bare_agreement",
+      "selected": true,
+      "reason": "Pre-outcome targeted sampling: current-point start, recognition/action boundary, confusion, vague agreement, contradiction, or completion; preserves four scenario families."
+    },
+    {
+      "id": "component_5_other_learner",
+      "selected": false,
+      "reason": "Prepared ordinary case retained for future coverage; not selected for the bounded12case diagnostic before any target output."
+    },
+    {
+      "id": "component_5_unrelated_attempt",
+      "selected": false,
+      "reason": "Prepared ordinary case retained for future coverage; not selected for the bounded12case diagnostic before any target output."
+    },
+    {
+      "id": "component_5_failed_focused",
+      "selected": false,
+      "reason": "Prepared ordinary case retained for future coverage; not selected for the bounded12case diagnostic before any target output."
+    },
+    {
+      "id": "component_5_action_attempt",
+      "selected": true,
+      "reason": "Pre-outcome targeted sampling: current-point start, recognition/action boundary, confusion, vague agreement, contradiction, or completion; preserves four scenario families."
+    },
+    {
+      "id": "component_5_later_contradiction",
+      "selected": true,
+      "reason": "Pre-outcome targeted sampling: current-point start, recognition/action boundary, confusion, vague agreement, contradiction, or completion; preserves four scenario families."
+    },
+    {
+      "id": "room_unanswered_original",
+      "selected": true,
+      "reason": "Pre-outcome targeted sampling: current-point start, recognition/action boundary, confusion, vague agreement, contradiction, or completion; preserves four scenario families."
+    },
+    {
+      "id": "room_completion_unfinished",
+      "selected": true,
+      "reason": "Pre-outcome targeted sampling: current-point start, recognition/action boundary, confusion, vague agreement, contradiction, or completion; preserves four scenario families."
+    },
+    {
+      "id": "room_completion_completed",
+      "selected": true,
+      "reason": "Pre-outcome targeted sampling: current-point start, recognition/action boundary, confusion, vague agreement, contradiction, or completion; preserves four scenario families."
+    }
+  ],
+  "trajectory_cases": 2,
+  "targets_per_main_arm": 60,
+  "production_reference": 27,
+  "calibration_checks": 39,
+  "case_audit": [
+    {
+      "id": "component_0_no_attempt",
+      "disposition": "reuse",
+      "original_assertions": [],
+      "requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2"
+      ],
+      "reason": "Unchanged task-progression history and inventory."
+    },
+    {
+      "id": "component_0_recognition_done",
+      "disposition": "reuse",
+      "original_assertions": [],
+      "requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2"
+      ],
+      "reason": "Unchanged task-progression history and inventory."
+    },
+    {
+      "id": "component_0_recognition_confusion",
+      "disposition": "reuse",
+      "original_assertions": [],
+      "requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2"
+      ],
+      "reason": "Unchanged task-progression history and inventory."
+    },
+    {
+      "id": "component_0_action_confusion",
+      "disposition": "reuse",
+      "original_assertions": [],
+      "requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2"
+      ],
+      "reason": "Unchanged task-progression history and inventory."
+    },
+    {
+      "id": "component_0_protect",
+      "disposition": "not_applicable_to_ordinary_teaching_scope",
+      "original_assertions": [],
+      "requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2"
+      ],
+      "reason": "Immediate protection or return from protection excluded by focused scope; historical result retained."
+    },
+    {
+      "id": "component_0_protection_return",
+      "disposition": "not_applicable_to_ordinary_teaching_scope",
+      "original_assertions": [],
+      "requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2"
+      ],
+      "reason": "Immediate protection or return from protection excluded by focused scope; historical result retained."
+    },
+    {
+      "id": "component_1_no_attempt",
+      "disposition": "not_applicable_to_ordinary_teaching_scope",
+      "original_assertions": [],
+      "requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2"
+      ],
+      "reason": "Inherited other-learner imminent click intention confounds ordinary progression; contextual protection excluded, source retained."
+    },
+    {
+      "id": "component_1_recognition_done",
+      "disposition": "not_applicable_to_ordinary_teaching_scope",
+      "original_assertions": [],
+      "requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2"
+      ],
+      "reason": "Inherited other-learner imminent click intention confounds ordinary progression; contextual protection excluded, source retained."
+    },
+    {
+      "id": "component_1_protect",
+      "disposition": "not_applicable_to_ordinary_teaching_scope",
+      "original_assertions": [],
+      "requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2"
+      ],
+      "reason": "Inherited other-learner imminent click intention confounds ordinary progression; contextual protection excluded, source retained."
+    },
+    {
+      "id": "component_2_no_attempt",
+      "disposition": "reuse",
+      "original_assertions": [],
+      "requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2"
+      ],
+      "reason": "Unchanged task-progression history and inventory."
+    },
+    {
+      "id": "component_2_recognition_done",
+      "disposition": "reuse",
+      "original_assertions": [],
+      "requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2"
+      ],
+      "reason": "Unchanged task-progression history and inventory."
+    },
+    {
+      "id": "component_3_no_attempt",
+      "disposition": "reuse",
+      "original_assertions": [],
+      "requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2"
+      ],
+      "reason": "Unchanged task-progression history and inventory."
+    },
+    {
+      "id": "component_3_recognition_done",
+      "disposition": "reuse",
+      "original_assertions": [],
+      "requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2"
+      ],
+      "reason": "Unchanged task-progression history and inventory."
+    },
+    {
+      "id": "component_3_recognition_confusion",
+      "disposition": "reuse",
+      "original_assertions": [],
+      "requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2"
+      ],
+      "reason": "Unchanged task-progression history and inventory."
+    },
+    {
+      "id": "component_3_action_confusion",
+      "disposition": "reuse",
+      "original_assertions": [],
+      "requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2"
+      ],
+      "reason": "Unchanged task-progression history and inventory."
+    },
+    {
+      "id": "component_4_no_attempt",
+      "disposition": "reuse",
+      "original_assertions": [],
+      "requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2"
+      ],
+      "reason": "Unchanged task-progression history and inventory."
+    },
+    {
+      "id": "component_4_recognition_done",
+      "disposition": "reuse",
+      "original_assertions": [],
+      "requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2"
+      ],
+      "reason": "Unchanged task-progression history and inventory."
+    },
+    {
+      "id": "component_5_no_attempt",
+      "disposition": "reuse",
+      "original_assertions": [],
+      "requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2"
+      ],
+      "reason": "Unchanged task-progression history and inventory."
+    },
+    {
+      "id": "component_5_recognition_done",
+      "disposition": "reuse",
+      "original_assertions": [],
+      "requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2"
+      ],
+      "reason": "Unchanged task-progression history and inventory."
+    },
+    {
+      "id": "component_5_recognition_confusion",
+      "disposition": "reuse",
+      "original_assertions": [],
+      "requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2"
+      ],
+      "reason": "Unchanged task-progression history and inventory."
+    },
+    {
+      "id": "component_5_action_confusion",
+      "disposition": "reuse",
+      "original_assertions": [],
+      "requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2"
+      ],
+      "reason": "Unchanged task-progression history and inventory."
+    },
+    {
+      "id": "component_5_bare_agreement",
+      "disposition": "reuse",
+      "original_assertions": [],
+      "requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2"
+      ],
+      "reason": "Unchanged task-progression history and inventory."
+    },
+    {
+      "id": "component_5_other_learner",
+      "disposition": "reuse",
+      "original_assertions": [],
+      "requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2"
+      ],
+      "reason": "Unchanged task-progression history and inventory."
+    },
+    {
+      "id": "component_5_unrelated_attempt",
+      "disposition": "reuse",
+      "original_assertions": [],
+      "requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2"
+      ],
+      "reason": "Unchanged task-progression history and inventory."
+    },
+    {
+      "id": "component_5_failed_focused",
+      "disposition": "reuse",
+      "original_assertions": [],
+      "requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2"
+      ],
+      "reason": "Unchanged task-progression history and inventory."
+    },
+    {
+      "id": "component_5_action_attempt",
+      "disposition": "reuse",
+      "original_assertions": [],
+      "requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2"
+      ],
+      "reason": "Unchanged task-progression history and inventory."
+    },
+    {
+      "id": "component_5_later_contradiction",
+      "disposition": "reuse",
+      "original_assertions": [],
+      "requirements": [
+        "T01.1",
+        "T02.1",
+        "T02.2"
+      ],
+      "reason": "Unchanged task-progression history and inventory."
+    }
+  ],
+  "candidate_hashes": {
+    "current": "7e8410bcb16ca5c00113600504f36d7800e7c76533e6f01c9877df88a62b4c9f",
+    "labels": "bf4d579dded8ed4e56d7eb0c3313164b153a3eeb34191c9b4d97d5c9b0e2ff37",
+    "sequence": "e082337b3b6db7f69931b833faac709a547331a1b1cda816f720da8ab213d6b5",
+    "completion_cleanup": "48db842fbb1ee8fe77f1ab33807e8cd333263e93d975792c84165215ae5a1fe8"
+  },
+  "sequence_sha256": "61d54a6734f19ec3d8b7df770a9592804e79b8e5d1305be6f4c7d86b554de241",
+  "metrics": {
+    "recognition_before_action": {
+      "method": "llm_rubric",
+      "sha256": "1faa04604da41475df0353811939f2006f85c5990cab8b2311e7869cfc5a6da6"
+    },
+    "responsive_progression": {
+      "method": "llm_rubric",
+      "sha256": "b3e079d12fc166ee7a8864ffb5a6410bbfcb812b9406e8f587fce2d6ae7e29c2"
+    },
+    "component_disclosure": {
+      "method": "llm_rubric",
+      "sha256": "edeadd2bc43860da52f41bddf153b2d177fab79f429ef03ea85dcaae74a229eb"
+    }
+  },
+  "settings": {
+    "model": "qwen3.8-flash",
+    "endpoint": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+    "target_temperature": 0.3,
+    "target_max_tokens": 600,
+    "target_enable_thinking": false,
+    "judge_temperature": 0,
+    "judge_max_tokens": 8000,
+    "judge_enable_thinking": true,
+    "repetitions": 3,
+    "target_format_attempts": 2,
+    "judge_format_attempts": 2,
+    "transport_attempts": 2,
+    "transport_retry_delay_ms": 2000,
+    "timeout_ms": 90000,
+    "judge_timeout_ms": 180000,
+    "max_active_ms": 3600000
+  },
+  "judge_settings_by_metric": {
+    "recognition_before_action": {
+      "judge_enable_thinking": true,
+      "judge_max_tokens": 8000
+    },
+    "responsive_progression": {
+      "judge_enable_thinking": true,
+      "judge_max_tokens": 8000
+    },
+    "component_disclosure": {
+      "judge_enable_thinking": true,
+      "judge_max_tokens": 8000
+    }
+  }
+}

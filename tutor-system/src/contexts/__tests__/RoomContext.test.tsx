@@ -48,7 +48,7 @@ jest.mock('../../services/supabase', () => ({
 }));
 
 jest.mock('../../services/aiService', () => ({
-    DEFAULT_AI_MODEL: 'gpt-4o-mini',
+    OAI_MODEL: 'gpt-4o-mini',
     generateTutorSuggestion: jest.fn(),
     getAIConfig: jest.fn(),
     updateAIConfig: jest.fn()

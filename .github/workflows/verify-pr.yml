@@ -23,6 +23,7 @@ jobs:
           node --test scripts/database/export_validation_baseline.test.js
           node --test scripts/database/disposable-database.test.js
           node --test scripts/staging-coordination.test.js
+          node --test tutor-system/scripts/react-scripts.test.js
 
       - uses: actions/setup-python@v5
         with:
@@ -61,6 +62,7 @@ jobs:
   frontend-jest:
     runs-on: ubuntu-24.04 # Pinned: Playwright 1.60 --with-deps fails on the ubuntu-latest Ubuntu 26 image.
     env:
+      OAI_MODEL: ci-test-model
       REACT_APP_SUPABASE_URL: http://127.0.0.1:54321
       REACT_APP_SUPABASE_ANON_KEY: ci-placeholder
     defaults:
@@ -85,10 +87,14 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Browser runner harness (local HTML only; no hosted access)
         run: npm run test:e2e:unit
+      - name: Exact source and database template seed parity
+        run: npm run test:regression -- --runInBand --runTestsByPath src/services/__tests__/detectionTemplates.test.ts
       - name: Deterministic Jest regression
         run: npm run test:regression -- --runInBand
 
   frontend-build:
+    env:
+      OAI_MODEL: ci-test-model
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -104,3 +110,32 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - name: Build React application
         run: CI=false npm run build
+
+  # Two-tab identity journeys (#109) in real Chromium against a local fake Supabase backend: no hosted access.
+  browser-tabs:
+    runs-on: ubuntu-24.04 # Pinned with frontend-jest for Playwright 1.60 --with-deps.
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: tutor-system
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: tutor-system/package-lock.json
+      - run: npm install --global npm@10.9.2
+      - run: npm ci --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - name: Two-tab identity scenarios A-H (production build, fake backend)
+        run: npm run test:e2e:tabs
+        env:
+          E2E_TABS_EVIDENCE: ${{ runner.temp }}/e2e-tabs
+      - name: Keep evidence of a failed run
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-tabs-evidence
+          path: ${{ runner.temp }}/e2e-tabs
+          retention-days: 7

@@ -1,0 +1,25 @@
+{
+  "intent": "Audit the explicitly declared judge-settings experiment while holding the tested tutor and measurement meaning fixed.",
+  "reviewer": "/root/continuity_audit",
+  "date": "2026-11-13",
+  "verdict": "clear",
+  "scope": "Execution-design integrity, not calibrated judgment accuracy or target acceptance.",
+  "snapshot_fingerprint": "5229076c8249ad055f71e430657059cbb9fb0c2eba9b02066f238bb42e56964f",
+  "runner_sha256": "7f544591c61e09fe92edeb2e75556c607a17df658fc49111d01830735a831a0c",
+  "evaluation_plan_sha256": "8673b3f6f9c27dce2adf3b6aafd90b5a7c360e5e359038f0edee227f04a775ab",
+  "changes": {
+    "judge_enable_thinking": { "previous": false, "current": true },
+    "judge_max_tokens": { "previous": 2600, "current": 8000 }
+  },
+  "independent_verification": {
+    "source_hashes": 31,
+    "exactly_two_setting_changes": true,
+    "target_thinking": false,
+    "target_max_tokens": 600,
+    "deep_equal_to_v4": ["judge_system", "judge_steps", "cases", "calibration", "rubrics", "shells", "jobs", "trajectories", "thresholds", "partitions"],
+    "candidate_hashes": "Unchanged from independent-preparation-review.json."
+  },
+  "grounding": "The updated evaluation plan records an evaluator configuration experiment. It introduces no new behavior requirement, reference label, constitutional priority or threshold.",
+  "provider_evidence": "provider-settings.md records the executor's official documentation check for Qwen3.8-flash hybrid thinking and synchronous commercial-model support, plus the existing project's 8000-token judge precedent. This review inspected that record and the actual configured values; provider support was not independently fetched again.",
+  "execution_condition": "Make new calls for all 32 calibration checks under the exact settings. Preserve prior failed runs. Target comparison requires successful calibration; a settings change is not itself evidence of improved judgment."
+}

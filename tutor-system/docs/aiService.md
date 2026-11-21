@@ -1,8 +1,13 @@
 # aiService.ts - AI Assistant Functionality
 
-<!-- Assessment dialogue revision approved 2026-10-17; baseline commit c6d5129. -->
+<!-- Intent: explain the supported AI request boundary and its configuration/context contracts. Updated: 2026-11-12. Learning-target baseline commit: d8e1b1d. -->
 
 ## Assessment dialogue revision
+
+The default tutor prompt includes the same temporary fourth-grade audience paragraph
+previously deployed from `fix/temporary-grade4-tutor`, as explicitly requested on
+2026-11-12. Its [known evaluation limitations](ai-behaviors/temporary-fourth-grade-prompt.md)
+remain recorded. The learning-target release will deploy the integrated `no_sign_up` branch.
 
 Tutor requests use saved assessment question/options, learner answers and backend result messages in dialogue history. Remove the dynamic VERIFIED ASSESSMENT STATE section and prompt-only assessmentFeedback input. Trusted readiness still blocks provider calls for pending/missing results; common request instructions preserve recorded grading, retries, cancellation, required feedback and Guard. See [Assessment result messages](assessment-result-messages.md) for the governing publication and consumer rules. Implementation/release status is recorded there; older dated evidence below is retained.
 
@@ -18,7 +23,7 @@ Comprehensive AI integration service providing intelligent tutoring suggestions,
 
 The selected tutor policy is full candidate11, including the approved Guard response pattern and its evaluated base-prompt composition. Tutor requests use temperature0.3, max_tokens600 and enable_thinkingfalse, including the bounded JSON repair attempt. These settings override stored room temperature/token values; `appliedConfig` reports the settings actually sent. Room role, style and target inventories still configure the generated base prompt. The user explicitly selected release despite the recorded benchmark failures.
 
-React and `ai-api` import `DEFAULT_AI_MODEL` from `src/services/aiModels.ts`, selecting Qwen3.8. The learning-progress analyzer and assessment generation retain the existing Qwen3.5 provider in `assessment-api`, because their broader Qwen3.8 staging check advanced unrelated targets. Provider credentials remain required server secrets; the application no longer reads the old project OAI_MODEL secret. The similarly named local setting is only for offline evaluations.
+`OAI_MODEL` is required server configuration for both `ai-api` and `assessment-api`, including message analysis and audit provenance. Set it in each project’s Supabase Edge secrets. No provider model is pinned in source. Frontend npm commands load `OAI_MODEL` from the environment or CRA `.env` files and expose only the model name as `REACT_APP_OAI_MODEL`. Rebuild after changing it; keep its value aligned with the target server. Provider credentials remain server-only. Missing or blank model configuration fails before provider calls; frontend commands also reject missing model configuration.
 
 The learning-progress analyzer uses the candidate02 policy with target-text evidence rules at temperature0, max_tokens600 and enable_thinkingfalse. The current unified-target revision is tracked in the [unified release record](doc_update_record/documentation_update_record_v2026_10_15_unified_learning_targets.md). The earlier candidate selection and its observed semantic errors are recorded in [candidate release evidence](doc_update_record/documentation_update_record_v2026_10_15_selected_ai_candidates.md). Assessment-question generation remains a separate call with its existing settings.
 
@@ -79,7 +84,7 @@ interface ParameterOverrides {
 - **Role**: `supportive_adult` preset (high authority, encouraging tone)
 - **Detection areas**: `['Suspicious links', 'Urgent language', 'Unexpected requests']`
 - **Verification steps**: `['Check sender authenticity', 'Verify through official channels', 'Think before clicking']`
-- **Model**: `qwen3.8-flash` (`DEFAULT_AI_MODEL`, the only selectable model)
+- **Model**: `OAI_MODEL` (the configured selectable model)
 - **Transport**: `supabase.functions.invoke('ai-api')` from the localStorage/offline-user session; the Edge Function calls the provider with `enable_thinking: false`. Supabase Auth sign-in is not required.
 - **Response policy**: prompt-controlled maximum of three sentences and 50 words; runtime output is not clipped or rewritten
 
@@ -163,7 +168,7 @@ The ecological prompt includes semantic Guard activation, persistence, exit, and
 **Configuration**:
 - **Context window**: Last 10 messages for conversation context
 - **Streaming**: Not implemented (educational use prioritizes simplicity)
-- **Model**: Always `qwen3.8-flash`; legacy room model values are normalized before use
+- **Model**: Configured `OAI_MODEL`; legacy room model values are normalized before use
 
 ### `TutorSuggestionService` Class (Lines 316-406)
 **Purpose**: Specialized tutor suggestion generation
@@ -283,6 +288,29 @@ import { generateSystemPrompt, PRESET_CONFIGS } from './systemPrompts';
 ```typescript
 import { buildAIContextFromExistingData } from './simplifiedAIContext';
 ```
+
+`generateTutorSuggestion` owns one room read at request entry. Its typed snapshot
+supplies AI enablement/model/prompt, prior Guard mode, scenario title/description,
+and pre-populated discussion to configuration merging and history construction.
+Those fields describe the same room state for that request; there is no later room
+revalidation before the provider call. A subsequent suggestion starts with a fresh
+snapshot. The cyberbullying branch returns after this validation and delegates its
+generation inputs to the server operation.
+
+Extended configuration, checklist progress, full paginated message history and
+learner-specific assessment readiness remain separate reads. In particular, the
+readiness check still recovers missing saved results and blocks incomplete
+assessment dialogue. Standalone `getAIConfig` and `buildAIContextFromExistingData`
+calls acquire their own room data; context callers can supply `AIContextRoom` as
+the fourth argument when they already own a room snapshot.
+
+Tutor history retains every input entry. The selected request branch alone
+serializes it: Phase 0 keeps literal role labels including system messages; the
+ecological format keeps its existing participant-label/system-message policy and
+repeats the explicit focused learner line, or infers the last user line when no
+nonblank focus is supplied. Neither branch mutates input history. This cleanup
+does not change prompts, provider settings, pagination or assessment policy.
+
 **Features**:
 - **Context building**: Automatic conversation history extraction
 - **Performance optimization**: Efficient database queries
@@ -295,19 +323,23 @@ import { buildAIContextFromExistingData } from './simplifiedAIContext';
 import { SCENARIO_TEMPLATES, ScenarioTemplate } from './detectionTemplates';
 ```
 
-The six teaching scenarios and the generic `General Scam Indicators` fallback use five
-learning targets each in `detection_areas`.
+The six teaching scenarios use the complete document knowledge points from
+`src/services/detectionTemplates.ts` in `detection_areas`. Home-location and
+movie-meetup scenarios have four targets; the other four teaching scenarios have
+five. The generic `General Scam Indicators` fallback retains five targets.
 Checklist initialization reads the saved inventory before considering prompt
 extraction. Each resulting checklist item has the type `detection_area`.
+AI settings separate detection targets with a blank line, preserving internal
+line breaks in each point's explanation and action when saving or reopening.
 
-| Teaching template | Five learning targets |
+| Teaching template | Document learning targets |
 | --- | --- |
-| Account Security Alert Scam | Pressure tactics; sender/domain impersonation; limits of design and HTTPS; missing alert details; independent verification and account security |
-| Nintendo Switch Deal Scam | Offer plausibility; urgency/scarcity; sender/link authenticity; social proof; official promotion and price verification |
-| iTunes Gift Card Survey Scam | Reward plausibility; excitement/instant-reward persuasion; sender/link authenticity; photos/testimonials/terms; official promotion verification |
-| Location Sharing Safety | Exposed location; audience and misuse; home-identifying details; private communication; safe post rewriting |
-| Movie Meetup Social Engineering | Exposed future movements; trackability; familiarity-based manipulation; participant verification; private coordination |
-| Phone Number Phishing Training | Exposed contact information; misuse risks; suspicious follow-up contact; selective sharing; safe response to requests for credentials or codes |
+| Account Security Alert Scam | Scare tactics; warning sender; which account is affected; website address; safe account checks |
+| Nintendo Switch Deal Scam | Implausible deal; rushing language; who shared it; suspicious links; real-company verification |
+| iTunes Gift Card Survey Scam | Reward plausibility; exciting promises; sharer; website link; official reward verification |
+| Location Sharing Safety | Public address; identifying photos; invitations to strangers; general versus exact locations |
+| Movie Meetup Social Engineering | Destination disclosure; advance plans; exact schedule; audience |
+| Phone Number Phishing Training | Keeping numbers private; audience; misuse; account access; responding to accidental disclosure |
 
 Free-text prompt extraction uses the configured Qwen service and returns
 `{"detection_areas": ["target", "target"]}`. The parser validates strings, trims
@@ -319,12 +351,12 @@ Account-alert demo variants share the account-alert inventory. The Phase 0
 comparison keeps its historical tutor policy and examples, with only its knowledge
 sections refreshed to match the current targets. The frozen source prompt and
 historical evaluation datasets retain their original content. Custom inventories
-are not subject to the catalog's five-target limit.
+are not subject to the catalog's four- or five-target sizes.
 
 Saved global templates must receive the matching knowledge configuration and
 prompt update before newly created hosted rooms inherit these targets. Existing
 rooms retain their authored inventories. Deployment status and verification are
-tracked in the [unified release record](doc_update_record/documentation_update_record_v2026_10_15_unified_learning_targets.md).
+tracked in the [document-target release record](doc_update_record/documentation_update_record_v2026_11_12_document_learning_targets.md).
 
 **Available Scenarios**:
 - **Phishing detection**: Email scam identification
@@ -347,7 +379,7 @@ tracked in the [unified release record](doc_update_record/documentation_update_r
 
 ### Cost Management
 - **Tutor token limit**: max_tokens600 for the selected candidate11 configuration
-- **Model selection**: qwen3.8-flash
+- **Model selection**: `OAI_MODEL`
 - **Context pruning**: Intelligent conversation history management
 - **Failure handling**: Graceful degradation to dummy service
 

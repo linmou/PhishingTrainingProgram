@@ -19,6 +19,47 @@ const assessment = {
 };
 
 describe('transfer assessment DTO projections', () => {
+  it('rejects malformed evidence envelopes instead of treating them as empty evidence', async () => {
+    await expect(serviceWith({ evidence: [] }).readLearningEvidence('room-1', 'checklist-1'))
+      .rejects.toThrow('Invalid learning evidence response');
+  });
+
+  it('surfaces evidence transport failures', async () => {
+    const service = new TransferAssessmentService({ api: { invoke: async () => ({ data: null, error: { message: 'network unavailable' } }) } });
+    await expect(service.readLearningEvidence('room-1', 'checklist-1')).rejects.toThrow('network unavailable');
+  });
+
+  it('uses keyless history readiness for ordinary tutoring context', async () => {
+    const history_readiness = { ready: true, result_message_ids: ['result-1'] };
+    const invoke = jest.fn().mockResolvedValue({ data: { ok: true, data: { history_readiness } }, error: null });
+    const service = new TransferAssessmentService({ api: { invoke }, requestId: () => 'request-1' });
+    await expect(service.readAssessmentHistory('room-1', 'assessment-1')).resolves.toEqual({ history_readiness });
+    expect(invoke).toHaveBeenCalledWith({ operation: 'read_history_readiness', request_id: 'request-1', room_id: 'room-1', assessment_id: 'assessment-1' }, undefined);
+  });
+
+  it('sends the caller-owned request id for a post, and mints one otherwise and for every delivery', async () => {
+    const invoke = jest.fn().mockResolvedValue({ data: { ok: true, data: { message: {} } }, error: null });
+    let minted = 0;
+    const service = new TransferAssessmentService({ api: { invoke }, requestId: () => `minted-${++minted}` });
+    const post = { roomId: 'room-1', content: 'A', replyToMessageId: 'q-1', assessmentId: 'a-1', selectedOptionIds: ['A'] as const };
+
+    await service.postMessage({ ...post, requestId: 'action-1' });
+    await service.postMessage({ ...post, requestId: 'action-1' });
+    await service.postMessage(post);
+    const delivery = { reviewedPayload: {} as never, roomId: 'room-1', studentId: 's-1',
+      checklistId: 'c-1', itemId: 'i-1', focusStudentMessageId: 'm-1' };
+    await service.sendReviewed(delivery).catch(() => undefined);
+    await service.sendReviewed(delivery).catch(() => undefined);
+
+    expect(invoke.mock.calls.map(([body]) => [body.operation, body.request_id])).toEqual([
+      ['post_message', 'action-1'],
+      ['post_message', 'action-1'],
+      ['post_message', 'minted-1'],
+      ['send_reviewed', 'minted-2'],
+      ['send_reviewed', 'minted-3'],
+    ]);
+  });
+
   it('records page visits with the same supplied key and leaves pre-navigation joins unkeyed', async () => {
     const invoke = jest.fn().mockResolvedValue({ data: { ok: true, data: { room_role: 'student' } }, error: null });
     const service = new TransferAssessmentService({ api: { invoke }, requestId: () => 'request-1' });

@@ -54,7 +54,7 @@ jest.mock('../../services/aiService', () => ({
   recordAISuggestionFeedback: jest.fn(),
   updateAIConfig: jest.fn(),
   getAIConfig: jest.fn(),
-  DEFAULT_AI_MODEL: 'qwen3.5-flash',
+  OAI_MODEL: 'qwen3.5-flash',
 }));
 
 jest.mock('../AuthContext', () => ({ useAuth: jest.fn() }));
@@ -179,14 +179,8 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     (ChecklistService.getChecklistForStudent as jest.Mock).mockResolvedValue(transferChecklist);
 
     jest.spyOn(transferAssessmentService, 'analyzeMessage').mockResolvedValue({ applied: [] });
-    jest.spyOn(transferAssessmentService, 'readReview').mockResolvedValue({
+    jest.spyOn(transferAssessmentService, 'readAssessmentHistory').mockResolvedValue({
       history_readiness:{ready:true,result_message_ids:['saved-result'],pending_answer_message_ids:[],unavailable_assessment_ids:[]},
-      item_label: 'Verify payment requests',
-      assessment: preparedCandidate.assessment,
-      resolution: 'passed',
-      lifecycle: 'passed',
-      attempt_count: 1,
-      feedback_required: true,
     });
     prepareAssessment = jest.spyOn(transferAssessmentService, 'prepareAssessment').mockResolvedValue(preparedTurnResult);
     sendReviewed = jest.spyOn(transferAssessmentService, 'sendReviewed').mockResolvedValue(reviewedDelivery);
@@ -229,7 +223,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     expect(room!.transferDraft!.itemId).toBe(CHECKLIST_ITEM_ID);
     expect(room!.transferDraft!.itemLabel).toBe('Verify payment requests');
     expect(generateTutorSuggestion).not.toHaveBeenCalled();
-    expect(transferAssessmentService.readReview).not.toHaveBeenCalled();
+    expect(transferAssessmentService.readAssessmentHistory).not.toHaveBeenCalled();
   });
 
   it('routes an explicit no-assessment result to the ordinary tutor', async () => {
@@ -260,7 +254,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
   ])('focuses ordinary conversation after persisted $resolution state and $attemptCount attempts', async ({
     answer, resolution, lifecycle, attemptCount, feedbackRequired,
   }) => {
-    (transferAssessmentService.readReview as jest.Mock).mockResolvedValue({
+    (transferAssessmentService.readAssessmentHistory as jest.Mock).mockResolvedValue({
       history_readiness:{ready:true,result_message_ids:['saved-result'],pending_answer_message_ids:[],unavailable_assessment_ids:[]},
       item_label: 'Verify payment requests', assessment: preparedCandidate.assessment,
       resolution, lifecycle, attempt_count: attemptCount, feedback_required: feedbackRequired,
@@ -314,7 +308,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
   ])(
     'refuses tutor feedback without a verified lifecycle %j', async (lifecycle) => {
       mockTables([learnerAMessageRow, deliveredQuestionRow, deliveredAnswerRow]);
-      (transferAssessmentService.readReview as jest.Mock).mockResolvedValue({
+      (transferAssessmentService.readAssessmentHistory as jest.Mock).mockResolvedValue({
         item_label: 'Verify payment requests', assessment: preparedCandidate.assessment, ...lifecycle,
       });
       await mountRoom();
@@ -429,6 +423,31 @@ describe('RoomContext teacher transfer review lifecycle', () => {
 
     expect(room!.messages.map((message) => message.id)).toEqual(before);
     expect(room!.transferDraft).not.toBeNull();
+  });
+
+  it('retries a delivery whose response was lost as a new request (FR-36; server replay tracked in #117)', async () => {
+    sendReviewed
+      .mockRejectedValueOnce(new Error('Assessment API request failed: Failed to send a request to the Edge Function'))
+      .mockResolvedValueOnce(reviewedDelivery);
+    await mountRoom();
+    await act(async () => {
+      await room!.generateAIResponse();
+    });
+
+    let lost: Error | null = null;
+    await act(async () => {
+      await room!.confirmTransferDraft(preparedCandidate).catch((error: Error) => { lost = error; });
+    });
+    expect(lost).toEqual(expect.objectContaining({ message: expect.stringMatching(/Edge Function/) }));
+    await act(async () => {
+      await room!.confirmTransferDraft(preparedCandidate);
+    });
+
+    // The server rejects a retried delivery before its replay lookup, and a kept id would make a later
+    // edited question replay the cancelled one, so each delivery call gets its own fresh id.
+    expect(sendReviewed).toHaveBeenCalledTimes(2);
+    expect(sendReviewed.mock.calls.map(([input]) => input.requestId)).toEqual([undefined, undefined]);
+    expect(room!.messages.filter((message) => message.id === DELIVERED_QUESTION_ID)).toHaveLength(1);
   });
 
   it('merges a repeated delivery result into one visible message', async () => {

@@ -22,3 +22,11 @@ Remaining PR discussion:
 - The engine's Deno import resolution remains partial (#93); dependency/type/security backlogs (#89–#94) are not resolved by refreshing the monitor.
 
 No full frontend tests/build were rerun for this tooling-only update. No deployment or shared-state cleanup was required. Primary checkout's existing user changes were untouched. Temporary validation outputs remain outside the checkout.
+
+## Follow-up: base integration and template conflict resolution
+
+Integrated `origin/no_sign_up` at `244b56f3891ffdb8838ad3a84f2aae96ea3fab78` into PR head `808829c1c350cad0f5b2fec21ca998a38d781ae5` on 2026-11-21. The merge commit containing this entry is the candidate. The only content conflict was the Verification section of `.github/PULL_REQUEST_TEMPLATE.md`: retained the base's four CI check IDs (including `browser-tabs`) and the PR's explicit current-head independent-review/acceptance wording. `.github/workflows/verify-pr.yml` merged automatically, retaining current-base jobs and the PR's monitor/policy test steps. No application or server source differs from the base as a result of resolving this conflict.
+
+Integrated local verification passed: 48 engine tests, three original monitor security tests, six TypeScript behavioral tests, source-inventory fixtures, 17 review-policy/decision tests, 16 isolation/configuration harness tests, the exact CI template-versus-job-ID script for all four jobs, and Git whitespace/conflict checks. TypeScript adapters used the existing primary checkout's installed dependency directory via `NODE_PATH` or an explicit path; application dependencies were not installed or changed in the isolated worktree. Hosted CI will run after pushing this commit; no old-head result is claimed for this candidate.
+
+This resolves the merge-conflict item above. Independent current-head review/approval and policy activation (#71) remain open. No PR merge into `no_sign_up`, branch-protection change, deployment or hosted-state mutation was performed.

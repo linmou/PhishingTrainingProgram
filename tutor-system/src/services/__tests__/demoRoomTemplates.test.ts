@@ -1,3 +1,4 @@
+import { OAI_MODEL } from '../aiModels';
 /**
  * File: src/services/demoRoomTemplates.ts
  * Purpose: ensure demo room templates ship improved prompts, realistic multi-turn
@@ -17,7 +18,6 @@ import {
 } from '../demoRoomTemplates';
 import fs from 'fs';
 import path from 'path';
-import { RESPONSE_POLICY } from '../prompts/responsePolicy';
 import { ROLE_PARAMETERS } from '../prompts/pedagogy/parameters/roleParameters';
 import { SCENARIO_TEMPLATES, ScenarioTemplate, requireScenarioTemplate } from '../detectionTemplates';
 import phase0Prompt from '../prompts/phase0AccountSecurityAlertPrompt.json';
@@ -43,7 +43,7 @@ describe('demoRoomTemplates', () => {
     expect(() => buildCasualPeerAIConfig(scenario as ScenarioTemplate)).toThrow('Unknown or missing scenario reference');
   });
 
-  it('packages six teaching scenarios with the matching five-target inventory', () => {
+  it('packages six teaching scenarios with their complete document inventory', () => {
     const expectedScenarios = [
       'Account Security Alert',
       'Nintendo Switch Deal ($19.99)',
@@ -62,7 +62,6 @@ describe('demoRoomTemplates', () => {
       expect(seed.test_only).toBe(false);
       expect(config.detection_areas).toEqual(scenario.detection_areas);
       expect(config.verification_steps).toEqual(scenario.verification_steps);
-      expect(config.detection_areas).toHaveLength(5);
       expect(config.verification_steps).toEqual([]);
     }
   });
@@ -154,7 +153,7 @@ describe('demoRoomTemplates', () => {
 
     expect(config.enabled).toBe(true);
     expect(config.preset).toBe('casual_peer');
-    expect(config.system_prompt).toContain(RESPONSE_POLICY);
+    expect(config.system_prompt).not.toContain('TUTOR POLICY');
     expect(config.system_prompt).toContain(ROLE_PARAMETERS.role.low);
     expect(config.system_prompt).toMatch(/third-person|A person who/i);
     expect(config.prompt_config.detection_areas.length).toBeGreaterThan(0);
@@ -228,7 +227,7 @@ describe('demoRoomTemplates', () => {
 
     [clickCorrect!, lockCorrect!].forEach((seed) => {
       expect(seed.test_only).toBe(true);
-      expect(seed.ai_config_template.model_name).toBe('qwen3.8-flash');
+      expect(seed.ai_config_template.model_name).toBe(OAI_MODEL);
       expect(seed.ai_config_template.prompt_config.detection_areas.length).toBeGreaterThan(0);
       expect(seed.ai_config_template.prompt_config.verification_steps).toEqual([]);
     });

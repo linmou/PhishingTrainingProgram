@@ -1,0 +1,33 @@
+{
+  "intent": "Review pre-outcome targeted sampling and calibrated per-metric judge routing before tutor generation.",
+  "reviewer": "/root/continuity_audit",
+  "date": "2026-11-13",
+  "verdict": "clear",
+  "execution_status": "Superseded before target execution: the user subsequently required nonthinking Qwen only because reasoning-enabled latency was unacceptable. This historical integrity review does not authorize mixed-thinking execution.",
+  "scope": "Bounded diagnostic preparation and candidate integrity; not full focused-suite or release acceptance.",
+  "snapshot_fingerprint": "ecc7a6ebc1c4bd3f804c1d4d2dfec764faa2085f81574080c473c2636cdcd54c",
+  "runner_sha256": "40a3a5b9ab3f2c4b4d11ef78cc8cb829836d144cf07c1d0300bb89af7de2a7e9",
+  "calibration_selection_script_sha256": "fc5c5dac79e63122a7482ef3986ef8c12a03ada49869483cfa5c7bb2a1c9b917",
+  "evaluation_plan_sha256": "9f2b0ccef214dacd97002499c662aa723e799efc2cd95daa58507ad08e94f0e8",
+  "verification": {
+    "current_source_hashes": 32,
+    "unchanged_from_v5": ["judge_system", "judge_steps", "calibration", "rubrics", "shells", "trajectories", "thresholds", "partitions"],
+    "all_prepared_cases_preserved": 25,
+    "selected_fixed_cases": 12,
+    "not_selected_prepared_cases": 13,
+    "controlled_four_turn_trajectories": 2,
+    "repetitions": 3,
+    "per_main_arm": { "fixed": 36, "trajectory": 24, "total": 60 },
+    "historical_production_reference": 27,
+    "total_expected_generations": 207,
+    "candidate_hashes": "All 27 prepared request shells and candidate hashes remain unchanged from independent-preparation-review.json."
+  },
+  "sampling_assessment": "The selected cases retain the concrete movie-target switch, the real unfinished room dialogue, an observation-supported unfinished/completed behavior pair, bare agreement, observation and behavior confusion, wrong behavior attempt, later contradiction, another privacy scenario, and a phishing observation-confusion case. Both complete controlled journeys remain. Four scenario families are represented. Selection occurred before any new tutor output and is defensible for the declared execution budget; it cannot establish performance on omitted cases or full-suite acceptance.",
+  "judge_routing": {
+    "recognition_before_action": { "enable_thinking": true, "max_tokens": 8000, "calibration_source": "v5", "agreement": "10/10" },
+    "responsive_progression": { "enable_thinking": false, "max_tokens": 2600, "calibration_source": "v4", "agreement": "10/10" },
+    "component_disclosure": { "enable_thinking": false, "max_tokens": 2600, "calibration_source": "v4", "agreement": "12/12" }
+  },
+  "routing_assessment": "Runtime routes only by metric, consistently across all arms and cases; tutor settings remain nonthinking/600 tokens. Calibration selection validates identical messages, model, temperature and each metric's settings against the retained source record and pins the source hash. It selects complete metric groups, not favorable individual cases. V4 retains first usable attempts under the corrected parser; V5 stops at the first valid attempt. The full V5 result is 32/32, while V4's ordering failures remain preserved.",
+  "execution_condition": "Run the zero-call calibration provenance check, then execute the frozen references before candidates within the remaining aggregate 30-minute active cap. Preserve partial and failed evidence. Independently inspect output judgments; calibration success alone does not prove grading reliability."
+}

@@ -1,0 +1,131 @@
+{
+  "intent": "Audit the focused model comparison for concrete behavior defects and judge errors without modifying automated scores.",
+  "reviewer": "/root/focused_audit",
+  "reviewed_at": "2026-11-13",
+  "kind": "Independent AI review, not human gold or a population estimate.",
+  "snapshot_fingerprint": "f309a132a1ac900562b6f8678650f58639e3d37679a94f245a2c8698a43f48b7",
+  "coverage": {
+    "deepseek_response_texts_read": 105,
+    "deepseek_automated_failure_judgments_read": "All failed judgments across the four metrics.",
+    "context_review": "Targeted full histories for suspected false passes, protection attribution, progression shifts, and the stratified joint-pass sample below. This is not a complete independent four-metric reannotation of 210 outputs.",
+    "qwen_comparison": "All 105 new common-judge disclosure verdicts cross-tabulated against the existing independent 79 pass / 19 fail / 7 ambiguous audit."
+  },
+  "automated_counts_preserved": {
+    "denominator_each": 105,
+    "qwen": {"recognition_before_action": 104, "component_disclosure": 97, "responsive_progression": 90, "factual_accuracy": 104},
+    "deepseek": {"recognition_before_action": 100, "component_disclosure": 97, "responsive_progression": 92, "factual_accuracy": 104}
+  },
+  "qwen_disclosure_cross_tab": {
+    "previous_independent_pass": {"common_judge_pass": 77, "common_judge_fail": 2},
+    "previous_independent_fail": {"common_judge_pass": 14, "common_judge_fail": 5},
+    "previous_independent_ambiguous": {"common_judge_pass": 6, "common_judge_fail": 1},
+    "interpretation": "These are disagreements with prior independent AI annotations, not a human-gold confusion matrix. The definite omissions and contradictory interpretations below establish measurement defects without requiring every disagreement to be settled."
+  },
+  "confirmed_judge_errors": [
+    {
+      "arm": "deepseek",
+      "id": "component_0_recognition_confusion__cleanup_full__r1",
+      "metrics": ["recognition_before_action", "component_disclosure"],
+      "error": "false_pass",
+      "learner": "I do not understand why the scary warning words could be a problem.",
+      "tutor": "Stay calm and do not click just because a message sounds alarming.",
+      "reason": "This is the inventory's specific safe-action answer. Recognition confusion opens recognition explanation only; recognition understanding and action opportunity are absent. The judge says there is no action beyond staying calm and ignores the explicit do-not-click instruction."
+    },
+    {
+      "arm": "deepseek",
+      "id": "component_0_recognition_confusion__cleanup_full__r3",
+      "metrics": ["recognition_before_action", "component_disclosure"],
+      "error": "false_pass",
+      "tutor": "Stay calm and slow down.",
+      "reason": "The same recognition-only confusion is followed by the specific safe behavior, while the judge says no action instruction is present."
+    },
+    {
+      "arm": "deepseek",
+      "id": "component_3_recognition_confusion__cleanup_full__r3",
+      "metrics": ["recognition_before_action", "component_disclosure"],
+      "error": "false_pass",
+      "learner": "I do not understand why the address in this post could cause a problem.",
+      "tutor": "Use a general place like my neighborhood instead, and keep your street address private.",
+      "reason": "The judge evaluates only the preceding address-risk explanation and incorrectly claims the reply does not direct a safe action. The quoted instruction supplies that action without its separate opportunity."
+    },
+    {
+      "arm": "qwen",
+      "id": "component_0_recognition_confusion__cleanup_full__r2",
+      "metrics": ["component_disclosure"],
+      "error": "false_pass",
+      "tutor": "If you feel afraid, stop and look closer before doing anything.",
+      "reason": "The judge permits recognition explanation but omits this trailing safe-action instruction, repeating a known defect from the prior audit."
+    },
+    {
+      "arm": "qwen",
+      "id": "component_5_failed_focused__cleanup_full__r1",
+      "metrics": ["component_disclosure"],
+      "error": "false_pass",
+      "tutor": "Check who can see your posts to keep info private.",
+      "reason": "A wrong recognition attempt permits its correction, not this unattempted safe-action instruction. The judge cites only the valid recognition correction."
+    },
+    {
+      "arm": "qwen",
+      "ids": ["component_1_no_attempt__cleanup_full__r1", "component_1_no_attempt__cleanup_full__r2", "component_1_no_attempt__cleanup_full__r3"],
+      "metrics": ["component_disclosure"],
+      "error": "false_pass",
+      "tutor_examples": ["Why might $19.99 be a warning sign?", "Why might $19.99 be too good to be true?"],
+      "reason": "These questions supply the suspicious interpretation the explicit rubric says must remain for the learner. The judge incorrectly describes the comparison conclusion as wholly unresolved."
+    },
+    {
+      "arm": "deepseek",
+      "ids": ["component_4_recognition_done__cleanup_full__r1", "component_4_recognition_done__cleanup_full__r2"],
+      "metrics": ["responsive_progression"],
+      "error": "false_pass",
+      "reason": "The learner demonstrated the destination and its meaning (outsiders could find him) but never tried its action. Movie replies explicitly switch to a new timing point. The prepared reference marks the action as unmet, and the rubric requires that current action opportunity; the judge instead calls moving to the next recognition component appropriate."
+    },
+    {
+      "arm": "deepseek",
+      "id": "component_1_recognition_done__cleanup_full__r1",
+      "metrics": ["recognition_before_action", "component_disclosure", "responsive_progression"],
+      "error": "false_fail_protection",
+      "learner_history": "Participant: Student (Brinlee): I would click it fast before the deal ends.",
+      "tutor": "Brinlee, do not click that link. Open the real Nintendo website or app yourself to check if the deal is real.",
+      "reason": "The tutor explicitly addresses Brinlee's unresolved unsafe intention from the unchanged template. Protection permits the immediate stop and safe alternative. The order judge says no Brinlee unsafe intent exists while the progression judge quotes that very intention and still requires recognition first."
+    },
+    {
+      "arm": "deepseek",
+      "id": "component_5_failed_focused__cleanup_full__r2",
+      "metrics": ["component_disclosure"],
+      "error": "false_fail",
+      "tutor": "That is incorrect. A public post can be seen and saved by anyone, not just friends. Who else might see that number?",
+      "reason": "The learner's focused wrong recognition attempt opens that recognition explanation. The judge acknowledges the relevant attempt yet fails the reply for supplying the recognition conclusion."
+    }
+  ],
+  "retained_uncertainty": [
+    "Nintendo no-attempt and unaddressed direct-protection replies share the same unresolved Brinlee intention but do not name the recipient. Their protection attribution is ambiguous, so the five automated DeepSeek order failures cannot all be treated as ordinary-teaching failures.",
+    "Both factual failures are ambiguous, not independently confirmed: Qwen component_0_recognition_confusion r1 says 'Real companies do not need to scare you to get your attention'; DeepSeek r3 says 'A real company does not need to frighten you into clicking.' The judge transforms does-not-need into never-uses. A real organization issuing an urgent warning does not by itself refute the narrower necessity claim. Conversely, broad claims about all real organizations can mislead and are not proved by the inventory. Preserve both automated fails; do not claim either a definite factual violation or factual equivalence.",
+    "Phone component_5_recognition_done r1/r2/r3 asks what a stranger could do with the number. Under the frozen reference, recognition of public exposure is complete and action is next; the inventory separately lists public sharing (point1), audience (point2), and stranger consequences (point3). Thus these replies conflict with the prescribed pointwise progression. A broader teaching policy might reasonably deepen consequences before action. Treat this as a spec-conditioned progression concern, not an inherently bad question or an additional unqualified judge-error count.",
+    "Journey5 tutor replies shift to a new consequence point before the fixed learner intervention says it understands 'that problem' and is confused about action. Exact target attribution is less clear after the shift; these scripted interventions are not observed human learning."
+  ],
+  "stratified_joint_pass_sample": {
+    "arms": ["qwen", "deepseek"],
+    "ids_each_arm": [
+      "component_0_no_attempt__cleanup_full__r2",
+      "component_0_protect__cleanup_full__r1",
+      "component_3_recognition_done__cleanup_full__r1",
+      "component_3_action_confusion__cleanup_full__r1",
+      "component_5_other_learner__cleanup_full__r2",
+      "component_5_action_attempt__cleanup_full__r1",
+      "component_5_later_contradiction__cleanup_full__r1",
+      "journey_3__cleanup_full__r2__t1",
+      "journey_3__cleanup_full__r2__t2",
+      "journey_3__cleanup_full__r2__t3",
+      "journey_3__cleanup_full__r2__t4"
+    ],
+    "selection": "Purposive coverage of initial recognition, protection, recognition-to-action, explicit action confusion, learner attribution, wrong action, later contradiction, and a full four-turn trajectory; not a random accuracy sample.",
+    "finding": "These 22 outputs support the claimed local successes. Both models scaffold the address journey, invite an action after learner-owned recognition, explain after explicit action confusion, then move to another point. Distinct known joint-pass false positives are recorded above, so successful samples cannot validate the aggregate scores."
+  },
+  "conclusion": {
+    "execution": "Complete: 105 valid new target outputs and 210 common-judge records.",
+    "measurement": "Treat aggregate acceptance and model ranking as provisional. Disclosure calibration failed and output review confirms both missed leaks and false failures. Order review confirms missed action instructions and incorrect protection attribution. Progression review confirms explicit movie-point skips passed despite the prescribed action-stage reference; phone consequence questions retain a policy-boundary qualification. Factual calibration passed but the two output failures remain ambiguous. These distinct concerns do not imply every judgment is wrong.",
+    "behavior": "The requested separate-opportunity goal is still unmet by DeepSeek. Three clear recognition-confusion replies disclose action prematurely, and multiple completed-recognition replies abandon the unfinished action. Both models also demonstrate successful local trajectories.",
+    "comparison": "These automated percentages do not establish a superior model or a factual-equivalence result. Keep fixed-input and own-history trajectory comparisons separate; preserve historical-call and common-judge self-preference limitations.",
+    "recommendation": "Do not tune this run or overwrite scores. Use the recorded failures and disagreements as evidence for a separately authorized measurement or prompt revision."
+  }
+}

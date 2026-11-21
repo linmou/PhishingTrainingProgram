@@ -1,0 +1,75 @@
+{
+  "intent": "Independently ground and review the contextual-completion specification, prompt replacement, semantic checks and boundary cases before target execution.",
+  "reviewer": "continuity_audit; authored independent cases/calibration but not the target prompt candidate or revised canonical requirements",
+  "date": "2026-11-13",
+  "verdict": "clear for the focused diagnostic freeze; execution calibration and outputs unassessed",
+  "authority": "Root relayed the user's explicit request to generalize the repeated-tutoring observation into specifications and rubrics. This review interprets existing P2/R1 and T02 semantic evidence rather than adding a constitutional priority.",
+  "constitution": {
+    "id": "phishing_tutor_constitution",
+    "version": "1.0",
+    "sha256": "33ddd10ba3d0c949dbe308d67b9320b6be934f8af09ce07129b02a21dee2dec4"
+  },
+  "specification": {
+    "path": "tutor-system/docs/ai-behaviors/tutor-behavior-specification.md",
+    "sha256": "2514086b2cf350d149a167d32ed1473aa2642dcd685c2f44575be21aa3738986",
+    "requirements": [
+      "T02",
+      "T02.1",
+      "T02.2"
+    ],
+    "grounding": "P2 requires pacing from demonstrated meaning, R1 favors learner reasoning without mandatory questions, and existing T02 forbids needless retesting/invented curriculum. A short answer's contextual meaning, evidence persistence, one contribution covering multiple concepts and later contradictions already belong to these rules. Task-specific completion does not assert generalized mastery or permit unsupported progress labels."
+  },
+  "reviewed_hashes": {
+    "candidate.txt": "df357f4776efd58cca764634f7449df072627f3466c3cffca7128ad51c04e30b",
+    "rubrics.json": "141135c380b7ed4602e253cba2e2182cc9ded48f54fd6875398fc8bc8fb7b05f",
+    "plan.md": "cc1278242aa7021fb21ea85cc2822731485e9e4a133244478da5af424b0859e9",
+    "independent-cases.json": "472c10af070c66b7615723d74a213b157872972e6f13dfc31ae83b54169c55fe",
+    "independent-calibration.json": "81dc0d1c6725d36c53357bfc95b1b4af1aaecaf6247835be9806cc4cc40eea2b"
+  },
+  "candidate_findings": [
+    "Replaces the broad evidence override instead of appending a conflicting exception.",
+    "Uses general semantic evidence rules: task-specific meaning, whole history, overlapping tasks, acknowledgments, action versus judgment, progress corroboration, and contradictions.",
+    "Contains no room IDs, names, currency amounts, case IDs, expected-answer lookups or case-specific prompt examples.",
+    "Preserves the original task payload/headings and separate component-disclosure gate; actual executor shell parity still needs verification."
+  ],
+  "rubric_findings": [
+    "contextual_progression owns unfinished-point continuity, completed-task repetition and invented requirements.",
+    "unfinished_prerequisite is narrowly observation-before-behavior. A recognition-only wrong next point can fail progression while passing this metric; the calibration reflects this explicitly.",
+    "component_disclosure retains the prior attempt/confusion rule prospectively with clarified evidence interpretation. Executor must pin exact inherited rubric text/hash.",
+    "Semantic completion evidence remains distinct from a mere acknowledgment. A risk verdict after a distinct action question does not complete that action."
+  ],
+  "case_findings": {
+    "count": 9,
+    "calibration_responses": 8,
+    "calibration_metric_checks": 16,
+    "source_roles": "One exposed ecological derivative and eight independent synthetic development cases; no unseen-holdout claim.",
+    "coverage": [
+      "Concise contextual judgment",
+      "Agreement with no task meaning",
+      "Recognition established but distinct action unanswered",
+      "One answer covers overlapping observation/action and headings",
+      "Acknowledgment preserves prior completion",
+      "Contradiction reopens understanding",
+      "Short meaningful observation does not complete distinct action",
+      "All configured tasks completed: consolidate without inventing another target or exercise"
+    ],
+    "controlled_pairs": [
+      "judgment_vs_agreement",
+      "acknowledgment_vs_contradiction"
+    ],
+    "event_overlap_resolution": "Future exposure can already be established by the answer in its tomorrow context. Distinct posting-time behavior remains; no mandatory extra future-observation retest.",
+    "real_room_scope": "Actual prefix ends at Not possible. Later automatic assessment and repetitions are outside prefix; ordinary-tutoring assumption is explicit. No covered label is injected, and both arms use identical history-only context."
+  },
+  "limitations": [
+    "The case authorship is independent of the new target candidate, but the auditor saw earlier related experiments and the real failure. All cases are exposed development evidence.",
+    "The separate checklist-routing repair is not measured by this history-only prompt comparison and needs its own integration evidence.",
+    "No calibration pass or target improvement is claimed before execution.",
+    "No target word matching, minimum length or phrase requirement is an evaluation criterion."
+  ],
+  "pending": [
+    "Freeze exact generated target shells and source hashes; verify only candidate policy replacement differs between arms.",
+    "Run independent calibration16 checks and preserve failures before final score claims.",
+    "Review actual outputs and complete exact-denominator comparisons; retain any new independent disagreements."
+  ],
+  "specification_metadata_reconciliation": "Root reported only the source-baseline header changed from297a1b3 to9bcae2d after contextual clarification. Reviewer re-read the current header and contextual clauses and repinned the current canonical SHA before any execution freeze."
+}

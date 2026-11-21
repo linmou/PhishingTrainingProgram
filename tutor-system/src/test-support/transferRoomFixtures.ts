@@ -85,6 +85,7 @@ export const transferRoom: Room = {
   pre_populated_dialogue: null,
   guard_mode: false,
   transfer_learning_enabled: true,
+  in_room_assessment_enabled: true,
   guard_mode_changed_at: '2026-09-12T08:00:00Z',
   guard_mode_change_source: 'reviewed_response',
   created_at: '2026-09-12T08:00:00Z',

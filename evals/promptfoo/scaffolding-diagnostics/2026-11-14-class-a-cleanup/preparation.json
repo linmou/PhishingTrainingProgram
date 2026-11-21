@@ -1,0 +1,159 @@
+{
+  "fingerprint": "0ff95e3620f9b8cd58be7862ac1b77b91d43cab989290aface6611f737379c1e",
+  "checks": {
+    "baseline_room_equals_saved_shell": false,
+    "candidate_room_equals_saved_shell": false,
+    "baseline_matches_full_history_candidate": {
+      "gift_card_contextual_judgment_real": true,
+      "library_contextual_judgment": true,
+      "library_agreement_only": true,
+      "event_one_answer_covers_overlapping_points": true,
+      "phone_contradiction_after_completed_task": true,
+      "library_all_tasks_completed": true
+    }
+  },
+  "units": 23,
+  "targets": 210,
+  "judgments": 630,
+  "calibration": 55,
+  "system_hashes": {
+    "ctx:gift_card_contextual_judgment_real": {
+      "baseline": "ac17ac774d85",
+      "candidate": "e4f89679627f",
+      "baseline_chars": 27700,
+      "candidate_chars": 25243
+    },
+    "ctx:library_contextual_judgment": {
+      "baseline": "735ae10e961d",
+      "candidate": "f32d7b31164e",
+      "baseline_chars": 26544,
+      "candidate_chars": 24087
+    },
+    "ctx:library_agreement_only": {
+      "baseline": "735ae10e961d",
+      "candidate": "f32d7b31164e",
+      "baseline_chars": 26544,
+      "candidate_chars": 24087
+    },
+    "ctx:phone_risk_verdict_after_action_question": {
+      "baseline": "da377a39daa2",
+      "candidate": "70de0375e8be",
+      "baseline_chars": 26555,
+      "candidate_chars": 24098
+    },
+    "ctx:event_one_answer_covers_overlapping_points": {
+      "baseline": "95c7f89db6a2",
+      "candidate": "8caa652122c7",
+      "baseline_chars": 26864,
+      "candidate_chars": 24407
+    },
+    "ctx:phone_ack_after_completed_task": {
+      "baseline": "da377a39daa2",
+      "candidate": "70de0375e8be",
+      "baseline_chars": 26555,
+      "candidate_chars": 24098
+    },
+    "ctx:phone_contradiction_after_completed_task": {
+      "baseline": "da377a39daa2",
+      "candidate": "70de0375e8be",
+      "baseline_chars": 26555,
+      "candidate_chars": 24098
+    },
+    "ctx:short_link_concise_observation_only": {
+      "baseline": "e96e0785ce87",
+      "candidate": "2512c85ded95",
+      "baseline_chars": 26607,
+      "candidate_chars": 24150
+    },
+    "ctx:library_all_tasks_completed": {
+      "baseline": "735ae10e961d",
+      "candidate": "f32d7b31164e",
+      "baseline_chars": 26544,
+      "candidate_chars": 24087
+    },
+    "tl:component_0_recognition_confusion": {
+      "baseline": "a7e28156ad14",
+      "candidate": "ee88f2842d6b",
+      "baseline_chars": 27871,
+      "candidate_chars": 25414
+    },
+    "tl:component_3_recognition_done": {
+      "baseline": "0e5fad7d04e7",
+      "candidate": "4b981e619aab",
+      "baseline_chars": 27396,
+      "candidate_chars": 24939
+    },
+    "tl:component_4_no_attempt": {
+      "baseline": "4991357b42d3",
+      "candidate": "302d08700c34",
+      "baseline_chars": 27424,
+      "candidate_chars": 24967
+    },
+    "tl:component_4_recognition_done": {
+      "baseline": "4991357b42d3",
+      "candidate": "302d08700c34",
+      "baseline_chars": 27424,
+      "candidate_chars": 24967
+    },
+    "tl:component_5_recognition_confusion": {
+      "baseline": "61e27164187c",
+      "candidate": "70d6a8e76a69",
+      "baseline_chars": 27653,
+      "candidate_chars": 25196
+    },
+    "tl:component_5_action_confusion": {
+      "baseline": "61e27164187c",
+      "candidate": "70d6a8e76a69",
+      "baseline_chars": 27653,
+      "candidate_chars": 25196
+    },
+    "tl:component_5_bare_agreement": {
+      "baseline": "61e27164187c",
+      "candidate": "70d6a8e76a69",
+      "baseline_chars": 27653,
+      "candidate_chars": 25196
+    },
+    "tl:component_5_action_attempt": {
+      "baseline": "61e27164187c",
+      "candidate": "70d6a8e76a69",
+      "baseline_chars": 27653,
+      "candidate_chars": 25196
+    },
+    "tl:component_5_later_contradiction": {
+      "baseline": "61e27164187c",
+      "candidate": "70d6a8e76a69",
+      "baseline_chars": 27653,
+      "candidate_chars": 25196
+    },
+    "tl:room_unanswered_original": {
+      "baseline": "ec780fce89bb",
+      "candidate": "2ce4b0a31a25",
+      "baseline_chars": 28784,
+      "candidate_chars": 26327
+    },
+    "tl:room_completion_unfinished": {
+      "baseline": "ec780fce89bb",
+      "candidate": "2ce4b0a31a25",
+      "baseline_chars": 28784,
+      "candidate_chars": 26327
+    },
+    "tl:room_completion_completed": {
+      "baseline": "ec780fce89bb",
+      "candidate": "2ce4b0a31a25",
+      "baseline_chars": 28784,
+      "candidate_chars": 26327
+    },
+    "tl:journey_3": {
+      "baseline": "0e5fad7d04e7",
+      "candidate": "4b981e619aab",
+      "baseline_chars": 27396,
+      "candidate_chars": 24939
+    },
+    "tl:journey_5": {
+      "baseline": "61e27164187c",
+      "candidate": "70d6a8e76a69",
+      "baseline_chars": 27653,
+      "candidate_chars": 25196
+    }
+  }
+}

@@ -36,7 +36,7 @@ jest.mock('../services/aiService', () => ({
   recordAISuggestionFeedback: jest.fn(),
   updateAIConfig: jest.fn(),
   getAIConfig: jest.fn(),
-  DEFAULT_AI_MODEL: 'qwen3.5-flash',
+  OAI_MODEL: 'qwen3.5-flash',
 }));
 
 jest.mock('../contexts/AuthContext', () => ({ useAuth: jest.fn() }));
@@ -74,6 +74,7 @@ const ROOM: Room = {
   title: 'Phishing 101',
   created_at: '2024-01-01T00:00:00.000Z',
   transfer_learning_enabled: false,
+  in_room_assessment_enabled: false,
   ai_assistant_enabled: true,
   guard_mode: false,
 };

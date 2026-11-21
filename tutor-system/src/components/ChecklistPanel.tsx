@@ -14,16 +14,17 @@ import {
   Edit,
   Zap
 } from 'lucide-react';
-import { ChecklistItem } from '../types/checklist';
+import { ChecklistItem, SessionChecklist } from '../types/checklist';
 import { useChecklist } from '../hooks/useChecklist';
 import { ChecklistGenerationModal } from './ChecklistGenerationModal';
 import { ManualChecklistInput } from './ManualChecklistInput';
 import AddCustomAreaModal from './AddCustomAreaModal';
-import { RoomFeaturesService } from '../services/roomFeaturesService';
+import EvidenceModal from './EvidenceModal';
 import { transferAssessmentService } from '../services/transferAssessmentService';
 import { useOptionalAuth } from '../contexts/AuthContext';
 import './ChecklistPanel.css';
 import { CYBERBULLYING_LEARNING_TARGETS } from '../services/detectionTemplates';
+import { newRequestId } from '../utils/requestId';
 
 interface ChecklistPanelProps {
   sharedTargets?: boolean;
@@ -33,6 +34,8 @@ interface ChecklistPanelProps {
   isVisible: boolean;
   onToggleVisibility: () => void;
   progressLocked?: boolean;
+  readOnly?: boolean;
+  onSetupStateChange?: (waiting: boolean) => void;
 }
 
 interface ChecklistItemComponentProps {
@@ -40,11 +43,12 @@ interface ChecklistItemComponentProps {
   onStatusChange: (itemId: string, newStatus: ChecklistItem['status']) => void;
   onUnderstandingChange: (itemId: string, level: ChecklistItem['understanding_level']) => void;
   onPriorityChange: (itemId: string, newPriority: ChecklistItem['priority']) => void;
-  onAddNote: (itemId: string, note: string) => void;
+  onAddNote: (itemId: string, note: string) => Promise<boolean | void>;
   onViewEvidence: (itemId: string) => void;
-  onEditItem: (itemId: string, newText: string) => void;
+  onEditItem: (itemId: string, newText: string) => Promise<boolean | void>;
   progressLocked?: boolean;
   transferPolicy?: boolean;
+  readOnly?: boolean;
 }
 
 const serializeChecklistItem = (item: ChecklistItem) => ({
@@ -78,19 +82,24 @@ const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
   onViewEvidence,
   onEditItem,
   progressLocked = false,
-  transferPolicy = false
+  transferPolicy = false,
+  readOnly = false
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [editingNote, setEditingNote] = useState(false);
   const [noteText, setNoteText] = useState(item.tutor_notes);
   const [editingText, setEditingText] = useState(false);
   const [itemText, setItemText] = useState(item.area_text);
+  const [savingNote, setSavingNote] = useState(false);
+  const [savingText, setSavingText] = useState(false);
 
-  // Update local state when item changes
+  // A remote update may change either saved field while the other is being edited.
   React.useEffect(() => {
-    setItemText(item.area_text);
-    setNoteText(item.tutor_notes);
-  }, [item.area_text, item.tutor_notes]);
+    if (!editingText) setItemText(item.area_text);
+  }, [item.area_text, editingText]);
+  React.useEffect(() => {
+    if (!editingNote) setNoteText(item.tutor_notes);
+  }, [item.tutor_notes, editingNote]);
 
   const getStatusIcon = (status: ChecklistItem['status']) => {
     switch (status) {
@@ -123,16 +132,32 @@ const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
     return badges[level || 'none'];
   };
 
-  const handleSaveNote = () => {
-    onAddNote(item.id, noteText);
-    setEditingNote(false);
+  const handleSaveNote = async () => {
+    if (savingNote) return;
+    setSavingNote(true);
+    try {
+      if (await onAddNote(item.id, noteText) !== false) setEditingNote(false);
+    } catch {
+      // The hook reports the failure; retain the editor and its unsaved draft.
+    } finally {
+      setSavingNote(false);
+    }
   };
 
-  const handleSaveItemText = () => {
-    if (itemText.trim() && itemText !== item.area_text) {
-      onEditItem(item.id, itemText.trim());
+  const handleSaveItemText = async () => {
+    if (savingText || !itemText.trim()) return;
+    if (itemText.trim() === item.area_text) {
+      setEditingText(false);
+      return;
     }
-    setEditingText(false);
+    setSavingText(true);
+    try {
+      if (await onEditItem(item.id, itemText.trim()) !== false) setEditingText(false);
+    } catch {
+      // A rejected save must not replace the draft with the last server value.
+    } finally {
+      setSavingText(false);
+    }
   };
 
   const handleCancelEditText = () => {
@@ -176,7 +201,11 @@ const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
 
       {isExpanded && (
         <div className="checklist-item-details">
-          <div className="checklist-item-controls-expanded">
+          {readOnly && <div className="checklist-item-controls-expanded">
+            <span>Status: {item.status.replace(/_/g, ' ')}</span>
+            <span>Understanding: {getUnderstandingBadge(item.understanding_level).text}</span>
+          </div>}
+          {!readOnly && <div className="checklist-item-controls-expanded">
             <div className="control-group">
               <label htmlFor={`status-${item.id}`}>Status:</label>
               <select
@@ -222,12 +251,12 @@ const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
                 <option value="optional">Optional</option>
               </select>
             </div>
-          </div>
+          </div>}
 
           <div className="checklist-item-text-edit">
             <div className="text-edit-header">
               <label>Item Text:</label>
-              {!editingText && !progressLocked && (
+              {!editingText && !progressLocked && !readOnly && (
                 <button
                   className="edit-text-button"
                   onClick={() => setEditingText(true)}
@@ -237,21 +266,22 @@ const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
                 </button>
               )}
             </div>
-            {editingText ? (
+            {editingText && !readOnly ? (
               <div className="text-editor">
                 <input
                   type="text"
                   value={itemText}
+                  disabled={savingText}
                   onChange={(e) => setItemText(e.target.value)}
                   className="text-edit-input"
                   placeholder="Enter checklist item text..."
                 />
                 <div className="text-actions">
-                  <button onClick={handleSaveItemText} className="save-text">Save</button>
-                  <button onClick={handleCancelEditText} className="cancel-text">Cancel</button>
+                  <button onClick={handleSaveItemText} className="save-text" disabled={savingText || !itemText.trim()}>Save</button>
+                  <button onClick={handleCancelEditText} className="cancel-text" disabled={savingText}>Cancel</button>
                 </div>
               </div>
-            ) : (!transferPolicy || !progressLocked) ? (
+            ) : (readOnly || !transferPolicy || !progressLocked) ? (
               <div className="text-display">
                 {item.area_text}
               </div>
@@ -261,7 +291,7 @@ const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
           <div className="checklist-item-notes">
             <div className="notes-header">
               <label>Tutor Notes:</label>
-              {!editingNote && (
+              {!editingNote && !readOnly && (
                 <button
                   className="edit-note-button"
                   onClick={() => setEditingNote(true)}
@@ -270,17 +300,18 @@ const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
                 </button>
               )}
             </div>
-            {editingNote ? (
+            {editingNote && !readOnly ? (
               <div className="note-editor">
                 <textarea
                   value={noteText}
+                  disabled={savingNote}
                   onChange={(e) => setNoteText(e.target.value)}
                   placeholder="Add notes about student's understanding..."
                   rows={3}
                 />
                 <div className="note-actions">
-                  <button onClick={handleSaveNote} className="save-note">Save</button>
-                  <button onClick={() => setEditingNote(false)} className="cancel-note">Cancel</button>
+                  <button onClick={handleSaveNote} className="save-note" disabled={savingNote}>Save</button>
+                  <button onClick={() => setEditingNote(false)} className="cancel-note" disabled={savingNote}>Cancel</button>
                 </div>
               </div>
             ) : (
@@ -323,24 +354,27 @@ const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
 
 const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
   roomId,
-  transferEnabled = false,
   studentId = null,
   sharedTargets = false,
   isVisible,
   onToggleVisibility,
-  progressLocked = false
+  progressLocked = false,
+  readOnly = false,
+  onSetupStateChange
 }) => {
   const auth = useOptionalAuth();
-  const canSetupTargets = !sharedTargets && (!transferEnabled || auth?.user?.current_role === 'tutor');
+  const isReadOnly = readOnly || auth?.user?.current_role === 'student';
+  const canSetupTargets = !isReadOnly && !sharedTargets && auth?.user?.current_role === 'tutor';
   // Use the enhanced service layer hook
   const { 
     checklist,
+    priorChecklist,
     loading, 
-    error, 
+    error,
+    liveError,
     progress,
     updateItem,
     refreshChecklist,
-    generateChecklist,
     // New enhanced functionality
     showGenerationModal,
     showManualInput,
@@ -349,13 +383,31 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
     closeModals,
     handleSetupAI,
     handleManualSubmit
-  } = useChecklist(roomId, { enabled: transferEnabled, studentId });
+  } = useChecklist(roomId, { enabled: true, studentId });
 
   const [showAddCustomArea, setShowAddCustomArea] = useState(false);
+  const [evidenceSelection, setEvidenceSelection] = useState<{ scope: string; itemId: string } | null>(null);
+  const evidenceScope = JSON.stringify([
+    roomId, studentId, auth?.user?.id,
+    checklist?.id, checklist?.student_id
+  ]);
+  const evidenceOwner = studentId || (auth?.user?.current_role === 'student' ? auth.user.id : null);
+  const evidenceMatchesScope = checklist?.room_id === roomId
+    && (!evidenceOwner || checklist.student_id === evidenceOwner);
+  const evidenceItem = evidenceMatchesScope && evidenceSelection?.scope === evidenceScope
+    ? [...(checklist?.detection_areas || []), ...(checklist?.verification_steps || [])]
+      .find(item => item.id === evidenceSelection.itemId) || null
+    : null;
+  React.useEffect(() => {
+    if (!isVisible || loading || !evidenceItem) setEvidenceSelection(null);
+  }, [isVisible, loading, evidenceItem]);
   const transferPolicy = checklist?.progress_policy_version === 'transfer_v1';
-  const setupRequired = transferEnabled && (!checklist ||
+  const setupRequired = (!checklist ||
     checklist.detection_areas.length + checklist.verification_steps.length === 0);
-  const progressControlsLocked = progressLocked || sharedTargets;
+  const progressControlsLocked = progressLocked || sharedTargets || isReadOnly;
+  React.useEffect(() => {
+    if (!loading && !error) onSetupStateChange?.(setupRequired);
+  }, [loading, error, setupRequired, onSetupStateChange]);
 
   const handleStatusChange = async (itemId: string, newStatus: ChecklistItem['status']) => {
     if (progressControlsLocked) return;
@@ -368,6 +420,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
   };
 
   const handlePriorityChange = async (itemId: string, newPriority: ChecklistItem['priority']) => {
+    if (isReadOnly) return;
     try {
       await updateItem(itemId, { priority: newPriority });
     } catch (err) {
@@ -381,46 +434,49 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
   };
 
   const handleAddNote = async (itemId: string, note: string) => {
+    if (isReadOnly) return false;
     try {
-      await updateItem(itemId, { tutor_notes: note });
+      return await updateItem(itemId, { tutor_notes: note });
     } catch (err) {
       console.error('Failed to save note:', err);
+      return false;
     }
   };
 
   const handleViewEvidence = (itemId: string) => {
-    // TODO: Open evidence modal
-    console.log('View evidence for item:', itemId);
+    if (!evidenceMatchesScope || loading) return;
+    setEvidenceSelection({ scope: evidenceScope, itemId });
   };
 
-  const handleExportReport = useCallback(() => {
-    if (!checklist) {
+  const exportChecklistReport = useCallback((exportedChecklist: SessionChecklist | null) => {
+    if (!exportedChecklist) {
       return;
     }
 
-    const allItems = [...checklist.detection_areas, ...checklist.verification_steps];
-    const safeTemplateName = checklist.template_name
+    const allItems = [...exportedChecklist.detection_areas, ...exportedChecklist.verification_steps];
+    const safeTemplateName = exportedChecklist.template_name
       .trim()
       .replace(/\s+/g, '_')
       .replace(/[^a-zA-Z0-9_-]/g, '');
     const exportDate = new Date().toISOString().split('T')[0];
 
+    const coveredItems = allItems.filter(item => item.status === 'covered').length;
     const exportData = {
       room_id: roomId,
-      template_name: checklist.template_name,
+      template_name: exportedChecklist.template_name,
       exported_at: new Date().toISOString(),
       summary: {
-        completion_percentage: progress?.completion_percentage ?? checklist.completion_percentage,
+        completion_percentage: allItems.length ? Math.round(coveredItems / allItems.length * 100) : 0,
         total_items: allItems.length,
-        covered_items: progress?.covered_areas ?? checklist.completed_items,
-        partially_covered_items: progress?.partially_covered_areas ?? allItems.filter(item => item.status === 'partially_covered').length,
-        pending_items: progress?.pending_areas ?? allItems.filter(item => item.status === 'pending').length
+        covered_items: coveredItems,
+        partially_covered_items: allItems.filter(item => item.status === 'partially_covered').length,
+        pending_items: allItems.filter(item => item.status === 'pending').length
       },
-      target_version: checklist.target_version ?? null,
-      student_id: checklist.student_id ?? null,
-      progress_policy_version: checklist.progress_policy_version,
-      detection_areas: checklist.detection_areas.map(serializeChecklistItem),
-      verification_steps: checklist.verification_steps.map(serializeChecklistItem)
+      target_version: exportedChecklist.target_version ?? null,
+      student_id: exportedChecklist.student_id ?? null,
+      progress_policy_version: exportedChecklist.progress_policy_version,
+      detection_areas: exportedChecklist.detection_areas.map(serializeChecklistItem),
+      verification_steps: exportedChecklist.verification_steps.map(serializeChecklistItem)
     };
 
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
@@ -434,22 +490,26 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
     downloadLink.click();
     document.body.removeChild(downloadLink);
     URL.revokeObjectURL(downloadUrl);
-  }, [checklist, progress, roomId]);
+  }, [roomId]);
+  const handleExportReport = () => exportChecklistReport(checklist);
+  const handleExportHistoricalReport = () => exportChecklistReport(priorChecklist);
+  const historicalNotice = priorChecklist ? <div>
+    <p>Historical learning records are preserved for export. New targets require learner-owned setup.</p>
+    <button onClick={handleExportHistoricalReport}>Export Historical Progress</button>
+  </div> : null;
 
   const handleAddCustomArea = async (
     areaText: string, 
     priority: ChecklistItem['priority']
   ) => {
+    if (isReadOnly) return;
     try {
       // Default to 'detection_area' since we removed the type selector
       const itemType = 'detection_area';
       console.log('Adding custom area:', { areaText, itemType, priority });
       
       if (transferPolicy) {
-        const randomUuid = globalThis.crypto?.randomUUID;
-        const itemId = randomUuid
-          ? randomUuid.call(globalThis.crypto)
-          : `item-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        const itemId = newRequestId('item');
         await transferAssessmentService.editLearningProgress({
           roomId,
           itemId,
@@ -457,7 +517,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
           updates: { area_text: areaText, item_type: itemType, priority },
         });
       } else {
-        await RoomFeaturesService.checklist.addCustomArea(roomId, areaText, itemType, priority);
+        throw new Error('Learner-owned targets must be initialized before adding an area.');
       }
       
       // Refresh the checklist to show the new area
@@ -471,11 +531,13 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
   };
 
   const handleEditItem = async (itemId: string, newText: string) => {
+    if (isReadOnly) return false;
     try {
       console.log('Editing checklist item:', { itemId, newText });
-      await updateItem(itemId, { area_text: newText });
+      return await updateItem(itemId, { area_text: newText });
     } catch (err) {
       console.error('Failed to edit item text:', err);
+      return false;
     }
   };
 
@@ -483,9 +545,23 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
     return {
       critical: items.filter(item => item.priority === 'critical'),
       important: items.filter(item => item.priority === 'important'),
-      optional: items.filter(item => item.priority === 'optional')
+      optional: items.filter(item => !item.priority || item.priority === 'optional')
     };
   };
+
+  const draftSyncError = Boolean(error && checklist?.id.startsWith('draft-'));
+  const warnings = <>
+    {liveError && <div className="checklist-error" role="status"><p>{liveError}</p></div>}
+    {error && (checklist || !isVisible || showManualInput) && <div
+      className={draftSyncError ? 'checklist-error checklist-sync-failed' : 'checklist-error'}
+      role={draftSyncError ? 'alert' : 'status'}>
+      {draftSyncError && <strong>Learning targets are not saved. Learner progress is not being recorded.</strong>}
+      <p>{error}</p>
+      <button onClick={refreshChecklist} className="retry-button">
+        <RotateCcw size={14} />{draftSyncError ? 'Retry sync' : 'Retry'}
+      </button>
+    </div>}
+  </>;
 
   if (!isVisible) {
     return (
@@ -494,11 +570,13 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
           <Settings size={16} />
           <span>Learning Progress</span>
         </button>
+        {historicalNotice}
+        {warnings}
       </div>
     );
   }
 
-  if (loading) {
+  if (loading && !checklist && !showManualInput) {
     return (
       <div className="checklist-panel">
         <div className="checklist-header">
@@ -510,14 +588,14 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
             <EyeOff size={16} />
           </button>
         </div>
+        {historicalNotice}
+        {warnings}
         <div className="checklist-loading">Loading checklist...</div>
       </div>
     );
   }
 
-  const draftSyncError = Boolean(error && checklist?.id.startsWith('draft-'));
-
-  if (error && !draftSyncError) {
+  if (error && !checklist && !showManualInput) {
     return (
       <div className="checklist-panel">
         <div className="checklist-header">
@@ -529,6 +607,8 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
             <EyeOff size={16} />
           </button>
         </div>
+        {historicalNotice}
+        {warnings}
         <div className="checklist-error">
           <p>Error: {error}</p>
           <button onClick={refreshChecklist} className="retry-button">
@@ -545,11 +625,17 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
       <div className="checklist-header"><h3>Learning Progress</h3>
         <button onClick={onToggleVisibility} aria-label="Close Learning Progress"><EyeOff size={16} /></button>
       </div>
+      {historicalNotice}
+      {warnings}
       <p>Learner progress begins when a learner joins.</p>
       <ol>{CYBERBULLYING_LEARNING_TARGETS.map(target => <li key={target.key}>{target.description}</li>)}</ol>
+      <button onClick={refreshChecklist} className="action-button secondary"><RotateCcw size={14} />Refresh</button>
     </section>;
   }
-  if (!checklist || setupRequired) {
+  if (!checklist || setupRequired || (canSetupTargets && showManualInput)) {
+    const savedTargetsArrived = Boolean(checklist && !checklist.id.startsWith('draft-')
+      && transferPolicy
+      && checklist.detection_areas.length + checklist.verification_steps.length > 0);
     return (
       <div className="checklist-panel">
         <div className="checklist-header">
@@ -561,14 +647,21 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
             <EyeOff size={16} />
           </button>
         </div>
+        {historicalNotice}
+        {warnings}
         {/* Show manual input form */}
         {canSetupTargets && showManualInput && (
           <div className="checklist-manual-input">
+            {savedTargetsArrived && <p role="status">
+              Targets were saved while this form was open. Your text is still here to copy.
+              Cancel to view and edit the saved targets.
+            </p>}
             <ManualChecklistInput
               onSubmit={handleManualSubmit}
+              submitDisabled={savedTargetsArrived}
               onCancel={closeModals}
-              title={transferEnabled ? 'Enter Learning Targets' : undefined}
-              allowVerificationOnly={transferEnabled}
+              title="Enter Learning Targets"
+              allowVerificationOnly
             />
           </div>
         )}
@@ -576,31 +669,32 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
         {/* Show generation options when no manual input */}
         {(!showManualInput || !canSetupTargets) && (
           <div className="checklist-empty">
-            {(!transferEnabled || !canSetupTargets) && <p>{transferEnabled
-              ? 'Waiting for the tutor to set up learning targets.'
-              : 'No checklist found for this room.'}</p>}
-            {transferEnabled && canSetupTargets && !studentId && <p>Targets are saved locally and sync when a learner joins.</p>}
+            {!canSetupTargets && <p>Waiting for the tutor to set up learning targets.</p>}
+            {canSetupTargets && !studentId && <p>Targets are saved locally and sync when a learner joins.</p>}
             {canSetupTargets && <div className="checklist-generation-options">
               <button 
                 onClick={() => startSmartGeneration()}
                 className="generate-checklist-button primary"
-                disabled={loading || (!transferEnabled && progressControlsLocked)}
+                disabled={loading}
               >
                 <Zap size={16} />
-                {loading ? 'Generating...' : transferEnabled ? 'Generate Learning Targets' : 'Smart Generate'}
+                {loading ? 'Generating...' : 'Generate Learning Targets'}
               </button>
               <button 
                 onClick={openManualInput} 
                 className="manual-checklist-button secondary"
-                disabled={loading || (!transferEnabled && progressControlsLocked)}
+                disabled={loading}
               >
                 <Edit size={16} />
-                {transferEnabled ? 'Enter Manually' : 'Manual Input'}
+                {'Enter Manually'}
               </button>
             </div>}
           </div>
         )}
         
+        <button onClick={refreshChecklist} className="action-button secondary" disabled={loading}>
+          <RotateCcw size={14} />Refresh
+        </button>
         {/* Generation modal */}
         {canSetupTargets && showGenerationModal && (
           <ChecklistGenerationModal
@@ -609,7 +703,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
             onClose={closeModals}
             onSetupAI={handleSetupAI}
             onManualInput={openManualInput}
-            onUseTemplate={transferEnabled ? undefined : () => generateChecklist('General Scam Indicators')}
+            onUseTemplate={undefined}
             onEditAIPrompt={() => {
               closeModals();
               // TODO: Navigate to AI settings
@@ -647,17 +741,12 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
         )}
       </div>
 
-      {draftSyncError && (
-        <div className="checklist-error" role="status">
-          <p>{error}</p>
-          <button onClick={refreshChecklist} className="retry-button">
-            <RotateCcw size={14} />
-            Retry sync
-          </button>
-        </div>
-      )}
+      {historicalNotice}
+      {warnings}
 
-      <div className="checklist-content">
+      <fieldset className="checklist-content"
+        disabled={loading && checklist.id.startsWith('draft-')}
+        style={{ border: 0, margin: 0, minWidth: 0 }}>
         <div className="checklist-summary">
           <div className="template-info">
             <strong>{checklist.template_name}</strong>
@@ -685,74 +774,36 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
           {/* All Items in One List */}
           <div className="checklist-section">
             <div className="section-content">
-              {/* Critical Items */}
-              {itemGroups.critical.length > 0 && (
-                <div className="priority-group critical">
-                  <h4>🔴 Critical Items ({itemGroups.critical.length})</h4>
-                  {itemGroups.critical.map(item => (
-                    <ChecklistItemComponent
-                      key={item.id}
-                      item={item}
-                      onStatusChange={handleStatusChange}
-                      onUnderstandingChange={handleUnderstandingChange}
-                      onPriorityChange={handlePriorityChange}
-                      onAddNote={handleAddNote}
-                      onViewEvidence={handleViewEvidence}
-                      onEditItem={handleEditItem}
-                      progressLocked={progressControlsLocked}
-                      transferPolicy={transferPolicy}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {/* Important Items */}
-              {itemGroups.important.length > 0 && (
-                <div className="priority-group important">
-                  <h4>🟡 Important Items ({itemGroups.important.length})</h4>
-                  {itemGroups.important.map(item => (
-                    <ChecklistItemComponent
-                      key={item.id}
-                      item={item}
-                      onStatusChange={handleStatusChange}
-                      onUnderstandingChange={handleUnderstandingChange}
-                      onPriorityChange={handlePriorityChange}
-                      onAddNote={handleAddNote}
-                      onViewEvidence={handleViewEvidence}
-                      onEditItem={handleEditItem}
-                      progressLocked={progressControlsLocked}
-                      transferPolicy={transferPolicy}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {/* Optional Items */}
-              {itemGroups.optional.length > 0 && (
-                <div className="priority-group optional">
-                  <h4>⚪ Optional Items ({itemGroups.optional.length})</h4>
-                  {itemGroups.optional.map(item => (
-                    <ChecklistItemComponent
-                      key={item.id}
-                      item={item}
-                      onStatusChange={handleStatusChange}
-                      onUnderstandingChange={handleUnderstandingChange}
-                      onPriorityChange={handlePriorityChange}
-                      onAddNote={handleAddNote}
-                      onViewEvidence={handleViewEvidence}
-                      onEditItem={handleEditItem}
-                      progressLocked={progressControlsLocked}
-                      transferPolicy={transferPolicy}
-                    />
-                  ))}
-                </div>
-              )}
+              {/* One flat keyed list keeps editors mounted when an item's priority changes. */}
+              {(['critical', 'important', 'optional'] as const).flatMap(priority => {
+                const items = itemGroups[priority];
+                if (!items.length) return [];
+                const labels = { critical: '🔴 Critical', important: '🟡 Important', optional: '⚪ Optional' };
+                return [
+                  <div key={`heading-${priority}`} className={`priority-group ${priority}`}>
+                    <h4>{labels[priority]} Items ({items.length})</h4>
+                  </div>,
+                  ...items.map(item => <ChecklistItemComponent
+                    key={item.id}
+                    item={item}
+                    onStatusChange={handleStatusChange}
+                    onUnderstandingChange={handleUnderstandingChange}
+                    onPriorityChange={handlePriorityChange}
+                    onAddNote={handleAddNote}
+                    onViewEvidence={handleViewEvidence}
+                    onEditItem={handleEditItem}
+                    progressLocked={progressControlsLocked}
+                    transferPolicy={transferPolicy}
+                    readOnly={isReadOnly}
+                  />)
+                ];
+              })}
             </div>
           </div>
         </div>
 
         <div className="checklist-actions">
-          {transferEnabled && !transferPolicy && canSetupTargets && (
+          {!transferPolicy && canSetupTargets && (
             <>
               <button
                 className="action-button primary"
@@ -772,7 +823,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
               </button>
             </>
           )}
-          {!sharedTargets && <button
+          {!sharedTargets && !isReadOnly && <button
             className="action-button primary"
             onClick={() => setShowAddCustomArea(true)}
             disabled={progressControlsLocked}
@@ -796,16 +847,20 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
             {loading ? 'Refreshing...' : 'Refresh'}
           </button>
         </div>
-      </div>
+      </fieldset>
 
       {/* Add Custom Area Modal */}
-      <AddCustomAreaModal
+      {!isReadOnly && <AddCustomAreaModal
         isOpen={showAddCustomArea}
         onClose={() => setShowAddCustomArea(false)}
         onAdd={handleAddCustomArea}
-      />
+      />}
       
-      {/* TODO: Add evidence viewing modal */}
+      <EvidenceModal
+        isOpen={evidenceItem !== null}
+        item={evidenceItem}
+        onClose={() => setEvidenceSelection(null)}
+      />
     </div>
   );
 };

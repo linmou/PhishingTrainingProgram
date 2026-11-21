@@ -106,15 +106,15 @@ describe('ChecklistPanel export report', () => {
 
     mockUseChecklist.mockReturnValue({
       checklist,
+      priorChecklist: null,
+      liveError: null,
       loading: false,
       error: null,
       progress,
       showGenerationModal: null,
       showManualInput: false,
-      generateChecklist: jest.fn(),
       updateItem: jest.fn(),
       refreshChecklist: jest.fn(),
-      deleteChecklist: jest.fn(),
       startSmartGeneration: jest.fn(),
       openManualInput: jest.fn(),
       closeModals: jest.fn(),

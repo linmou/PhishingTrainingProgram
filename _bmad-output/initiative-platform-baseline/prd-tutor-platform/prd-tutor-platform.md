@@ -2,8 +2,10 @@
 title: Online Safety Tutor Platform
 status: final
 created: 2026-10-22
-updated: 2026-10-30
+updated: 2026-11-18
 ---
+
+<!-- Scope updated: 2026-11-12. Source baseline commit: 878ed46. -->
 
 # PRD: Online Safety Tutor Platform
 *Working title — confirm.*
@@ -12,7 +14,7 @@ updated: 2026-10-30
 
 This PRD states the system contracts of the deployed tutor platform: what the system guarantees, verified by code tests. It is a brownfield baseline — every requirement describes behavior intended for the platform as deployed on 2026-10-22 — so that new initiatives can be checked against it before they change shared behavior. It is written for the product owner, for whoever plans the next initiative, and for the skills that derive the architecture spine and the baseline epics from it.
 
-**Layering.** The root is the product constitution (`../constitution-product/constitution-product.md`): principles P1–P8, constraints C1–C6 and priority rules R1–R8. Every FR and NFR below carries a **Grounding** line citing them. AI behavior — how good an AI job's output is — is not specified here: it belongs to AI behavior constitutions and specifications, verified by evaluations. This PRD states only each AI job's boundary (inputs, output shape, audience, gates, failure handling) and points to its specification (§7).
+**Layering.** The root is the product constitution (`../constitution-product/constitution-product.md`): principles P1–P8, constraints C1, C2, C4 and C6 (C3 and C5 retired 2026-11-02) and priority rules R1–R9. Every FR and NFR below carries a **Grounding** line citing them. AI behavior — how good an AI job's output is — is not specified here: it belongs to AI behavior constitutions and specifications, verified by evaluations. This PRD states only each AI job's boundary (inputs, output shape, audience, gates, failure handling) and points to its specification (§7).
 
 **Structure.** Glossary; Part A, the shared platform (§4); Part B, phishing practice (§5); Part C, cyberbullying practice (§6); AI behavior boundaries (§7); cross-cutting NFRs (§8); Non-Goals (§9); Scope (§10); Open Questions and Decisions (§11); Assumptions Index (§12). FRs are numbered globally and keep their numbers when moved between parts. Terms are defined in §3.
 
@@ -147,12 +149,15 @@ A visitor can enter a display name and choose tutor, student or observer to get 
 - After joining, the user lands on their role's dashboard; reloading the page keeps them signed in.
 
 #### FR-2: Manage own profile
-A user can change their display name, role and avatar (from presets).
+A user can change their display name and avatar (from presets). The role is chosen at join and cannot be changed afterwards; to use another role, a person joins again with that role, which creates a separate user (FR-1).
 **Grounding:** P5.
 
 **Consequences (testable):**
 - Changes are saved to the user record and to the browser.
-- The user identifier does not change when name or role changes.
+- The user identifier does not change when the display name changes.
+- The profile offers no role change.
+
+**Change (2026-11-20):** role change removed from the profile. Not yet implemented: the deployed profile still offers it (gap G-79). It let a room owner's own user take the student role in their own room (G-38, #112). The server rule that the owner is never the learner of their own room (FR-12) stays as the guarantee.
 
 **Out of Scope:** custom avatar upload.
 
@@ -162,6 +167,7 @@ A user can leave, which removes the application identity from this browser only.
 
 **Consequences (testable):**
 - Leaving deletes no user, room, message or learning progress data.
+- Leaving signs out every open tab of this browser. A tab whose identity or role changed elsewhere stops acting and returns to sign-in; it never continues as another user or as nobody.
 
 ### 4.2 Rooms, Scenarios and Templates
 
@@ -241,6 +247,7 @@ A student can become a room's learner if it has none; any later student enters a
 - At most one learner per room at any time, enforced on the server.
 - The room owner is never the learner of their own room, and never answers an assessment, whatever role their profile shows.
 - The learner keeps the seat for the room's whole life; rooms are not reused for another learner.
+- The learner seat is taken only by the student's explicit Join action, never as a side effect of opening a page or changing identity.
 
 #### FR-13: Observe rooms
 An observer can list active rooms other than test rooms and open any of them read-only. Realizes UJ-3.
@@ -259,6 +266,8 @@ The room owner and the learner can exchange messages, and every participant sees
 - A sent message appears for every participant within about 2 seconds.
 - Leaving and re-entering shows the full history in order.
 - Messages sent while a participant was offline appear when they reconnect.
+- Choosing Reply on a message starts the composer with `@<name> `, where `<name>` is the name participants see on that message: the persona name for a character reply, "Security Supervisor" for a Guard reply, otherwise the display name. Text already typed is kept, choosing another message swaps the mention, and cancelling the reply removes it while it is still at the start.
+- A message that contains only the reply mention cannot be sent.
 
 #### FR-15: Typing indicator
 The room owner and the learner can see when the other is typing; the indicator clears when typing stops or after 3 seconds without input.
@@ -274,6 +283,7 @@ The learner must rate the most recent tutor reply before sending their next mess
 - Pre-populated dialogue and result messages are never rated. While exit assessment is in force, transfer assessment questions are never rated either, whether open and hidden from the learner (FR-37) or ended and shown again.
 - A learner has one rating per message; changing it replaces it. The room owner and observers see rating counts update live.
 - If saving the rating fails, the learner is told and their unsent message is kept.
+- Once the rating is saved, the learner's unsent message is sent once, without a second click, after the room's sending rules are checked again. If that send fails, the rating stays saved and the message is kept for another try. Leaving the room before the send cancels it.
 
 #### FR-17: (withdrawn 2026-10-22)
 Clearing chat history is not a supported feature.
@@ -302,7 +312,7 @@ The system has every learner message judged against each learning target separat
 
 #### FR-21: Progress states and transitions
 Learning targets move between progress states only in three ways: learning events as defined in the transfer-status response contract, a transfer assessment result (FR-40), and a manual edit (FR-53).
-**Grounding:** P4, P7, C3.
+**Grounding:** P4, P7, C2.
 
 **Consequences (testable):**
 - Pending → Partial on an initial signal; Pending or Partial → Covered on demonstrated understanding; Needs review → Partial on a post-repair signal; any state except Covered → Covered on spontaneous transfer; Partial or Covered → Needs review on contradiction.
@@ -314,9 +324,13 @@ While Guard is on, no learning progress advances; learning events gathered meanw
 
 #### FR-23: Learning Progress panel
 The room owner and the learner can open the Learning Progress panel showing each learning target's progress state and evidence for that learner.
-**Grounding:** P2, P1.
+**Grounding:** P2, P1, P4, P5.
 
 **Consequences (testable):**
+- The room owner and learner see committed learning-target, progress and evidence changes automatically, including initial setup, catch-up, manual edits, Guard replay and assessment results. The learner view is read-only.
+- Background refresh preserves unsaved target text and notes, expanded cards and an open evidence view, including when a target changes priority. It does not replace existing content with a loading screen.
+- Subscriptions remain active while the panel is hidden. Initial subscription and reconnect reconcile the latest saved state; switching room or identity cannot display a previous learner's progress.
+- A failed feed or refresh retains the last valid data with a visible warning and a manual Refresh fallback. Automatic refresh only reads; it never judges messages or retries a failed target save.
 - The panel never covers the room owner's AI and send controls on desktop.
 - On narrow screens the panel uses the full width.
 
@@ -400,6 +414,7 @@ The room owner can turn the AI assistant on or off for a room and set its AI rol
 **Consequences (testable):**
 - With the AI assistant off, no AI draft can be requested.
 - Reopening settings shows the saved values.
+- In phishing rooms the settings also keep which scenario preset the AI teaches from (its detection areas and verification steps), or Custom. Reopening shows that choice; switching to Custom keeps the current text; an unknown preset is refused.
 
 #### FR-25: Request an AI suggestion (boundary)
 The room owner can request an AI suggestion for a chosen learner message, or the latest one. Realizes UJ-1.
@@ -507,7 +522,7 @@ The room owner can see the learning target, the new context, the question, the o
 
 #### FR-36: Deliver to the learner
 The room owner can send a reviewed assessment draft to the learner; the server rechecks it before saving.
-**Grounding:** P2, C3.
+**Grounding:** P2, P4.
 
 **Consequences (testable):**
 - If the transfer assessment is no longer due or Guard is on, delivery is refused.
@@ -529,7 +544,7 @@ The learner can answer only their own open transfer assessment, by selecting opt
 
 #### FR-38: Grading and two attempts
 The server grades each attempt by exact match with the correct options and allows at most two attempts.
-**Grounding:** P4, C3.
+**Grounding:** P4, C2.
 
 **Consequences (testable):**
 - While Guard is on, a learner's answer to an open transfer assessment is held: it is not graded and uses no attempt. It is graded after Guard ends. While exit assessment is in force, this applies to answers given in the exit pop-up too (FR-54).
@@ -540,7 +555,7 @@ The server grades each attempt by exact match with the correct options and allow
 
 #### FR-39: Result messages
 Every accepted attempt creates exactly one result message: "Correct.", "Incorrect. One attempt remaining." or, after the second wrong attempt, "Incorrect. No attempts remaining. Correct option(s): …" followed by the learner explanation.
-**Grounding:** P1, R3, C5.
+**Grounding:** P1, R3.
 
 **Consequences (testable):**
 - The correct answer and learner explanation are published only in the second-wrong-attempt result message.
@@ -583,7 +598,7 @@ The AI assistant gets transfer-assessment outcomes only from the saved conversat
 
 #### FR-54: Exit assessment (temporary)
 While exit assessment is in force, a learner who leaves a room while any of their transfer assessments is open must first answer them in a pop-up, one at a time. Realizes UJ-1.
-**Grounding:** P1, P6, P4, C3, C5.
+**Grounding:** P1, P6, P4, C2, R3.
 
 **Consequences (testable):**
 - There is no runtime switch. Exit assessment replaces in-dialogue answering in place. The in-dialogue implementation of FR-32–FR-43 is archived unchanged on branch `assess-in-dialogue` (commit `ebc03d1`) as the reference. Restoring it is a forward change on `no_sign_up` that reverts only the exit-assessment changes, released through the normal merge and production gates; the archived branch itself is never deployed, so later unrelated changes are kept. Releasing either version never regrades or deletes a transfer assessment, and closes one only on a rollback when it could never be graded again (its snapshot no longer matches under the restored rule); such a question is cancelled with one closure message and uses no attempt.
@@ -683,13 +698,13 @@ Each AI job's boundary FR states what the system guarantees around it. The quali
 ## 8. Cross-Cutting NFRs
 
 - **NFR-1 Human supervision.** No AI-generated text reaches a learner without the room owner's explicit send. The AI assistant never changes room state on its own. **Grounding:** P2, C1.
-- **NFR-2 Server authority.** Grading, attempt counting, whether a transfer assessment is due, learning progress changes, the learner seat and private transfer-assessment data are decided on the server. The browser never grades or changes learning progress directly. **Grounding:** P4, C3.
-- **NFR-3 Private material.** Correct answers and learner explanations stay private until a second wrong attempt (FR-39). The reasoning behind a transfer assessment and raw AI output are never visible to participants. Reasons and instruction labels are visible to the room owner only. AI provider credentials never reach the browser. **Grounding:** C5, P2, C6.
+- **NFR-2 Server authority.** Grading, attempt counting, whether a transfer assessment is due, learning progress changes, the learner seat and private transfer-assessment data are decided on the server. The browser never grades or changes learning progress directly. **Grounding:** P4, C2.
+- **NFR-3 Private material.** Correct answers and learner explanations stay private until a second wrong attempt (FR-39). The reasoning behind a transfer assessment and raw AI output are never visible to participants. Reasons and instruction labels are visible to the room owner only. AI provider credentials never reach the browser. **Grounding:** R3, P2, C6.
 - **NFR-4 Identity model and accepted risk.** The application identity identifies users but does not authenticate them, and room data is readable and writable by any client of the app, except the private material in NFR-3. This is accepted for the current small-scale pilot, in which students use the platform under close adult supervision and ease of use takes priority over authentication. Accepted consequences: anyone can act as any user by typing the same name and role, and any participant can read any room's messages and password. **Grounding:** P5, P6, R1.
 - **NFR-5 Reliable repetition.** Repeating any request (send, attempt, delivery, judging) produces no duplicate effect. Concurrent requests resolve to one outcome. **Grounding:** P4.
 - **NFR-6 Persistence.** The application identity, conversation, learning progress and transfer-assessment state survive reloads, reconnects and multiple tabs. Rooms are kept after use. **Grounding:** P4, P8, C4.
 - **NFR-7 Fail visibly.** When something needed is missing or fails (conversation history, learning targets, AI output, configuration), the user gets a clear error. No placeholder content and no hidden fallback. **Grounding:** P7.
-- **NFR-8 Live updates.** Messages appear for all participants within about 2 seconds; room lists and ratings update without refresh. **Grounding:** P5.
+- **NFR-8 Live updates.** Messages appear for all participants within about 2 seconds; room lists and ratings update without refresh. Learning targets, progress and evidence update for the room owner and learner within about 2 seconds of a committed change under normal connectivity. This latency starts after server judging finishes, not when a message is sent. Reconnection reconciles changes missed while offline. **Grounding:** P2, P4, P5.
 - **NFR-9 AI behavior governance.** The quality of every AI job's output is governed by an AI behavior constitution and specification (§7), each child principle naming its parent in the product constitution. The tutoring constitution governs phishing only; AI jobs without a constitution fall directly under the product constitution until one exists. **Grounding:** P1, P3.
 - **NFR-10 Behavior change control.** Changing an AI model, a shared prompt or the learning-event judge changes behavior for every practice type that uses it, and must be re-evaluated for each. Constitutions change only through an explicit human decision; passing evaluations cannot authorize a change. **Grounding:** P7.
 - **NFR-11 Client compatibility.** A browser running an outdated version of the app is told to reload, rather than writing data under old rules. **Grounding:** P4.
@@ -713,6 +728,7 @@ Each AI job's boundary FR states what the system guarantees around it. The quali
 
 ### 10.1 In Scope
 - Everything in Parts A–C for the current small-scale pilot.
+- The pilot uses only rooms created from existing room templates; AI evaluations primarily focus on those templates.
 
 ### 10.2 Out of Scope
 - **Success metrics and goals.** Deliberately left out of this baseline (decision of 2026-10-22). Add them when the next initiative sets targets.
@@ -733,3 +749,11 @@ Questions OQ-1 to OQ-15 were all resolved on 2026-10-22. Each decision is built 
 ## 12. Assumptions Index
 
 - FR-52 — A tutor who is not the room owner takes part as an observer.
+
+### Approved extension: automatic learning progress (2026-11-12)
+
+Issue #75 extends FR-23 and NFR-8 under the owner-approved automatic refresh design. P2/P4/P5 favor timely visibility; P6 and P7/R7 favor the existing Realtime mechanism. The P1 tension of learners seeing progress sooner is accepted by the owner; progress rules and assessment privacy remain unchanged. This is a target contract, not evidence of deployment. Release status is recorded in `tutor-system/docs/doc_update_record/documentation_update_record_v2026_11_12_learning_target_auto_refresh.md`.
+
+### Approved extension: reply mentions (2026-11-18)
+
+Issue #107 extends FR-14 under the owner-requested reply mention. P5 favors a clear reply target. Using the visible name keeps FR-22/FR-30 (Guard shown as "Security Supervisor") and FR-49 (persona identity) intact; the mention-only rule follows FR-28's empty-reply refusal. Copying an AI suggestion replaces the draft and drops the reply target, because a reviewed reply is threaded to the message it was generated for. The owner accepted that a tutor who adds a mention to a copied AI suggestion is recorded as `modified` (FR-28). The mention is part of the saved message text. Frontend only; Render deploys it from `no_sign_up`.

@@ -128,8 +128,8 @@ describe('assessment API contract', () => {
 
   it('keeps the explicit operation allowlist and versioned envelopes', () => {
     expect(ASSESSMENT_API_OPERATIONS).toEqual([
-      'initialize_checklist', 'join_room', 'edit_learning_progress', 'post_message', 'analyze_message',
-      'prepare_turn', 'send_reviewed', 'read_review', 'process_message', 'clear_chat_history',
+      'configure_assessment', 'initialize_checklist', 'join_room', 'edit_learning_progress', 'read_learning_evidence', 'post_message', 'analyze_message',
+      'prepare_turn', 'send_reviewed', 'read_review', 'read_history_readiness', 'process_message', 'clear_chat_history',
     ]);
     expect(new Set(ASSESSMENT_API_OPERATIONS).size).toBe(ASSESSMENT_API_OPERATIONS.length);
     ASSESSMENT_API_OPERATIONS.forEach((operation) => expect(isAssessmentApiOperation(operation)).toBe(true));
@@ -236,8 +236,8 @@ describe('assessment API contract', () => {
     expect(source).toContain("resolveTransferAnswer } from '../../../src/services/transferAssessmentOrchestrator.ts'");
     expect(source).toContain("deps.env('OAI_API_KEY')");
     expect(source).toContain("deps.env('OAI_BASE_URL')");
-    expect(source).not.toContain("deps.env('OAI_MODEL')");
-    expect(source).toContain("const PROVIDER_MODEL = 'qwen3.5-flash'");
+    expect(source).toContain("deps.env('OAI_MODEL')");
+    expect(source).not.toContain("const PROVIDER_MODEL");
     expect(source).toContain('p_expected_attempt_count');
     expect(source).toContain("committed.code === 'CONCURRENT_MODIFICATION'");
     expect(source).toContain("deps.env('OAI_API_KEY')");

@@ -17,6 +17,7 @@ import { useRoom } from '../contexts/RoomContext';
 import type { AIAssistantConfig, Room, User } from '../types';
 import type { SystemPromptConfig } from '../services/prompts/types';
 
+jest.mock('../services/roomSeatService', () => require('../test-support/seatSignedInStudent'));
 jest.mock('../contexts/AuthContext', () => ({
   useAuth: jest.fn(),
 }));

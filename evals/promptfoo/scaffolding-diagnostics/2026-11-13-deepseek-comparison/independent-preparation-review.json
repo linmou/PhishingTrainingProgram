@@ -1,0 +1,43 @@
+{
+  "intent": "Independently verify readiness of the frozen four-rubric model comparison before interpreting model results.",
+  "reviewed_at": "2026-11-13",
+  "reviewer": "/root/focused_audit",
+  "status": "execution_cleared_after_operational_repairs",
+  "active_snapshot": "raw/snapshot-v2.json",
+  "active_snapshot_fingerprint": "f309a132a1ac900562b6f8678650f58639e3d37679a94f245a2c8698a43f48b7",
+  "active_runner_sha256": "93891c7a6968e20bd81977f400ffadafda2cbaf870b1b71e3914c6d2ebd4dc8c",
+  "followup_verification": "Recomputed active snapshot fingerprint and runner hash match embedded source; both operational repairs inspected. Initial snapshot remains preserved.",
+  "snapshot_fingerprint": "a32cbbdb716e87df2ab5e892c7f15086af936eca175fd8eab91f6b9c3077f31c",
+  "runner_sha256": "3034fc8a0b0584bd6c97c2279c7cbd24f638a4e4698ddee92007488d328c14f1",
+  "structural_verification": {"tests": 5, "passed": 5, "failed": 0},
+  "verified_controls": [
+    "105 saved Qwen source outputs comprise 81 fixed requests and 24 trajectory turns.",
+    "Fixed prompts and full real inventories are consumed from saved evidence, not rebuilt from dirty runtime files.",
+    "Trajectory shells change only learner history and current intervention; each model uses its own generated tutor history.",
+    "Prior guard mode is explicitly fixed false: these are controlled-state journeys, not autonomous full-state production rollouts.",
+    "The four amended primary rubrics and relevant 24 calibration examples with 42 primary annotations are frozen without tuning.",
+    "Common judge evidence omits target model identity and private tutor reason.",
+    "DeepSeek targets retain their own final target call and attempts, with saved Qwen file and hash as separate provenance.",
+    "Ordinary thresholds are 80 percent; factual accuracy threshold is 100 percent; failed calibration makes affected semantic comparisons provisional."
+  ],
+  "operational_findings": [
+    {
+      "status": "resolved_in_active_snapshot_v2",
+      "finding": "A budget assertion before a retry can discard attempts accumulated by that call before persistence.",
+      "recommendation": "Return a structured budget error retaining earlier attempts when the budget is exhausted.",
+      "scope": "Execution evidence preservation; does not block short calibration."
+    },
+    {
+      "status": "resolved_in_active_snapshot_v2",
+      "finding": "Target generation can attempt format repair after a transport error.",
+      "recommendation": "Stop format retry on transport errors, matching the judge path.",
+      "scope": "Operational retry classification; no prompt or rubric change."
+    }
+  ],
+  "inference_limits": [
+    "Only the 81 fixed requests permit an identical-input comparison.",
+    "The 24 trajectory turns permit a controlled-journey comparison with intentionally different later tutor histories.",
+    "Historical Qwen calls and a common DeepSeek judge retain temporal and potential self-preference confounds.",
+    "This readiness review does not establish calibration validity or behavior acceptance."
+  ]
+}

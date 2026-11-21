@@ -54,7 +54,7 @@ jest.mock('../../services/aiService', () => ({
   recordAISuggestionFeedback: jest.fn(),
   updateAIConfig: jest.fn(),
   getAIConfig: jest.fn(),
-  DEFAULT_AI_MODEL: 'qwen3.5-flash',
+  OAI_MODEL: 'qwen3.5-flash',
 }));
 
 jest.mock('../AuthContext', () => ({ useAuth: jest.fn() }));
@@ -211,13 +211,13 @@ describe('RoomContext learner answer path', () => {
       });
     });
 
-    expect(postMessage).toHaveBeenCalledWith({
+    expect(postMessage).toHaveBeenCalledWith(expect.objectContaining({
       roomId: TRANSFER_ROOM_ID,
       content: 'B',
       replyToMessageId: DELIVERED_QUESTION_ID,
       assessmentId: DELIVERED_QUESTION_ID,
       selectedOptionIds: ['B'],
-    });
+    }));
     expect(processMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID, DELIVERED_QUESTION_ID);
     expect(analyzeMessage).not.toHaveBeenCalled();
     const answer = room!.messages.find((message) => message.id === DELIVERED_ANSWER_ID);
@@ -253,13 +253,13 @@ describe('RoomContext learner answer path', () => {
       });
     });
 
-    expect(postMessage).toHaveBeenCalledWith({
+    expect(postMessage).toHaveBeenCalledWith(expect.objectContaining({
       roomId: TRANSFER_ROOM_ID,
       content: 'B,D',
       replyToMessageId: DELIVERED_QUESTION_ID,
       assessmentId: DELIVERED_QUESTION_ID,
       selectedOptionIds: ['B', 'D'],
-    });
+    }));
     expect(processMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID, DELIVERED_QUESTION_ID);
     const answer = room!.messages.find((message) => message.id === DELIVERED_ANSWER_ID);
     expect(answer?.parent_message_id).toBe(DELIVERED_QUESTION_ID);
@@ -889,7 +889,7 @@ describe('RoomContext learner answer path', () => {
     expect(answer.answerLifecycle?.code).toBe('ANSWER_FORMAT_UNRESOLVED');
   });
 
-  it('keeps an ordinary learner message on the legacy path when the room has no transfer checklist', async () => {
+  it('uses trusted storage even when a historical checklist exists', async () => {
     initialMessages = [learnerAMessageRow];
     (ChecklistService.getChecklistForStudent as jest.Mock).mockResolvedValue({
       ...transferChecklist,
@@ -901,7 +901,7 @@ describe('RoomContext learner answer path', () => {
       await room!.sendMessage('Just chatting', {});
     });
 
-    expect(postMessage).not.toHaveBeenCalled();
+    expect(postMessage).toHaveBeenCalledTimes(1);
   });
 
   // RoomContext.tsx: retry permits ordinary chat, while explicit answers retain the option gate.

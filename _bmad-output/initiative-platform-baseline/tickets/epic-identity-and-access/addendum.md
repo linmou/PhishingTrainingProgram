@@ -9,8 +9,8 @@ Updated: 2026-10-27. Sources: the guard audit and the P6 triage audit in the git
 | Rule | Guard | Why the guard fails | Basis | Harm if the clause breaks |
 | --- | --- | --- | --- | --- |
 | R3 | `tutor-system/src/contexts/__tests__/AuthContext.test.tsx` (should clear localStorage on sign out) | Checks browser cleanup without asserting that leaving deletes no server data. | C4 | Leaving deletes rooms, messages or progress without a confirmed owner deletion. |
-| R6 | `tutor-system/supabase/tests/unified_room_progress.sql` (Concurrent first joins did not arbitrate to one learner seat) | Uses a single insert instead of concurrent joins, and never checks that the owner cannot become the learner or answer. | C2, C3, C4 | Two learners, or the owner as learner, mix evidence and grades in one seat. |
-| R7 | `tutor-system/supabase/functions/assessment-api/index.test.ts` (observer cannot post a message or answer through the trusted API) | Stubs the observer role instead of deriving it from room records; omits rating refusal, composer absence, and the read-only notice. | C2, C3 | An observer's answer is recorded as the learner's grade. |
+| R6 | `tutor-system/supabase/tests/unified_room_progress.sql` (Concurrent first joins did not arbitrate to one learner seat) | Uses a single insert instead of concurrent joins, and never checks that the owner cannot become the learner or answer. | C2, C4 | Two learners, or the owner as learner, mix evidence and grades in one seat. |
+| R7 | `tutor-system/supabase/functions/assessment-api/index.test.ts` (observer cannot post a message or answer through the trusted API) | Stubs the observer role instead of deriving it from room records; omits rating refusal, composer absence, and the read-only notice. | C2 | An observer's answer is recorded as the learner's grade. |
 
 ## B. Guards that can wait under P6
 

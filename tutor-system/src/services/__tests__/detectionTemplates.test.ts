@@ -1,24 +1,46 @@
 /**
- * File: src/services/detectionTemplates.ts
- * Purpose: verify unified teaching inventories, scenario identities and custom catalog coverage.
+ * File: src/services/__tests__/detectionTemplates.test.ts
+ * Purpose: prevent exact source/database template seed drift in CI.
  */
+import { readFileSync, readdirSync, existsSync } from 'fs';
+import { resolve } from 'path';
 import { SCENARIO_TEMPLATES } from '../detectionTemplates';
 
 describe('Detection Templates', () => {
+  it('exactly matches the latest database template seed without normalization', () => {
+    const supabase = resolve(__dirname, '../../../supabase');
+    const seeds = ['migrations', 'archived_migrations'].flatMap(directory => {
+      const folder = resolve(supabase, directory);
+      return existsSync(folder) ? readdirSync(folder).filter(name => name.endsWith('.sql'))
+        .map(name => ({ name, path: resolve(folder, name) })) : [];
+    }).sort((a, b) => b.name.localeCompare(a.name));
+    const migration = seeds.map(seed => readFileSync(seed.path, 'utf8'))
+      .find(sql => sql.includes('$catalog$'));
+    expect(migration).toBeDefined();
+    const entries: { scenario: keyof typeof SCENARIO_TEMPLATES; points: string[] }[] =
+      JSON.parse(migration!.split('$catalog$')[1]);
+    expect(entries.map(entry => entry.scenario).sort()).toEqual(
+      Object.keys(SCENARIO_TEMPLATES).filter(name => name !== 'General Scam Indicators').sort()
+    );
+    entries.forEach(entry => {
+      expect(entry.points).toEqual(SCENARIO_TEMPLATES[entry.scenario].detection_areas);
+    });
+  });
+
   it.each([
-    'Nintendo Switch Deal ($19.99)',
-    'iTunes Gift Card Survey ($500)',
-    'Account Security Alert',
-    'Location Sharing Risks',
-    'Movie Meetup Social Engineering',
-    'Contact Information Exposure',
-    'General Scam Indicators'
-  ] as const)('provides five unique nonempty learning targets for %s', (name) => {
+    ['Nintendo Switch Deal ($19.99)', 5],
+    ['iTunes Gift Card Survey ($500)', 5],
+    ['Account Security Alert', 5],
+    ['Location Sharing Risks', 4],
+    ['Movie Meetup Social Engineering', 4],
+    ['Contact Information Exposure', 5],
+    ['General Scam Indicators', 5]
+  ] as const)('provides the approved inventory for %s', (name, count) => {
     const scenario = SCENARIO_TEMPLATES[name];
-    expect(scenario.detection_areas).toHaveLength(5);
+    expect(scenario.detection_areas).toHaveLength(count);
     expect(scenario.verification_steps).toEqual([]);
     expect(scenario.detection_areas.every((target) => target.trim().length > 0)).toBe(true);
-    expect(new Set(scenario.detection_areas.map((target) => target.trim().toLowerCase())).size).toBe(5);
+    expect(new Set(scenario.detection_areas.map((target) => target.trim().toLowerCase())).size).toBe(count);
   });
 
   it('keeps home-location and future-meetup inventories distinct', () => {

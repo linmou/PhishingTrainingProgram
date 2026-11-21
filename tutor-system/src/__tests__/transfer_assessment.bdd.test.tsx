@@ -61,7 +61,7 @@ jest.mock('../services/aiService', () => ({
   recordAISuggestionFeedback: jest.fn(),
   updateAIConfig: jest.fn(),
   getAIConfig: jest.fn(),
-  DEFAULT_AI_MODEL: 'qwen3.5-flash',
+  OAI_MODEL: 'qwen3.5-flash',
 }));
 
 jest.mock('../contexts/AuthContext', () => ({ useAuth: jest.fn() }));
@@ -74,7 +74,18 @@ jest.mock('../services/checklistService', () => ({
   },
 }));
 
-jest.mock('../components/ChecklistPanel', () => function MockChecklistPanel({ isVisible }: { isVisible: boolean }) {
+jest.mock('../components/ChecklistPanel', () => function MockChecklistPanel({ isVisible, roomId, onSetupStateChange }: {
+  isVisible: boolean; roomId: string; onSetupStateChange: (waiting: boolean) => void;
+}) {
+  const React = require('react');
+  const { ChecklistService: checklistService } = require('../services/checklistService');
+  React.useEffect(() => {
+    let active = true;
+    void checklistService.getActiveTransferChecklistForRoom(roomId).then((checklist: { detection_areas: unknown[]; verification_steps: unknown[] } | null) => {
+      if (active) onSetupStateChange(!checklist || checklist.detection_areas.length + checklist.verification_steps.length === 0);
+    });
+    return () => { active = false; };
+  }, [roomId, onSetupStateChange]);
   return isVisible ? <div data-testid="checklist-panel" /> : null;
 });
 jest.mock('../components/AIAssistantSettings', () => function MockAIAssistantSettings() {
@@ -294,6 +305,7 @@ async function mountTeacherRoom(
 }
 
 beforeEach(() => {
+  Element.prototype.scrollIntoView = jest.fn();
   jest.clearAllMocks();
   (ChecklistService.analyzeStudentMessages as jest.Mock).mockImplementation((roomId, _studentId, focusId) =>
     transferAssessmentService.analyzeMessage(focusId, roomId));
@@ -914,4 +926,24 @@ defineFeature(feature, (test) => {
       expect(generateTutorSuggestion).not.toHaveBeenCalled();
     });
   });
+});
+
+// Regression for #100: tracing and tutor context survive the assessment switch.
+it('keeps ordinary tutor generation and analysis when in-room assessment is off', async () => {
+  const state = makeState();
+  transferRoom.in_room_assessment_enabled = false;
+  try {
+    await mountTeacherRoom(state);
+    (generateTutorSuggestion as jest.Mock).mockResolvedValue({
+      success: true, suggestion: 'Check the official site.', contextMessages: [],
+      decision: { mode: 'tutoring', instruction: 'continue' },
+    });
+    await act(async () => { await state.room!.generateAIResponse(); });
+    expect(state.analyzeSpy).toHaveBeenCalled();
+    expect(state.prepareSpy).not.toHaveBeenCalled();
+    expect(state.room!.transferDraft).toBeNull();
+    expect(generateTutorSuggestion).toHaveBeenCalled();
+  } finally {
+    transferRoom.in_room_assessment_enabled = true;
+  }
 });

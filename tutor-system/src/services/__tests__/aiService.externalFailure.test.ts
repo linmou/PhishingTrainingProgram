@@ -34,6 +34,8 @@ describe('aiService external backend failures', () => {
   });
 
   it('returns an error instead of a generic dummy suggestion when the configured AI backend returns 401', async () => {
+    const { ChecklistService } = await import('../checklistService');
+    jest.spyOn(ChecklistService, 'getActiveTransferChecklistForRoom').mockResolvedValue(null);
     const { supabase } = await import('../supabase');
     const mockSupabaseFrom = supabase.from as jest.Mock;
     const mockSupabaseInvoke = supabase.functions.invoke as jest.Mock;
@@ -48,23 +50,12 @@ describe('aiService external backend failures', () => {
           eq: jest.fn().mockReturnValue({
             single: jest.fn().mockResolvedValue({
               data: {
-                ai_assistant_enabled: true,
-                ai_assistant_model: 'gpt-4o-mini'
-              },
-              error: null
-            })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: {
                 id: 'room-1',
                 ai_assistant_enabled: true,
                 ai_assistant_model: 'gpt-4o-mini',
                 ai_assistant_prompt: 'Scenario prompt',
+                title: 'Test room',
+                description: 'Test scenario',
                 created_at: '2026-04-02T00:00:00Z',
                 updated_at: '2026-04-02T00:00:00Z'
               },
@@ -117,16 +108,6 @@ describe('aiService external backend failures', () => {
               eq: jest.fn().mockReturnValue({
                 single: jest.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } })
               })
-            })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: { title: 'Test room', description: 'Test scenario' },
-              error: null
             })
           })
         })

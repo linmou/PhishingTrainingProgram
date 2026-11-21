@@ -17,7 +17,11 @@ jest.mock('../supabase', () => ({
 }));
 
 jest.mock('../checklistService', () => ({
-  ChecklistService: { getChecklistByRoom: jest.fn().mockResolvedValue(null) }
+  ChecklistService: {
+    getChecklistByRoom: jest.fn().mockResolvedValue(null),
+    getChecklistForStudent: jest.fn().mockResolvedValue(null),
+    getActiveTransferChecklistForRoom: jest.fn().mockResolvedValue(null)
+  }
 }));
 
 const promptConfig = (interactionMode: 'single_agent' | 'multi_agent') => ({
@@ -59,21 +63,14 @@ describe('aiService deprecated Multi-agent mode', () => {
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
             single: jest.fn().mockResolvedValue({
-              data: { ai_assistant_enabled: true, ai_assistant_model: 'qwen3.5-flash', guard_mode: false },
-              error: null
-            })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
               data: {
                 id: 'room-1',
                 ai_assistant_enabled: true,
                 ai_assistant_model: 'qwen3.5-flash',
                 ai_assistant_prompt: 'Scenario prompt',
+                guard_mode: false,
+                title: 'Test room',
+                description: 'Test scenario',
                 created_at: '2026-04-02T00:00:00Z',
                 updated_at: '2026-04-02T00:00:00Z'
               },
@@ -90,16 +87,6 @@ describe('aiService deprecated Multi-agent mode', () => {
                 data: { prompt_config: promptConfig(interactionMode), temperature: 0.3, max_tokens: 100 },
                 error: null
               })
-            })
-          })
-        })
-      })
-      .mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: { title: 'Test room', description: 'Test scenario' },
-              error: null
             })
           })
         })

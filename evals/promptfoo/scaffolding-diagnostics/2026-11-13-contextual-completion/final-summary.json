@@ -1,0 +1,2209 @@
+{
+  "created_at": "2026-11-13T20:01:48.198Z",
+  "fingerprint": "8c5f19e0fb1ecc4fd32daa8d30a3b42aa1ef60cd2055345eb228789bf74f2a43",
+  "source_commit": "5b5b86ec2d805b7e07ff03f5a08da5168f8b517a",
+  "frozen_sha256": "f4360f7f50a786b7b54ded0dfbd45933e79178f7ce639b85425a2e6b38a034e8",
+  "summary_script_sha256": "e33eea3a7eb2af37c50a0b3c6091b20db813e7ec283af96abcf3d8f7a76af6dc",
+  "command": [
+    "/Users/admin/.nvm/versions/node/v22.12.0/bin/node",
+    "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/tutor-stage-scaffolding/evals/promptfoo/scaffolding-diagnostics/2026-11-13-contextual-completion/summarize-final.cjs"
+  ],
+  "cwd": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/tutor-stage-scaffolding/evals/promptfoo/scaffolding-diagnostics/2026-11-13-contextual-completion",
+  "coverage": {
+    "expected": 81,
+    "saved": 81,
+    "valid": 81,
+    "judgments_expected": 243,
+    "judgments_saved": 243,
+    "judge_errors": 0
+  },
+  "arms": {
+    "baseline": {
+      "expected": 27,
+      "valid_targets": 27,
+      "metrics": {
+        "contextual_progression": {
+          "expected": 27,
+          "pass": 21,
+          "fail": 6,
+          "error": 0,
+          "missing": 0,
+          "rate_planned": 0.7777777777777778
+        },
+        "unfinished_prerequisite": {
+          "expected": 27,
+          "pass": 25,
+          "fail": 2,
+          "error": 0,
+          "missing": 0,
+          "rate_planned": 0.9259259259259259
+        },
+        "component_disclosure": {
+          "expected": 27,
+          "pass": 26,
+          "fail": 1,
+          "error": 0,
+          "missing": 0,
+          "rate_planned": 0.9629629629629629
+        }
+      },
+      "joint": {
+        "pass": 18,
+        "fail": 9,
+        "unevaluable": 0
+      },
+      "pairwise": {
+        "contextual_progression__component_disclosure": {
+          "both_pass": 20,
+          "progression_only": 1,
+          "other_only": 6,
+          "both_fail": 0,
+          "unevaluable": 0,
+          "expected": 27
+        },
+        "contextual_progression__unfinished_prerequisite": {
+          "both_pass": 19,
+          "progression_only": 2,
+          "other_only": 6,
+          "both_fail": 0,
+          "unevaluable": 0,
+          "expected": 27
+        }
+      }
+    },
+    "candidate": {
+      "expected": 27,
+      "valid_targets": 27,
+      "metrics": {
+        "contextual_progression": {
+          "expected": 27,
+          "pass": 23,
+          "fail": 4,
+          "error": 0,
+          "missing": 0,
+          "rate_planned": 0.8518518518518519
+        },
+        "unfinished_prerequisite": {
+          "expected": 27,
+          "pass": 24,
+          "fail": 3,
+          "error": 0,
+          "missing": 0,
+          "rate_planned": 0.8888888888888888
+        },
+        "component_disclosure": {
+          "expected": 27,
+          "pass": 24,
+          "fail": 3,
+          "error": 0,
+          "missing": 0,
+          "rate_planned": 0.8888888888888888
+        }
+      },
+      "joint": {
+        "pass": 18,
+        "fail": 9,
+        "unevaluable": 0
+      },
+      "pairwise": {
+        "contextual_progression__component_disclosure": {
+          "both_pass": 20,
+          "progression_only": 3,
+          "other_only": 4,
+          "both_fail": 0,
+          "unevaluable": 0,
+          "expected": 27
+        },
+        "contextual_progression__unfinished_prerequisite": {
+          "both_pass": 20,
+          "progression_only": 3,
+          "other_only": 4,
+          "both_fail": 0,
+          "unevaluable": 0,
+          "expected": 27
+        }
+      }
+    },
+    "task_meaning": {
+      "expected": 27,
+      "valid_targets": 27,
+      "metrics": {
+        "contextual_progression": {
+          "expected": 27,
+          "pass": 22,
+          "fail": 5,
+          "error": 0,
+          "missing": 0,
+          "rate_planned": 0.8148148148148148
+        },
+        "unfinished_prerequisite": {
+          "expected": 27,
+          "pass": 27,
+          "fail": 0,
+          "error": 0,
+          "missing": 0,
+          "rate_planned": 1
+        },
+        "component_disclosure": {
+          "expected": 27,
+          "pass": 26,
+          "fail": 1,
+          "error": 0,
+          "missing": 0,
+          "rate_planned": 0.9629629629629629
+        }
+      },
+      "joint": {
+        "pass": 21,
+        "fail": 6,
+        "unevaluable": 0
+      },
+      "pairwise": {
+        "contextual_progression__component_disclosure": {
+          "both_pass": 21,
+          "progression_only": 1,
+          "other_only": 5,
+          "both_fail": 0,
+          "unevaluable": 0,
+          "expected": 27
+        },
+        "contextual_progression__unfinished_prerequisite": {
+          "both_pass": 22,
+          "progression_only": 0,
+          "other_only": 5,
+          "both_fail": 0,
+          "unevaluable": 0,
+          "expected": 27
+        }
+      }
+    }
+  },
+  "by_case": {
+    "gift_card_contextual_judgment_real": {
+      "baseline": {
+        "expected": 3,
+        "valid_targets": 3,
+        "metrics": {
+          "contextual_progression": {
+            "expected": 3,
+            "pass": 1,
+            "fail": 2,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 0.3333333333333333
+          },
+          "unfinished_prerequisite": {
+            "expected": 3,
+            "pass": 2,
+            "fail": 1,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 0.6666666666666666
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          }
+        },
+        "joint": {
+          "pass": 0,
+          "fail": 3,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "contextual_progression__component_disclosure": {
+            "both_pass": 1,
+            "progression_only": 0,
+            "other_only": 2,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          },
+          "contextual_progression__unfinished_prerequisite": {
+            "both_pass": 0,
+            "progression_only": 1,
+            "other_only": 2,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          }
+        }
+      },
+      "candidate": {
+        "expected": 3,
+        "valid_targets": 3,
+        "metrics": {
+          "contextual_progression": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "unfinished_prerequisite": {
+            "expected": 3,
+            "pass": 1,
+            "fail": 2,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 0.3333333333333333
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 1,
+            "fail": 2,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 0.3333333333333333
+          }
+        },
+        "joint": {
+          "pass": 0,
+          "fail": 3,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "contextual_progression__component_disclosure": {
+            "both_pass": 1,
+            "progression_only": 2,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          },
+          "contextual_progression__unfinished_prerequisite": {
+            "both_pass": 1,
+            "progression_only": 2,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          }
+        }
+      },
+      "task_meaning": {
+        "expected": 3,
+        "valid_targets": 3,
+        "metrics": {
+          "contextual_progression": {
+            "expected": 3,
+            "pass": 2,
+            "fail": 1,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 0.6666666666666666
+          },
+          "unfinished_prerequisite": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          }
+        },
+        "joint": {
+          "pass": 2,
+          "fail": 1,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "contextual_progression__component_disclosure": {
+            "both_pass": 2,
+            "progression_only": 0,
+            "other_only": 1,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          },
+          "contextual_progression__unfinished_prerequisite": {
+            "both_pass": 2,
+            "progression_only": 0,
+            "other_only": 1,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          }
+        }
+      }
+    },
+    "library_contextual_judgment": {
+      "baseline": {
+        "expected": 3,
+        "valid_targets": 3,
+        "metrics": {
+          "contextual_progression": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "unfinished_prerequisite": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          }
+        },
+        "joint": {
+          "pass": 3,
+          "fail": 0,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "contextual_progression__component_disclosure": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          },
+          "contextual_progression__unfinished_prerequisite": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          }
+        }
+      },
+      "candidate": {
+        "expected": 3,
+        "valid_targets": 3,
+        "metrics": {
+          "contextual_progression": {
+            "expected": 3,
+            "pass": 2,
+            "fail": 1,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 0.6666666666666666
+          },
+          "unfinished_prerequisite": {
+            "expected": 3,
+            "pass": 2,
+            "fail": 1,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 0.6666666666666666
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          }
+        },
+        "joint": {
+          "pass": 1,
+          "fail": 2,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "contextual_progression__component_disclosure": {
+            "both_pass": 2,
+            "progression_only": 0,
+            "other_only": 1,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          },
+          "contextual_progression__unfinished_prerequisite": {
+            "both_pass": 1,
+            "progression_only": 1,
+            "other_only": 1,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          }
+        }
+      },
+      "task_meaning": {
+        "expected": 3,
+        "valid_targets": 3,
+        "metrics": {
+          "contextual_progression": {
+            "expected": 3,
+            "pass": 2,
+            "fail": 1,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 0.6666666666666666
+          },
+          "unfinished_prerequisite": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          }
+        },
+        "joint": {
+          "pass": 2,
+          "fail": 1,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "contextual_progression__component_disclosure": {
+            "both_pass": 2,
+            "progression_only": 0,
+            "other_only": 1,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          },
+          "contextual_progression__unfinished_prerequisite": {
+            "both_pass": 2,
+            "progression_only": 0,
+            "other_only": 1,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          }
+        }
+      }
+    },
+    "library_agreement_only": {
+      "baseline": {
+        "expected": 3,
+        "valid_targets": 3,
+        "metrics": {
+          "contextual_progression": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "unfinished_prerequisite": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 2,
+            "fail": 1,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 0.6666666666666666
+          }
+        },
+        "joint": {
+          "pass": 2,
+          "fail": 1,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "contextual_progression__component_disclosure": {
+            "both_pass": 2,
+            "progression_only": 1,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          },
+          "contextual_progression__unfinished_prerequisite": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          }
+        }
+      },
+      "candidate": {
+        "expected": 3,
+        "valid_targets": 3,
+        "metrics": {
+          "contextual_progression": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "unfinished_prerequisite": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          }
+        },
+        "joint": {
+          "pass": 3,
+          "fail": 0,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "contextual_progression__component_disclosure": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          },
+          "contextual_progression__unfinished_prerequisite": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          }
+        }
+      },
+      "task_meaning": {
+        "expected": 3,
+        "valid_targets": 3,
+        "metrics": {
+          "contextual_progression": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "unfinished_prerequisite": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 2,
+            "fail": 1,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 0.6666666666666666
+          }
+        },
+        "joint": {
+          "pass": 2,
+          "fail": 1,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "contextual_progression__component_disclosure": {
+            "both_pass": 2,
+            "progression_only": 1,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          },
+          "contextual_progression__unfinished_prerequisite": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          }
+        }
+      }
+    },
+    "phone_risk_verdict_after_action_question": {
+      "baseline": {
+        "expected": 3,
+        "valid_targets": 3,
+        "metrics": {
+          "contextual_progression": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "unfinished_prerequisite": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          }
+        },
+        "joint": {
+          "pass": 3,
+          "fail": 0,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "contextual_progression__component_disclosure": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          },
+          "contextual_progression__unfinished_prerequisite": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          }
+        }
+      },
+      "candidate": {
+        "expected": 3,
+        "valid_targets": 3,
+        "metrics": {
+          "contextual_progression": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "unfinished_prerequisite": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          }
+        },
+        "joint": {
+          "pass": 3,
+          "fail": 0,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "contextual_progression__component_disclosure": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          },
+          "contextual_progression__unfinished_prerequisite": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          }
+        }
+      },
+      "task_meaning": {
+        "expected": 3,
+        "valid_targets": 3,
+        "metrics": {
+          "contextual_progression": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "unfinished_prerequisite": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          }
+        },
+        "joint": {
+          "pass": 3,
+          "fail": 0,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "contextual_progression__component_disclosure": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          },
+          "contextual_progression__unfinished_prerequisite": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          }
+        }
+      }
+    },
+    "event_one_answer_covers_overlapping_points": {
+      "baseline": {
+        "expected": 3,
+        "valid_targets": 3,
+        "metrics": {
+          "contextual_progression": {
+            "expected": 3,
+            "pass": 0,
+            "fail": 3,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 0
+          },
+          "unfinished_prerequisite": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          }
+        },
+        "joint": {
+          "pass": 0,
+          "fail": 3,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "contextual_progression__component_disclosure": {
+            "both_pass": 0,
+            "progression_only": 0,
+            "other_only": 3,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          },
+          "contextual_progression__unfinished_prerequisite": {
+            "both_pass": 0,
+            "progression_only": 0,
+            "other_only": 3,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          }
+        }
+      },
+      "candidate": {
+        "expected": 3,
+        "valid_targets": 3,
+        "metrics": {
+          "contextual_progression": {
+            "expected": 3,
+            "pass": 0,
+            "fail": 3,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 0
+          },
+          "unfinished_prerequisite": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          }
+        },
+        "joint": {
+          "pass": 0,
+          "fail": 3,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "contextual_progression__component_disclosure": {
+            "both_pass": 0,
+            "progression_only": 0,
+            "other_only": 3,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          },
+          "contextual_progression__unfinished_prerequisite": {
+            "both_pass": 0,
+            "progression_only": 0,
+            "other_only": 3,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          }
+        }
+      },
+      "task_meaning": {
+        "expected": 3,
+        "valid_targets": 3,
+        "metrics": {
+          "contextual_progression": {
+            "expected": 3,
+            "pass": 0,
+            "fail": 3,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 0
+          },
+          "unfinished_prerequisite": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          }
+        },
+        "joint": {
+          "pass": 0,
+          "fail": 3,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "contextual_progression__component_disclosure": {
+            "both_pass": 0,
+            "progression_only": 0,
+            "other_only": 3,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          },
+          "contextual_progression__unfinished_prerequisite": {
+            "both_pass": 0,
+            "progression_only": 0,
+            "other_only": 3,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          }
+        }
+      }
+    },
+    "phone_ack_after_completed_task": {
+      "baseline": {
+        "expected": 3,
+        "valid_targets": 3,
+        "metrics": {
+          "contextual_progression": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "unfinished_prerequisite": {
+            "expected": 3,
+            "pass": 2,
+            "fail": 1,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 0.6666666666666666
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          }
+        },
+        "joint": {
+          "pass": 2,
+          "fail": 1,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "contextual_progression__component_disclosure": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          },
+          "contextual_progression__unfinished_prerequisite": {
+            "both_pass": 2,
+            "progression_only": 1,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          }
+        }
+      },
+      "candidate": {
+        "expected": 3,
+        "valid_targets": 3,
+        "metrics": {
+          "contextual_progression": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "unfinished_prerequisite": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 2,
+            "fail": 1,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 0.6666666666666666
+          }
+        },
+        "joint": {
+          "pass": 2,
+          "fail": 1,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "contextual_progression__component_disclosure": {
+            "both_pass": 2,
+            "progression_only": 1,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          },
+          "contextual_progression__unfinished_prerequisite": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          }
+        }
+      },
+      "task_meaning": {
+        "expected": 3,
+        "valid_targets": 3,
+        "metrics": {
+          "contextual_progression": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "unfinished_prerequisite": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          }
+        },
+        "joint": {
+          "pass": 3,
+          "fail": 0,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "contextual_progression__component_disclosure": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          },
+          "contextual_progression__unfinished_prerequisite": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          }
+        }
+      }
+    },
+    "phone_contradiction_after_completed_task": {
+      "baseline": {
+        "expected": 3,
+        "valid_targets": 3,
+        "metrics": {
+          "contextual_progression": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "unfinished_prerequisite": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          }
+        },
+        "joint": {
+          "pass": 3,
+          "fail": 0,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "contextual_progression__component_disclosure": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          },
+          "contextual_progression__unfinished_prerequisite": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          }
+        }
+      },
+      "candidate": {
+        "expected": 3,
+        "valid_targets": 3,
+        "metrics": {
+          "contextual_progression": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "unfinished_prerequisite": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          }
+        },
+        "joint": {
+          "pass": 3,
+          "fail": 0,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "contextual_progression__component_disclosure": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          },
+          "contextual_progression__unfinished_prerequisite": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          }
+        }
+      },
+      "task_meaning": {
+        "expected": 3,
+        "valid_targets": 3,
+        "metrics": {
+          "contextual_progression": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "unfinished_prerequisite": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          }
+        },
+        "joint": {
+          "pass": 3,
+          "fail": 0,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "contextual_progression__component_disclosure": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          },
+          "contextual_progression__unfinished_prerequisite": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          }
+        }
+      }
+    },
+    "short_link_concise_observation_only": {
+      "baseline": {
+        "expected": 3,
+        "valid_targets": 3,
+        "metrics": {
+          "contextual_progression": {
+            "expected": 3,
+            "pass": 2,
+            "fail": 1,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 0.6666666666666666
+          },
+          "unfinished_prerequisite": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          }
+        },
+        "joint": {
+          "pass": 2,
+          "fail": 1,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "contextual_progression__component_disclosure": {
+            "both_pass": 2,
+            "progression_only": 0,
+            "other_only": 1,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          },
+          "contextual_progression__unfinished_prerequisite": {
+            "both_pass": 2,
+            "progression_only": 0,
+            "other_only": 1,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          }
+        }
+      },
+      "candidate": {
+        "expected": 3,
+        "valid_targets": 3,
+        "metrics": {
+          "contextual_progression": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "unfinished_prerequisite": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          }
+        },
+        "joint": {
+          "pass": 3,
+          "fail": 0,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "contextual_progression__component_disclosure": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          },
+          "contextual_progression__unfinished_prerequisite": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          }
+        }
+      },
+      "task_meaning": {
+        "expected": 3,
+        "valid_targets": 3,
+        "metrics": {
+          "contextual_progression": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "unfinished_prerequisite": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          }
+        },
+        "joint": {
+          "pass": 3,
+          "fail": 0,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "contextual_progression__component_disclosure": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          },
+          "contextual_progression__unfinished_prerequisite": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          }
+        }
+      }
+    },
+    "library_all_tasks_completed": {
+      "baseline": {
+        "expected": 3,
+        "valid_targets": 3,
+        "metrics": {
+          "contextual_progression": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "unfinished_prerequisite": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          }
+        },
+        "joint": {
+          "pass": 3,
+          "fail": 0,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "contextual_progression__component_disclosure": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          },
+          "contextual_progression__unfinished_prerequisite": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          }
+        }
+      },
+      "candidate": {
+        "expected": 3,
+        "valid_targets": 3,
+        "metrics": {
+          "contextual_progression": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "unfinished_prerequisite": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          }
+        },
+        "joint": {
+          "pass": 3,
+          "fail": 0,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "contextual_progression__component_disclosure": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          },
+          "contextual_progression__unfinished_prerequisite": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          }
+        }
+      },
+      "task_meaning": {
+        "expected": 3,
+        "valid_targets": 3,
+        "metrics": {
+          "contextual_progression": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "unfinished_prerequisite": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          },
+          "component_disclosure": {
+            "expected": 3,
+            "pass": 3,
+            "fail": 0,
+            "error": 0,
+            "missing": 0,
+            "rate_planned": 1
+          }
+        },
+        "joint": {
+          "pass": 3,
+          "fail": 0,
+          "unevaluable": 0
+        },
+        "pairwise": {
+          "contextual_progression__component_disclosure": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          },
+          "contextual_progression__unfinished_prerequisite": {
+            "both_pass": 3,
+            "progression_only": 0,
+            "other_only": 0,
+            "both_fail": 0,
+            "unevaluable": 0,
+            "expected": 3
+          }
+        }
+      }
+    }
+  },
+  "transitions": {
+    "baseline__to__candidate": {
+      "contextual_progression": {
+        "expected": 27,
+        "both_pass": 20,
+        "baseline_only": 1,
+        "candidate_only": 3,
+        "both_fail": 3,
+        "unevaluable": 0,
+        "pass_to_fail": [
+          "library_contextual_judgment__candidate__r3"
+        ],
+        "fail_to_pass": [
+          "gift_card_contextual_judgment_real__candidate__r2",
+          "gift_card_contextual_judgment_real__candidate__r3",
+          "short_link_concise_observation_only__candidate__r1"
+        ]
+      },
+      "unfinished_prerequisite": {
+        "expected": 27,
+        "both_pass": 22,
+        "baseline_only": 3,
+        "candidate_only": 2,
+        "both_fail": 0,
+        "unevaluable": 0,
+        "pass_to_fail": [
+          "gift_card_contextual_judgment_real__candidate__r2",
+          "gift_card_contextual_judgment_real__candidate__r3",
+          "library_contextual_judgment__candidate__r1"
+        ],
+        "fail_to_pass": [
+          "gift_card_contextual_judgment_real__candidate__r1",
+          "phone_ack_after_completed_task__candidate__r3"
+        ]
+      },
+      "component_disclosure": {
+        "expected": 27,
+        "both_pass": 23,
+        "baseline_only": 3,
+        "candidate_only": 1,
+        "both_fail": 0,
+        "unevaluable": 0,
+        "pass_to_fail": [
+          "gift_card_contextual_judgment_real__candidate__r1",
+          "gift_card_contextual_judgment_real__candidate__r3",
+          "phone_ack_after_completed_task__candidate__r2"
+        ],
+        "fail_to_pass": [
+          "library_agreement_only__candidate__r1"
+        ]
+      }
+    },
+    "baseline__to__task_meaning": {
+      "contextual_progression": {
+        "expected": 27,
+        "both_pass": 20,
+        "baseline_only": 1,
+        "candidate_only": 2,
+        "both_fail": 4,
+        "unevaluable": 0,
+        "pass_to_fail": [
+          "library_contextual_judgment__task_meaning__r3"
+        ],
+        "fail_to_pass": [
+          "gift_card_contextual_judgment_real__task_meaning__r2",
+          "short_link_concise_observation_only__task_meaning__r1"
+        ]
+      },
+      "unfinished_prerequisite": {
+        "expected": 27,
+        "both_pass": 25,
+        "baseline_only": 0,
+        "candidate_only": 2,
+        "both_fail": 0,
+        "unevaluable": 0,
+        "pass_to_fail": [],
+        "fail_to_pass": [
+          "gift_card_contextual_judgment_real__task_meaning__r1",
+          "phone_ack_after_completed_task__task_meaning__r3"
+        ]
+      },
+      "component_disclosure": {
+        "expected": 27,
+        "both_pass": 25,
+        "baseline_only": 1,
+        "candidate_only": 1,
+        "both_fail": 0,
+        "unevaluable": 0,
+        "pass_to_fail": [
+          "library_agreement_only__task_meaning__r2"
+        ],
+        "fail_to_pass": [
+          "library_agreement_only__task_meaning__r1"
+        ]
+      }
+    },
+    "candidate__to__task_meaning": {
+      "contextual_progression": {
+        "expected": 27,
+        "both_pass": 22,
+        "baseline_only": 1,
+        "candidate_only": 0,
+        "both_fail": 4,
+        "unevaluable": 0,
+        "pass_to_fail": [
+          "gift_card_contextual_judgment_real__task_meaning__r3"
+        ],
+        "fail_to_pass": []
+      },
+      "unfinished_prerequisite": {
+        "expected": 27,
+        "both_pass": 24,
+        "baseline_only": 0,
+        "candidate_only": 3,
+        "both_fail": 0,
+        "unevaluable": 0,
+        "pass_to_fail": [],
+        "fail_to_pass": [
+          "gift_card_contextual_judgment_real__task_meaning__r2",
+          "gift_card_contextual_judgment_real__task_meaning__r3",
+          "library_contextual_judgment__task_meaning__r1"
+        ]
+      },
+      "component_disclosure": {
+        "expected": 27,
+        "both_pass": 23,
+        "baseline_only": 1,
+        "candidate_only": 3,
+        "both_fail": 0,
+        "unevaluable": 0,
+        "pass_to_fail": [
+          "library_agreement_only__task_meaning__r2"
+        ],
+        "fail_to_pass": [
+          "gift_card_contextual_judgment_real__task_meaning__r1",
+          "gift_card_contextual_judgment_real__task_meaning__r3",
+          "phone_ack_after_completed_task__task_meaning__r2"
+        ]
+      }
+    }
+  },
+  "pairs": [
+    {
+      "id": "judgment_vs_agreement",
+      "results": [
+        {
+          "arm": "baseline",
+          "repetition": 1,
+          "members": [
+            "library_contextual_judgment__baseline__r1",
+            "library_agreement_only__baseline__r1"
+          ],
+          "status": "fail"
+        },
+        {
+          "arm": "baseline",
+          "repetition": 2,
+          "members": [
+            "library_contextual_judgment__baseline__r2",
+            "library_agreement_only__baseline__r2"
+          ],
+          "status": "pass"
+        },
+        {
+          "arm": "baseline",
+          "repetition": 3,
+          "members": [
+            "library_contextual_judgment__baseline__r3",
+            "library_agreement_only__baseline__r3"
+          ],
+          "status": "pass"
+        },
+        {
+          "arm": "candidate",
+          "repetition": 1,
+          "members": [
+            "library_contextual_judgment__candidate__r1",
+            "library_agreement_only__candidate__r1"
+          ],
+          "status": "fail"
+        },
+        {
+          "arm": "candidate",
+          "repetition": 2,
+          "members": [
+            "library_contextual_judgment__candidate__r2",
+            "library_agreement_only__candidate__r2"
+          ],
+          "status": "pass"
+        },
+        {
+          "arm": "candidate",
+          "repetition": 3,
+          "members": [
+            "library_contextual_judgment__candidate__r3",
+            "library_agreement_only__candidate__r3"
+          ],
+          "status": "fail"
+        },
+        {
+          "arm": "task_meaning",
+          "repetition": 1,
+          "members": [
+            "library_contextual_judgment__task_meaning__r1",
+            "library_agreement_only__task_meaning__r1"
+          ],
+          "status": "pass"
+        },
+        {
+          "arm": "task_meaning",
+          "repetition": 2,
+          "members": [
+            "library_contextual_judgment__task_meaning__r2",
+            "library_agreement_only__task_meaning__r2"
+          ],
+          "status": "fail"
+        },
+        {
+          "arm": "task_meaning",
+          "repetition": 3,
+          "members": [
+            "library_contextual_judgment__task_meaning__r3",
+            "library_agreement_only__task_meaning__r3"
+          ],
+          "status": "fail"
+        }
+      ]
+    },
+    {
+      "id": "acknowledgment_vs_contradiction",
+      "results": [
+        {
+          "arm": "baseline",
+          "repetition": 1,
+          "members": [
+            "phone_ack_after_completed_task__baseline__r1",
+            "phone_contradiction_after_completed_task__baseline__r1"
+          ],
+          "status": "pass"
+        },
+        {
+          "arm": "baseline",
+          "repetition": 2,
+          "members": [
+            "phone_ack_after_completed_task__baseline__r2",
+            "phone_contradiction_after_completed_task__baseline__r2"
+          ],
+          "status": "pass"
+        },
+        {
+          "arm": "baseline",
+          "repetition": 3,
+          "members": [
+            "phone_ack_after_completed_task__baseline__r3",
+            "phone_contradiction_after_completed_task__baseline__r3"
+          ],
+          "status": "fail"
+        },
+        {
+          "arm": "candidate",
+          "repetition": 1,
+          "members": [
+            "phone_ack_after_completed_task__candidate__r1",
+            "phone_contradiction_after_completed_task__candidate__r1"
+          ],
+          "status": "pass"
+        },
+        {
+          "arm": "candidate",
+          "repetition": 2,
+          "members": [
+            "phone_ack_after_completed_task__candidate__r2",
+            "phone_contradiction_after_completed_task__candidate__r2"
+          ],
+          "status": "fail"
+        },
+        {
+          "arm": "candidate",
+          "repetition": 3,
+          "members": [
+            "phone_ack_after_completed_task__candidate__r3",
+            "phone_contradiction_after_completed_task__candidate__r3"
+          ],
+          "status": "pass"
+        },
+        {
+          "arm": "task_meaning",
+          "repetition": 1,
+          "members": [
+            "phone_ack_after_completed_task__task_meaning__r1",
+            "phone_contradiction_after_completed_task__task_meaning__r1"
+          ],
+          "status": "pass"
+        },
+        {
+          "arm": "task_meaning",
+          "repetition": 2,
+          "members": [
+            "phone_ack_after_completed_task__task_meaning__r2",
+            "phone_contradiction_after_completed_task__task_meaning__r2"
+          ],
+          "status": "pass"
+        },
+        {
+          "arm": "task_meaning",
+          "repetition": 3,
+          "members": [
+            "phone_ack_after_completed_task__task_meaning__r3",
+            "phone_contradiction_after_completed_task__task_meaning__r3"
+          ],
+          "status": "pass"
+        }
+      ]
+    }
+  ],
+  "calibration": [
+    {
+      "source": "raw/calibration-summary-1794569221461.json",
+      "sha256": "151757081a5b76142b96eda467e616a5a5eee69dc147fcff8dcaa36263840dbf",
+      "fingerprint": "e3c526e5e407c7b53eedd29af6ad56831e2bb543cd8560add6cb943fb429d2a6",
+      "total": 16,
+      "agreed": 15,
+      "passed": false,
+      "results": [
+        {
+          "id": "agreement_premature_next_fail__contextual_progression",
+          "expected": false,
+          "actual": false,
+          "agreed": true
+        },
+        {
+          "id": "risk_verdict_continue_behavior_pass__unfinished_prerequisite",
+          "expected": true,
+          "actual": true,
+          "agreed": true
+        },
+        {
+          "id": "agreement_premature_next_fail__unfinished_prerequisite",
+          "expected": false,
+          "actual": false,
+          "agreed": true
+        },
+        {
+          "id": "risk_verdict_continue_behavior_pass__component_disclosure",
+          "expected": true,
+          "actual": true,
+          "agreed": true
+        },
+        {
+          "id": "all_completed_consolidation_pass__contextual_progression",
+          "expected": true,
+          "actual": true,
+          "agreed": true
+        },
+        {
+          "id": "contradiction_ignored_fail__unfinished_prerequisite",
+          "expected": true,
+          "actual": false,
+          "agreed": false
+        },
+        {
+          "id": "all_completed_extra_test_fail__contextual_progression",
+          "expected": false,
+          "actual": false,
+          "agreed": true
+        },
+        {
+          "id": "overlapping_headings_retest_fail__contextual_progression",
+          "expected": false,
+          "actual": false,
+          "agreed": true
+        },
+        {
+          "id": "overlapping_headings_retest_fail__component_disclosure",
+          "expected": true,
+          "actual": true,
+          "agreed": true
+        },
+        {
+          "id": "overlapping_headings_retest_fail__unfinished_prerequisite",
+          "expected": true,
+          "actual": true,
+          "agreed": true
+        },
+        {
+          "id": "risk_verdict_continue_behavior_pass__contextual_progression",
+          "expected": true,
+          "actual": true,
+          "agreed": true
+        },
+        {
+          "id": "contextual_gift_extra_rationale_fail__contextual_progression",
+          "expected": false,
+          "actual": false,
+          "agreed": true
+        },
+        {
+          "id": "agreement_premature_next_fail__component_disclosure",
+          "expected": false,
+          "actual": false,
+          "agreed": true
+        },
+        {
+          "id": "contextual_gift_advance_pass__contextual_progression",
+          "expected": true,
+          "actual": true,
+          "agreed": true
+        },
+        {
+          "id": "contradiction_ignored_fail__contextual_progression",
+          "expected": false,
+          "actual": false,
+          "agreed": true
+        },
+        {
+          "id": "contradiction_ignored_fail__component_disclosure",
+          "expected": false,
+          "actual": false,
+          "agreed": true
+        }
+      ]
+    },
+    {
+      "source": "raw/calibration-summary-1794588551620.json",
+      "sha256": "e3072682e6a0cc431ee86f7e12b6ad5d7fb2aa93cce8091aad1d39e368d9f2f4",
+      "fingerprint": "8c5f19e0fb1ecc4fd32daa8d30a3b42aa1ef60cd2055345eb228789bf74f2a43",
+      "total": 16,
+      "agreed": 16,
+      "passed": true,
+      "results": [
+        {
+          "id": "contextual_gift_advance_pass__contextual_progression",
+          "expected": true,
+          "actual": true,
+          "agreed": true,
+          "reused_from": "raw/calibration/contextual_gift_advance_pass__contextual_progression.json"
+        },
+        {
+          "id": "contextual_gift_extra_rationale_fail__contextual_progression",
+          "expected": false,
+          "actual": false,
+          "agreed": true,
+          "reused_from": "raw/calibration/contextual_gift_extra_rationale_fail__contextual_progression.json"
+        },
+        {
+          "id": "agreement_premature_next_fail__contextual_progression",
+          "expected": false,
+          "actual": false,
+          "agreed": true,
+          "reused_from": "raw/calibration/agreement_premature_next_fail__contextual_progression.json"
+        },
+        {
+          "id": "agreement_premature_next_fail__component_disclosure",
+          "expected": false,
+          "actual": false,
+          "agreed": true,
+          "reused_from": "raw/calibration/agreement_premature_next_fail__component_disclosure.json"
+        },
+        {
+          "id": "risk_verdict_continue_behavior_pass__contextual_progression",
+          "expected": true,
+          "actual": true,
+          "agreed": true,
+          "reused_from": "raw/calibration/risk_verdict_continue_behavior_pass__contextual_progression.json"
+        },
+        {
+          "id": "risk_verdict_continue_behavior_pass__component_disclosure",
+          "expected": true,
+          "actual": true,
+          "agreed": true,
+          "reused_from": "raw/calibration/risk_verdict_continue_behavior_pass__component_disclosure.json"
+        },
+        {
+          "id": "overlapping_headings_retest_fail__contextual_progression",
+          "expected": false,
+          "actual": false,
+          "agreed": true,
+          "reused_from": "raw/calibration/overlapping_headings_retest_fail__contextual_progression.json"
+        },
+        {
+          "id": "overlapping_headings_retest_fail__component_disclosure",
+          "expected": true,
+          "actual": true,
+          "agreed": true,
+          "reused_from": "raw/calibration/overlapping_headings_retest_fail__component_disclosure.json"
+        },
+        {
+          "id": "contradiction_ignored_fail__contextual_progression",
+          "expected": false,
+          "actual": false,
+          "agreed": true,
+          "reused_from": "raw/calibration/contradiction_ignored_fail__contextual_progression.json"
+        },
+        {
+          "id": "contradiction_ignored_fail__component_disclosure",
+          "expected": false,
+          "actual": false,
+          "agreed": true,
+          "reused_from": "raw/calibration/contradiction_ignored_fail__component_disclosure.json"
+        },
+        {
+          "id": "all_completed_consolidation_pass__contextual_progression",
+          "expected": true,
+          "actual": true,
+          "agreed": true,
+          "reused_from": "raw/calibration/all_completed_consolidation_pass__contextual_progression.json"
+        },
+        {
+          "id": "all_completed_extra_test_fail__contextual_progression",
+          "expected": false,
+          "actual": false,
+          "agreed": true,
+          "reused_from": "raw/calibration/all_completed_extra_test_fail__contextual_progression.json"
+        },
+        {
+          "id": "agreement_premature_next_fail__unfinished_prerequisite",
+          "expected": false,
+          "actual": false,
+          "agreed": true,
+          "reused_from": null
+        },
+        {
+          "id": "overlapping_headings_retest_fail__unfinished_prerequisite",
+          "expected": true,
+          "actual": true,
+          "agreed": true,
+          "reused_from": null
+        },
+        {
+          "id": "risk_verdict_continue_behavior_pass__unfinished_prerequisite",
+          "expected": true,
+          "actual": true,
+          "agreed": true,
+          "reused_from": null
+        },
+        {
+          "id": "contradiction_ignored_fail__unfinished_prerequisite",
+          "expected": true,
+          "actual": true,
+          "agreed": true,
+          "reused_from": null
+        }
+      ]
+    }
+  ],
+  "execution_time": {
+    "active_union_minutes": 7.010166666666667,
+    "process_sum_minutes": 7.010166666666667,
+    "allowance_minutes": 15,
+    "intervals": [
+      {
+        "source": "raw/budget/1794569221462.json",
+        "start": 1794569221462,
+        "end": 1794569283985
+      },
+      {
+        "source": "raw/budget/1794588551627.json",
+        "start": 1794588551627,
+        "end": 1794588909714
+      }
+    ],
+    "merged_intervals": [
+      {
+        "start": 1794569221462,
+        "end": 1794569283985
+      },
+      {
+        "start": 1794588551627,
+        "end": 1794588909714
+      }
+    ],
+    "idle_gaps_excluded": true
+  },
+  "detailed_evidence": {
+    "path": "raw/final-summary-1794600108202.json",
+    "sha256": "3f28d9584b082e8d4f9e0491a33674029e60d6a7591f5a771a729adaf4b1b0d1"
+  }
+}

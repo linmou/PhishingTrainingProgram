@@ -1,0 +1,32 @@
+[
+  {
+    "location": "tutor-system/src/pages/RoomPagePost.tsx:652-674",
+    "trigger_condition": "Membership lookup fails after switching rooms while the previous learner ID remains set.",
+    "guard_snippet": "const visibleStudentId = membership.scope === learnerLookupScope ? membership.studentId : null;",
+    "potential_consequence": "Old learner identity drives new-room draft promotion or rejects the new room's valid checklist."
+  },
+  {
+    "location": "tutor-system/src/pages/RoomPagePost.tsx:662-666",
+    "trigger_condition": "Another membership invalidation arrives while a membership lookup is still pending.",
+    "guard_snippet": "if (membershipRead) { membershipRead.pending = true; return membershipRead.promise; }",
+    "potential_consequence": "Overlapping requests invalidate usable responses; repeated events can indefinitely postpone learner discovery."
+  },
+  {
+    "location": "tutor-system/src/hooks/useChecklist.ts:595-596",
+    "trigger_condition": "A background notification follows a failed persisted target save.",
+    "guard_snippet": "setReadError(null); // Keep mutationError until explicit retry or dismissal.",
+    "potential_consequence": "Automatic reads erase the failed-save warning although the edit was never persisted."
+  },
+  {
+    "location": "tutor-system/src/components/ChecklistPanel.tsx:94-100",
+    "trigger_condition": "Saving edited text or notes exits editing before the asynchronous save fails.",
+    "guard_snippet": "await onAddNote(item.id, noteText); setEditingNote(false); // Apply equivalent success handling to text.",
+    "potential_consequence": "Effects overwrite the failed draft with saved values, preventing the user from retrying it."
+  },
+  {
+    "location": "tutor-system/src/hooks/useChecklist.ts:583-603",
+    "trigger_condition": "An outstanding checklist read never settles during a connection loss.",
+    "guard_snippet": "saved = await readWithAbortTimeout(scope, 15000); // Release the serialized request on timeout.",
+    "potential_consequence": "Manual Refresh and reconnect reconciliation remain queued behind the hung request indefinitely."
+  }
+]

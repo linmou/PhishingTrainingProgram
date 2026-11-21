@@ -20,7 +20,7 @@ jest.mock('../../services/supabase', () => ({
 }));
 jest.mock('../../services/aiService', () => ({
   generateTutorSuggestion: jest.fn(), getAIConfig: jest.fn(),
-  recordAISuggestionFeedback: jest.fn(), DEFAULT_AI_MODEL: 'qwen3.8-flash',
+  recordAISuggestionFeedback: jest.fn(), OAI_MODEL: 'qwen3.8-flash',
 }));
 jest.mock('../../services/checklistService', () => ({
   ChecklistService: { analyzeStudentMessages: jest.fn(), getActiveTransferChecklistForRoom: jest.fn(), getChecklistForStudent: jest.fn() },
@@ -162,7 +162,9 @@ test('stores a learner comment before analysis and leaves it available when anal
   const post = jest.spyOn(transferAssessmentService, 'postMessage').mockResolvedValue({ message: { ...learnerMessage, id: 'new-comment' } });
   (ChecklistService.analyzeStudentMessages as jest.Mock).mockRejectedValue(new Error('provider unavailable'));
   await mount();
-  await act(async () => { await room.sendMessage('A new comment'); });
+  await act(async () => {
+    await room.sendMessage('A new comment');
+  });
   expect(post).toHaveBeenCalledTimes(1);
   expect(room.messages.some(message => message.id === 'new-comment')).toBe(true);
   expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(cyberRoom.id, learnerAUser.id, 'new-comment', learnerAUser.id);

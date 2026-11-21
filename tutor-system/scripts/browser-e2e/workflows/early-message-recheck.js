@@ -23,7 +23,10 @@ module.exports = async function earlyMessageRecheck(ctx) {
     await openRoom(studentPage, appUrl, room.id);
     await waitForMatch(() => query(client, 'sessions', 'student_id,status', 'room_id', room.id),
       rows => rows.some(row => row.student_id === ctx.student.id && row.status === 'active'), 'active learner');
+    const learnerLoaded = tutorPage.waitForResponse(response =>
+      response.url().includes('/rest/v1/sessions?') && response.request().method() === 'GET', { timeout: TIMEOUT });
     await openRoom(tutorPage, appUrl, room.id);
+    await learnerLoaded;
     const earlyContent = [
       'An alert link could lead to a fake sign-in page. I would open the official account app myself and check the alert there, without using its link.',
       'The urgent deadline is pressure to make me act before I verify who sent it, so I should pause instead of reacting to it.'
@@ -41,10 +44,7 @@ module.exports = async function earlyMessageRecheck(ctx) {
 
     const targets = ['Recognize an urgent deadline as pressure to act without checking',
       'Open the official account app directly instead of following an alert link'];
-    const learnerLoaded = tutorPage.waitForResponse(response =>
-      response.url().includes('/rest/v1/sessions?') && response.request().method() === 'GET', { timeout: TIMEOUT });
     await tutorPage.locator('button[title="Learning Progress Checklist"]').click();
-    await learnerLoaded;
     await tutorPage.locator('.checklist-loading').waitFor({ state: 'hidden', timeout: TIMEOUT });
     await tutorPage.getByRole('button', { name: 'Enter Manually', exact: true }).click();
     await tutorPage.getByRole('textbox', { name: 'Detection Areas' }).fill(targets[0]);

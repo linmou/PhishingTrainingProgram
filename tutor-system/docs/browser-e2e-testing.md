@@ -1,5 +1,28 @@
 # Browser E2E Testing
 
+<!-- Realtime acceptance updated: 2026-11-12; baseline 33aaeec. -->
+
+`--workflow=learning-progress-realtime` checks two live browser viewers, remote
+progress updates, preserved drafts and evidence view, read-only learner controls,
+an isolated evidence INSERT, hidden-panel catch-up, websocket reconnect and
+pre-entry draft promotion. It creates two tagged rooms and uses the runner's
+ownership-checked cleanup. The isolated evidence INSERT is a service-role fixture
+diagnostic; progress edits and joins use the normal Edge API. Its report records
+latency and distinguishes fixture writes from functional calls. Run against the
+explicit target under the release owner's project lease.
+
+The realtime workflow reloads after installing its websocket probe (hash
+navigation does not run init scripts), captures scoped GET/POST evidence, and
+restores its temporary 390px learner viewport. Guard uses the common learner-send
+helper, including rating auto-send. Login waits for DOM-ready route navigation;
+failure evidence includes the actual route and displayed login error.
+
+<!-- Learning-target integration updated: 2026-11-12; baseline 84d7a50. -->
+
+Template-settings readiness uses blank lines between detection targets so each
+document point keeps its internal line breaks. New cyberbullying checklist and
+export checks expect `cyberbullying_doc_20261112`.
+
 <!-- Exit assessment implementation: updated 2026-11-03; baseline d6f6be7. -->
 
 <!-- Rating auto-send harness repair: updated 2026-11-03; baseline 976b0b1. -->
@@ -55,6 +78,7 @@ The app and runner must use the same selected target. `test:e2e:staging` and `te
 | --- | --- | --- | --- |
 | Jest unit and `*.integration.test.tsx` | jsdom, mocked services | None | Default regression suite. |
 | `test:integration:qwen` | Real provider, no browser | None | Opt-in provider contract checks. |
+| `test:e2e:tabs` | Real Chromium, two tabs in one context, local fake Supabase backend | None (no network to any real server) | Two-tab identity journeys A–H (#109); runs in CI as `browser-tabs`. |
 | `test:e2e:staging` / `test:e2e:production` | Eleven default Playwright workflows, plus opt-in staging security and privacy workflows | Test rows are deleted after each workflow; fixture rooms remain; new-room workflows delete their tagged rooms | Explicit live suite against the selected project. |
 | `eval:behavior:web` | Playwright and seven real tutor calls with rubric judge | Seven staging Test Rooms | Deeper behavior evaluation; separate from the workflow suite. |
 | `scripts/browser-capture-prompt-contrast.js` | Playwright and six prompt comparisons | Six staging Test Rooms | Specialized capture utility. |
@@ -65,6 +89,9 @@ The app and runner must use the same selected target. `test:e2e:staging` and `te
 GitHub Actions includes deterministic PR isolation checks and a manually dispatched assessment API deployment/inspection workflow. Hosted browser E2E is not in CI. The `frontend-jest` job installs Playwright Chromium and runs `test:e2e:unit` against local HTML fixtures; these checks do not connect to staging or establish hosted acceptance. The [2026-10-14 release record](doc_update_record/documentation_update_record_v2026_10_14_final_assessment_release.md) contains successful staging/production answer and full-inventory delivery runs, cleanup, and earlier failure evidence. Status observations now preserve the analysis-context RPC result before assertions and fixture cleanup; on success this is the context after analysis, not a raw provider-response audit.
 
 The [early-message browser record](doc_update_record/documentation_update_record_v2026_10_14_early_message_recheck_browser.md) verifies automatic replay after manual goal creation in the merged app against staging, including reload and duplicate prevention.
+
+`npm run test:e2e:tabs` builds the app against a fake Supabase origin and runs the two-tab identity scenarios (cross-tab sign-out, other user, rename, explicit learner join, rejoin, learning-target save, reload/new-tab restore, in-flight sign-out); add `-- --dev` to run them on the StrictMode dev server and `-- --scenario=A,G` to select some. It prints each check and an evidence folder (screenshots, `network.json`, `backend.json`).
+The fake backend models `join_room` (owner observes, first student claims an empty seat, one visit per `visit_key`), so it cannot prove the server's real seat rules, RLS, rejection of headerless calls or realtime refetches; those still need the live suite.
 
 ## Select The Release Checks
 
@@ -168,3 +195,7 @@ Workflow screenshots use full-page JPEG at quality 75 to bound evidence size dur
 Preserve `evals/promptfoo/results/`: LLM-judge results include rubric evidence beyond pass/fail. `scripts/transfer-assessment-release.config.json` is a frozen historical blocked snapshot; its runner no longer generates releases. See the [Wave 105 retirement audit](transfer-assessment-wave105-audit.md).
 
 Earlier staging findings are recorded in [staging runtime evidence](doc_update_record/documentation_update_record_v2026_09_29_staging_runtime_draft.md) and the [AI-only browser rerun](doc_update_record/documentation_update_record_v2026_09_29_ai_only_rerun.md). The 2026-09-30 workflow run verified tutor progress context and learner assessment results after reload.
+
+## Assessment switch regression (#100)
+
+Run the opt-in `--workflow=assessment-switch` against the selected project and candidate app. It saves assessment off through the tutor dialog, saves again untouched, verifies the legacy flag is preserved, sends ordinary learner evidence, checks per-message analysis markers and visible target progress, generates ordinary tutoring without `prepare_turn`, and checks explicit preparation/delivery rejection. It restores the fixture assessment setting before the runner cleans its generated rows. Run an assessment-on delivery/answer journey alongside this check.

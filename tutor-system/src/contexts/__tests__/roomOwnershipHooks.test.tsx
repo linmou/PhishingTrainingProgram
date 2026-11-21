@@ -18,6 +18,55 @@ const room = { id: 'room', tutor_id: 'tutor', created_at: '2026-10-24T12:00:00Z'
 
 beforeEach(() => { jest.clearAllMocks(); });
 
+// useRoomRealtime.ts: expiry ticks preserve state identity and clean up all owned typing timers.
+it('retains unchanged typing state, expires entries at five seconds and stops timers on unmount', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-11-08T12:00:00Z'));
+    const handlers: Record<string, (payload: any) => void> = {};
+    const channel: any = {
+        on: jest.fn((type: string, filter: { event?: string }, callback: (payload: any) => void) => {
+            handlers[filter.event || type] = callback;
+            return channel;
+        }),
+        subscribe: jest.fn().mockReturnThis(), unsubscribe: jest.fn(), send: jest.fn(),
+    };
+    (supabase.channel as jest.Mock).mockReturnValue(channel);
+    (startRoomMessageSync as jest.Mock).mockReturnValue({ realtime: jest.fn(), status: jest.fn(), stop: jest.fn() });
+    const options = {
+        currentRoom: room, user, participants: [user], activeRoomId: { current: room.id },
+        joinRealtimeIds: { current: new Set<string>() }, setMessages: jest.fn(), setCurrentRoom: jest.fn(),
+        addDisplayNameToMessage: jest.fn(message => message), handleFeedbackRealtime: jest.fn(async () => {}),
+        refreshMessageFeedbackStats: jest.fn(async () => {}),
+    };
+    const { result, unmount } = renderHook(() => useRoomRealtime(options));
+    try {
+        const empty = result.current.typingUsers;
+        act(() => { jest.advanceTimersByTime(1000); });
+        expect(result.current.typingUsers).toBe(empty);
+        act(() => { handlers.typing_start({ payload: { userId: 'first', displayName: 'First' } }); });
+        const first = result.current.typingUsers;
+        act(() => { jest.advanceTimersByTime(3000); });
+        expect(result.current.typingUsers).toBe(first);
+        act(() => { handlers.typing_start({ payload: { userId: 'second', displayName: 'Second' } }); });
+        const both = result.current.typingUsers;
+        act(() => { jest.advanceTimersByTime(1000); });
+        expect(result.current.typingUsers).toBe(both);
+        act(() => { jest.advanceTimersByTime(1000); });
+        expect(result.current.typingUsers.map(entry => entry.userId)).toEqual(['second']);
+        act(() => { jest.advanceTimersByTime(3000); });
+        expect(result.current.typingUsers).toEqual([]);
+        act(() => { result.current.startTyping(); });
+        expect(jest.getTimerCount()).toBe(2);
+        unmount();
+        expect(jest.getTimerCount()).toBe(0);
+        expect(channel.unsubscribe).toHaveBeenCalledTimes(1);
+    } finally {
+        unmount();
+        jest.clearAllTimers();
+        jest.useRealTimers();
+    }
+});
+
 // useRoomRealtime.ts: exercise the installed SDK transport reconnect and fresh room binding without hosted services.
 it('restores a room subscription after the SDK reconnects its socket but loses the channel retry', async () => {
     jest.useFakeTimers();
@@ -85,7 +134,7 @@ it('restores a room subscription after the SDK reconnects its socket but loses t
         expect(client.getChannels()).toHaveLength(1);
         expect(sent.filter(message => message.event === 'phx_leave')).toHaveLength(1);
         const channel = client.getChannels()[0];
-        channel._trigger('postgres_changes', { ids: [1], data: { schema: 'public', table: 'messages', type: 'INSERT',
+        (channel as any)._trigger('postgres_changes', { ids: [1], data: { schema: 'public', table: 'messages', type: 'INSERT',
             columns: [], record: { id: 'new-message', room_id: room.id }, old_record: {} } });
         expect(syncs[1].realtime).toHaveBeenCalledWith(expect.objectContaining({ id: 'new-message' }));
     } finally {

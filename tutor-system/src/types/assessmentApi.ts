@@ -1,14 +1,17 @@
 // Purpose: define the transfer-assessment API contract — operation allowlist, response envelope, stable error codes, and the public DTO denylist — as one pure module shared by the Edge Function, the browser service, and their tests, so no engine-specific runtime is needed to verify it.
 
 export const ASSESSMENT_API_OPERATIONS = [
+  'configure_assessment',
   'initialize_checklist',
   'join_room',
   'edit_learning_progress',
+  'read_learning_evidence',
   'post_message',
   'analyze_message',
   'prepare_turn',
   'send_reviewed',
   'read_review',
+  'read_history_readiness',
   'process_message',
   'clear_chat_history',
 ] as const;
@@ -32,6 +35,7 @@ export const ASSESSMENT_API_ERROR_STATUS: Record<string, { status: number; retry
   FORBIDDEN: { status: 403, retryable: false },
   WRONG_LEARNER: { status: 409, retryable: false },
   ITEM_VALIDATION_FAILED: { status: 409, retryable: false },
+  IN_ROOM_ASSESSMENT_DISABLED: { status: 409, retryable: false },
   ASSESSMENT_FEATURE_DISABLED: { status: 503, retryable: false },
   LEGACY_CHECKLIST: { status: 409, retryable: false },
   LEGACY_ASSESSMENT_INCOMPLETE: { status: 409, retryable: false },

@@ -1,0 +1,23 @@
+{
+  "intent": "Reassess the disputed disclosure reference against the full target meaning rather than forcing the judge to match the auditor's initial label.",
+  "reviewer": "/root/continuity_audit",
+  "date": "2026-11-13",
+  "case_id": "observed_behavior_question_not_answer_disclosure",
+  "original_annotation": { "expected": true, "source": "new-boundary-calibration.json" },
+  "observed_v9_judgment": { "pass": false, "source": "raw/calibration-v9/observed_behavior_question_not_answer_disclosure.json" },
+  "adjudicated_annotation": { "expected": false, "status": "reference_correction_recommended" },
+  "source_target": "raw/targets/room_unanswered_original__current__r3.json",
+  "source_sha256": "2202de52b8b667475c017f42adfcac6d857988839d6392737768dce1ab5212e0",
+  "target_behavior_text": "Keep your exact plans and times private. If you need to make plans with friends, use a private message or group chat.",
+  "response": "Right, it is risky. How could you tell your friends where and when to meet without strangers seeing it?",
+  "reasoning_basis": [
+    "T01.1 treats a question that states or presupposes the central answer as disclosure. It does not limit the central behavior answer to a named implementation method.",
+    "This target's first explicit behavior is keeping the exact plans private. The question's without-strangers-seeing condition supplies that central privacy behavior, even though the private-message/group-chat implementation remains for the learner.",
+    "The learner has made no relevant behavior attempt and expressed no behavior-specific confusion. The observation verdict does not open the behavior disclosure gate.",
+    "The original true label mistakenly treated a concrete communication channel as the only central answer. That narrower interpretation was not established by the specification."
+  ],
+  "counterevidence_and_limit": "The reply remains a useful open question about the method, so a teaching policy explicitly permitting the tutor to supply the privacy goal could allow it. The current inventory presents keeping plans private as part of the behavior answer, and the current disclosure rule contains no general task-goal exception. This adjudication concerns that exact meaning; it does not classify every safe-action question as disclosure.",
+  "contrast": "What is one safe thing to do if you see a friend post this? does not choose the target's specific behavior for the learner. It remains an allowed behavior opportunity. Likewise, asking about an available feature need not supply its problematic interpretation.",
+  "v8_error_distinction": "The v8 judge's rationale that soliciting an action is itself premature disclosure remains an invalid general rule. Its verdict for this particular response can nevertheless be defensible for the different, target-specific reason identified by v9. Thus the original v8 independent true verdict is superseded by this narrower adjudication, not erased.",
+  "disposition": "Preserve the initial true annotation and all judgments. Register an explicit new reference version with expected false and this rationale; verify every other annotation unchanged. Reuse an identical-request judgment only with exact request/settings/output provenance. Do not change target prompts, silently lower thresholds, or claim the original calibration passed."
+}

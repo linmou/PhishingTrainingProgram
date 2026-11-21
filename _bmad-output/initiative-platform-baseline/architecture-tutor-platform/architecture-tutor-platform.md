@@ -7,8 +7,8 @@ paradigm: 'Server-authoritative state behind a trusted gateway (Edge Function, t
 scope: 'The tutor platform: phishing and cyberbullying practice, shared state, progress and assessment state machine, identity, routing, module contracts'
 status: final
 created: '2026-10-22'
-updated: '2026-10-27'
-binds: ['prd-tutor-platform FR-1..FR-53', 'NFR-1..NFR-12', 'constitution-product C1..C6']
+updated: '2026-11-02'
+binds: ['prd-tutor-platform FR-1..FR-53', 'NFR-1..NFR-12', 'constitution-product C1, C2, C4, C6']
 sources: ['prd-tutor-platform/prd-tutor-platform.md', 'constitution-product/constitution-product.md', 'code-sweep-1-state-machine.md', 'code-sweep-2-client.md', 'code-sweep-3-server-data.md']
 companions: ['architecture-seed-tutor-platform.md']
 ---
@@ -35,13 +35,13 @@ Dependency direction: pages → components → contexts and hooks → services �
 
 ### AD-1 — One writer per progress and assessment entity [TARGET]
 
-- **Binds:** FR-19..FR-23, FR-38..FR-41, FR-53, C2, C3
+- **Binds:** FR-19..FR-23, FR-38..FR-41, FR-53, C2
 - **Prevents:** two code paths changing the same progress or assessment row, so the learning record disagrees with itself.
 - **Rule:** item progress changes only through the learning-event writer (model and assessment events) or the manual progress-edit writer (the owner's edit); assessment state changes only through the reviewed-send function (create), the assessment grading function (grade and close) and the cancellation functions. No new writer is added: not in the client, not in another database function, not in an Edge Function. History tables are append-only.
 
 ### AD-2 — Judging and grading go through the trusted gateway; the server picks the path [TARGET]
 
-- **Binds:** FR-18, FR-20, FR-31, FR-37, FR-46, NFR-2, C3
+- **Binds:** FR-18, FR-20, FR-31, FR-37, FR-46, NFR-2, C2
 - **Prevents:** a feature judging a learner message, or changing progress, from the browser; the path depending on a switch the owner can flip.
 - **Rule:** every operation that judges a learner message, grades an answer or changes progress is an operation of the trusted assessment gateway. Every new room is created on the trusted path, and the path is chosen from the room's policy version and practice type, not from the in-room assessment switch. The browser-side judging path serves rooms that already exist and receives no new code. A learner message in a trusted-path room is accepted only when written by the assessment answer-post function.
 
@@ -101,7 +101,7 @@ Dependency direction: pages → components → contexts and hooks → services �
 
 ### AD-12 — Nothing secret in a public table; one source for assessment state [TARGET]
 
-- **Binds:** FR-39, FR-42, FR-51, NFR-3, C5
+- **Binds:** FR-39, FR-42, FR-51, NFR-3
 - **Prevents:** an answer key, learner explanation or raw AI output readable by any client with the anon key; two copies of assessment state that disagree.
 - **Rule:** public tables are open to every client. The answer key, learner explanation and raw AI output live in the private schema; the answer key and explanation reach the public messages only inside the result message written by the database function at the publication point. The assessment lifecycle in the private schema is the source; any lifecycle value on a public message is a projection written in the same transaction and never read back as truth. Result and closure messages are inserted only by database functions.
 
@@ -125,6 +125,7 @@ Dependency direction: pages → components → contexts and hooks → services �
 | Gateway envelope | Request `{operation, request_id, ...}`; response `{ok: true, data}` or `{ok: false, error: {code, message, retryable}}`; error codes upper snake case. A new operation uses this envelope. |
 | Identity and contract headers | `x-application-user-id` and `x-practice-contract` on every call to an Edge Function that identifies a user. |
 | State and mutation | Server tables are the source of truth. Messages arrive by realtime first; join and recovery reconcile with bounded history reads ordered by message id; every path merges by message id. |
+| Learning progress refresh | Reuse Supabase Postgres Changes for session_checklists, checklist_items and coverage_evidence, plus room-scoped sessions events for learner arrival. Scope notifications and reads to the room/learner; filters are selection, not authorization. Coalesce bursts, serialize reads, discard obsolete scope responses, and reconcile after subscription/reconnect. Keep feeds active when the panel is hidden and drafts/cards mounted during background reads. Refresh never invokes judging or retries mutations; failed reads and feeds warn without hiding saved content (FR-23, NFR-7/8; approved #75). |
 | Errors | Fail visibly (NFR-7). A thrown error carries a code; best-effort side effects log and never hide the failure. |
 | Configuration and secrets | Client variables are `REACT_APP_*`; server secrets are set per project and never committed. |
 | Release | Staging before production; SQL before a dependent Edge Function; one pending migration; merge into the integration branch before any production change (see `AGENTS.md`). |

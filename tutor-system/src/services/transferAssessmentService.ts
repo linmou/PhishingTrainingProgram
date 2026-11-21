@@ -1,10 +1,12 @@
 // Purpose: expose a typed browser facade for the trusted transfer-assessment API.
 
 import { supabase } from './supabase';
+import { getApplicationUserId } from './applicationIdentity';
 import type { Room } from '../types';
-import type { LearningTargetInput } from '../types/checklist';
+import type { CoverageEvidence, LearningTargetInput } from '../types/checklist';
 import type { AssessmentEvent, AssessmentHistoryReadiness, AssessmentOption, AssessmentOptionId, PrivateAssessment, TransferAssessmentDraft } from '../types/assessment';
 import { parseAssessmentEvent } from './assessmentRendering';
+import { newRequestId } from '../utils/requestId';
 import {
   PUBLIC_ASSESSMENT_DTO_KEYS,
   type AssessmentApiEnvelope,
@@ -126,6 +128,11 @@ export interface TransferAssessmentApi {
 export interface TransferAssessmentServiceOptions {
   api?: TransferAssessmentApi;
   requestId?: () => string;
+}
+
+export interface LearningEvidenceRow extends Omit<CoverageEvidence, 'timestamp'> {
+  item_id: string;
+  timestamp: string;
 }
 
 export class AssessmentApiRequestError extends Error {
@@ -273,29 +280,19 @@ function projectProcessedMessage(value: unknown): ProcessedMessageDTO {
   };
 }
 
-function defaultRequestId(): string {
-  const randomUuid = globalThis.crypto?.randomUUID;
-  return randomUuid ? randomUuid.call(globalThis.crypto) : `transfer-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}
 
-function storedApplicationUserId(): string | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const storedUser = window.localStorage.getItem('tutor_system_user');
-    const user = storedUser ? asRecord(JSON.parse(storedUser)) : {};
-    return nullableString(user.id);
-  } catch {
-    return null;
-  }
-}
+/** Raised without sending a request when this tab has no signed-in user: the server's answer to an anonymous call. */
+export const SIGNED_OUT_ERROR: AssessmentApiError = { code: 'UNAUTHORIZED', message: 'Signed out: sign in to continue.', retryable: false };
 
 function createDefaultApi(): TransferAssessmentApi {
   return {
     invoke: async (body, applicationUserId) => {
-      const userId = applicationUserId ?? storedApplicationUserId();
+      const userId = applicationUserId ?? getApplicationUserId();
+      // Every operation needs a signed-in user; never send an anonymous request after this tab signs out.
+      if (!userId) throw new AssessmentApiRequestError(SIGNED_OUT_ERROR);
       return (supabase as any).functions.invoke('assessment-api', {
         body,
-        headers: userId ? { 'x-application-user-id': userId } : {},
+        headers: { 'x-application-user-id': userId },
       });
     },
   };
@@ -307,11 +304,23 @@ export class TransferAssessmentService {
 
   constructor(options: TransferAssessmentServiceOptions = {}) {
     this.api = options.api ?? createDefaultApi();
-    this.requestId = options.requestId ?? defaultRequestId;
+    this.requestId = options.requestId ?? (() => newRequestId('transfer'));
   }
 
-  private async request<T>(operation: AssessmentApiOperation, payload: Record<string, unknown>, applicationUserId?: string): Promise<T> {
-    const { data, error } = await this.api.invoke({ operation, request_id: this.requestId(), ...payload }, applicationUserId);
+  /**
+   * Calls one assessment-api operation. `requestId` is the caller's id for the user action; a retry
+   * of that action must pass the same id so the server replays the stored result. Without one, the
+   * call is treated as a new action.
+   */
+  private async request<T>(
+    operation: AssessmentApiOperation,
+    payload: Record<string, unknown>,
+    { requestId, applicationUserId }: { requestId?: string; applicationUserId?: string } = {}
+  ): Promise<T> {
+    const { data, error } = await this.api.invoke(
+      { operation, ...payload, request_id: requestId ?? this.requestId() },
+      applicationUserId
+    );
     if (error?.context && typeof error.context.json === 'function') {
       let body: unknown;
       try {
@@ -344,8 +353,29 @@ export class TransferAssessmentService {
     return this.request('join_room', { room_id: roomId, ...(visitKey ? { visit_key: visitKey } : {}) });
   }
 
+  async configureAssessment(roomId: string, enabled: boolean): Promise<Room> {
+    const result = await this.request<{ room: Room }>('configure_assessment', { room_id: roomId, enabled });
+    if (!result.room || result.room.id !== roomId || typeof result.room.in_room_assessment_enabled !== 'boolean') {
+      throw new Error('Invalid assessment configuration response');
+    }
+    return result.room;
+  }
+
   readReview(roomId: string, assessmentId: string): Promise<TutorAssessmentReview> {
     return this.request('read_review', { room_id: roomId, assessment_id: assessmentId });
+  }
+
+  readAssessmentHistory(roomId: string, assessmentId: string): Promise<Pick<TutorAssessmentReview, 'history_readiness'>> {
+    return this.request('read_history_readiness', { room_id: roomId, assessment_id: assessmentId });
+  }
+
+  async readLearningEvidence(roomId: string, checklistId: string): Promise<LearningEvidenceRow[]> {
+    const rows = await this.request<LearningEvidenceRow[]>('read_learning_evidence', {
+      room_id: roomId,
+      checklist_id: checklistId,
+    });
+    if (!Array.isArray(rows)) throw new Error('Invalid learning evidence response');
+    return rows;
   }
 
   clearChatHistory(roomId:string):Promise<{success:boolean;title:string;prePopulatedMessagesPreserved:boolean}> {
@@ -372,6 +402,8 @@ export class TransferAssessmentService {
     replyToMessageId?: string;
     assessmentId?: string;
     selectedOptionIds?: ReadonlyArray<AssessmentOptionId>;
+    /** The learner action's id; reuse it when retrying the same post. */
+    requestId?: string;
   }): Promise<Record<string, unknown>> {
     return this.request('post_message', {
       room_id: input.roomId,
@@ -379,7 +411,7 @@ export class TransferAssessmentService {
       parent_message_id: input.replyToMessageId ?? null,
       assessment_id: input.assessmentId ?? null,
       selected_option_ids: input.selectedOptionIds ? [...input.selectedOptionIds] : null,
-    });
+    }, { requestId: input.requestId });
   }
 
   prepareAssessment(input: { roomId: string; focusStudentMessageId: string; checklistId: string }): Promise<Record<string, unknown> | null> {
@@ -419,7 +451,7 @@ export class TransferAssessmentService {
   }
 
   analyzeMessage(messageId: string, roomId: string, applicationUserId?: string): Promise<Record<string, unknown>> {
-    return this.request('analyze_message', { message_id: messageId, room_id: roomId }, applicationUserId);
+    return this.request('analyze_message', { message_id: messageId, room_id: roomId }, { applicationUserId });
   }
 
   static toPublicAssessment(value: unknown): PublicAssessmentDTO {
