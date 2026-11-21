@@ -1,0 +1,29 @@
+{
+  "url": "https://api.github.com/repos/linmou/PhishingTrainingProgram/branches/no_sign_up/protection/required_status_checks",
+  "strict": true,
+  "contexts": [
+    "isolation-harness",
+    "frontend-jest",
+    "frontend-build",
+    "review-policy"
+  ],
+  "contexts_url": "https://api.github.com/repos/linmou/PhishingTrainingProgram/branches/no_sign_up/protection/required_status_checks/contexts",
+  "checks": [
+    {
+      "context": "isolation-harness",
+      "app_id": 15368
+    },
+    {
+      "context": "frontend-jest",
+      "app_id": 15368
+    },
+    {
+      "context": "frontend-build",
+      "app_id": 15368
+    },
+    {
+      "context": "review-policy",
+      "app_id": 15368
+    }
+  ]
+}
