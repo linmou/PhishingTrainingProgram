@@ -38,6 +38,7 @@
         "test:e2e:production": "E2E_TARGET=production node scripts/browser-e2e.js",
         "test:assessment:audit": "node --test scripts/transfer-assessment-release.test.js scripts/browser-e2e/workflows/assessment-result-checks.test.js scripts/browser-e2e/workflows/assessment-security.test.js scripts/browser-e2e/workflows/assessment-privacy-checks.test.js",
         "test:e2e:unit": "node --test scripts/browser-e2e.test.js",
+        "test:e2e:tabs": "node scripts/e2e-tabs/run.js",
         "test:e2e:staging:migrate-templates": "node scripts/migrate-browser-e2e-templates.js",
         "test:smart-generate": "node scripts/react-scripts.js test --testPathPattern=\"smart_generate_integration.test.ts\" --watchAll=false",
         "test:smart-quick": "node scripts/react-scripts.js test --testPathPattern=\"smart_generate_quick_test.ts\" --watchAll=false",
